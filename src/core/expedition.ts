@@ -36,6 +36,8 @@ export interface ExpeditionState {
   needs?: Needs;
   /** Pacto de altar activo (Fase 7): uno como máximo, hasta el final de la incursión. */
   pact?: string | null;
+  /** Preparación del Refugio con la que bajaste (Fase 9): recorta el consumo de necesidades en esta incursión. */
+  prep?: { cot?: boolean; dish?: string } | null;
   /** Jefes de los que te retiraste (Fase 8): conservan vida, fase y auxiliar gastado hasta el final de la incursión. */
   bosses?: Record<string, BossMemory>;
   /** Cirugía de campo en marcha: región y pulsos que faltan (el equipo ya está reservado). */
@@ -95,6 +97,7 @@ export function startExpedition(p: Profile, now: number): { profile: Profile; ex
     hp: 0,
     body: fromWounds(p.wounds, stats.maxHp),
     needs: needsOf(p.needs),
+    prep: p.prep ?? null,
     mp: stats.maxMp,
     goldFound: 0,
     xpGained: 0,
@@ -104,7 +107,7 @@ export function startExpedition(p: Profile, now: number): { profile: Profile; ex
   };
   expedition.hp = summaryHp(expedition.body);
   return {
-    profile: { ...p, activeExpedition: { startedAt: now }, stats: { ...p.stats, expeditions: p.stats.expeditions + 1 } },
+    profile: { ...p, prep: null, activeExpedition: { startedAt: now }, stats: { ...p.stats, expeditions: p.stats.expeditions + 1 } },
     expedition,
   };
 }

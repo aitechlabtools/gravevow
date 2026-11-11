@@ -1137,6 +1137,11 @@ const ICON_SHAPES: Record<string, string[]> = {
   crown: ['............', '............', '............', '..g..g..g...', '..gg.gg.gg..', '..gaggagg...', '..ggggggg...', '..gyyyyyG...', '..GGGGGGG...', '............', '............', '............'],
   chain: ['............', '.aa.........', 'a..a........', '.aa.aa......', '....a..a....', '.....aa.aa..', '........a..a', '.........aa.', '............', '............', '............', '............'],
   hammer: ['............', '.....aaaaa..', '.....ahaaA..', '.....aaaaA..', '......AAA...', '.......bB...', '......bB....', '.....bB.....', '....bB......', '...bB.......', '..gg........', '............'],
+  // ── Fase 9: desguace y cocina ──
+  scrap: ['............', '............', '..aa........', '..aAa...hh..', '...aA..haA..', '.......aA...', '....aaa.....', '...ahaAa..a.', '...aaAA..aA.', '.aA.....aA..', '.aA.........', '............'],
+  meat: ['............', '............', '....aaaa....', '...ahhaaa...', '..aahaaaaA..', '..aaaaaaaA..', '..AaaaaaAA..', '...AAAAAA.e.', '.........eEe', '..........e.', '............', '............'],
+  shroom: ['............', '...aaaa.....', '..ahhaaa....', '.aaaaaaaA...', '.AAAAAAAA...', '....ee..aaa.', '....eE.ahaaA', '....eE.AAAA.', '....eE...eE.', '...eeEE..eE.', '..........E.', '............'],
+  bowl: ['............', '....h..h....', '.....h..h...', '....h..h....', '..gggggggg..', '.gaaaaaaaaG.', '.gaahaaaaaG.', '..gaaaaaaG..', '...gggggG...', '....GGGG....', '............', '............'],
   key: ['............', '............', '..ggg.......', '.g...g......', '.g...gggggg.', '.g...g..g.g.', '..ggg...g.g.', '............', '............', '............', '............', '............'],
 };
 
@@ -1252,6 +1257,13 @@ const ICONS: Record<string, IconVariant> = {
   hemostatic: { shape: 'potion', a: '#7a1a24', A: '#3e0d12', h: '#e0a0a0' },
   tourniquet: { shape: 'strap', a: '#6a4a32', A: '#3a281a', g: PAL.steel2 },
   splint: { shape: 'splint', a: '#e9e1cc' },
+  scrap_metal: { shape: 'scrap', a: PAL.steel2, A: PAL.steel0, h: PAL.steel3 },
+  leather_scrap: { shape: 'strap', a: '#8a5a32', A: '#4a2e1a', g: '#b07a4a' },
+  arcane_shard: { shape: 'gem', a: PAL.magic2, A: PAL.magic0, h: '#e8d8ff' },
+  salted_meat: { shape: 'meat', a: '#a8492a', A: '#5a2014', h: '#e08a6a' },
+  cave_mushroom: { shape: 'shroom', a: '#6a5a8a', A: '#3a2e50', h: '#b8a8d8' },
+  stew: { shape: 'bowl', a: '#8a4a1a', h: '#e8d8c0', g: '#6a4a32', A: '#4a2e1a' },
+  broth: { shape: 'bowl', a: '#c9a03a', h: '#e8d8c0', g: '#6a4a32', A: '#4a2e1a' },
   surgery_kit: { shape: 'medkit', a: PAL.steel2, g: PAL.threat2 },
 };
 

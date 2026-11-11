@@ -52,7 +52,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
   garth: {
     id: 'garth', name: 'Garth', role: 'Cocinero y cazador', sprite: 'vendor_garth', color: '#d9a066', place: 'cocina', buysItems: false,
     blurb: 'Abajo nadie te da de comer. Tráeme pieles y colmillos de lo que cazas y no volverás con el estómago vacío.',
-    stock: [{ itemId: 'ration', rank: 0 }, { itemId: 'water', rank: 0 }],
+    stock: [{ itemId: 'ration', rank: 0 }, { itemId: 'water', rank: 0 }, { itemId: 'salted_meat', rank: 0 }, { itemId: 'cave_mushroom', rank: 0 }],
   },
   nira: {
     id: 'nira', name: 'Nira', role: 'Curtidora y tendera', sprite: 'vendor_nira', color: '#e8b33a', place: 'mercado', buysItems: true,

@@ -25,7 +25,7 @@ function homeZone(id: string): string {
 
 /** `cooldowns`: las recargas que quedaron pendientes del combate anterior de la expedición. */
 /** `opts.body`: anatomía de la expedición (la vida pasa a ser su resumen). `opts.headHits`: los golpes pueden ir a la cabeza. */
-export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: number, mp: number, cooldowns: Record<string, number> = {}, classSkill?: string, opts: { body?: Body; headHits?: boolean; noInjuries?: boolean; needs?: Needs; restExtra?: number; pact?: string | null } = {}): Combatant {
+export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: number, mp: number, cooldowns: Record<string, number> = {}, classSkill?: string, opts: { body?: Body; headHits?: boolean; noInjuries?: boolean; needs?: Needs; restExtra?: number; pact?: string | null; prepMods?: Partial<Record<'sat' | 'hyd' | 'rest', number>> } = {}): Combatant {
   const cls = CLASSES[ch.classId];
   const stats = computeStats(ch.classId, ch.level, equipment);
   const kit = combatLoadout(ch.classId, equipment, classSkill);
@@ -39,7 +39,7 @@ export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: num
   if (opts.needs || pactMpLoss) stats.maxMp = effectiveMaxMp(baseMaxMp, opts.needs ?? { sat: 100, hyd: 100, rest: 100 }, pactMpLoss);
   return {
     ...(body ? { body, headHits: !!opts.headHits, noInjuries: opts.noInjuries } : {}),
-    ...(opts.needs ? { needs: { ...opts.needs }, baseMaxMp, ...(opts.restExtra ? { restExtra: opts.restExtra } : {}) } : {}),
+    ...(opts.needs ? { needs: { ...opts.needs }, baseMaxMp, ...(opts.restExtra ? { restExtra: opts.restExtra } : {}), ...(opts.prepMods && Object.keys(opts.prepMods).length ? { prepMods: opts.prepMods } : {}) } : {}),
     ...(pactMpLoss ? { pactMpLoss, baseMaxMp } : {}),
     id: 'player', name: ch.name, side: 'A', sprite: `hero_${ch.classId}`,
     stats, hp: body ? summaryHp(body) : Math.min(hp, stats.maxHp), mp: Math.min(mp, stats.maxMp),

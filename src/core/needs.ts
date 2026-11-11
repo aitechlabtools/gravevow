@@ -25,8 +25,10 @@ export function needsOf(n: Partial<Needs> | null | undefined): Needs {
 }
 
 /** Multiplicador del consumo de una necesidad (abdomen inutilizado, peso…), con sus topes. `restExtra`: carga (Fase 6). */
-export function consumptionMult(need: Need, body?: Body, restExtra = 0): number {
-  let mod = 0;
+/** `prep`: recortes de la preparación del Refugio (Fase 9), negativos; todo se suma y se aplica una vez con sus topes. */
+export type NeedMods = Partial<Record<Need, number>>;
+export function consumptionMult(need: Need, body?: Body, restExtra = 0, prep: NeedMods = {}): number {
+  let mod = prep[need] ?? 0;
   if (body && need !== 'rest' && isDisabled(body, 'abdomen')) mod += NEED_CFG.abdomenExtra;
   if (need === 'rest') mod += restExtra;
   return 1 + Math.max(-NEED_CFG.maxReduction, Math.min(NEED_CFG.maxIncrease, mod));
@@ -71,12 +73,12 @@ export interface NeedsTick {
 }
 
 /** Un pulso: gasta las tres barras y, a cero de Hidratación o Saciedad, hiere el tórax de vez en cuando. */
-export function tickNeeds(n0: Needs, body: Body, total: number, restExtra = 0): NeedsTick {
+export function tickNeeds(n0: Needs, body: Body, total: number, restExtra = 0, prep: NeedMods = {}): NeedsTick {
   const n: Needs = { ...n0 };
   const crossed: NeedsTick['crossed'] = [];
   for (const k of NEEDS) {
     const before = needLevel(n[k]);
-    n[k] = clamp(n[k] - NEED_CFG.rate[k] * consumptionMult(k, body, restExtra));
+    n[k] = clamp(n[k] - NEED_CFG.rate[k] * consumptionMult(k, body, restExtra, prep));
     const after = needLevel(n[k]);
     if (after !== before) crossed.push({ need: k, level: after });
   }
@@ -97,9 +99,9 @@ export function tickNeeds(n0: Needs, body: Body, total: number, restExtra = 0): 
 }
 
 /** Pulsos que faltan para el siguiente efecto grave (penalización, cero o daño) de una barra. */
-export function pulsesToNext(n: Needs, need: Need, body?: Body, restExtra = 0): number | null {
+export function pulsesToNext(n: Needs, need: Need, body?: Body, restExtra = 0, prep: NeedMods = {}): number | null {
   const v = n[need];
-  const rate = NEED_CFG.rate[need] * consumptionMult(need, body, restExtra);
+  const rate = NEED_CFG.rate[need] * consumptionMult(need, body, restExtra, prep);
   if (v > NEED_CFG.warnAt) return Math.ceil((v - NEED_CFG.warnAt) / rate);
   if (v > NEED_CFG.criticalAt) return Math.ceil((v - NEED_CFG.criticalAt) / rate);
   if (v > 0) return Math.ceil(v / rate);

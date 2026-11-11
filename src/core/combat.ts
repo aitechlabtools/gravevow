@@ -74,6 +74,8 @@ export interface Combatant {
   baseMaxMp?: number;
   /** Carga (Fase 6): gasto extra de Descanso por ronda. */
   restExtra?: number;
+  /** Preparación del Refugio (Fase 9): recortes del consumo de necesidades. */
+  prepMods?: Partial<Record<'sat' | 'hyd' | 'rest', number>>;
   /** Pacto de altar (Fase 7): parte del máximo del recurso que se pierde además de las necesidades. */
   pactMpLoss?: number;
   /** Cirugía en curso (dos turnos propios): la región. Un golpe la interrumpe. */
@@ -769,7 +771,7 @@ function checkOutcome(s: CombatState) {
 
 /** Una ronda es un pulso también para el hambre, la sed y el cansancio. */
 function tickCombatNeeds(s: CombatState, c: Combatant) {
-  const t = tickNeeds(c.needs!, c.body!, c.body!.total, c.restExtra ?? 0);
+  const t = tickNeeds(c.needs!, c.body!, c.body!.total, c.restExtra ?? 0, c.prepMods ?? {});
   c.needs = t.needs;
   if (c.baseMaxMp !== undefined) {
     c.stats.maxMp = effectiveMaxMp(c.baseMaxMp, t.needs, c.pactMpLoss ?? 0);

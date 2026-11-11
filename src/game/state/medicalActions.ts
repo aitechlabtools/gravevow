@@ -3,6 +3,7 @@
 import { ANATOMY, REGION_NAME } from '../../config/anatomy';
 import { healBody, toWounds, tickPain, applyTreatment, bleedTick, bestTreatment, damageRegion, fromWounds, isDead, resizeBody, rollInjury, summaryHp, treatError, urgencies, vesperPrice, type Body, type Region, type Treatment } from '../../core/anatomy';
 import { needLog, regionWith } from '../../core/combat';
+import { prepMods } from '../../core/refuge';
 import { needsOf, tickNeeds } from '../../core/needs';
 import { computeStats } from '../../core/stats';
 import { potionAmount } from '../../config/progression';
@@ -115,7 +116,7 @@ export const medicalActions = {
       body = tickPain(b.body);
       if (b.dead) break;
       // Necesidades: el mismo pulso gasta Saciedad, Hidratación y Descanso
-      const t = tickNeeds(needsOf(exp.needs), body, body.total, loadNow()?.restExtra ?? 0);
+      const t = tickNeeds(needsOf(exp.needs), body, body.total, loadNow()?.restExtra ?? 0, prepMods(exp.prep));
       exp = { ...exp, needs: t.needs };
       body = t.body;
       for (const x of t.crossed) if (x.level !== 'ok') toast(needLog(x.need, x.level), x.level === 'low' ? 'info' : 'danger', x.need === 'hyd' ? 'water' : x.need === 'sat' ? 'ration' : undefined);

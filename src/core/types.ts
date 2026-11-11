@@ -30,7 +30,7 @@ export type ItemEffect =
   /** Tratamientos de la anatomía (venda, hemostático, torniquete, férula, cirugía): se aplican a una región. */
   | { kind: 'treat'; treat: 'bandage' | 'hemostatic' | 'tourniquet' | 'splint' | 'surgery' | 'painkiller' }
   /** Comida y bebida (Fase 5): suben Saciedad, Hidratación o Descanso. Fuera de combate. */
-  | { kind: 'need'; sat?: number; hyd?: number; rest?: number };
+  | { kind: 'need'; sat?: number; hyd?: number; rest?: number; /** Plato del Refugio (Fase 9): ventaja para la siguiente incursión; solo se come en el Bastión. */ dish?: boolean };
 
 /** Familias de armas y objetos de mano izquierda (ver data/weapons.ts). */
 export type WeaponFamily =
@@ -241,6 +241,14 @@ export interface Profile {
   wounds?: { pct: Partial<Record<'head' | 'thorax' | 'abdomen' | 'armL' | 'armR' | 'legL' | 'legR', number>>; fractures: ('head' | 'thorax' | 'abdomen' | 'armL' | 'armR' | 'legL' | 'legR')[] } | null;
   /** Saciedad, Hidratación y Descanso (Fase 5) al volver al Bastión. Sin valor: llenas. */
   needs?: { sat: number; hyd: number; rest: number } | null;
+  /** Refugio (Fase 9): nivel de cada módulo. Sin valor: todo a 0. */
+  refuge?: { cot: number; kitchen: number; bench: number };
+  /** Preparación para la siguiente incursión (catre mejorado, plato). Se gasta al bajar. */
+  prep?: { cot?: boolean; dish?: string } | null;
+  /** Receta en el fogón (ingredientes ya gastados): se retoma al volver a la cocina. */
+  cooking?: { recipe: string; events: number[]; picks: ('low' | 'mid' | 'high')[] } | null;
+  /** Recetas cocinadas al menos una vez (abren la producción normal por lotes). */
+  cooked?: string[];
   /** Tiempo de juego activo acumulado en expediciones (ms, reloj de juego). Formato de guardado 4. */
   playMs?: number;
   /** Tutorial guiado de la primera expedición completado (o saltado). Las partidas con expediciones lo tienen hecho. */

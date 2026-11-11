@@ -34,6 +34,9 @@ import { questDef, isComplete, acceptQuest as acceptQuestCore, abandonQuest as a
 import { applyXp } from '../../core/stats';
 import { potionAmount, resourcePotionAmount } from '../../config/progression';
 import { makeRng, makeUid, randomSeed } from '../../core/rng';
+import { vendorUnlocked } from '../../core/vendors';
+import { canSleepForPrep, cookBatch, cookStep, scrap, startCooking, upgradeModule } from '../../core/refuge';
+import type { Heat, ModuleId } from '../../core/data/refuge';
 import { bus } from './bus';
 import { buySkin, equipSkin } from '../../core/skins';
 import { getSkin } from '../../core/data/skins';
@@ -506,6 +509,19 @@ export const actions = {
     if (def.use?.kind !== 'need') return;
     if (s.combat) return invError('No hay tiempo para comer en mitad de un combate.');
     const inDungeon = s.screen === 'dungeon' && !!s.expedition;
+    if (def.use.dish) {
+      // Platos del Refugio: en el Bastión; preparan la siguiente incursión aunque la barra esté llena
+      if (inDungeon || s.expedition) return invError('Este plato se come en el Bastión, antes de bajar.');
+      if (loc.kind !== 'grid') return;
+      const grid = [...c[loc.container]];
+      grid[loc.index] = st.qty > 1 ? { ...st, qty: st.qty - 1 } : null;
+      applyContainers({ ...c, [loc.container]: grid });
+      const fed = feed(needsOf(s.profile.needs), { sat: def.use.sat, hyd: def.use.hyd, rest: def.use.rest }) ?? needsOf(s.profile.needs);
+      set((s2) => ({ profile: s2.profile ? { ...s2.profile, needs: toSaved(fed), prep: { ...(s2.profile.prep ?? {}), dish: st.itemId } } : s2.profile }));
+      sfx('heal');
+      toast(`Comes: ${def.name.toLowerCase()}. Bajarás preparado.`, 'good', def.icon);
+      return;
+    }
     const cur = needsOf(inDungeon ? s.expedition!.needs : s.profile.needs);
     const next = feed(cur, { sat: def.use.sat, hyd: def.use.hyd, rest: def.use.rest });
     if (!next) return invError(def.use.hyd ? 'No tienes sed.' : 'No tienes hambre.');
@@ -532,10 +548,11 @@ export const actions = {
     const p = state.profile;
     if (!p || state.expedition) return;
     const n = needsOf(p.needs);
-    if (n.rest >= 100) return invError('Ya estás descansado.');
-    set({ profile: { ...p, needs: toSaved(sleep(n)) } });
+    const prep = canSleepForPrep(p);
+    if (n.rest >= 100 && !prep) return invError('Ya estás descansado.');
+    set({ profile: { ...p, needs: toSaved(sleep(n)), ...(prep ? { prep: { ...(p.prep ?? {}), cot: true } } : {}) } });
     sfx('heal');
-    toast('Duermes en el catre del Bastión. Descanso recuperado.', 'good');
+    toast(prep ? 'Duermes en el jergón del Refugio. Bajarás descansado: −10 % de Descanso en la próxima incursión.' : 'Duermes en el catre del Bastión. Descanso recuperado.', 'good');
   },
 
   drinkPotion() {
@@ -573,6 +590,61 @@ export const actions = {
     sfx('coin');
     set({ profile: r.profile });
     toast(`Compras ${getItem(itemId).name}.`, 'good', getItem(itemId).icon);
+  },
+
+  /** Refugio (Fase 9): mejorar un módulo. */
+  upgradeModule(id: ModuleId) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const r = upgradeModule(p, id);
+    if (!r.ok) return invError(r.error);
+    sfx('equip');
+    set({ profile: r.profile });
+    toast(`Refugio · ${r.note}`, 'good');
+  },
+
+  /** Desguace en el taller de Orik. */
+  scrap(container: 'backpack' | 'stash', index: number) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    if (!vendorUnlocked(p, 'orik')) return invError('Orik aún no ha llegado al Bastión.');
+    const r = scrap(p, container, index);
+    if (!r.ok) return invError(r.error);
+    sfx('equip');
+    set({ profile: r.profile });
+    toast(`Orik desguaza: ${r.note}`, 'good');
+  },
+
+  /** Cocina: empezar una receta en el fogón (gasta los ingredientes). */
+  startCooking(recipeId: string) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const r = startCooking(p, recipeId, randomSeed());
+    if (!r.ok) return invError(r.error);
+    sfx('click');
+    set({ profile: r.profile });
+  },
+
+  /** Cocina: fuego del paso actual. */
+  cookStep(heat: Heat) {
+    const p = state.profile;
+    if (!p) return;
+    const r = cookStep(p, heat);
+    if (!r.ok) return invError(r.error);
+    set({ profile: r.profile });
+    if (r.done) { sfx('heal'); toast(`Garth prueba el plato: ${r.note}`, r.perfect ? 'loot' : 'good'); }
+    else sfx('click');
+  },
+
+  /** Cocina: producción normal por lotes (calidad estándar). */
+  cookBatch(recipeId: string, qty: number) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const r = cookBatch(p, recipeId, qty);
+    if (!r.ok) return invError(r.error);
+    sfx('heal');
+    set({ profile: r.profile });
+    toast(`Cocinas: ${r.note}`, 'good');
   },
 
   forge(recipeId: string, ensure: boolean) {
