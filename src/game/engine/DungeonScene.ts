@@ -16,9 +16,13 @@ import { mobilityMult } from '../../core/anatomy';
 import { loadOfMemo } from '../../core/carry';
 import { registerTextures, registerHeroTextures } from './textures';
 import { lookSignature } from '../../shared/gearLook';
-import { actions, getState, subscribe, tutorialFrozen } from '../state/store';
+import { actions, getState, subscribe, toast, tutorialFrozen } from '../state/store';
 import { bus } from '../state/bus';
 import { sfx } from '../audio';
+import { getPact, pactPrice } from '../../core/data/altars';
+import { CLASSES } from '../../core/data/classes';
+import { EXPLORE_SECONDS, TRAP_DAMAGE } from '../../config/exploration';
+import type { DoorLock } from '../../core/dungeon';
 
 // ════════════════════════════════════════════════════════════════════
 // Escena de exploración isométrica.
@@ -76,6 +80,7 @@ interface TileVis {
 }
 
 export interface Interactable { label: string; run: () => void }
+type Door = { id: string; x: number; y: number; img: Phaser.GameObjects.Image; open: boolean; lock?: DoorLock; extra?: Phaser.GameObjects.Image[]; name?: string };
 
 export let activeScene: DungeonScene | null = null;
 
@@ -93,9 +98,11 @@ export class DungeonScene extends Phaser.Scene {
   job: { label: string; seconds: number; done: () => void } | null = null;
   tiles: TileVis[] = [];
   tileIndex = new Map<string, TileVis>();
-  doors = new Map<string, { id: string; x: number; y: number; img: Phaser.GameObjects.Image; open: boolean }>();
+  doors = new Map<string, Door>();
+  altars: { id: string; pact: string; x: number; y: number; img: Phaser.GameObjects.Image; used: boolean }[] = [];
   chests: { id: string; x: number; y: number; table: string; img: Phaser.GameObjects.Image; opened: boolean }[] = [];
-  traps: { id: string; x: number; y: number; img: Phaser.GameObjects.Image; cooldown: number }[] = [];
+  /** Fase 7: una trampa salta una vez y no se rearma; también se puede desarmar. */
+  traps: { id: string; x: number; y: number; img: Phaser.GameObjects.Image; state: 'armed' | 'disarmed' | 'spent' }[] = [];
   torches: { x: number; y: number; lx: number; ly: number; img: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image; phase: number; light: Map<string, number> }[] = [];
   pillars = new Set<string>();
   portal!: { x: number; y: number; img: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image };
@@ -142,6 +149,7 @@ export class DungeonScene extends Phaser.Scene {
     this.doors.clear();
     this.chests = [];
     this.traps = [];
+    this.altars = [];
     this.torches = [];
     this.pillars.clear();
     this.bagSprites.clear();
@@ -259,10 +267,21 @@ export class DungeonScene extends Phaser.Scene {
     switch (e.kind) {
       case 'door': {
         const b = iso(e.x + 1, e.y + 1);
-        const img = this.add.image(b.x, b.y, 'door').setOrigin(0.5, 1).setDepth(depthAt(cx, cy));
-        this.doors.set(`${e.x},${e.y}`, { id: e.id, x: e.x, y: e.y, img, open: false });
+        // Fase 7: el secreto parece un muro (con marcas); la sala cerrada lleva cerrojo; el atajo es un rastrillo
+        const tex = e.lock?.type === 'secret' ? 'wall0' : e.lock?.type === 'key' ? 'door_locked' : e.lock?.type === 'gate' ? 'gate' : 'door';
+        const img = this.add.image(b.x, b.y, tex).setOrigin(0.5, 1).setDepth(depthAt(cx, cy));
+        const extra: Phaser.GameObjects.Image[] = [];
+        if (e.lock?.type === 'secret') extra.push(this.add.image(b.x, b.y, 'secret_marks').setOrigin(0.5, 1).setDepth(depthAt(cx, cy) + 0.5));
+        const room = e.lock && e.lock.type !== 'gate' ? this.def.rooms.find((r) => r.id.startsWith('opt_') && Math.abs(r.x + r.w / 2 - e.x) + Math.abs(r.y + r.h / 2 - e.y) < 9) : undefined;
+        this.doors.set(`${e.x},${e.y}`, { id: e.id, x: e.x, y: e.y, img, open: false, lock: e.lock, extra, name: room?.name });
+        for (const i of [img, ...extra]) { vis?.imgs.push(i); vis?.tall.add(i); }
+        break;
+      }
+      case 'altar': {
+        const used = false;
+        const img = this.add.image(c.x, c.y, 'altar').setOrigin(0.5, 0.8).setDepth(depthAt(cx, cy) + 1);
+        this.altars.push({ id: e.id, pact: e.pact, x: e.x, y: e.y, img, used });
         vis?.imgs.push(img);
-        vis?.tall.add(img);
         break;
       }
       case 'pillar': {
@@ -274,7 +293,7 @@ export class DungeonScene extends Phaser.Scene {
       }
       case 'trap': {
         const img = this.add.image(c.x, c.y, 'trap_off').setDepth(-9);
-        this.traps.push({ id: e.id, x: e.x, y: e.y, img, cooldown: 0 });
+        this.traps.push({ id: e.id, x: e.x, y: e.y, img, state: 'armed' });
         vis?.imgs.push(img);
         break;
       }
@@ -365,7 +384,7 @@ export class DungeonScene extends Phaser.Scene {
     const t = this.dungeon.tiles[y]?.[x];
     if (t !== 'floor') return true;
     const d = this.doors.get(`${x},${y}`);
-    return !!d && !d.open;
+    return !!d && !d.open && d.lock?.type !== 'gate';
   }
 
   precomputeTorchLight() {
@@ -821,16 +840,17 @@ export class DungeonScene extends Phaser.Scene {
 
   updateTraps(dt: number) {
     const p = this.player;
+    void dt;
     for (const t of this.traps) {
-      if (t.cooldown > 0) t.cooldown -= dt;
-      if (Math.floor(p.x) === t.x && Math.floor(p.y) === t.y && t.cooldown <= 0) {
-        t.cooldown = 2.5;
+      if (t.state === 'armed' && Math.floor(p.x) === t.x && Math.floor(p.y) === t.y) {
+        // Salta una sola vez: queda disparada y ya no hace daño
+        t.state = 'spent';
         t.img.setTexture('trap_on');
-        this.time.delayedCall(700, () => t.img.setTexture('trap_off'));
+        this.time.delayedCall(700, () => t.img.setTexture('trap_spent'));
         this.cameras.main.shake(140, 0.004);
         this.player.sprite.setTintFill(0xff4040);
         this.time.delayedCall(120, () => this.player.sprite.clearTint());
-        actions.trapHit(10);
+        actions.trapHit(TRAP_DAMAGE);
       }
     }
   }
@@ -880,7 +900,17 @@ export class DungeonScene extends Phaser.Scene {
         });
       }
     }
-    for (const door of this.doors.values()) if (!door.open && d(door.x, door.y) < 1.45) out.push({ dist: d(door.x, door.y), label: 'Abrir la puerta', run: () => this.openDoor(door) });
+    for (const door of this.doors.values()) if (!door.open && d(door.x, door.y) < 1.45) out.push({ dist: d(door.x, door.y), ...this.doorAction(door) });
+    // Fase 7: trampas a la vista que se pueden desarmar (quieto unos segundos) y altares
+    for (const t of this.traps) if (t.state === 'armed' && d(t.x, t.y) < 1.45 && !(Math.floor(p.x) === t.x && Math.floor(p.y) === t.y)) {
+      out.push({ dist: d(t.x, t.y), label: `Desarmar la trampa (${EXPLORE_SECONDS.disarm} s)`, run: () => this.startChannel({ label: 'Desarmando la trampa… no te muevas', seconds: EXPLORE_SECONDS.disarm, done: () => { t.state = 'disarmed'; t.img.setTexture('trap_spent'); sfx('click'); toast('Trampa desarmada: ya no saltará.'); } }) });
+    }
+    for (const a of this.altars) {
+      if (a.used || d(a.x, a.y) >= 1.45) continue;
+      const pact = getPact(a.pact);
+      if (!pact) continue;
+      out.push({ dist: d(a.x, a.y), label: `Altar: ${pact.name}`, run: () => this.offerPact(a) });
+    }
     if (this.channel < 0 && d(this.portal.x, this.portal.y) < 1.3) out.push({ dist: d(this.portal.x, this.portal.y), label: 'Activar el portal y extraer', run: () => this.startChannel() });
     return out.sort((a, b) => a.dist - b.dist).map(({ label, run }) => ({ label, run }));
   }
@@ -909,13 +939,43 @@ export class DungeonScene extends Phaser.Scene {
     choice?.run();
   }
 
-  openDoor(door: { x: number; y: number; img: Phaser.GameObjects.Image; open: boolean }) {
+  /** Qué se hace con una puerta según su acceso (Fase 7). */
+  doorAction(door: Door): Interactable {
+    const lock = door.lock;
+    if (!lock) return { label: 'Abrir la puerta', run: () => this.openDoor(door) };
+    if (lock.type === 'secret') return { label: 'Examinar las marcas del muro', run: () => this.startChannel({ label: 'Buscando el mecanismo… no te muevas', seconds: EXPLORE_SECONDS.secret, done: () => { this.openDoor(door); toast(`¡Un pasaje oculto${door.name ? ': ' + door.name : ''}!`); } }) };
+    if (lock.type === 'key') {
+      const e = getState().expedition;
+      const have = !!e && [...e.backpack, ...e.pocket].some((x) => x?.itemId === lock.key);
+      const key = getItem(lock.key).name.toLowerCase();
+      return { label: have ? `Abrir ${door.name ?? 'la puerta'} (gasta tu ${key})` : `Cerrada: necesitas una ${key}`, run: () => { if (actions.useDoorKey(lock.key)) this.openDoor(door); } };
+    }
+    // Rastrillo: solo desde su lado (la sala honda)
+    const p = this.player;
+    const fromSide = (p.x - (door.x + 0.5)) * lock.side[0] + (p.y - (door.y + 0.5)) * lock.side[1] > 0;
+    if (!fromSide) return { label: 'Rastrillo: se levanta desde el otro lado', run: () => { sfx('error'); toast('El torno del rastrillo está al otro lado. Búscalo desde dentro.'); } };
+    return { label: `Levantar el rastrillo (atajo, ${EXPLORE_SECONDS.gate} s)`, run: () => this.startChannel({ label: 'Girando el torno… no te muevas', seconds: EXPLORE_SECONDS.gate, done: () => { this.openDoor(door); toast('Atajo abierto: el camino de vuelta es más corto.'); } }) };
+  }
+
+  /** Altar: el beneficio y el precio se leen antes de aceptar. Rechazar no cuesta nada. */
+  offerPact(a: DungeonScene['altars'][number]) {
+    const pact = getPact(a.pact)!;
+    const busy = getState().expedition?.pact;
+    const price = pactPrice(pact, CLASSES[getState().profile!.character.classId].resourceName);
+    this.pendingChoices = [
+      { label: busy ? `Ya tienes un pacto (${getPact(busy)?.name}): solo cabe uno` : `Aceptar el ${pact.name.toLowerCase()}: ${pact.boon}; precio: ${price} (hasta salir)`, run: () => { if (!busy && actions.acceptPact(a.pact)) { a.used = true; a.img.setTexture('altar_used'); } } },
+      { label: 'Rechazar y seguir', run: () => {} },
+    ];
+    actions.openModal({ type: 'interact', options: this.pendingChoices.map((i) => i.label) });
+  }
+
+  openDoor(door: Door) {
     door.open = true;
     sfx('door');
-    this.tweens.add({ targets: door.img, alpha: 0, scaleY: 0.2, duration: 350, onComplete: () => door.img.setVisible(false) });
+    for (const i of [door.img, ...(door.extra ?? [])]) this.tweens.add({ targets: i, alpha: 0, scaleY: 0.2, duration: 350, onComplete: () => i.setVisible(false) });
     const vis = this.tileIndex.get(`${door.x},${door.y}`);
     if (vis) {
-      vis.imgs = vis.imgs.filter((i) => i !== door.img);
+      vis.imgs = vis.imgs.filter((i) => i !== door.img && !(door.extra ?? []).includes(i));
       // Bajo la puerta hay suelo
       const c = iso(door.x + 0.5, door.y + 0.5);
       vis.imgs.unshift(this.add.image(c.x, c.y, 'floor1').setDepth(-10));

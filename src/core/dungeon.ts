@@ -13,7 +13,9 @@ export type EntityDef =
   | { kind: 'spawn'; x: number; y: number }
   | { kind: 'enemy'; id: string; enemyId: string; x: number; y: number; /** Niveles de más por lo honda que está su sala. */ lvl?: number }
   | { kind: 'chest'; id: string; table: string; x: number; y: number }
-  | { kind: 'door'; id: string; x: number; y: number }
+  | { kind: 'door'; id: string; x: number; y: number; /** Fase 7: acceso especial (sin valor: puerta normal). */ lock?: DoorLock }
+  /** Fase 7: altar con un pacto (beneficio y precio a la vista). */
+  | { kind: 'altar'; id: string; pact: string; x: number; y: number }
   | { kind: 'trap'; id: string; x: number; y: number }
   | { kind: 'torch'; x: number; y: number; face: 'south' | 'east' }
   | { kind: 'pillar'; x: number; y: number }
@@ -22,6 +24,14 @@ export type EntityDef =
   | { kind: 'captive'; mercId: string; x: number; y: number }
   | { kind: 'vein'; id: string; vein: import('./mining').VeinId; x: number; y: number }
   | { kind: 'decor'; sprite: DecorSprite; x: number; y: number };
+
+/**
+ * Accesos especiales (Fase 7). Todos son opcionales: nada obligatorio queda detrás de uno.
+ *  · secret: muro con marcas; se abre examinándolo, sin llave ni herramienta.
+ *  · key: puerta cerrada; la abre una llave de la zona, que se gasta al abrir.
+ *  · gate: rastrillo de un atajo; solo se levanta desde el lado `side` (dirección desde la casilla del rastrillo).
+ */
+export type DoorLock = { type: 'secret' } | { type: 'key'; key: string } | { type: 'gate'; side: [number, number] };
 
 /** Piezas de decorado (cada subzona usa las suyas: data/subzones.ts → decor). */
 export const DECOR_SPRITES = ['bones', 'skull', 'barrel', 'rubble', 'grass', 'stake', 'puddle', 'crate', 'banner', 'cage', 'chain', 'urn', 'candles', 'roots', 'statue', 'coffin', 'lava', 'crystal', 'brazier', 'spikes'] as const;

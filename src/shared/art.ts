@@ -853,6 +853,67 @@ export function drawTrap(armed: boolean): Canvas {
   return p.c;
 }
 
+// ── Fase 7: accesos especiales, altar y trampa desarmada ──
+
+/** Puerta cerrada con llave: madera con flejes de hierro y un cerrojo dorado bien visible. */
+export function drawLockedDoor(): Canvas {
+  const face = (u: number, v: number, base: string) => {
+    if (v === 3 || v === 9 || v === 15) return PAL.steel1;
+    if (u % 4 === 0) return PAL.earth0;
+    return hash(u, v, 71) > 0.85 ? shade(base, 0.15) : base;
+  };
+  return drawBlock({
+    height: WALL_H - 2,
+    top: () => PAL.earth1,
+    left: (u, v) => ((u >= 7 && u <= 9 && v >= 10 && v <= 13) ? (v === 10 || u === 8 && v === 12 ? PAL.gold3 : PAL.gold1) : face(u, v, PAL.earth2)),
+    right: (u, v) => face(u, v, PAL.earth1),
+  });
+}
+
+/** Rastrillo de un atajo: barrotes de hierro sobre la oscuridad. */
+export function drawGate(): Canvas {
+  const bars = (u: number, v: number, lit: boolean) => {
+    if (v === 2 || v === 12) return lit ? PAL.steel2 : PAL.steel1;
+    if (u % 3 === 1) return v === WALL_H - 3 ? PAL.steel3 : lit ? PAL.steel2 : PAL.steel1;
+    return PAL.void;
+  };
+  return drawBlock({ height: WALL_H - 2, top: () => PAL.steel0, left: (u, v) => bars(u, v, true), right: (u, v) => bars(u, v, false) });
+}
+
+/** Marcas de un muro con secreto (se dibujan encima del muro normal): arañazos claros y una corriente de aire. */
+export function drawSecretMarks(): Canvas {
+  const p = new Pix(TILE_W, TILE_H + WALL_H);
+  const marks: [number, number][] = [[6, 14], [7, 15], [8, 16], [6, 18], [7, 19], [8, 20], [10, 15], [10, 16], [10, 17], [10, 18], [4, 22], [5, 23], [6, 24]];
+  for (const [x, y] of marks) p.px(x, y, PAL.bone2);
+  for (const [x, y] of [[20, 18], [22, 17], [24, 18], [21, 21], [23, 20]] as [number, number][]) p.px(x, y, PAL.ice);
+  return p.c;
+}
+
+/** Altar de piedra con dos velas y una mancha de sangre: el pacto se ve de lejos. */
+export function drawAltar(used: boolean): Canvas {
+  const p = new Pix(TILE_W, TILE_H + 16);
+  for (let y = 0; y < TILE_H; y++) for (let x = 4; x < 28; x++) if (inDiamond(x - 4, y + 2, 24, 14)) p.px(x, y + 14, PAL.stone2);
+  for (let y = 6; y < 20; y++) for (let x = 8; x < 24; x++) p.px(x, y, y === 6 ? PAL.stone5 : x < 16 ? PAL.stone4 : PAL.stone3);
+  for (let x = 11; x < 21; x++) p.px(x, 7, used ? PAL.stone2 : PAL.threat1);
+  if (!used) { p.px(14, 8, PAL.threat2); p.px(17, 8, PAL.threat2); }
+  for (const cx of [9, 22]) {
+    p.rect(cx, 2, 1, 4, PAL.bone2);
+    if (!used) { p.px(cx, 1, PAL.fire2); p.px(cx, 0, PAL.fire3); }
+  }
+  return p.c;
+}
+
+/** Trampa desarmada o ya disparada: las púas dobladas y una marca en el suelo. */
+export function drawTrapSpent(): Canvas {
+  const p = new Pix(TILE_W, TILE_H);
+  for (let y = 0; y < TILE_H; y++) for (let x = 0; x < TILE_W; x++) if (inDiamond(x, y)) {
+    const inner = Math.abs(x + 0.5 - 16) / 12 + Math.abs(y + 0.5 - 8) / 6 <= 1;
+    if (inner) p.px(x, y, hash(x, y, 9) > 0.5 ? PAL.stone2 : PAL.stone1);
+  }
+  for (const [x, y] of [[12, 7], [13, 8], [19, 7], [18, 8], [16, 10]] as [number, number][]) p.px(x, y, PAL.steel0);
+  return p.c;
+}
+
 /** Afloramiento de roca con vetas de mineral, apoyado en la pared. Agotada: solo roca. */
 export function drawVein(color: string, glint: string, depleted: boolean): Canvas {
   const p = new Pix(18, 16);

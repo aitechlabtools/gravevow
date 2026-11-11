@@ -2,6 +2,8 @@
 import { CARRY_MAX, CARRY_TIERS } from '../../config/carry';
 import { fmtWeight, loadOf } from '../../core/carry';
 import { useGame } from '../state/store';
+import { getPact, pactPrice } from '../../core/data/altars';
+import { CLASSES } from '../../core/data/classes';
 
 const TIER_COLOR = ['#8fae6a', '#e8b33a', '#d0533f'];
 
@@ -45,4 +47,13 @@ export function OverloadChip() {
   const l = useLoad();
   if (!l || !l.tier) return null;
   return <span className="hud-overload font-pixel text-[10px] px-1.5 py-0.5 border" style={{ color: TIER_COLOR[l.tier], borderColor: TIER_COLOR[l.tier], background: '#0b0a0dcc' }} data-testid="hud-overload" title={loadText(l.tier)}>Sobrecarga {Math.round(l.pct * 100)} %</span>;
+}
+
+/** Fase 7: pacto de altar activo (beneficio y precio en la ventanita). */
+export function PactChip() {
+  const id = useGame((s) => s.expedition?.pact ?? null);
+  const cls = useGame((s) => s.profile?.character.classId ?? 'warrior');
+  const pact = getPact(id);
+  if (!pact) return null;
+  return <span className="font-pixel text-[10px] px-1.5 py-0.5 border" style={{ color: '#ff6a5a', borderColor: '#8e1c2c', background: '#0b0a0dcc' }} data-testid="hud-pact" title={`${pact.boon}. Precio: ${pactPrice(pact, CLASSES[cls].resourceName)}.`}>{pact.name}</span>;
 }

@@ -26,6 +26,9 @@ import { CAPTIVE_CHANCE } from '../../config/contracts';
 import { CRYPTS_OF_UMBRAVEL } from '../../core/dungeon';
 import { generateDungeon } from '../../core/dungeonGen';
 import { sfx } from '../audio';
+import { getPact, pactPrice } from '../../core/data/altars';
+import { CLASSES } from '../../core/data/classes';
+import { effectiveMaxMp, needsOf } from '../../core/needs';
 import { dev, invError, markTutorialDoneOnDevice, saveNow, set, state, subzoneDepth, toast } from './internals';
 import type { Bag, DungeonHud, Modal } from './internals';
 import { actions } from './store';
@@ -241,6 +244,32 @@ export const expeditionActions = {
     const dead = actions.hurtByTrap(damage);
     if (s.tutorial && !s.tutorial.trapHit) set({ tutorial: { ...s.tutorial, trapHit: true } });
     if (dead) void actions.finishExpedition('died');
+  },
+
+  // ── Exploración (Fase 7) ──
+  /** Gasta una llave para abrir una sala cerrada. La llave se quita solo si la puerta se abre (lo confirma quien llama con el resultado). */
+  useDoorKey(key: string): boolean {
+    const e = state.expedition;
+    if (!e) return false;
+    const fromBp = removeItem(e.backpack, key, 1);
+    const fromPocket = fromBp ? null : removeItem(e.pocket, key, 1);
+    if (!fromBp && !fromPocket) { toast(`Cerrada: necesitas una ${getItem(key).name.toLowerCase()}.`, 'danger'); sfx('error'); return false; }
+    set({ expedition: { ...e, ...(fromBp ? { backpack: fromBp } : { pocket: fromPocket! }) } });
+    toast(`Gastas tu ${getItem(key).name.toLowerCase()}: la puerta cede.`);
+    return true;
+  },
+  /** Acepta el pacto de un altar. Uno como máximo; el altar queda gastado. */
+  acceptPact(pactId: string): boolean {
+    const e = state.expedition;
+    const pact = getPact(pactId);
+    if (!e || !pact) return false;
+    if (e.pact) { toast(`Ya tienes un pacto: ${getPact(e.pact)?.name ?? 'otro'}. Solo cabe uno por incursión.`, 'danger'); sfx('error'); return false; }
+    const stats = computeStats(state.profile!.character.classId, state.profile!.character.level, e.equipment);
+    const max = effectiveMaxMp(stats.maxMp, needsOf(e.needs), pact.mpLoss);
+    set({ expedition: { ...e, pact: pactId, mp: Math.min(e.mp, max) } });
+    sfx('portal');
+    toast(`${pact.name}: ${pact.boon}. Precio: ${pactPrice(pact, CLASSES[state.profile!.character.classId].resourceName)}.`);
+    return true;
   },
 
   // ── Minería ──

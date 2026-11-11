@@ -28,6 +28,7 @@ export const ROADMAP: RoadmapColumn[] = [
       'Aliados y mercenarios',
       'Oro físico: si caes, lo pierdes',
       'Mochila con tamaños y peso: elige qué te llevas',
+      'Salas secretas, puertas con llave, atajos y altares',
       'Hasta cuatro personajes',
       'Copia de seguridad de tu partida',
       'Atuendos sin ventajas',

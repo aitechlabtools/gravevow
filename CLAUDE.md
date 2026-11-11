@@ -32,6 +32,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Botín: `loot.ts`. Oro físico: `gold.ts`, `bag.ts` y `inventory.ts`.
   - Inventario espacial: `inventory.ts` (objetos de varias casillas con marcas `cover`, giro `rot`, `splitStack`) y peso en `carry.ts` (carga por clase, tramos y tope del 150 %); cifras en `config/carry.ts`.
   - Expedición: `expedition.ts`, `dungeonGen.ts` y `dungeon.ts`.
+  - Exploración: `exploration.ts` (salas secreta y cerrada, atajo y altar como desvíos opcionales con `DoorLock`; `checkExploration` garantiza que nada obligatorio queda detrás); pactos en `data/altars.ts`; cifras en `config/exploration.ts`.
   - Partida: `save.ts` (formato 4, con cuenta y hasta 4 personajes; migra los formatos anteriores), `profile.ts` y `backup.ts` (copias firmadas con código `GV1.`; se aceptan las antiguas `CR1.`).
 - `src/config`: valores de equilibrio y medidas (`touch.ts`, `ui.ts`, `stash.ts`, `subzones.ts`…).
 - `src/game/state/store.ts`: estado global (`useGame`) y acciones (`actions`); la interfaz importa siempre de aquí. `bus.ts` avisa a la escena de Phaser.
@@ -87,6 +88,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Anatomía y heridas: `node scripts/anatomia-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Necesidades: `node scripts/necesidades-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Inventario y peso: `node scripts/inventario-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Exploración: `node scripts/exploracion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
 - Pasa solo las pruebas relacionadas con lo que has tocado, pero no te saltes ninguna necesaria.
 
 ## Ahorro de tokens

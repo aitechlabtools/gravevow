@@ -72,6 +72,8 @@ export interface Combatant {
   baseMaxMp?: number;
   /** Carga (Fase 6): gasto extra de Descanso por ronda. */
   restExtra?: number;
+  /** Pacto de altar (Fase 7): parte del máximo del recurso que se pierde además de las necesidades. */
+  pactMpLoss?: number;
   /** Cirugía en curso (dos turnos propios): la región. Un golpe la interrumpe. */
   surgery?: { region: Region };
   /** Última región golpeada (ahí se abre el sangrado de una habilidad). */
@@ -624,7 +626,7 @@ function tickCombatNeeds(s: CombatState, c: Combatant) {
   const t = tickNeeds(c.needs!, c.body!, c.body!.total, c.restExtra ?? 0);
   c.needs = t.needs;
   if (c.baseMaxMp !== undefined) {
-    c.stats.maxMp = effectiveMaxMp(c.baseMaxMp, t.needs);
+    c.stats.maxMp = effectiveMaxMp(c.baseMaxMp, t.needs, c.pactMpLoss ?? 0);
     c.mp = Math.min(c.mp, c.stats.maxMp);
   }
   for (const x of t.crossed) if (x.level !== 'ok') s.log.push(needLog(x.need, x.level));

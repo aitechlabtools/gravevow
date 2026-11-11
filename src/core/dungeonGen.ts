@@ -9,6 +9,7 @@ import { areaDef, type ZoneDef, type ZoneId, type SubzoneId } from './data/zones
 import { getSubzone } from './data/subzones';
 import { pickVein } from './mining';
 import { LEVEL_BONUS, depthBonus } from '../config/subzones';
+import { addSpecials, checkExploration } from './exploration';
 import { buildDungeon, findPath, type DecorSprite, type DungeonDef, type EntityDef, type Rect, type RoomDef, type BuiltDungeon } from './dungeon';
 
 export interface GenOptions {
@@ -143,8 +144,16 @@ export function generateDungeon(seed: number, opts: GenOptions = {}): DungeonDef
     const rng = makeRng((seed + attempt * 7919) >>> 0);
     const d = draft(rng, W, H, rng.int(minR, maxR));
     if (!d) continue;
-    const def = populate(rng, seed, d, W, H, areaDef(opts.subzone, opts.zone), opts.captive ?? null);
-    if (def && validateDungeon(def).ok) return opts.subzone ? { ...def, subzone: getSubzone(opts.subzone).id } : def;
+    const zone = areaDef(opts.subzone, opts.zone);
+    const def = populate(rng, seed, d, W, H, zone, opts.captive ?? null);
+    if (!def || !validateDungeon(def).ok) continue;
+    // Fase 7: salas secretas, salas con llave, atajos y altares según la subzona. Si no pasan la comprobación, el mapa va sin ellos.
+    let out = def;
+    if (opts.subzone) {
+      const withSpecials = addSpecials(def, seed, zone, getSubzone(opts.subzone).index);
+      if (validateDungeon(withSpecials).ok && checkExploration(withSpecials).length === 0) out = withSpecials;
+    }
+    return opts.subzone ? { ...out, subzone: getSubzone(opts.subzone).id } : out;
   }
   throw new Error(`No se pudo generar una mazmorra válida con la semilla ${seed}`);
 }
@@ -371,7 +380,7 @@ export function validateDungeon(def: DungeonDef): { ok: boolean; problems: strin
       if (seen.has(k) && e.kind !== 'trap') problems.push(`solapamiento en ${k}`);
       seen.add(k);
     }
-    if (spawn && ['portal', 'chest', 'enemy', 'rival', 'door', 'captive', 'vein'].includes(e.kind)) {
+    if (spawn && ['portal', 'chest', 'enemy', 'rival', 'door', 'captive', 'vein', 'altar'].includes(e.kind)) {
       if (!findPath(def.width, def.height, blocked, [spawn.x, spawn.y], [e.x, e.y], 20000)) problems.push(`${e.kind} inalcanzable en ${e.x},${e.y}`);
     }
   }

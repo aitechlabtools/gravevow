@@ -36,6 +36,12 @@ export function registerTextures(scene: Phaser.Scene, subzone?: string) {
   add('pillar', Art.drawPillar());
   add('trap_off', Art.drawTrap(false));
   add('trap_on', Art.drawTrap(true));
+  add('trap_spent', Art.drawTrapSpent());
+  add('door_locked', Art.drawLockedDoor());
+  add('gate', Art.drawGate());
+  add('secret_marks', Art.drawSecretMarks());
+  add('altar', Art.drawAltar(false));
+  add('altar_used', Art.drawAltar(true));
   for (const k of ['common', 'rich', 'boss'] as const) {
     add(`chest_${k}`, Art.drawChest(k, false));
     add(`chest_${k}_open`, Art.drawChest(k, true));

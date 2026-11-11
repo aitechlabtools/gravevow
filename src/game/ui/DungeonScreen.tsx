@@ -1,6 +1,7 @@
 import { NeedsPanel, NeedsStrip } from './NeedsBars';
-import { CarryBar, OverloadChip } from './CarryBar';
+import { CarryBar, OverloadChip, PactChip } from './CarryBar';
 import { effectiveMaxMp, needsOf } from '../../core/needs';
+import { getPact } from '../../core/data/altars';
 import { useClearOnDrop } from './pointerDrag';
 import { gridGold, isCoins } from '../../core/gold';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -149,9 +150,9 @@ function Hud() {
             </div>
             <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label="Vida" testId="hud-hp" />
             <div className="h-1" />
-            <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={CLASSES[ch.classId].resourceName} />
+            <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs, getPact(exp.pact)?.mpLoss ?? 0)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={CLASSES[ch.classId].resourceName} />
             {!tutorial && <NeedsStrip needs={needs} />}
-            {!tutorial && <OverloadChip />}
+            {!tutorial && <OverloadChip />}{!tutorial && <PactChip />}
             <button className="btn w-full mt-2 text-sm flex items-center justify-center gap-2" onClick={() => actions.drinkPotion()} disabled={!potions} data-testid="btn-potion">
               <ItemIcon itemId="health_potion" size={20} /> Poción ({potions}) <kbd className="text-xs opacity-60">Q</kbd>
             </button>
@@ -272,9 +273,9 @@ function TouchTopHud() {
         </div>
         <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label={phone ? undefined : 'Vida'} testId="hud-hp" />
         <div className="h-1" />
-        <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={phone ? undefined : CLASSES[ch.classId].resourceName} />
+        <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs, getPact(exp.pact)?.mpLoss ?? 0)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={phone ? undefined : CLASSES[ch.classId].resourceName} />
         {!tutorial && <NeedsStrip needs={needs} />}
-            {!tutorial && <OverloadChip />}
+            {!tutorial && <OverloadChip />}{!tutorial && <PactChip />}
         <div className="text-[11px] mt-1.5 flex items-center gap-1 flex-wrap">Botín: <span className="text-gold" data-testid="hud-loot-value">{gridValue(exp.backpack)}</span> · Oro encima: <GoldAmount value={gridGold(exp.backpack)} /></div>
       </div>
 

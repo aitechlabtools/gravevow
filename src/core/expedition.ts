@@ -33,6 +33,8 @@ export interface ExpeditionState {
   body: Body;
   /** Saciedad, Hidratación y Descanso (Fase 5). Las expediciones antiguas no tienen: llenas. */
   needs?: Needs;
+  /** Pacto de altar activo (Fase 7): uno como máximo, hasta el final de la incursión. */
+  pact?: string | null;
   /** Cirugía de campo en marcha: región y pulsos que faltan (el equipo ya está reservado). */
   surgery?: { region: Region; left: number } | null;
   mp: number;

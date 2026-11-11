@@ -1,3 +1,4 @@
+import { RESOURCE_LOSS_CAP } from '../config/exploration';
 // Necesidades (Fase 5): Saciedad, Hidratación y Descanso de 0 a 100 (100 es lo bueno).
 // Solo se gastan por pulso de juego activo (exploración o ronda de combate); en el Bastión no.
 import { NEEDS, NEED_CFG, type Need } from '../config/needs';
@@ -43,8 +44,9 @@ export function resourceLoss(n: Needs): number {
 }
 
 /** Máximo efectivo del recurso con las necesidades actuales. */
-export function effectiveMaxMp(maxMp: number, n: Needs): number {
-  return Math.round(maxMp * (1 - resourceLoss(n)));
+/** `extraLoss`: lo que quita además un pacto de altar (Fase 7); la suma tiene techo (config/exploration.ts). */
+export function effectiveMaxMp(maxMp: number, n: Needs, extraLoss = 0): number {
+  return Math.round(maxMp * (1 - Math.min(RESOURCE_LOSS_CAP, resourceLoss(n) + extraLoss)));
 }
 
 /** Pérdida de iniciativa por agotamiento (Descanso a cero). */
