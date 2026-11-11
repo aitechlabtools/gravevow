@@ -14,6 +14,24 @@ import { zoneBackdrop, zoneFor } from './combatZones';
 import { areaDef } from '../../core/data/zones';
 import { getEnemy } from '../../core/data/enemies';
 import { Bar, ItemIcon } from './inventory';
+import { BodyFigure } from './BodyFigure';
+import { TREATMENT_ITEM } from '../state/medicalActions';
+import { bestTreatment, isDisabled, painfulRegions, REGIONS, treatError, TREATMENT_NAME, urgencies, type Body, type Treatment } from '../../core/anatomy';
+import { REGION_NAME } from '../../config/anatomy';
+
+/** Resumen corto de las heridas para la ficha del combate (lo más grave primero). */
+function bodyNote(b: Body): string {
+  const parts: string[] = [];
+  const heavy = REGIONS.filter((r) => b.parts[r].bleed === 2).length, light = REGIONS.filter((r) => b.parts[r].bleed === 1).length;
+  if (heavy) parts.push(`${heavy} sangrado${heavy > 1 ? 's' : ''} grave${heavy > 1 ? 's' : ''}`);
+  if (light) parts.push(`${light} leve${light > 1 ? 's' : ''}`);
+  const fr = REGIONS.filter((r) => b.parts[r].fracture).length;
+  if (fr) parts.push(`${fr} fractura${fr > 1 ? 's' : ''}`);
+  const off = REGIONS.filter((r) => isDisabled(b, r)).length;
+  if (off) parts.push(`${off} inutilizada${off > 1 ? 's' : ''}`);
+  const t = b.parts.thorax.hp, h = b.parts.head.hp;
+  return [`Tórax ${t} · Cabeza ${h}`, ...parts].join(' · ');
+}
 import { sfx } from '../audio';
 import { ActionIcon, skillSlot, useLongPress, FX_COLOR as FX_COLORS, type Slot } from './combatActions';
 
@@ -116,6 +134,34 @@ export function CombatScreen() {
     id, key: '', name: getItem(id).name, fx: 'bag', source: 'basic' as const, sourceLabel: `x${countItem(expedition!.backpack, id)}`, cost: 0, disabled: false,
     desc: getItem(id).description, lines: [], onUse: () => actions.combatAct({ type: 'item', itemId: id }), testId: `use-${id}`, itemId: id,
   }));
+  // Tratamientos: uno por herida que tenga remedio en la mochila, con la región a la vista antes de gastarlo (gasta el turno)
+  if (player.body && expedition) {
+    const have = (t: Treatment) => countItem(expedition.backpack, TREATMENT_ITEM[t]) > 0;
+    if (painfulRegions(player.body).length && !player.body.painFree && have('painkiller')) {
+      bagEntries.unshift({
+        id: 'painkiller', key: '', name: 'Analgésico', fx: 'bag', source: 'basic' as const, sourceLabel: `Dolor · x${countItem(expedition.backpack, 'painkiller')}`, cost: 0, disabled: false,
+        desc: getItem('painkiller').description, lines: [], onUse: () => actions.combatAct({ type: 'item', itemId: 'painkiller' }), testId: 'treat-painkiller', itemId: 'painkiller',
+      });
+    }
+    // Cirugía: dos turnos tuyos; si te golpean entre medias, se pierde
+    if (have('surgery') && !player.surgery) for (const r of REGIONS.filter((x) => !treatError(player.body!, 'surgery', x))) {
+      bagEntries.push({
+        id: `surgery:${r}`, key: '', name: 'Cirugía', fx: 'bag', source: 'basic' as const, sourceLabel: `${REGION_NAME[r]} · 2 turnos`, cost: 0, disabled: false,
+        desc: `${getItem('surgery_kit').description} Si te golpean antes de tu próximo turno, el equipo se pierde.`, lines: [], onUse: () => actions.combatAct({ type: 'item', itemId: 'surgery_kit', region: r }), testId: `treat-surgery-${r}`, itemId: 'surgery_kit',
+      });
+    }
+    for (const u of urgencies(player.body)) {
+      if (u.need === 'disabled') continue;
+      const t = bestTreatment(player.body, u, have);
+      if (!t) continue;
+      const itemId = TREATMENT_ITEM[t];
+      bagEntries.unshift({
+        id: `${itemId}:${u.region}`, key: '', name: TREATMENT_NAME[t], fx: 'bag', source: 'basic' as const,
+        sourceLabel: `${REGION_NAME[u.region]} · x${countItem(expedition.backpack, itemId)}`, cost: 0, disabled: false, desc: getItem(itemId).description, lines: [],
+        onUse: () => actions.combatAct({ type: 'item', itemId, region: u.region }), testId: `treat-${t}-${u.region}`, itemId,
+      });
+    }
+  }
   const pages = Math.max(1, Math.ceil(bagEntries.length / 4));
   const shownBag = bagEntries.slice(page * 4, page * 4 + 4);
   const list: Slot[] = menu === 'special' ? specials : shownBag;
@@ -127,9 +173,11 @@ export function CombatScreen() {
     { label: 'Atacar', sub: `${player.basicAttack.name} · sin coste`, color: '#ff6a5a', icon: player.basicAttack.fx ?? 'slash', onUse: doAttack, testId: 'act-attack', disabled: false },
     { label: 'Ataque especial', sub: specials.length ? `${ready} listo${ready === 1 ? '' : 's'}${waiting ? ` · ${waiting} en recarga` : ''}` : 'Ninguno', color: '#a56bff', icon: specials[0]?.fx ?? 'slash', onUse: openSpecial, testId: 'act-special', disabled: !specials.length },
     { label: classSlot?.name ?? 'Habilidad', sub: !classSlot ? '—' : classCd ? `Recarga: ${classCd} turno${classCd > 1 ? 's' : ''}` : classSlot.cost ? `${classSlot.cost} ${res.toLowerCase()}` : 'sin coste', color: '#e8b33a', icon: classSlot?.fx ?? 'holy', onUse: () => classSlot && !classSlot.disabled && classSlot.onUse(), testId: 'act-class', disabled: !classSlot || classSlot.disabled },
-    { label: 'Mochila', sub: usableItems.length ? `${bagEntries.length} usable${bagEntries.length > 1 ? 's' : ''}` : 'Nada', color: '#e8b33a', icon: 'bag', onUse: openBag, testId: 'act-bag', disabled: !usableItems.length },
+    { label: 'Mochila', sub: bagEntries.length ? `${bagEntries.length} usable${bagEntries.length > 1 ? 's' : ''}` : 'Nada', color: '#e8b33a', icon: 'bag', onUse: openBag, testId: 'act-bag', disabled: !bagEntries.length },
     { label: 'Huir', sub: fleeTxt, color: '#8c8693', icon: 'flee', onUse: () => actions.combatAct({ type: 'flee' }), testId: 'act-flee', disabled: !cs.canFlee },
   ];
+  // Cirugía a medias: el primer botón la termina (cualquier otra acción la abandona y el equipo se pierde)
+  if (player.surgery) mainCmds[0] = { label: 'Terminar cirugía', sub: `2 de 2 · ${REGION_NAME[player.surgery.region]}`, color: '#7fd65a', icon: 'holy', onUse: () => actions.combatAct({ type: 'surgery' }), testId: 'act-surgery', disabled: false };
   // Coste de la habilidad señalada (ratón, teclado o mantener pulsado): se marca en la barra de recurso
   const spendPreview = !playerTurn || cs.outcome ? 0 : menu === 'special' ? (focused?.itemId ? 0 : (focused as { cd?: number } | undefined)?.cd ? 0 : focused?.cost ?? 0) : menu === 'main' && focus === 2 && classSlot && !classCd ? classSlot.cost : 0;
   const useEntry = (e: Slot | undefined) => { if (e && !e.disabled) e.onUse(); };
@@ -304,6 +352,12 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo }: { c: 
         </div>
         {small && <span className="text-xs text-stone-400">{c.hp} / {c.stats.maxHp}</span>}
       </div>
+      {c.body && !small && (
+        <div className="frame-body">
+          <BodyFigure body={c.body} unit={duo ? 2 : 3} testId={`body-${c.id}`} />
+          <span className="text-[11px] leading-tight text-stone-300">{bodyNote(c.body)}</span>
+        </div>
+      )}
       <div className="hprow"><span className="text-[#ff7a6a]">PV</span><Bar value={c.hp} max={c.stats.maxHp} color="#c4283b" testId={`hp-${c.id}`} />{nums && <b className="hpnum" data-testid={`hpnum-${c.id}`}>{c.hp}<i> / {c.stats.maxHp}</i></b>}</div>
       {!small && c.stats.maxMp > 0 && <div className="hprow"><span className={c.resourceName === 'Ímpetu' ? 'text-[#ffc08a]' : 'text-[#9cc3ff]'}>{c.resourceName === 'Ímpetu' ? 'IM' : 'MA'}</span><Bar value={c.mp} max={c.stats.maxMp} color={c.resourceName === 'Ímpetu' ? '#e08a3d' : '#3d7be0'} spend={spend} testId={`mp-${c.id}`} />{nums && <b className="hpnum" data-testid={`mpnum-${c.id}`}>{c.mp}<i> / {c.stats.maxMp}</i></b>}</div>}
       {!small && (!duo || c.defending || c.statuses.length > 0) && (

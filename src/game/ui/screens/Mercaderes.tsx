@@ -24,23 +24,25 @@ import type { ItemStack } from '../../../core/types';
 import { RepBar, ShopStock, VendorQuests, type VendorTarget, type VendorView } from '../VendorsTab';
 import { ForgePanel } from '../ForgePanel';
 import { RepairPanel } from '../RepairPanel';
+import { InfirmaryPanel } from '../InfirmaryPanel';
 import { ContractsPanel } from '../ContractsPanel';
 import { ItemCard } from './ItemCard';
 import { Card, Drawer, Panel, SubHead, usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
 import { sfx } from '../../audio';
 
-const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Misiones', sell: 'Vender', forge: 'Forja', repair: 'Reparar', contracts: 'Contratos' };
+const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Misiones', sell: 'Vender', forge: 'Forja', repair: 'Reparar', contracts: 'Contratos', infirmary: 'Enfermería' };
 
 function servicesOf(id: VendorId): VendorView[] {
   const v: VendorView[] = id === 'coleccionista' ? ['shop'] : ['shop', 'quests'];
   if (VENDORS[id].buysItems) v.push('sell');
   if (id === 'garra') v.push('contracts');
   if (id === 'brand') v.push('forge', 'repair');
+  if (id === 'vesper') v.push('infirmary');
   return v;
 }
 /** El servicio propio de cada mercader (se resalta en su tarjeta). */
-const SPECIAL: Partial<Record<VendorId, VendorView>> = { garra: 'contracts', brand: 'forge', orvel: 'sell', coleccionista: 'shop' };
+const SPECIAL: Partial<Record<VendorId, VendorView>> = { garra: 'contracts', brand: 'forge', orvel: 'sell', coleccionista: 'shop', vesper: 'infirmary' };
 
 export function Mercaderes({ target, onConsumed }: { target: VendorTarget | null; onConsumed: () => void }) {
   const [open, setOpen] = useState<VendorTarget | null>(target);
@@ -99,12 +101,13 @@ function VendorInterior({ vendor, initial, onBack }: { vendor: VendorId; initial
   // Quién compra al vender (el Coleccionista solo joyas y tesoros, y paga mejor)
   useEffect(() => { actions.setActiveVendor(vendor); return () => actions.setActiveVendor(null); }, [vendor]);
 
-  const title = view === 'forge' ? `Forja de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'contracts' ? 'Contratos de Garra Roja' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
+  const title = view === 'forge' ? `Forja de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'infirmary' ? `Enfermería de ${v.name}` : view === 'contracts' ? 'Contratos de Garra Roja' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
   const center: ReactNode =
     view === 'shop' ? <ShopStock vid={vendor} cols={`grid gap-2 ${phone ? 'grid-cols-1' : 'grid-cols-2 2xl:grid-cols-3'}`} />
       : view === 'quests' ? <VendorQuests vendor={vendor} />
         : view === 'forge' ? <ForgePanel />
           : view === 'repair' ? <RepairPanel />
+          : view === 'infirmary' ? <InfirmaryPanel />
           : view === 'contracts' ? <ContractsPanel />
             : <SellGrids sel={sel} setSel={setSel} marks={marks} setMarks={setMarks} vendor={vendor} />;
   const side: ReactNode = view === 'sell'

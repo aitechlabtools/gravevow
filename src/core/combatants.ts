@@ -11,6 +11,7 @@ import { itemSpecials } from './data/weapons';
 import { getWanderer } from './data/wanderers';
 import { ZONE_NORMALIZE, subzoneGrowth } from '../config/subzones';
 import { ZONES, ZONE_ORDER } from './data/zones';
+import { resizeBody, summaryHp, type Body } from './anatomy';
 
 /** Zona de origen de una criatura (la de su archivo de datos). Las nuevas, diseñadas a escala de la Mazmorra, no se tocan. */
 const ORIGIN: Record<string, string> = {};
@@ -20,13 +21,16 @@ function homeZone(id: string): string {
 }
 
 /** `cooldowns`: las recargas que quedaron pendientes del combate anterior de la expedición. */
-export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: number, mp: number, cooldowns: Record<string, number> = {}, classSkill?: string): Combatant {
+/** `opts.body`: anatomía de la expedición (la vida pasa a ser su resumen). `opts.headHits`: los golpes pueden ir a la cabeza. */
+export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: number, mp: number, cooldowns: Record<string, number> = {}, classSkill?: string, opts: { body?: Body; headHits?: boolean; noInjuries?: boolean } = {}): Combatant {
   const cls = CLASSES[ch.classId];
   const stats = computeStats(ch.classId, ch.level, equipment);
   const kit = combatLoadout(ch.classId, equipment, classSkill);
+  const body = opts.body ? resizeBody(opts.body, stats.maxHp) : undefined;
   return {
+    ...(body ? { body, headHits: !!opts.headHits, noInjuries: opts.noInjuries } : {}),
     id: 'player', name: ch.name, side: 'A', sprite: `hero_${ch.classId}`,
-    stats, hp: Math.min(hp, stats.maxHp), mp: Math.min(mp, stats.maxMp),
+    stats, hp: body ? summaryHp(body) : Math.min(hp, stats.maxHp), mp: Math.min(mp, stats.maxMp),
     resourceName: cls.resourceName, resourceRegen: cls.resourceRegen,
     statuses: [], skills: kit.skills, basicAttack: kit.basicAttack,
     control: 'player', skillChance: 0, undead: false, defending: false, potions: 0,

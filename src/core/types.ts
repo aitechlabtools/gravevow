@@ -26,7 +26,9 @@ export type ItemEffect =
   | { kind: 'mana'; amount: number }
   | { kind: 'cleanse' }
   /** Kit de campo: repara parte del equipo (solo fuera de combate). */
-  | { kind: 'repair' };
+  | { kind: 'repair' }
+  /** Tratamientos de la anatomía (venda, hemostático, torniquete, férula, cirugía): se aplican a una región. */
+  | { kind: 'treat'; treat: 'bandage' | 'hemostatic' | 'tourniquet' | 'splint' | 'surgery' | 'painkiller' };
 
 /** Familias de armas y objetos de mano izquierda (ver data/weapons.ts). */
 export type WeaponFamily =
@@ -231,6 +233,8 @@ export interface Profile {
   /** Marca de expedición en curso, para detectar recargas a mitad de partida. */
   activeExpedition: { startedAt: number } | null;
   tutorialSeen: { lobby: boolean; dungeon: boolean };
+  /** Heridas que traes de la última incursión (ya estabilizadas en el Bastión). Sin valor: entero. */
+  wounds?: { pct: Partial<Record<'head' | 'thorax' | 'abdomen' | 'armL' | 'armR' | 'legL' | 'legR', number>>; fractures: ('head' | 'thorax' | 'abdomen' | 'armL' | 'armR' | 'legL' | 'legR')[] } | null;
   /** Tiempo de juego activo acumulado en expediciones (ms, reloj de juego). Formato de guardado 4. */
   playMs?: number;
   /** Tutorial guiado de la primera expedición completado (o saltado). Las partidas con expediciones lo tienen hecho. */

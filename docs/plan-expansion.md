@@ -1,7 +1,7 @@
 # Plan de la expansión de Gravevow
 
 Última actualización: 11/11/2026. Fuente: «Gravevow_Plan_Maestro_Expansion_Claude.txt» (v1.1, 9/11/2026), entregado por el usuario.
-Este archivo resume la auditoría, las decisiones del usuario y las fases. El plan maestro tiene el detalle de reglas, cifras de prueba y la matriz de aceptación A01–A100; si falta un detalle, se pide al usuario.
+Este archivo resume la auditoría, las decisiones del usuario y las fases. El plan maestro está en `docs/plan-maestro.txt` y tiene el detalle de reglas, cifras de prueba y la matriz de aceptación A01–A100; si falta un detalle, se pide al usuario.
 
 ## Reglas de trabajo
 - Una fase cada vez. Al terminar una fase: el juego sigue siendo jugable y pasan `tsc`, vitest y las pruebas de navegador relacionadas.
@@ -47,7 +47,7 @@ Este archivo resume la auditoría, las decisiones del usuario y las fases. El pl
 | 1 | Base técnica: separar combate y expedición de `store.ts`; guardado formato 4 con migración; reloj de juego (pulso) que se pausa en menús y al ocultar la pestaña | Hecho (11/11): `internals.ts`, `expeditionActions.ts`, `combatActions.ts`; formato 4 (`playMs`); `core/clock.ts` |
 | 2 | Combate 1 contra 2 y 2 contra 2: dos enemigos, elegir objetivo, dos fichas, máximo 2 por bando, defensa que cubre hasta tu próximo turno | Hecho (11/11): `MAX_PER_SIDE`, `joiningEnemy`, fichas para elegir objetivo, Bloqueo hasta tu turno; `tests/groups.test.ts` |
 | 3 | Durabilidad de armas, armaduras y herramientas; avisos al 25 % y 10 %; roto no se destruye; reparación con Brand y kits de campo | Hecho (11/11): `core/durability.ts`, `core/repair.ts`, yunque de Brand, `repair_kit`; `tests/durability.test.ts` |
-| 4 | Anatomía de 7 zonas, sangrado, fracturas y tratamientos (venda, hemostático, torniquete, férula, cirugía) | Muerte solo por cabeza o tórax; interfaz legible en móvil |
+| 4 | Anatomía de 7 zonas, sangrado, fracturas y tratamientos (venda, hemostático, torniquete, férula, cirugía) | Hecho (11/11): `core/anatomy.ts`, `config/anatomy.ts`, `medicalActions.ts`, panel de heridas, enfermería de Vesper; `tests/anatomy.test.ts`. Cirugía en combate (dos turnos), dolor y analgésico añadidos después. Pendiente: perfiles anatómicos de enemigos (Fase 8) y abdomen con necesidades (Fase 5) |
 | 5 | Saciedad, hidratación y descanso; comida, agua y catre en la base | Avisos antes del daño; menús no consumen |
 | 6 | Inventario: tamaños por objeto, rotación y peso | Nada se pierde al reorganizar; alternativa al arrastre |
 | 7 | Exploración: salas secretas, llaves, trampas mejoradas, atajos y altares | Toda semilla tiene salida y llaves alcanzables |

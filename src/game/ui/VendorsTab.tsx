@@ -22,7 +22,7 @@ export function RepBar({ rep }: { rep: number }) {
   );
 }
 
-export type VendorView = 'shop' | 'quests' | 'sell' | 'forge' | 'repair' | 'contracts';
+export type VendorView = 'shop' | 'quests' | 'sell' | 'forge' | 'repair' | 'contracts' | 'infirmary';
 export interface VendorTarget { vendor: VendorId; view: VendorView }
 
 /** Mercancía de un mercader, con el precio según tu reputación y lo que está bloqueado por rango. */

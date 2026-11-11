@@ -4,6 +4,8 @@ import { makeRng, type Rng } from './rng';
 import { getSkill } from './data/skills';
 import { getItem } from './data/items';
 import { STATUSES } from './statuses';
+import { ANATOMY } from '../config/anatomy';
+import { tickPain, addBleed, bleedTick, applyTreatment, damageRegion, damageSpread, healBody, initiativeMult, offenseMult, rollInjury, rollRegion, summaryHp, treatError, REGION_NAME, type Body, type Region } from './anatomy';
 
 // ════════════════════════════════════════════════════════════════════
 // Motor de combate por turnos.
@@ -57,18 +59,30 @@ export interface Combatant {
   skillMods?: Record<string, { cooldown: number; power: number }>;
   /** Desgaste del equipo (solo el jugador): ataques hechos y golpes encajados. */
   wear?: { swings: number; hits: number };
+  /** Anatomía de siete regiones (solo el jugador): la vida `hp` es su resumen y la muerte la decide la cabeza o el tórax. */
+  body?: Body;
+  /** Los golpes normales pueden ir a la cabeza (no en S1 ni S2). */
+  headHits?: boolean;
+  /** Sin lesiones (tutorial): los golpes quitan vida por regiones, pero no abren sangrados ni rompen huesos. */
+  noInjuries?: boolean;
+  /** Cirugía en curso (dos turnos propios): la región. Un golpe la interrumpe. */
+  surgery?: { region: Region };
+  /** Última región golpeada (ahí se abre el sangrado de una habilidad). */
+  lastRegion?: Region;
 }
 
 export type CombatAction =
   | { type: 'attack'; targetId: string }
   | { type: 'skill'; skillId: string; targetId?: string }
   | { type: 'defend' }
-  | { type: 'item'; itemId: string }
-  | { type: 'flee' };
+  | { type: 'item'; itemId: string; /** Región a tratar (vendas, férulas…). */ region?: Region }
+  | { type: 'flee' }
+  /** Segunda ronda de una cirugía empezada (o `cancel` para dejarla: el equipo se pierde). */
+  | { type: 'surgery'; cancel?: boolean };
 
 export type CombatEvent =
   | { type: 'action'; actorId: string; label: string; fx: Fx | 'item' | 'defend' | 'flee'; targetId?: string }
-  | { type: 'damage'; targetId: string; amount: number; crit: boolean; source: 'hit' | 'dot' | 'doom'; status?: StatusId }
+  | { type: 'damage'; targetId: string; amount: number; crit: boolean; source: 'hit' | 'dot' | 'doom'; status?: StatusId; region?: Region }
   | { type: 'miss'; targetId: string }
   | { type: 'heal'; targetId: string; amount: number }
   | { type: 'mana'; targetId: string; amount: number }
@@ -157,11 +171,16 @@ export function opponents(s: CombatState, c: Combatant): Combatant[] {
   return s.combatants.filter((x) => x.side !== c.side && alive(x));
 }
 
+/** Velocidad efectiva: las piernas rotas o inutilizadas restan iniciativa. */
+export function speedOf(c: Combatant): number {
+  return c.body ? c.stats.spd * initiativeMult(c.body) : c.stats.spd;
+}
+
 export function turnOrder(combatants: Combatant[]): string[] {
   return combatants
     .map((c, i) => ({ c, i }))
     .filter(({ c }) => alive(c))
-    .sort((a, b) => b.c.stats.spd - a.c.stats.spd || (a.c.side === b.c.side ? 0 : a.c.side === 'A' ? -1 : 1) || a.i - b.i)
+    .sort((a, b) => speedOf(b.c) - speedOf(a.c) || (a.c.side === b.c.side ? 0 : a.c.side === 'A' ? -1 : 1) || a.i - b.i)
     .map(({ c }) => c.id);
 }
 
@@ -193,6 +212,8 @@ export function rollDamage(att: Combatant, def: Combatant, kind: DamageKind, pow
   const crit = rng.chance(att.stats.crit / 100);
   if (crit) dmg *= 1.5;
   if (def.undead && opts.undeadMult) dmg *= opts.undeadMult;
+  if (att.body) dmg *= offenseMult(att.body);
+  if (def.body) dmg *= ANATOMY.damageTaken;
   if (att.affixes?.includes('executioner') && def.hp < def.stats.maxHp * 0.3) dmg *= 1.25;
   for (const st of att.statuses) {
     const m = STATUSES[st.id].damageDealtMult;
@@ -224,7 +245,10 @@ function gainImpetus(c: Combatant, n: number) {
   c.mp = Math.min(c.stats.maxMp, c.mp + n);
 }
 
-function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boolean, source: 'hit' | 'dot' | 'doom', status?: StatusId) {
+interface HitInfo { status?: StatusId; rng?: Rng; kind?: DamageKind }
+
+function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boolean, source: 'hit' | 'dot' | 'doom', info: HitInfo = {}) {
+  const status = info.status;
   if (target.shield && target.shield > 0 && source !== 'doom') {
     const absorbed = Math.min(target.shield, amount);
     target.shield -= absorbed;
@@ -233,7 +257,32 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
     if (target.shield <= 0) { target.shield = 0; target.statuses = target.statuses.filter((x) => x.id !== 'ward'); }
   }
   const floor = hasStatus(target, 'endure') && source !== 'doom' ? 1 : 0;
-  target.hp = Math.max(Math.min(floor, target.hp), target.hp - amount);
+  let region: Region | undefined;
+  if (target.surgery && source === 'hit' && amount > 0) {
+    target.surgery = undefined;
+    s.log.push(`El golpe interrumpe la cirugía de ${target.name}: el equipo se echa a perder.`);
+  }
+  if (target.body) {
+    // Anatomía: el golpe cae en una región; el daño de estados y el tributo se reparten por todo el cuerpo
+    const lethal = floor === 0;
+    if (source === 'hit' && info.rng) {
+      region = rollRegion(info.rng, !!target.headHits);
+      target.lastRegion = region;
+      target.body = damageRegion(target.body, region, amount, { lethal }).body;
+      if (amount > 0) s.log.push(`El golpe alcanza a ${target.name} en ${regionWith(region)}.`);
+      if (info.kind === 'physical' && amount > 0 && !target.noInjuries && summaryHp(target.body) > 0) {
+        const inj = rollInjury(target.body, region, crit, info.rng);
+        target.body = inj.body;
+        if (inj.injury?.bleed) s.log.push(`${REGION_NAME[region]}: sangrado ${inj.injury.bleed === 2 ? 'grave' : 'leve'}.`);
+        if (inj.injury?.fracture) s.log.push(`${REGION_NAME[region]}: ¡fractura!`);
+      }
+    } else {
+      target.body = damageSpread(target.body, amount, { lethal }).body;
+    }
+    target.hp = summaryHp(target.body);
+  } else {
+    target.hp = Math.max(Math.min(floor, target.hp), target.hp - amount);
+  }
   if (source === 'hit') {
     if (amount > 0) gainImpetus(target, IMPETUS_WHEN_HIT);
     if (target.wear) target.wear.hits += 1;
@@ -247,7 +296,7 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
     }
     target.statuses = target.statuses.filter((x) => !STATUSES[x.id].consumedOnHit);
   }
-  s.events.push({ type: 'damage', targetId: target.id, amount, crit, source, status });
+  s.events.push({ type: 'damage', targetId: target.id, amount, crit, source, status, region });
   // Segunda fase de los jefes: por debajo de la mitad de la vida cambian de habilidades y avisan
   if (target.phase2 && !target.enraged && target.hp > 0 && target.hp <= target.stats.maxHp / 2) {
     target.enraged = true;
@@ -261,14 +310,37 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
   }
 }
 
+/** «el brazo izquierdo», «la cabeza»… */
+export function regionWith(r: Region): string {
+  return `${r === 'head' ? 'la' : r === 'legL' || r === 'legR' ? 'la' : 'el'} ${REGION_NAME[r].toLowerCase()}`;
+}
+
 function heal(s: CombatState, target: Combatant, amount: number) {
-  const real = Math.min(target.stats.maxHp - target.hp, Math.round(amount));
-  target.hp += real;
+  let real: number;
+  if (target.body) {
+    // Anatomía: la cura se reparte entre las regiones que funcionan; no quita sangrados ni fracturas
+    const r = healBody(target.body, amount);
+    target.body = r.body;
+    real = r.healed;
+    target.hp = summaryHp(target.body);
+  } else {
+    real = Math.min(target.stats.maxHp - target.hp, Math.round(amount));
+    target.hp += real;
+  }
   s.events.push({ type: 'heal', targetId: target.id, amount: real });
   return real;
 }
 
 function applyStatus(s: CombatState, target: Combatant, id: StatusId, turns: number) {
+  // Con anatomía, el sangrado no es un estado de unos turnos: es una herida en la última región golpeada
+  if (id === 'bleed' && target.body && !target.noInjuries) {
+    const r = target.lastRegion ?? 'thorax';
+    const level = target.body.parts[r].bleed >= 1 ? 2 : 1;
+    target.body = addBleed(target.body, r, level);
+    s.events.push({ type: 'status', targetId: target.id, status: id, applied: true });
+    s.log.push(`${target.name} sangra (${level === 2 ? 'grave' : 'leve'}) por ${regionWith(r)}.`);
+    return;
+  }
   const ex = target.statuses.find((x) => x.id === id);
   if (ex) ex.turns = Math.max(ex.turns, turns);
   else target.statuses.push({ id, turns });
@@ -326,7 +398,24 @@ function resolveTarget(s: CombatState, actor: Combatant, targetId?: string): Com
 }
 
 function executeAction(s: CombatState, actor: Combatant, action: CombatAction, rng: Rng) {
+  // Hacer otra cosa con una cirugía a medias la abandona (y el equipo ya está gastado)
+  if (actor.surgery && action.type !== 'surgery') {
+    actor.surgery = undefined;
+    s.log.push(`${actor.name} abandona la cirugía: el equipo se echa a perder.`);
+  }
   switch (action.type) {
+    case 'surgery': {
+      if (!actor.surgery || !actor.body) throw new Error('No estás operando.');
+      const region = actor.surgery.region;
+      actor.surgery = undefined;
+      s.events.push({ type: 'action', actorId: actor.id, label: action.cancel ? 'Dejar la cirugía' : 'Cirugía', fx: 'item' });
+      if (action.cancel) { s.log.push(`${actor.name} deja la cirugía a medias: el equipo se echa a perder.`); return; }
+      const r = applyTreatment(actor.body, 'surgery', region);
+      actor.body = r.body;
+      actor.hp = summaryHp(actor.body);
+      s.log.push(`(2 de 2) ${r.text}`);
+      return;
+    }
     case 'attack': {
       const target = resolveTarget(s, actor, action.targetId);
       if (!target) return;
@@ -341,7 +430,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
         s.log.push(`${actor.name} usa ${atk.name}, pero ${target.name} lo esquiva.`);
       } else {
         s.log.push(`${actor.name} usa ${atk.name}${vs}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
-        dealDamage(s, target, r.amount, r.crit, 'hit');
+        dealDamage(s, target, r.amount, r.crit, 'hit', { rng, kind: atk.kind });
         gainImpetus(actor, IMPETUS_ON_HIT);
         onHitAffixes(s, actor, target, r.amount, rng, true);
       }
@@ -376,7 +465,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
           } else {
             landedOn.add(t);
             s.log.push(`${actor.name} usa ${sk.name}${targets.length > 1 || many ? ` contra ${t.name}` : ''}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
-            dealDamage(s, t, r.amount, r.crit, 'hit');
+            dealDamage(s, t, r.amount, r.crit, 'hit', { rng, kind: sk.kind });
             onHitAffixes(s, actor, t, r.amount, rng, false);
             if (sk.lifesteal && alive(actor)) {
               const h = heal(s, actor, r.amount * sk.lifesteal);
@@ -390,7 +479,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
       }
       if (sk.selfDamagePct) {
         const loss = Math.min(actor.hp - 1, Math.round(actor.stats.maxHp * sk.selfDamagePct));
-        if (loss > 0) { actor.hp -= loss; s.events.push({ type: 'damage', targetId: actor.id, amount: loss, crit: false, source: 'dot' }); s.log.push(`${actor.name} paga ${loss} de vida.`); }
+        if (loss > 0) { if (actor.body) { actor.body = damageSpread(actor.body, loss, { lethal: false }).body; actor.hp = summaryHp(actor.body); } else actor.hp -= loss; s.events.push({ type: 'damage', targetId: actor.id, amount: loss, crit: false, source: 'dot' }); s.log.push(`${actor.name} paga ${loss} de vida.`); }
         if (sk.resetCooldowns) s.log.push(`Las recargas de ${actor.name} vuelven a cero.`);
       }
       if (sk.shieldPct) {
@@ -425,6 +514,28 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
     case 'item': {
       const def = getItem(action.itemId);
       if (!def.use || def.use.kind === 'repair') throw new Error('Objeto no utilizable');
+      if (def.use.kind === 'treat') {
+        // Tratamientos: se validan antes de gastar nada (si no sirven, ni turno ni objeto)
+        if (!actor.body) throw new Error('Objeto no utilizable');
+        const region = action.region ?? (def.use.treat === 'painkiller' ? 'thorax' : undefined);
+        if (!region) throw new Error('Elige dónde aplicarlo.');
+        const err = treatError(actor.body, def.use.treat, region);
+        if (err) throw new Error(err);
+        if (def.use.treat === 'surgery') {
+          // Dos turnos propios: el equipo se reserva (se gasta) ahora y la región se recupera al terminar el segundo
+          actor.surgery = { region };
+          s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item' });
+          s.events.push({ type: 'itemUsed', actorId: actor.id, itemId: def.id });
+          s.log.push(`${actor.name} empieza a operar ${regionWith(region)} (1 de 2). Si le golpean antes de su próximo turno, el equipo se pierde.`);
+          return;
+        }
+        const r = applyTreatment(actor.body, def.use.treat, region);
+        actor.body = r.body;
+        s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item' });
+        s.events.push({ type: 'itemUsed', actorId: actor.id, itemId: def.id });
+        s.log.push(r.text);
+        return;
+      }
       s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item' });
       s.events.push({ type: 'itemUsed', actorId: actor.id, itemId: def.id });
       s.log.push(`${actor.name} usa ${def.name}.`);
@@ -461,7 +572,7 @@ function endOfTurn(s: CombatState, actor: Combatant, used?: string) {
     if (def.dotPct && alive(actor)) {
       const amount = Math.max(1, Math.round(actor.stats.maxHp * def.dotPct));
       s.log.push(`${actor.name} sufre ${amount} por ${def.name.toLowerCase()}.`);
-      dealDamage(s, actor, amount, false, 'dot', st.id);
+      dealDamage(s, actor, amount, false, 'dot', { status: st.id });
     }
     if (def.regenPct && alive(actor)) {
       const h = heal(s, actor, actor.stats.maxHp * def.regenPct);
@@ -504,6 +615,25 @@ function startRound(s: CombatState) {
   s.round += 1;
   s.order = turnOrder(s.combatants);
   s.turnIndex = 0;
+  // Cada ronda es un pulso: las hemorragias de la anatomía sangran una vez (sea cual sea el número de actores)
+  if (s.round > 1) {
+    for (const c of s.combatants.filter((x) => x.body && alive(x))) {
+      const was = c.body!.painFree;
+      c.body = tickPain(c.body!);
+      if (was && !c.body.painFree) s.log.push(`El analgésico deja de hacer efecto en ${c.name}.`);
+      const r = bleedTick(c.body!);
+      if (!r.bleeding.length) continue;
+      c.body = r.body;
+      c.hp = summaryHp(c.body);
+      if (r.dealt > 0) {
+        s.events.push({ type: 'damage', targetId: c.id, amount: r.dealt, crit: false, source: 'dot', status: 'bleed' });
+        s.log.push(`${c.name} se desangra: -${r.dealt}.`);
+      }
+      if (c.hp === 0) { s.events.push({ type: 'death', targetId: c.id }); s.log.push(`${c.name} cae desangrado.`); }
+    }
+    checkOutcome(s);
+    if (s.outcome) return;
+  }
   if (s.round >= DOOM_ROUND) {
     const pct = 0.08 * (s.round - DOOM_ROUND + 1);
     s.log.push(`La cripta reclama su tributo (ronda ${s.round}).`);

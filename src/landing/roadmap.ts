@@ -20,6 +20,8 @@ export const ROADMAP: RoadmapColumn[] = [
       'Guerrero y Mago, hasta el nivel 100',
       'Tres zonas y diez escenarios',
       'Combate por turnos con habilidades',
+      'Heridas por zonas: sangrado y fracturas',
+      'Armas y armaduras que se desgastan',
       'Más de cincuenta armas y piezas',
       'Mercaderes, misiones y forja',
       'Aliados y mercenarios',

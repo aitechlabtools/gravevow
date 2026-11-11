@@ -30,6 +30,8 @@ import { dev, invError, markTutorialDoneOnDevice, saveNow, set, state, subzoneDe
 import type { Bag, DungeonHud, Modal } from './internals';
 import { actions } from './store';
 import { advanceClock, newClock } from '../../core/clock';
+import { bodyAtPct, resizeBody } from '../../core/anatomy';
+import { withBody } from './medicalActions';
 
 export const expeditionActions = {
 
@@ -106,7 +108,7 @@ export const expeditionActions = {
     // Recompensa: oro y objetos para empezar (config en data/tutorial.ts)
     let stash = profile.backpack;
     for (const it of TUTORIAL_REWARD.items) stash = addToGrid(stash, { uid: makeUid(), itemId: it.itemId, qty: it.qty }).grid;
-    profile = { ...earnGoldSafe({ ...profile, backpack: stash }, TUTORIAL_REWARD.gold), tutorialDone: true, tutorialSeen: { lobby: true, dungeon: true } };
+    profile = { ...earnGoldSafe({ ...profile, backpack: stash }, TUTORIAL_REWARD.gold), wounds: null, tutorialDone: true, tutorialSeen: { lobby: true, dungeon: true } };
     summary = { ...summary, tutorialNote: `Has sobrevivido a tu primera bajada. El intendente te da ${TUTORIAL_REWARD.gold} monedas de oro (están en tu almacén), 3 pociones y unos guantes de cuero.` };
     markTutorialDoneOnDevice();
     set({ profile, summary, tutorial: null, expedition: null, screen: 'summary', combat: null, modal: null, merc: null });
@@ -145,7 +147,7 @@ export const expeditionActions = {
           // El paso empieza cuando los pinchos te hieren (fila de pared a pared: no se pueden esquivar)
           if (!t.trapHit) return;
           const max = computeStats(s.profile!.character.classId, s.profile!.character.level, e.equipment).maxHp;
-          if (e.hp > max * 0.7) set({ expedition: { ...e, hp: Math.round(max * 0.55) } });
+          if (e.hp > max * 0.7) set({ expedition: withBody(e, bodyAtPct(resizeBody(e.body, max), 0.55)) });
           set({ tutorial: { ...t, potionsAt: countItem(state.expedition!.backpack, 'health_potion') } });
           return;
         }
@@ -192,6 +194,8 @@ export const expeditionActions = {
     const paused = s.screen !== 'dungeon' || !s.expedition || !!s.modal || s.suspended || !!s.summary || hidden;
     const { clock } = advanceClock(s.clock, now, paused);
     set(clock === s.clock ? { now } : { now, clock });
+    // Sangrado y cirugía: un pulso médico cada 6 s de exploración activa (en combate cuenta cada ronda)
+    if (!s.tutorial) actions.medicalPulse(clock.pulses);
   },
 
   setHud(patch: Partial<DungeonHud>) {
@@ -232,12 +236,11 @@ export const expeditionActions = {
   trapHit(damage: number) {
     const s = state;
     if (!s.expedition) return;
-    const hp = Math.max(0, s.expedition.hp - damage);
-    set({ expedition: { ...s.expedition, hp } });
     sfx('trap');
-    toast(`¡Una trampa de pinchos! -${damage} de vida.`, 'danger');
+    toast(`¡Una trampa de pinchos! -${damage} de vida en las piernas.`, 'danger');
+    const dead = actions.hurtByTrap(damage);
     if (s.tutorial && !s.tutorial.trapHit) set({ tutorial: { ...s.tutorial, trapHit: true } });
-    if (hp <= 0) void actions.finishExpedition('died');
+    if (dead) void actions.finishExpedition('died');
   },
 
   // ── Minería ──

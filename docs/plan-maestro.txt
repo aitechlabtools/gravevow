@@ -1,0 +1,1575 @@
+# Plan maestro de expansión de Gravevow
+
+Especificación de diseño e implementación para Claude
+
+Versión 1.1 | 9 de noviembre de 2026
+
+## 01 Propósito y forma de utilizar este plan
+
+La expansión debe convertir Gravevow en un RPG de extracción de fantasía oscura en el que preparar una expedición, tratar una herida, elegir qué transportar y decidir cuándo regresar formen un mismo ciclo de juego. El objetivo es aumentar las decisiones interesantes sin perder el combate por turnos ni la agilidad de la exploración.
+
+Este documento establece una propuesta recomendada completa, sus alternativas y los criterios para implementarla por fases. Las cifras de equilibrio son valores iniciales para pruebas; no son valores comprobados del juego. Las reglas marcadas como recomendadas forman una configuración coherente: Claude no debe implementar todas las variantes simultáneamente.
+
+La primera tarea de Claude será auditar el repositorio real y convertir esta especificación en un plan de cambios sobre archivos existentes. La tecnología, las fórmulas actuales, la estructura de carpetas y los errores mencionados en conversaciones anteriores deben comprobarse en el código. No se presupone que estén resueltos ni se autoriza una reescritura integral por comodidad.
+
+Esta versión incorpora nuevos enemigos y élites, jefes regionales, mercenarios reclutables, salas secretas y llaves, seis mecánicas de exploración y durabilidad de armas, equipo y herramientas. Añade combate 1 contra 2 y 2 contra 2 y contratación mediante Grizk, aprovechando la contratación que Pau indica que ya existe. Los nombres y cantidades del catálogo son propuestas que deberán contrastarse con el contenido existente.
+
+### Orden de autoridad
+
+1. Las instrucciones explícitas más recientes de Pau sobre el juego.
+2. Las decisiones previas confirmadas que se recogen en el apartado 02.
+3. Las reglas recomendadas de este plan para las nuevas mecánicas.
+4. Los valores de prueba, ajustables a partir de partidas reales.
+5. Las alternativas y ampliaciones opcionales, que no se activan automáticamente.
+
+Cuando una regla nueva choque con un comportamiento existente, Claude debe señalar el conflicto, su efecto sobre el jugador y la solución mínima. Debe distinguir un error de implementación de una decisión de diseño. Los módulos no afectados pueden avanzar sin bloquear todo el proyecto.
+
+### Recorrido de lectura
+
+- Apartados 02 a 06: identidad, decisiones y reglas globales.
+- Apartados 07 a 12: combate, supervivencia, inventario y economía.
+- Apartados 13 a 16: mercaderes, misiones, refugio y fabricación.
+- Apartados 17 a 23: mundo, extracción, compañeros, interfaz, aprendizaje y sonido.
+- Apartados 24 a 30: nuevos adversarios, aliados, secretos, mecánicas, durabilidad y combate por grupos.
+- Apartados 31 a 36: arquitectura, migraciones, alcance, implementación y validación.
+- Apartados 37 a 39: ejemplos completos, instrucciones para Claude y referencias.
+
+## 02 Punto de partida y problemas que se resuelven
+
+### Decisiones que se conservan
+
+Gravevow es una experiencia de un jugador para navegador, con uso en PC, móvil y tableta, progresión local y exportación de partidas. La exploración es en tiempo real y los enfrentamientos son por turnos. La expansión conserva esa combinación.
+
+El guerrero utiliza Ímpetu y los personajes mágicos utilizan Maná. Los consumibles correspondientes son el tónico de concentración y la poción de maná. El coste anunciado por una habilidad debe coincidir con el coste realmente descontado. Los enfriamientos continúan entre combates y la elección de habilidades al desbloquearlas corresponde al jugador.
+
+Debe revisarse el circuito de experiencia, monedas y saqueo: una animación o una pantalla de botín no puede conceder monedas adicionales por sí misma. Una recompensa de EXP y una recogida explícita de oro son eventos diferentes. Este plan no da por verificada la corrección del comportamiento actual.
+
+Del documento original se mantienen el Bastión de Ceniza, las regiones Mazmorra, Cripta e Infierno, diez subzonas, ocho mercaderes y Belzar. Los identificadores S1 a S10 son etiquetas de planificación. Los nombres de subzonas, enemigos intermedios, recetas y misiones que se añadan después serán contenido nuevo, no lore previamente confirmado.
+
+### Correcciones y decisiones pendientes del original
+
+| Punto | Problema detectado | Resolución recomendada |
+|---|---|---|
+| Anatomía | Se indican seis partes pero se enumeran siete | Utilizar siete y actualizar datos, tutorial y silueta |
+| Cansancio | Una barra llamada cansancio baja cuando empeora | Mostrar Descanso, con 100 como estado favorable |
+| Comida | Se presenta como recuperación principal del cansancio | Comida recupera saciedad; dormir recupera descanso |
+| Tiempo | No se relaciona exploración real con turnos | Un reloj de simulación con equivalencia explícita |
+| Muerte | No se determina qué se pierde | Separar patrimonio del Bastión y carga expuesta |
+| Equipo inicial | Las armas especializadas llegan tarde | Garantizar equipo básico para ambas clases al inicio |
+| Recuperación | Un jugador pobre podría no poder curarse | Estabilización y equipo mínimo renovables |
+| Portales | Todos podrían desaparecer en el Infierno | Mantener una salida estable y añadir alternativas dinámicas |
+| Traición | Se aumenta el riesgo sin explicar señales ni causas | Contratos visibles, descontento y ruptura comunicada |
+| Fabricación | Falta definir fallo, cancelación y recarga | Reservas de materiales y resultados persistentes |
+| Oro y espacio | No se define relación entre bolsa, mochila y peso | Bolsa específica, capacidad y peso separados |
+| Guardados | Las partidas antiguas no contemplan los sistemas nuevos | Versionar y migrar sin borrar objetos ni progreso |
+
+Los términos morfina, torniquete táctico y cóctel Molotov pueden adaptarse a analgésico alquímico, torniquete y frasco incendiario. Se conserva la función jugable y se unifica la ambientación.
+
+## 03 Experiencia deseada y límites de alcance
+
+### Ciclo principal
+
+En el Bastión, el jugador trata sus heridas, elige equipo y provisiones y selecciona una subzona desbloqueada. Entra en una incursión procedural, explora, combate y recoge recursos. Durante la expedición decide si buscar más botín, cumplir un objetivo o regresar. Una extracción consolida la carga; una muerte destruye la parte expuesta. De vuelta en la base, utiliza los recursos para mejorar su capacidad de afrontar la siguiente salida.
+
+Cada sistema tiene una función propia:
+
+- La anatomía crea decisiones de tratamiento y combate.
+- Las necesidades limitan la duración de una expedición.
+- La cuadrícula obliga a elegir objetos.
+- El peso hace relevante el transporte.
+- La economía sostiene preparación y reposición.
+- Los mercaderes y el Refugio ofrecen progreso permanente.
+- Los mapas y portales crean rutas con distintos riesgos.
+
+Estas presiones no deben acumularse sin límite sobre los mismos atributos. Una herida, una mochila pesada y la sed pueden empeorar una situación, pero siempre debe existir una acción útil: tratarse, reorganizar, soltar carga, combatir con una acción básica o retirarse.
+
+### Alcance de la primera expansión completa
+
+Se incluyen las diez subzonas rejugables, los ocho mercaderes, siete regiones corporales, tres necesidades, inventario espacial, peso, desguace, mejoras del Refugio, fabricación interactiva, un compañero simultáneo y portales adicionales dinámicos en el Infierno. Se añade un catálogo objetivo de doce enemigos ordinarios, seis variantes de élite, tres jefes regionales incluido Belzar y seis mercenarios reclutables; además de salas secretas, llaves, trampas, atajos, altares, respiros limitados, rituales y alerta local. Armas, protección y herramientas tienen durabilidad y reparación con reglas propias. El combate admite 1 contra 1, 1 contra 2, 2 contra 1 y 2 contra 2, con un máximo de dos participantes por bando. Grizk centraliza los contratos y se amplía la contratación existente tras auditarla.
+
+Quedan para una ampliación posterior: multijugador, mercado entre jugadores, sincronización cloud, permamuerte del personaje, varias escuadras de compañeros, bolsas dentro de bolsas, simulación de infecciones, enfermedades complejas, estaciones meteorológicas y construcción libre de edificios. Tampoco se añaden nuevas clases como consecuencia automática de vender arcos o ballestas.
+
+## 04 Variantes principales y configuración recomendada
+
+| Decisión | Configuración recomendada | Alternativa y efecto |
+|---|---|---|
+| Salud | Siete partes con vida independiente | Vida global y lesiones facilita la transición, pero reduce profundidad |
+| Seis partes | No utilizar en la versión final | Fusionar tórax y abdomen daría seis regiones y perdería esa distinción |
+| Muerte | Pérdida de carga expuesta, progreso permanente conservado | Permamuerte en un modo futuro separado |
+| Tiempo | Exploración real y rondas equivalentes a tiempo simulado | Todo por turnos cambiaría la identidad del juego |
+| Menús | Pausa al gestionar inventario y leer | Mundo activo como opción posterior de dificultad |
+| Necesidades | Saciedad, Hidratación y Descanso | Dos necesidades simplificarían la interfaz a costa de preparación |
+| Inventario | Cuadrícula y peso moderado | Solo cuadrícula es una opción de simplificación, no el objetivo final |
+| Bolsillo seguro | Pequeño y limitado por categorías | Acceso ilimitado anularía parte del riesgo de extracción |
+| Experiencia | Conservar EXP válida obtenida, sin duplicados | EXP solo al extraer aumentaría el castigo y exige una decisión expresa |
+| Extracción | Una estable más alternativas | Todas dinámicas, solo para desafíos posteriores cuidadosamente validados |
+| Progresión | Subzonas repetibles con objetivos de acceso | Diez plantas consecutivas alargarían demasiado cada incursión |
+| Fabricación | Minijuego para aprender y optimizar, producción normal después | Minijuego obligatorio siempre aumenta repetición y barreras táctiles |
+| Calidad | Mejoras pequeñas dentro de una receta | La precisión no convierte materiales comunes en equipo legendario |
+| Traición | Causas, advertencias y respuesta posible | Tirada oculta de muerte o robo inevitable queda descartada |
+| Refugio | Mejoras funcionales por módulos | Construcción libre añade una capa de edición innecesaria ahora |
+| Stock | Básicos renovables y rarezas limitadas | Escasez total puede bloquear una partida |
+| Descanso | Acción de base con resultado inmediato | Esperas de horas reales no encajan en esta propuesta |
+| Guardado | Mantener soporte actual si es suficiente y abstraerlo | Migrar a IndexedDB solo con una necesidad medida |
+| Nuevos enemigos | Roles, intenciones y respuestas diferentes | Aumentar atributos solo sirve como variación secundaria |
+| Accesos especiales | Secretos opcionales y una llave de destino preparable | Aleatoriedad pura puede dejar una llave preparada sin utilidad |
+| Durabilidad | Desgaste por uso con avisos y objetos rotos reparables | Destrucción permanente o deterioro de mochilas queda fuera |
+| Trampas y atajos | Interacciones legibles y opciones accesibles a ambas clases | Acceso obligatorio por herramienta podría bloquear la partida |
+| Combate grupal | Máximo dos por bando y una acción por actor y ronda | Grupos mayores y refuerzos continuos quedan fuera |
+| Contratación | Grizk ofrece contratos de una incursión respetando adquisiciones existentes | Propiedad permanente requiere otro modelo de progreso y mantenimiento |
+
+Las alternativas son excluyentes cuando cambian la misma regla. Claude debe registrar cuál utiliza, no combinarlas silenciosamente. La accesibilidad cambia controles, presentación o temporización del minijuego; no debe exigir una penalización económica adicional.
+
+## 05 Incursión y consecuencias de cada desenlace
+
+### Qué constituye una incursión
+
+Una incursión corresponde a una subzona elegida desde el Bastión. Tiene un identificador, una semilla, un mapa generado, una versión de contenido y un único resultado final. Las subzonas se pueden repetir. Completar S3 no obliga a entrar inmediatamente en S4 con el mismo inventario.
+
+El jugador prepara equipo, consumibles, bolsa de oro y bolsillo seguro antes de entrar. El banco y el almacén del Bastión no son accesibles desde la mazmorra. Lo retirado del banco para llevar en la bolsa pasa a estar expuesto.
+
+### Qué se conserva
+
+| Elemento | Extracción | Muerte o abandono definitivo |
+|---|---|---|
+| Equipo llevado y mochila | Regresan con su estado real | Se pierden, salvo excepciones ya definidas |
+| Objetos de mochila | Se transfieren al almacén o recepción | Se pierden |
+| Oro transportado | Se ingresa una vez en el banco | Se pierde |
+| Capacidad de bolsa y bolsillo seguro | Se conserva como mejora permanente | Se conserva como mejora permanente |
+| Bolsillo seguro | Conserva objetos admitidos | Conserva objetos admitidos |
+| Banco y almacén del Bastión | Se conservan | Se conservan |
+| EXP válida ya ganada | Se conserva | Se conserva |
+| Mercaderes y mejoras consolidados | Se conservan | Se conservan |
+| Objetivo que exige regresar | Se valida si se cumplen condiciones | No se valida por morir con el objeto protegido |
+| Consumibles utilizados | Permanecen gastados | Permanecen gastados |
+
+No se propone recuperación del cadáver en la primera expansión. Introducirla exigiría persistencia de mapas, límites de cadáveres y reglas adicionales de duplicación.
+
+Cerrar la aplicación suspende la partida. No equivale a extracción ni a muerte. Abandonar una incursión mediante una acción explícita aplica la pérdida correspondiente y debe advertirlo antes de confirmar.
+
+### Recuperación tras una derrota
+
+El Bastión ofrece estabilización gratuita: detiene sangrados, recupera funcionamiento anatómico y deja cada parte al menos al 50 % de su máximo normal. Elimina incapacidades persistentes que impedirían volver a jugar. Repetir el servicio no eleva la salud por encima de ese mínimo. El tratamiento de pago de Vesper recupera el 100 % y elimina las penalizaciones residuales definidas.
+
+El descanso básico recupera Descanso a 100; el suministro comunitario permite volver a un mínimo de Saciedad e Hidratación de 60. Los valores se ajustan en pruebas, pero la posibilidad de volver a jugar es obligatoria.
+
+Un conjunto de recuperación ofrece arma elemental de la clase, protección básica y suministros mínimos cuando falta equipo utilizable. No tiene valor de venta ni de desguace, no puede acumularse y no se utiliza como ingrediente. Se mantiene un solo conjunto por personaje. Sus estadísticas deben permitir sobrevivir en S1, sin sustituir al equipo progresado.
+
+La concesión se vincula a la creación del personaje o a una derrota resuelta y se realiza una vez por ese evento. Se comprueban equipo, almacén, recepción y contenedores del perfil; los componentes del préstamo que ya existen se reutilizan. Esconder o tirar un componente no crea derecho a pedir otro durante la misma salida. Los consumibles prestados tampoco pueden venderse ni emplearse en recetas comerciales.
+
+## 06 Tiempo de simulación y orden de resolución
+
+### Unidad temporal
+
+Se propone un pulso equivalente a seis segundos de exploración activa. Una ronda completa de combate avanza un pulso. Se guarda el tiempo parcial acumulado entre pulsos. La duración de seis segundos es un parámetro de prueba, no una modificación implícita del ritmo visual actual.
+
+Una ronda es el ciclo de iniciativa definido por el combate existente, con la acción del jugador y las respuestas previstas. Tener dos enemigos y un compañero no multiplica el consumo de necesidades ni el sangrado por el número de actores. Una huida que cierra una ronda parcialmente resuelta contabiliza ese pulso una sola vez.
+
+La selección de acciones, las animaciones de combate, los tutoriales modales, el inventario, el mapa y la pausa no añaden tiempo de supervivencia. La exploración activa, incluida la espera voluntaria, sí lo hace. No se aplica deterioro por tiempo real transcurrido con la aplicación cerrada.
+
+La pausa congela también patrullas, portales, peligros y enfriamientos que dependan del tiempo. No se acumula una deuda temporal que se ejecute al volver. Cambiar de pestaña o recibir una interrupción del móvil pausa la simulación y conserva los acumuladores.
+
+### Acciones desde menús
+
+Consultar y reorganizar no consume tiempo. Confirmar una curación, beber, comer, equipar o usar un objeto sí produce una acción cuando corresponde. Durante combate cuesta el turno definido; fuera de combate, las acciones de uso sustituyen temporalmente la exploración y avanzan un pulso, sin contar además seis segundos de reloj real. Cancelar antes de confirmar no consume nada.
+
+La búsqueda de un contenedor puede costar un pulso al confirmarse; revisar después su contenido ya descubierto no repite el coste ni la EXP. La selección del tamaño de pila que se recoge no vuelve a generar una búsqueda.
+
+Un pulso comprometido fuera de combate avanza también patrullas, peligros y ventanas de uso activos. Los encuentros e interrupciones se resuelven dentro de ese intervalo, sin limitarse a descontar necesidades. No es obligatorio mostrar seis segundos de animación, pero sí resolverlos de forma coherente. Durante combate, las patrullas ajenas al encuentro quedan congeladas en esta expansión; los temporizadores globales y las necesidades avanzan por ronda. Los refuerzos solo aparecen si el encuentro los declara y anuncia.
+
+### Resolución única de cada paso
+
+1. Validar el estado, el objetivo y los recursos de la acción.
+2. Reservar y descontar el coste confirmado.
+3. Resolver el efecto principal y los efectos directos derivados; después de cada operación de daño, comprobar inmediatamente la muerte.
+4. Cerrar la ronda o pulso que corresponda.
+5. Aplicar necesidades, sangrados y otros efectos periódicos vencidos.
+6. Resolver daño letal y marcar la muerte, si ocurre.
+7. Si el personaje sigue vivo, confirmar una extracción que termine en ese paso.
+8. Guardar el nuevo estado y emitir los eventos de interfaz, sonido y registro.
+
+Una cura válida se resuelve antes del sangrado de cierre del turno. Un personaje que ya estaba muerto no puede curarse. Si el daño letal y la finalización de extracción coinciden en el mismo paso, prevalece la muerte. Tras confirmar una extracción, se descartan impactos y callbacks tardíos de esa incursión.
+
+La comprobación del paso 6 corresponde al daño periódico; no pospone una muerte causada por un golpe. Un actor muerto no ejecuta respuestas pendientes ni recibe otro turno. Los efectos simultáneos declarados por una habilidad se resuelven como una operación definida, sin resucitar mediante callbacks posteriores.
+
+El tutorial puede detener la simulación después de una operación completa, nunca en mitad de la transferencia de un objeto o del descuento de un consumible.
+
+## 07 Integración con combate y clases
+
+El apartado 30 define los encuentros de hasta dos participantes por bando y su integración con la contratación existente. El sistema anatómico debe conectarse al resolvedor actual de daño. No se mantendrán dos barras de salud independientes que puedan contradecirse. Una cifra de salud total puede mostrarse como resumen de la suma de partes, pero no decide por sí sola si el personaje vive.
+
+Cada habilidad declara tipo de recurso, coste efectivo, enfriamiento, objetivo, daño, posibilidad de lesión y requisitos de uso. El botón, la descripción y el descuento leen el mismo coste calculado. Si el estado cambia antes de ejecutar, se revalida y se informa; nunca se permite un saldo negativo.
+
+### Ímpetu y Maná
+
+- El Ímpetu conserva las reglas actuales de generación y gasto que confirme la auditoría.
+- El Maná conserva sus reglas actuales de recuperación y gasto.
+- Las necesidades pueden limitar temporalmente el máximo efectivo de ambos recursos mediante la misma regla.
+- Cuando baja el máximo, el valor actual se limita a él. Cuando vuelve a subir, no se rellena automáticamente el recurso gastado.
+- Comer, cambiar equipo o abrir un menú no reinicia los enfriamientos.
+- Los enfriamientos se guardan al salir de un combate. Si hoy solo avanzan por rondas, se conserva inicialmente esa unidad; permitir su recuperación explorando exige una equivalencia explícita y una prueba de compatibilidad.
+
+La propuesta final permite que un enfriamiento de una ronda se recupere en un pulso de exploración activa, si la auditoría confirma que no contradice una regla previa. Esperar cuesta supervivencia. Abrir el inventario no recupera habilidades.
+
+Debe existir una acción básica sin coste de recurso, una defensa y una vía de retirada acorde con el combate actual. Romper el arma, agotar el Maná o perder funcionalidad en ambos brazos no puede dejar al jugador sin ninguna acción legal. La acción básica de emergencia será débil y compatible con el estado del personaje.
+
+### Ataques y localización
+
+El ataque normal utiliza una tabla de regiones permitidas. Los ataques de precisión o los enemigos especiales pueden declarar un objetivo anatómico. La interfaz solo pide elegir una región si la habilidad requiere esa decisión.
+
+En S1 y S2, los ataques ordinarios no apuntan aleatoriamente a la cabeza. Los ataques que puedan matar a un personaje sano de un golpe necesitan una señal previa y una respuesta posible, como defender, interrumpir, cambiar objetivo o retirarse. La señal se vincula a un evento de preparación real.
+
+Para enemigos humanoides puede reutilizarse anatomía cuando aporte decisiones. Esqueletos, criaturas y demonios utilizan perfiles explícitos: no todos deben sangrar, tener estómago o recibir fracturas humanas. No se introduce la anatomía completa de cada enemigo como requisito de la primera entrega.
+
+## 08 Salud de siete regiones
+
+### Distribución inicial propuesta
+
+La salud máxima total de referencia se obtiene del sistema de atributos actual. Se distribuye sin aumentar gratuitamente el presupuesto de resistencia del personaje. El daño enemigo se recalibra porque morir al agotar una región vital cambia la supervivencia respecto de una barra única.
+
+| Región | Proporción inicial | Consecuencia al llegar a cero |
+|---|---|---|
+| Cabeza | 10 % | Muerte |
+| Tórax | 25 % | Muerte |
+| Abdomen | 15 % | Incapacitación y aumento de consumo |
+| Brazo izquierdo | 10 % | Penalización a acciones dependientes de las manos |
+| Brazo derecho | 10 % | Penalización a acciones dependientes de las manos |
+| Pierna izquierda | 15 % | Menor movilidad e iniciativa |
+| Pierna derecha | 15 % | Menor movilidad e iniciativa |
+
+Las proporciones suman el 100 %. Si la salud se representa con enteros, distribuir los restos de redondeo de forma determinista y conservar la suma. No aplicar siete redondeos que creen o eliminen salud total.
+
+Una región no vital a cero queda incapacitada. No se cura con una poción normal hasta ser intervenida. El cuerpo debe mantener movilidad mínima y al menos una acción básica. El abdomen incapacitado aumenta un 25 % el consumo de Saciedad e Hidratación como valor inicial de prueba.
+
+### Daño protección y exceso
+
+Un ataque resuelve impacto, región, protección y daño una sola vez. La armadura declara qué regiones cubre; no protege la cabeza por llevar una coraza. Cada tipo de daño define resistencias y si puede causar sangrado o fractura.
+
+El daño que excede la salud de una región no vital se distribuye entre las regiones todavía funcionales, proporcionalmente a sus máximos. Se conserva la cantidad final de daño y se evita repetir la aplicación de armadura. Esta regla también se aplica si se golpea una región ya incapacitada. Evita convertir un brazo destruido en un escudo infinito.
+
+La redistribución se calcula como una sola operación, con iteración acotada para regiones que también se agoten. No se crea daño extra por redondeo. La versión inicial usa transferencia del 100 % del excedente; reducirla sería una variante de dificultad que debe aplicarse de forma global y documentada.
+
+El daño de área reparte un presupuesto total entre regiones. Una explosión de 20 puntos no aplica 20 puntos a cada una de las siete partes salvo que la habilidad declare expresamente siete impactos y se equilibre como tal.
+
+### Incapacidad y cirugía
+
+Una cirugía de campo desbloquea una región no vital, la deja al 20 % de su máximo original y limita su máximo al 60 % hasta volver al Bastión. No resucita cabeza o tórax. Se permite una intervención por región e incursión; si vuelve a incapacitarse, deberá regresarse con esa limitación.
+
+La cirugía de campo es una herramienta avanzada, no necesaria para completar S1. Vesper puede recuperar en la base la capacidad normal. La estabilización gratuita permite volver a una condición jugable sin conservar una amputación permanente no prevista en el diseño.
+
+## 09 Lesiones y tratamientos
+
+Cada región puede tener como máximo un sangrado: ninguno, leve o grave. El grave sustituye al leve de la misma región. Las fracturas se limitan inicialmente a brazos y piernas. Un miembro fracturado y uno incapacitado son estados distintos.
+
+| Objeto o servicio | Efecto principal | Límite |
+|---|---|---|
+| Venda | Detiene sangrado leve de una región | No repone automáticamente salud |
+| Hemostático | Detiene sangrado grave en una región | También puede tratar leve con aviso de uso excesivo |
+| Torniquete | Detiene sangrado grave en una extremidad | No sirve para cabeza, tórax o abdomen |
+| Férula | Elimina fractura de una extremidad | No recupera una región a cero |
+| Analgésico alquímico | Reduce temporalmente penalización por dolor | No cura lesión ni detiene hemorragia |
+| Cura o poción de salud | Recupera salud de una región funcional | No elimina sangrado o fractura salvo descripción expresa |
+| Equipo de cirugía | Recupera funcionalidad de una región no vital | Acción de dos rondas y una vez por región e incursión |
+| Vesper | Estabilización o tratamiento completo en la base | Servicios y precios visibles antes de confirmar |
+
+La cirugía reserva un equipo al empezar y lo consume al completar. Si se interrumpe por daño, huida o cancelación después de empezar, pierde el equipo y no recupera la región. La pantalla avisa antes. Cerrar la aplicación suspende ese proceso; no cuenta como interrupción ni devuelve el material.
+
+Sus estados son iniciada, primera ronda completada, segunda ronda completada o interrumpida. Cada ronda aplica por separado respuestas y efectos periódicos. El material reservado se consume exactamente una vez al completar o interrumpir; no se resuelve como una cura instantánea seguida de dos pulsos atrasados. Fuera de combate usa dos pulsos comprometidos bajo la misma regla.
+
+### Sangrado y penalizaciones
+
+Como punto inicial de equilibrio, cada sangrado leve produce por pulso un daño equivalente al 0,5 % de la salud máxima total original y uno grave al 1 %. Se acumula en decimales internamente para evitar que redondear cada herida multiplique el daño. El conjunto de hemorragias tiene un techo inicial del 3 % por pulso. Cada contribución daña su región de origen y utiliza la regla de exceso si está incapacitada.
+
+Si la suma supera el techo, se multiplica cada contribución por techo dividido entre suma. Así todas las heridas participan proporcionalmente y el orden de iteración no decide cuál daña. Los residuos decimales se conservan por región.
+
+El daño periódico usa la salud máxima normal como referencia, no la reducida por cirugía. Detener una hemorragia corta su daño futuro; no devuelve la salud perdida. El registro debe explicar región, gravedad y daño esperado.
+
+Las lesiones de brazos afectan acciones que utilizan manos, incluidas las mágicas que tengan ese requisito. Las piernas afectan movilidad e iniciativa. El dolor no vuelve a aplicar íntegramente la penalización de la lesión que lo origina.
+
+Los modificadores de lesiones y peso se suman por atributo y se limitan antes de aplicarlos. Valores de partida: movilidad nunca inferior al 40 % de la normal e iniciativa nunca inferior al 50 %. La eficacia ofensiva por heridas no cae más de un 40 %. Los topes evitan personajes inmóviles; no garantizan superar un combate.
+
+El tratamiento rápido propone la lesión más urgente y muestra el objetivo antes de consumir. Si hay dos heridas equivalentes, permite elegir. No utiliza automáticamente un recurso raro porque se encuentre en la primera casilla.
+
+## 10 Saciedad Hidratación y Descanso
+
+Las tres barras van de 0 a 100, con 100 como estado favorable. Internamente pueden conservar decimales; la interfaz muestra enteros. Los nombres de estado pueden ser Hambre, Sed y Agotamiento cuando aparezca una penalización, pero la dirección de las barras se mantiene consistente.
+
+| Necesidad | Recuperación principal | Desgaste inicial por pulso |
+|---|---|---|
+| Saciedad | Raciones y comida cocinada | 0,12 puntos |
+| Hidratación | Agua y bebidas apropiadas | 0,18 puntos |
+| Descanso | Dormir en el Refugio | 0,09 puntos |
+
+En veinte minutos de exploración activa, sin modificadores, se consumen 24 puntos de Saciedad, 36 de Hidratación y 18 de Descanso. Los menús y el tiempo de decisión del combate no cuentan. El valor real de una incursión se mide en tiempo simulado, no en minutos mirando la pantalla.
+
+### Umbrales y agotamiento
+
+Por encima de 30 no hay penalización de recursos. Entre 30 y más de 10, el máximo efectivo de Ímpetu o Maná se reduce un 10 %. Con 10 o menos, se reduce un 20 %. Se utiliza el peor estado de las tres barras, sin sumar tres reducciones del 20 %.
+
+A cero de Hidratación, el jugador recibe un daño de desgaste al tórax cada cinco pulsos. A cero de Saciedad, cada diez pulsos. El daño inicial de cada aplicación es el 1 % de la salud máxima normal, con acumulación decimal. Si ambas coinciden en el mismo pulso se aplica una sola vez. Descanso a cero aplica un 20 % de reducción de iniciativa, sujeto al límite global, y no causa muerte directa.
+
+Los avisos aparecen antes del daño. La vista detallada muestra el tiempo simulado aproximado hasta el siguiente efecto crítico, con sus modificadores. No se introduce muerte instantánea al llegar a cero.
+
+### Cocina y preparación
+
+Una ración puede recuperar 25 puntos de Saciedad y una dosis de agua 30 de Hidratación como valores de prueba. Los platos cocinados añaden una ventaja acotada: por ejemplo, reducir consumo de Descanso un 10 % durante la siguiente incursión. No rellenan Maná, Ímpetu ni salud por una regla oculta.
+
+Solo se permite un beneficio principal de comida y uno de alquimia, salvo receta expresamente distinta. Repetir el mismo beneficio renueva duración, no suma porcentajes ilimitados. Comer con la barra llena requiere confirmación si el único resultado útil es el beneficio.
+
+Los modificadores de consumo se suman por fuente identificada y se aplican una sola vez a la tasa base. Comida de menos 10 % y Refugio de menos 10 % equivalen a menos 20 %. La reducción total no supera el 30 % y el aumento total no supera el 75 % como valores iniciales. Se consideran aquí peso, abdomen, entorno y preparación. Repetir un descanso reemplaza su beneficio, no añade otro.
+
+El Refugio proporciona descanso gratuito mediante una acción inmediata. Sus mejoras añaden preparación o eficiencia, sin exigir esperar horas reales. En la base no se consume hambre ni agua por permanecer en los menús. Los cambios de reloj del dispositivo no afectan los recursos.
+
+## 11 Inventario espacial y peso
+
+### Contenedores y dimensiones
+
+| Contenedor | Propuesta inicial | Regla |
+|---|---|---|
+| Mochila básica | 6 columnas por 4 filas | Objetos expuestos a pérdida |
+| Mochila intermedia | 6 por 5 | Mejora obtenida mediante equipo |
+| Mochila avanzada | 6 por 6 | Más espacio, con peso y coste propios |
+| Bolsillo seguro | 1 por 2, ampliable a 2 por 2 | Solo categorías admitidas |
+| Bolsa de oro | Capacidad propia | Su contenido cuenta como carga |
+| Almacén del Bastión | Pestañas de cuadrícula con filtros | No acompaña al jugador |
+| Recepción | Excedentes de extracción o migración | Retirada únicamente, sin eliminación automática |
+
+Las cifras de casillas son propuestas. Se ajustan con inventarios reales antes de cerrar la interfaz. El almacén prioriza filtros, búsqueda y orden automático; no necesita imponer la misma presión que una mochila de expedición.
+
+Objetos sugeridos: poción, venda o gema de 1 por 1; daga de 2 por 1; espada de 3 por 1; bastón de 4 por 1; escudo o ballesta de 2 por 2; armadura ligera de 2 por 2 y pesada de 2 por 3. Son tamaños jugables, no medidas físicas literales.
+
+### Operaciones obligatorias
+
+Rotar 90 grados, mover, colocar automáticamente, dividir una pila, fusionar pilas compatibles, equipar, comparar, usar y descartar. Las dimensiones y rotación deben verse antes de confirmar. Un objeto fuera del panel no se destruye: vuelve a su posición anterior.
+
+Solo se apilan objetos con el mismo tipo y propiedades relevantes. Una poción de dos cargas no se mezcla con otra de una carga si eso oculta su estado. Los materiales comunes pueden apilarse en lotes iniciales de diez; gemas y equipo individual no se apilan salvo definición expresa.
+
+No hay bolsas dentro de bolsas. Una mochila vacía puede transportarse como objeto si está permitido; nunca añade capacidad desde dentro de otra. El equipo colocado en su ranura no ocupa casillas de mochila, pero sigue contando para el peso.
+
+El cambio a una mochila menor se valida antes de mover nada. Si el contenido no cabe, se rechaza y se solicita reorganización. El equipamiento temporalmente sustituido necesita destino válido. El orden automático conserva todos los objetos y permite deshacer hasta realizar otra acción de inventario.
+
+Cualquier transferencia que cambie una ranura equipada es equipar o desequipar y utiliza su acción, aunque se haga arrastrando. Solo mover objetos entre posiciones de almacenamiento admitidas cuenta como reorganización gratuita. El cambio de una mochila equipada entra en la misma regla.
+
+### Peso
+
+El peso incluye equipo, mochila, provisiones, bolsillo seguro y oro. La capacidad base se calibra por clase y equipo. Ninguna clase recibe por accidente un castigo doble porque sus objetos sean mayores y su capacidad idéntica a la de otra.
+
+Hasta el 100 % de capacidad no hay penalización. Entre el 100 y el 120 %, la movilidad baja un 10 % y el consumo de Descanso sube un 10 %. Entre el 120 y el 150 %, baja un 20 % y el consumo sube un 25 %. Toda transferencia voluntaria que aumente peso se valida sobre el peso resultante y solo se permite si termina dentro del 150 %. Se permite soltar, consumir o sustituir por algo más ligero cuando el estado del personaje lo haya situado sobre ese límite.
+
+Si una lesión o un cambio de equipo reduce la capacidad y deja al jugador por encima del límite, no se elimina carga ni se inmoviliza al personaje. Se mantienen la movilidad mínima y la posibilidad de reorganizar. La interfaz distingue casillas libres, peso y capacidad de oro.
+
+### Bolsillo seguro
+
+Admite por defecto suministros compactos, llaves ordinarias y gemas no vinculadas a un objetivo de extracción. Cada casilla segura admite una unidad de objeto; no pilas de diez. Quedan fuera oro, armas, armaduras, artefactos de jefe, materiales de progresión marcados y objetos que exijan ser extraídos para una misión.
+
+Puede proteger un objeto permitido encontrado durante la incursión. Si el jugador muere, lo conserva, pero no obtiene por ello el hito de extracción ni las recompensas que exijan regresar. Las exclusiones se muestran en la ficha del objeto. Las ampliaciones solo se realizan en el Bastión y nunca convierten retrospectivamente una pérdida en un objeto protegido.
+
+La economía debe comprobar que una ruta de recoger una gema cercana y morir repetidamente no resulte más rentable que extraer. La respuesta preferida es ajustar ubicación, valor y categorías seguras, no añadir una multa oculta al jugador.
+
+## 12 Oro comercio y sostenibilidad económica
+
+Hay dos saldos claramente diferenciados: oro del banco y oro transportado. El oro recogido durante una incursión se transfiere del mundo a la bolsa; todavía no se ingresa en el banco. La bolsa tiene peso por moneda o por lote, definido en datos. Ampliarla aumenta capacidad, no reduce mágicamente el peso.
+
+La bolsa y sus ampliaciones representan capacidad permanente del perfil, igual que las mejoras del bolsillo seguro. La muerte pierde el oro transportado, pero no reduce esa capacidad. La mochila ordinaria sí es equipo expuesto y puede perderse.
+
+Si no cabe todo el oro, se permite recoger una cantidad parcial. El resto permanece en el contenedor original. Ninguna recogida desborda la capacidad ni borra el sobrante. En la extracción, el saldo transportado se ingresa exactamente una vez y la bolsa queda vacía.
+
+La EXP procede de eventos de combate, exploración o saqueo que confirme el diseño actual. Cada evento tiene una identidad y no se repite al reabrir una pantalla. Las monedas físicas requieren una recogida explícita. La pantalla de resultados solo informa de transacciones ya confirmadas.
+
+### Fuentes y gastos
+
+Las fuentes de riqueza son tesoros extraídos, venta de equipo, encargos y objetivos. Los gastos son preparación, curación completa, reparaciones, fabricación, mejoras y servicios. El objetivo es que una extracción razonable permita reponer la salida y ahorrar para progresar, sin que un único fracaso impida volver a intentarlo.
+
+Como hipótesis de equilibrio, la reposición básica debería costar aproximadamente entre el 20 y el 35 % del valor neto mediano de una extracción normal de la misma etapa. Se recalibra con partidas reales; no se fija una economía de precios absolutos sin conocer el juego actual.
+
+Las compras y ventas tienen precios distintos. Los descuentos de reputación se aplican una sola vez, con límites definidos. Deben comprobarse ciclos de comprar, desguazar y vender; comprar, reparar y vender; cocinar ingredientes comprados y revender; y fabricar para reciclar de nuevo. Un circuito repetible sin riesgo no debe crear beneficio ilimitado.
+
+Los encargos rentables de fabricación son válidos si tienen demanda y recompensa acotadas. Los precios no cambian porque se abra y cierre el menú. La oferta especial se genera por un ciclo persistido de expedición, no por recarga ni por cambiar la hora del dispositivo.
+
+Una oferta especial solo se renueva tras un desenlace que incluya al menos un encuentro resuelto o un objetivo de exploración significativo, y una vez por identidad de incursión. Entrar y abandonar inmediatamente no renueva stock raro. El desbloqueo de reputación puede ampliar catálogo, pero no multiplica las unidades ya disponibles.
+
+Los básicos tienen disponibilidad renovable. Los objetos raros pueden tener stock limitado y requisitos. El servicio de recuperación carece de valor de venta y de rendimiento de desguace.
+
+## 13 Mercaderes y reputación
+
+Cada mercader debe aportar una función reconocible y una nueva decisión. Los ocho personajes del original se mantienen. El desbloqueo se consolida al completar su objetivo y extraer; después no se pierde por morir.
+
+| Mercader | Acceso propuesto | Servicio inicial | Desarrollo |
+|---|---|---|---|
+| Vesper | Inicio | Vendas, hemostáticos, férulas y tratamiento | Cirugía y suministros avanzados |
+| Garth | Inicio | Agua, raciones y cocina sencilla | Platos para preparar expediciones |
+| Nira | Inicio | Cuero, capas y equipo ligero | Arcos, ballestas y protección especializada |
+| Orik | S2 | Desguace y primera mejora del Refugio | Construcción y eficiencia material |
+| Grizk | S3 | Compra de tesoros, gemas y contratos de mercenarios | Bolsa, bolsillo seguro y ampliación del catálogo de aliados |
+| Maese Brand | S4 | Forja y mantenimiento de armas | Planos de armas y variantes de clase |
+| Valerius | S5 | Armaduras pesadas y escudos | Protección y resistencias especializadas |
+| Eldrin | S7 | Alquimia y resistencias ambientales | Venenos, bombas y elixires superiores |
+
+La base dispone de un pequeño depósito de equipo común para el guerrero y el mago desde el comienzo. Puede presentarse dentro de la tienda de Nira como equipo en consignación, sin convertirla narrativamente en especialista de magia o acero. Ninguna clase espera hasta S4 para tener un arma funcional o hasta S7 para recuperar su recurso.
+
+Eldrin se desbloquea mediante una misión viable con suministros anteriores. Antes de su llegada, los peligros de S7 se pueden evitar o mitigar por rutas y equipo ya accesibles. Sus productos no son requisito de su propio rescate.
+
+### Reputación
+
+Propuesta de cuatro rangos: Conocido, Colaborador, Confidente y Maestro. Sus umbrales iniciales son 0, 100, 300 y 600 puntos. Se gana reputación por misiones y entregas útiles, no comprando y revendiendo indefinidamente el mismo objeto.
+
+Los descuentos propuestos son 0, 3, 6 y 10 %. Las recetas y servicios son la recompensa principal. La rareza legendaria exige además una misión o componente específico; alcanzar reputación máxima no llena automáticamente la tienda de legendarios.
+
+Las cinco rarezas posibles del equipo pueden ser común, poco común, raro, épico y legendario. No es necesario tener cinco rangos de reputación para representarlas. El acceso se define por receta, región, reputación y, cuando proceda, misión.
+
+Cada pantalla muestra qué falta para el siguiente desbloqueo. No se superponen requisitos de nivel, reputación, llave, profesión y evento aleatorio sin una razón concreta.
+
+## 14 Misiones y progreso permanente
+
+Las misiones pueden ser de exploración, entrega, rescate, fabricación o desafío de combate. Cada una define inicio, condiciones, objetos admitidos, necesidad de extracción, recompensa, repetibilidad y momento exacto de consolidación.
+
+Estados mínimos: disponible, aceptada, objetivo logrado, pendiente de regreso, entregable, completada y fallida recuperable. No todas las misiones usan todos los estados, pero ninguna se completa por mostrar un mensaje antes de confirmar su transacción.
+
+### Reglas de progresión
+
+- S1 está disponible de inicio. La primera extracción abre S2.
+- Un objetivo de S2 y regreso abre S3; el rescate de Orik es una oportunidad garantizada de esa etapa.
+- Derrotar al jefe regional de S3 y regresar con su prueba garantizada abre la Cripta. Grizk se ofrece antes de completar esa etapa.
+- S4 y S5 avanzan mediante objetivos y extracción, con Brand y Valerius respectivamente.
+- Derrotar al jefe regional de S6 y regresar con su prueba garantizada abre el Infierno.
+- Completar el objetivo principal de S7 y extraer abre S8. Repetir esa condición en S8 abre S9, y en S9 abre S10.
+- Derrotar a Belzar marca un evento de victoria. Completar la campaña exige regresar con éxito en esa incursión.
+
+Los objetivos de acceso no dependen de una probabilidad rara. Una llave o prueba necesaria debe aparecer siempre en las semillas aplicables. Fracasar permite repetir; no elimina la misión ni consume una llave única sin vía de reposición.
+
+Los rescates de mercaderes solo son requisitos de acceso adicionales cuando el objetivo principal los incluye expresamente. Los objetivos concretos se definen en los datos de cada subzona; no se sustituyen por umbrales de nivel o visitas implícitas.
+
+### Objetos y entregas
+
+Los objetos de misión tienen etiquetas explícitas: se pueden vender, desguazar, proteger o sustituir, o no. Los objetos esenciales aparecen destacados y sus acciones destructivas se bloquean o advierten según su recuperabilidad.
+
+Para entregar, el sistema reserva los objetos exactos elegidos y muestra qué desaparecerá. No entrega por defecto un arma equipada o un ejemplar mejorado si existe otro válido. La recompensa se aplica una sola vez, aunque se pulse dos veces o se recargue.
+
+Un rescate inicial se representa mediante una interacción y regreso posterior. La escolta física con navegación se reserva para contenido opcional, porque puede bloquear la progresión por un problema del acompañante.
+
+Las misiones repetibles no condicionan la historia a días reales. Una misión obsoleta por actualización debe sustituirse o quedar resoluble mediante una equivalencia de datos; nunca dejar un rango de reputación permanentemente inaccesible.
+
+## 15 Refugio y servicios de base
+
+El Refugio es un espacio personal del Bastión que mejora por módulos. Se representa su evolución visual sin exigir un editor de construcción. Las mejoras consumen recursos extraídos y se completan mediante una acción, sin esperas de horas reales.
+
+| Módulo | Función | Dependencia |
+|---|---|---|
+| Catre inicial | Recuperar Descanso gratuitamente | Disponible desde el inicio |
+| Almacén | Más pestañas y organización | Primera mejora con Orik |
+| Cocina | Recetas de preparación | Garth y materiales comunes |
+| Banco de trabajo | Reparación sencilla y desguace | Orik |
+| Rincón de cura | Preparar suministros y mejorar recuperación | Vesper |
+| Forja | Fabricar recetas de armas y protección | Brand o Valerius según receta |
+| Mesa de alquimia | Preparar recetas avanzadas | Eldrin |
+
+Cada módulo tiene un nivel básico y uno o dos superiores. Las dependencias forman una cadena comprensible; no se exige fabricar una herramienta en la estación que esa misma herramienta debe construir.
+
+La mejora de descanso puede otorgar una reducción del 10 % del consumo de Descanso en la siguiente incursión. La cocina permite beneficios de comida. Las mejoras no eliminan por completo el consumo de necesidades ni convierten la base en una fuente infinita de objetos vendibles.
+
+La recepción de excedentes conserva objetos cuando el almacén está lleno. Solo permite retirarlos a un destino válido; no admite depósitos manuales. Mientras haya excedentes, el jugador puede gestionarlos, venderlos, desguazarlos o ampliar el almacén. Se impide iniciar otra incursión hasta resolver la recepción, pero nunca se bloquea la llegada ni se borran objetos. Esta regla debe comunicarse antes de salir si el almacén está próximo a llenarse.
+
+Se permite vender, desguazar y entregar misiones directamente desde recepción, sin necesitar un hueco intermedio. Los objetos esenciales no eliminables pasan a un depósito de misión del Bastión sin capacidad ordinaria. Este depósito solo existe en la base: durante una incursión, esos objetos ocupan el espacio previsto y siguen exigiendo extracción. Debe existir siempre una forma de vaciar recepción sin comprar una ampliación obligatoria.
+
+También se pueden descartar objetos no esenciales aunque no sean vendibles. Los préstamos pueden devolverse al depósito comunitario sin recompensa, conservando su identidad y posibilidad de reutilización. La devolución no genera una copia ni un nuevo derecho de reposición.
+
+## 16 Fabricación desguace y minijuegos
+
+### Contrato de una receta
+
+Cada receta declara estación, rango, ingredientes, herramientas, resultado base, límite de calidad, duración de interacción, posibilidad de fallo y política de recuperación. Debe poder leerse el resultado antes de comprometer los materiales.
+
+La rareza proviene del plano y los componentes. La calidad obtenida en el minijuego mejora una propiedad dentro de un margen inicial máximo del 5 %, o reduce modestamente el material común necesario. No se aplican ambas ventajas a la vez sin ajustar su valor.
+
+### Funcionamiento común
+
+1. Seleccionar receta y cantidad.
+2. Ver ingredientes y espacio necesario para el resultado.
+3. Confirmar y reservar materiales con un identificador de fabricación.
+4. Completar la interacción o el modo asistido.
+5. Resolver una sola vez el resultado y el consumo.
+6. Entregarlo al inventario o a recepción si el espacio cambió.
+
+Cancelar antes de iniciar devuelve la reserva completa. Al comenzar la interacción, la receta queda comprometida. Cerrar la aplicación suspende y conserva ese trabajo; recargar no cambia el resultado ya resuelto ni reinicia intentos para buscar una calidad superior.
+
+Las recetas esenciales garantizan un resultado estándar utilizable. El error en el minijuego pierde la bonificación, no el único objeto necesario para progresar. Las recetas experimentales optativas pueden fallar y perder hasta el 25 % de materiales comunes; los componentes únicos o legendarios se devuelven. El riesgo aparece antes de empezar y la explosión alquímica es un efecto visual, no una muerte en el Bastión.
+
+La primera elaboración enseña el minijuego. Después se habilita producción estándar y por lotes; volver a jugar es una opción para obtener calidad. El modo accesible reemplaza pruebas rápidas por decisiones sin límite de tiempo y permite alcanzar la misma calidad máxima. La producción automática entrega calidad estándar.
+
+### Forja
+
+Controlar una temperatura dentro de una franja y completar una secuencia corta de golpes. La calidad se calcula sobre tolerancias claras, no sobre la tasa de fotogramas. Un arma y una armadura pueden compartir mecánica con patrones distintos, evitando construir dos sistemas completos.
+
+Un golpe ligeramente tardío reduce calidad; no destruye un material legendario. Una opción accesible permite elegir la secuencia correcta de calentamiento y golpe sin exigir reflejos.
+
+### Cocina
+
+Elegir los ingredientes de una receta conocida y gestionar dos o tres pasos de cocción. Las variantes compatibles se muestran antes de confirmar. No es necesario memorizar combinaciones ocultas para preparar comida básica.
+
+La cocción incorrecta de una receta esencial produce la versión estándar. Las recetas experimentales pueden dar una porción inferior con el límite de pérdida indicado. Los platos no se pudren durante horas reales con el juego cerrado; la caducidad queda fuera de esta expansión.
+
+### Alquimia
+
+Medir proporciones y ordenar reactivos. En móvil se ofrecen botones de incremento y valores legibles, además de controles de arrastre. El resultado depende de dosis simuladas, nunca de la precisión física de un gesto diminuto.
+
+Las bombas y frascos incendiarios declaran área, daño, estados, coste de acción y compatibilidad con aliados. El fuego amigo está desactivado en la primera versión; si se añade después, tendrá reglas y señales propias.
+
+### Desguace y durabilidad
+
+El desguace es una operación rápida con rendimiento visible, no un cuarto minijuego obligatorio. El resultado utiliza tipo, material y durabilidad del objeto. Un objeto roto conserva un rendimiento mínimo; no proporciona siempre más valor que uno funcional.
+
+La durabilidad solo se desgasta por usos y golpes definidos, no por mover el objeto o por abrir inventario. La reparación de base consume materiales o dinero y restaura hasta el máximo normal; la de campo utiliza kits y tiene un techo. El apartado 29 concreta desgaste, rotura y reparación de armas, equipo y herramientas. Reducir permanentemente el máximo en cada reparación se deja como variante posterior por su impacto en la economía.
+
+Desguazar bloquea objetos equipados, de préstamo o vinculados a progresión. Un objeto favorito requiere confirmación. Antes de aceptar, se verifica la capacidad del destino o se utiliza recepción. Cada instancia se destruye y produce materiales exactamente una vez.
+
+## 17 Diez subzonas y ritmo de dificultad
+
+Cada subzona es una familia de mapas rejugables. Los sectores son unidades de contenido como salas, patios o tramos conectados, no dimensiones definitivas del motor. Los presupuestos deberán adaptarse a la velocidad de movimiento y duración del combate actuales.
+
+| Subzona | Sectores propuestos | Novedad principal | Progreso |
+|---|---|---|---|
+| S1 Mazmorra | 6 a 8 | Recoger, tratar herida y extraer | Aprendizaje y apertura de S2 |
+| S2 Mazmorra | 8 a 10 | Materiales y objetos deteriorados | Orik y primer módulo |
+| S3 Mazmorra | 10 a 12 | Carga, contratos y primer jefe regional | Grizk y acceso a Cripta |
+| S4 Cripta | 12 a 14 | Sinergias de grupo y nuevos roles de aliado | Brand y armas especializadas |
+| S5 Cripta | 14 a 16 | Protección frente a ataques distintos | Valerius y armadura pesada |
+| S6 Cripta | 16 a 18 | Preparación y objetivo regional | Acceso al Infierno |
+| S7 Infierno | 16 a 18 | Peligro ambiental evitable | Eldrin y alquimia |
+| S8 Infierno | 18 a 20 | Atajos y portales de oportunidad | Especialización |
+| S9 Infierno | 20 a 22 | Elección de ruta larga o retirada | Preparación de Belzar |
+| S10 Infierno | 18 a 22 | Aproximación y combate final | Belzar y cierre de campaña |
+
+Como objetivos iniciales, la Mazmorra debe permitir salidas de 8 a 15 minutos activos, la Cripta de 15 a 25 y el Infierno de 20 a 35. Son metas de ritmo, no límites temporales ni promesas de duración incluyendo menús. S10 puede ser más compacta que S9 para evitar repetir una travesía excesiva antes de cada intento del jefe.
+
+### Curva de desafío
+
+El salto de subzona no aumenta a la vez tamaño, densidad, daño, consumo y traición. Se eligen uno o dos factores principales por etapa y se valida el resultado. La dificultad de los enemigos depende de la subzona, con variaciones acotadas; no escala automáticamente para anular cada mejora del jugador.
+
+Las zonas anteriores siguen siendo útiles para recuperar materiales y experimentar. Se ajusta el valor por tiempo de las zonas avanzadas para recompensar el riesgo, sin eliminar la posibilidad de una salida segura en S1.
+
+Los peligros ambientales del Infierno se anuncian mediante terreno, iconos y efectos. Una resistencia facilita cruzar o aguantar, pero la primera aparición de un peligro no exige una poción que todavía no se ha desbloqueado.
+
+Tras vencer la campaña, las diez subzonas permanecen jugables. Un modo de desafíos con modificadores y mejores recompensas puede añadirse después. No se reinicia automáticamente la base ni se borra la progresión al derrotar a Belzar.
+
+## 18 Generación procedural y garantías de navegación
+
+La generación combina una estructura conectada de sectores, plantillas compatibles con la región y distribución de encuentros y recursos. La topología se valida antes de poblarla. El motor concreto se elige tras estudiar el generador existente.
+
+### Condiciones que debe cumplir cada mapa
+
+1. Aparición transitable y sin daño inevitable inmediato.
+2. Ruta desde la aparición a una extracción estable.
+3. Objetivos principales accesibles con las capacidades básicas de cualquier clase disponible.
+4. Llaves accesibles antes de sus cerraduras y ninguna dependencia circular.
+5. Rutas compatibles con el tamaño real de colisión del personaje.
+6. Presupuesto de amenaza y distancia de retorno dentro de los límites de la subzona.
+7. Objetos necesarios para el objetivo principal garantizados.
+8. Sectores de baja amenaza y referencias visuales suficientes para orientarse; los puntos interactivos de respiro siguen su propio límite.
+9. Peligros dinámicos incapaces de eliminar la última ruta de salida.
+10. Colocación de tesoros y suministros compatible con paredes, desniveles e interacciones.
+11. Sala compatible garantizada cuando se ha preparado una llave de destino válida.
+12. Presupuesto de amenazas simultáneas, eventos y élites que permita respuestas reales.
+13. Accesos opcionales claramente separados de las rutas y llaves necesarias para progresar.
+
+La garantía de ruta significa que el mapa se puede recorrer, no que todos los combates sean ganables con cualquier preparación. No debe existir, sin embargo, una puerta obligatoria que solo abra un mago o una salida cuyo pago sea imposible conseguir en esa semilla.
+
+Las salas de alto valor se sitúan en desvíos identificables. Deben variar las rutas, el encuentro o el riesgo, y no solo la posición de cajas equivalentes. La mayor densidad del Infierno no exige aumentar infinitamente el número de enemigos activos simultáneos.
+
+### Semillas y contenido persistente
+
+Guardar semilla, versión de generador, resultado necesario del mapa y estado de sus elementos. El mapa, el botín, el combate y la fabricación utilizan secuencias aleatorias separadas o un mecanismo equivalente reproducible. Las partículas y sonidos no alteran el próximo tesoro.
+
+Abrir un cofre genera o revela su contenido una sola vez. Recargar conserva lo que ya se retiró, los enemigos muertos, las puertas abiertas y los portales cerrados. Guardar solo la semilla sin el estado mutable no es suficiente.
+
+Si un mapa no supera la validación, se regenera hasta un límite inicial de diez intentos y después utiliza una plantilla de respaldo válida de la misma subzona. No se entrega una semilla imposible ni se deja una carga infinita. El fallo se registra para revisión.
+
+El recorrido y generación se evaluarán también en móvil. Si un mapa completo supera el presupuesto de memoria, se divide por sectores manteniendo una semilla y estado globales, sin modificar la conectividad ni reiniciar botín al cargar un sector.
+
+## 19 Extracción y portales
+
+Cada incursión mantiene una extracción estable. S1 y S2 presentan una ruta simple; S3 añade una alternativa. La Cripta puede añadir salidas condicionadas. El Infierno suma portales inestables, pero estos nunca sustituyen la última salida estable.
+
+Una salida estable puede estar lejos o tras un encuentro previsto. No exige una llave aleatoria, una moneda que quizá no aparezca ni un consumible único. La salida debe continuar físicamente accesible si se cierra un portal opcional.
+
+### Estados y uso
+
+Los estados de un portal son desconocido, descubierto, disponible, bloqueado por condición, activándose, interrumpido, cerrado y completado. La interfaz muestra condición, coste y ventana de uso cuando se conocen.
+
+La activación estándar dura dos pulsos de exploración simulada como hipótesis inicial. El jugador debe permanecer en el área, sin combate y sin recibir daño directo. Los sangrados siguen consumiendo salud, pero no cancelan por sí mismos el canal; pueden causar muerte antes de completarlo.
+
+La duración se mide desde el inicio de la activación: doce segundos simulados completos, con independencia de la fracción pendiente del pulso de supervivencia. Se guardan por separado progreso de canalización y acumulador global.
+
+Moverse fuera del área, comenzar combate o recibir un impacto directo cancela la activación. Pausar detiene el proceso; cerrar y cargar lo reanuda desde el estado confirmado. No se simulan segundos offline.
+
+Consultar un menú pausa sin cancelar. Confirmar una acción de uso, tratamiento, cambio de equipo, recogida o contratación cancela primero la canalización y después ejecuta la acción normal. Su pulso no completa la extracción cancelada. Reanudar una activación interrumpida empieza de nuevo sus doce segundos.
+
+Un portal opcional con coste reserva el recurso al empezar y lo consume solo si la extracción se confirma. Si se cancela, libera la reserva. Durante la activación no se puede gastar ese mismo recurso en otra acción. Su ventana garantiza el tiempo de canalización cuando se acepta la activación; no se cierra arbitrariamente a mitad por el mismo temporizador.
+
+Una cancelación no terminal libera la reserva al mismo origen transportado. En muerte o abandono, las reservas se cierran dentro del desenlace: el recurso expuesto se pierde con la carga y nunca se devuelve al banco. Una reserva de cirugía se consume según su regla de interrupción. Ningún manejador tardío puede liberar una reserva ya cerrada.
+
+La extracción no está disponible dentro de un combate salvo que una habilidad o evento específico lo declare. No se añade una salida instantánea gratuita al abrir el menú.
+
+### Resultado
+
+Antes de confirmar el resultado terminal se resuelven los efectos vencidos del paso. Si el personaje vive, el sistema transfiere objetos, oro y progreso de misión en una operación. Cuando falta espacio, utiliza recepción. La pantalla posterior explica lo extraído, consumido y perdido, y los cambios de reputación.
+
+Al derrotar a Belzar aparece una salida estable cercana. La victoria no teletransporta automáticamente al Bastión ni elimina lesiones. El personaje puede tratarse antes de activar la salida. La campaña se marca como completada al extraer después de esa victoria, no al reproducirse la animación del último golpe.
+
+## 20 Mercenarios contratos y traición
+
+El sistema admite un compañero simultáneo en esta expansión, elegido entre los arquetipos reclutables del apartado 26. Su comportamiento debe ser fácil de comprender y no requiere gestionar otro personaje con siete barras anatómicas. Puede utilizar salud simplificada y estados propios documentados.
+
+### Contrato de la primera versión
+
+La contratación existente se audita y amplía. Grizk ofrece en el Bastión contratos para una incursión: reserva la tarifa del banco al seleccionarlos y la consume al iniciar la salida. Las oportunidades de contratación dentro de una incursión utilizan oro transportado. Precio, rol, duración y condiciones aparecen antes de confirmar; si falta dinero se rechaza sin penalización. Se conserva cualquier derecho adquirido por el sistema anterior conforme a la migración del apartado 30.
+
+Los objetos que el compañero lleva al incorporarse no se convierten en botín del jugador al matarlo. Este criterio evita contratar, matar y vender equipo repetidamente. El material encontrado durante la expedición sí tiene propietario y estado registrados.
+
+El contrato puede señalar un contenedor de botín reservado al compañero. Debe pertenecer a un conjunto opcional y no contener llaves ni objetivos esenciales del jugador. La reserva solo se introduce si el mapa dispone de un contenedor adecuado y accesible; en caso contrario se ofrece el contrato de tarifa fija sin esa condición.
+
+Los demás objetos pertenecen al jugador. El contenedor reservado está identificado antes de que el jugador lo tome. Apropiárselo es una decisión explícita que puede romper el acuerdo; no se realiza un reparto oculto en la pantalla de extracción.
+
+El contenido reservado puede representarse en un contenedor separado, sin obligar al jugador a ordenar la mochila del NPC. El compañero recoge su parte cuando llega al contenedor. Si el jugador se la apropia, se registra el incumplimiento aunque después tire el objeto al suelo.
+
+### Confianza y ruptura
+
+Estados propuestos: disponible, contratado, conforme, descontento, pacto roto, hostil, retirado, muerto y extraído. Un cambio de estado registra causa y mensaje. La primera versión no añade una tirada aleatoria de traición mientras se cumpla el contrato.
+
+Incumplir el acuerdo muestra una advertencia y ofrece devolver el botín reservado cuando sea posible. Consumirlo, venderlo o mantener la negativa confirma la ruptura. Se ofrece un breve espacio de respuesta antes de iniciar hostilidad, nunca un golpe letal por un mensaje de diálogo.
+
+Las personalidades posteriores pueden tener distinta tolerancia y exigir condiciones más duras. La deslealtad probabilística queda como variante posterior: necesitaría señales, un límite de frecuencia y prohibición de ejecuciones inevitables. La primera expansión logra tensión mediante decisiones y contratos.
+
+### Casos del acompañamiento
+
+- Si muere el compañero, su botín adquirido durante la incursión puede recogerse una vez; su equipo de aparición no genera un beneficio repetible.
+- Si muere el jugador, el compañero no extrae automáticamente su mochila ni envía oro al banco.
+- Si el jugador decide salir sin el compañero, se informa del abandono; no se duplica la carga del NPC.
+- La extracción conjunta requiere que el compañero esté vivo y en el área; si está bloqueado por navegación, se ofrece reagrupar fuera de combate, nunca teletransportarlo a través de una pelea para ganar ventaja.
+- Si el compañero se vuelve hostil durante una activación, se cancela el portal y comienza el combate conforme al orden global.
+- Si un contrato se cumple y el jugador extrae, se cierra una sola vez. La tarifa no se cobra de nuevo.
+
+Al extraer sin el compañero, el contrato termina como abandonado y no devuelve la tarifa. El NPC y su carga se retiran con la incursión; no entregan botín ni siguen contratados en la siguiente salida. Muerte y abandono definitivo del jugador también cierran el vínculo. La primera versión no añade una penalización persistente por abandono salvo que el contrato la haya mostrado antes de aceptarse.
+
+## 21 Interfaz y controles
+
+### Información permanente
+
+El HUD mantiene salud y estados críticos, Ímpetu o Maná, habilidades disponibles, acceso a inventario y referencia de extracción. Las necesidades saludables se resumen con iconos o una barra compacta. Al empeorar se despliegan y explican su penalización.
+
+La anatomía muestra siete regiones y permite consultar vida, lesión y tratamiento. El color se acompaña de símbolo o texto. Un brazo rojo, fracturado y a cero tiene indicadores distintos; no se resume todo como poca vida.
+
+Las alertas se priorizan: peligro letal, sangrado grave, falta de recurso y sobrecarga, seguidos de información ordinaria. Se agrupan avisos repetidos y se limita su frecuencia. El parpadeo puede desactivarse.
+
+### PC
+
+Movimiento y acciones conservan los controles existentes. El inventario admite ratón y teclado: seleccionar, rotar, mover, confirmar y cancelar. Las acciones destructivas relevantes requieren confirmación o una interacción deliberada; cerrar un panel nunca descarta objetos.
+
+### Móvil y tableta
+
+Se optimiza el juego horizontal y se mantiene una pantalla vertical útil para pausa, inventario y ajustes. Girar el dispositivo no reinicia la incursión. Si la escena no es jugable en vertical, se pausa y se invita a girar sin seguir consumiendo necesidades.
+
+Los objetivos táctiles principales tendrán como meta de diseño al menos 44 por 44 píxeles CSS, ajustados a la pantalla. Las zonas seguras del dispositivo y los pulgares no deben tapar la información crítica.
+
+Todas las acciones tienen alternativa a arrastrar: tocar objeto, elegir rotación y tocar una casilla. No se depende de hover ni de clic derecho. El inventario permite ampliar detalle y colocación automática. Cambiar orientación durante un arrastre lo cancela devolviendo el objeto al origen.
+
+### Claridad de decisiones
+
+Antes de una acción se muestran coste, resultado y limitación relevantes. Ejemplos: la férula elimina la fractura pero no recupera salud; beber amplía un máximo reducido pero no rellena Maná; la extracción llevará el excedente a recepción.
+
+Los mensajes usan nombres del juego y lenguaje breve. Los identificadores técnicos, semillas y versiones se reservan al panel de diagnóstico o exportación, sin introducirlos en el recorrido normal del jugador.
+
+## 22 Tutorial progresivo
+
+El tutorial se divide en pequeñas acciones que aparecen al necesitarse. Ningún panel introductorio explica de golpe medicina, siete regiones, ocho mercaderes y toda la fabricación.
+
+| Disparador | Acción que enseña | Condición de finalización |
+|---|---|---|
+| Primera preparación | Equipar y llevar una cura | Equipo válido y objeto preparado |
+| Primer botín | Colocar y rotar | Objeto guardado |
+| Primer combate | Recurso y coste real | Ejecutar una acción válida |
+| Primera herida | Consultar región dañada | Abrir detalle anatómico |
+| Primer sangrado | Elegir tratamiento correcto | Tratar o reconocer la ayuda |
+| Primera retirada | Encontrar y activar salida | Primera extracción |
+| Primer regreso | Diferenciar mochila y almacén | Revisar resultado y depósito |
+| Orik desbloqueado | Desguazar y construir | Primera operación válida |
+| Primera receta | Completar o asistir minijuego | Resultado fabricado |
+| Primer mercenario | Leer condiciones | Aceptar o rechazar contrato |
+| Primer portal inestable | Consultar ventana y salida estable | Identificar alternativas |
+| Primera pista secreta | Distinguir revelar de abrir | Descubrir una entrada sin gastar una llave |
+| Primera herramienta | Leer durabilidad y coste | Completar un trabajo opcional |
+| Primer desgaste crítico | Sustituir o reparar equipo | Consultar la solución sin pérdida automática |
+| Primera trampa | Rodear desarmar o aprovechar | Elegir una opción informada |
+
+Los avisos se muestran después de la operación que los dispara y pausan cuando exigen lectura. Los pasos completados fuera del orden previsto se reconocen. Omitir o desactivar el tutorial no impide desbloquear ninguna mecánica.
+
+Cada ayuda queda disponible en un compendio. Una partida migrada no vuelve a reproducir todos los mensajes desde cero; enseña solo los sistemas realmente nuevos o permite reiniciar la ayuda voluntariamente.
+
+## 23 Ambientación música y efectos
+
+Se conserva la dirección del documento original: la Mazmorra utiliza laúd, vientos y ambiente húmedo; la Cripta incorpora coros, órgano, eco y piedra; el Infierno añade texturas industriales oscuras, percusión, lava y una identidad propia para Belzar.
+
+Cada región diferencia exploración, peligro y combate. No es necesario producir una banda sonora completamente distinta para cada una de las diez subzonas: pueden reutilizarse motivos y capas con variaciones locales.
+
+Los efectos de impacto, cura, saqueo y extracción se disparan desde eventos confirmados de la simulación. El sonido del golpe coincide con el momento visual del impacto; el de extracción completa ocurre después de confirmar el resultado. Saltar o acelerar una animación no cambia daño, botín ni consumo.
+
+La música de un jefe cambia por su fase real, no por un temporizador independiente. Se separan volumen de música, ambiente y efectos. Las señales críticas tienen equivalente visual. El audio se pausa o reduce al abandonar la aplicación y se reanuda sin reproducir todos los eventos acumulados.
+
+Se conserva la dirección artística vigente del juego. Este plan no cambia tipografías ni introduce una estética corporativa. Las fuentes actuales y sus funciones se verifican en el repositorio antes de cualquier ajuste de legibilidad.
+
+## 24 Nuevos enemigos y variantes de élite
+
+La expansión incorpora contenido de combate nuevo además de sistemas de supervivencia. Como objetivo inicial se proponen doce arquetipos ordinarios, cuatro por región, y seis variantes de élite. Es una propuesta de catálogo y alcance: la auditoría debe contrastar enemigos existentes, reutilizar los que ya cumplan una función y evitar duplicar conceptos.
+
+Todos los nombres nuevos de estos apartados son provisionales. Belzar conserva su identidad del documento original. Un arquetipo nuevo necesita una función, una intención legible y una respuesta posible para guerrero y mago. Cambiar color y aumentar vida puede servir como variante visual, pero no sustituye ese diseño.
+
+### Doce arquetipos ordinarios
+
+| Región y enemigo | Función y señal | Respuesta accesible |
+|---|---|---|
+| Mazmorra Carcelero oxidado | Alterna escudo y golpe pesado anunciado | Defender el golpe y atacar en su recuperación |
+| Mazmorra Saqueador pálido | Prepara durante una ronda un robo de oro transportado | Un ataque ordinario corta la preparación; su botín conserva lo robado |
+| Mazmorra Murciélago de herrumbre | Se eleva antes del picado y queda expuesto después | Defender y responder; ataques básicos de ambas clases lo alcanzan |
+| Mazmorra Jabalí de ceniza | Raspa el suelo y anuncia tórax o pierna antes de cargar | Defender reduce impacto y lesión sin exigir desplazamiento táctico |
+| Cripta Guardia del osario | Muestra qué aliado protege durante una ronda | Desgastar su guardia o defender hasta que ceda la postura |
+| Cripta Plañidera del campanario | Prepara en dos rondas un refuerzo para sus aliados | Priorizarla o soportar la ronda reforzada con defensa |
+| Cripta Araña sepulcral | Anuncia una mordedura con veneno breve | La defensa indicada evita la nueva aplicación; antídoto opcional |
+| Cripta Acólito de la vela negra | Marca un cadáver para reanimarlo una vez | Atacarlo corta el ritual; el reanimado no vuelve a dar premio completo |
+| Infierno Mastín de escoria | Alterna mordisco normal y ardiente anunciado | Defender la carga peligrosa y atacar entre preparaciones |
+| Infierno Forjador infernal | Su protección se calienta antes del golpe y se abre al enfriarse | Defender el martillazo y aprovechar exposición sin exigir daño elemental |
+| Infierno Portador de ascuas | Prepara una explosión durante dos etapas visibles | Derrotarlo cancela el estallido; una defensa mitiga la explosión si llega a ejecutarse |
+| Infierno Recaudador abisal | Anuncia absorción de Ímpetu o Maná | El ataque básico corta el vínculo sin gastar el recurso amenazado |
+
+En S1 se introducen solo dos patrones sencillos. Los demás entran progresivamente. Ningún ataque ordinario inicial apunta a la cabeza sin las garantías ya definidas. La señal puede ser animación, texto e icono; saltar una animación no elimina la información de intención.
+
+El robo nunca accede al banco, al bolsillo seguro ni a objetos arbitrarios. Se limita a un porcentaje y un máximo de oro transportado configurables, visibles al resolverse, y queda en la carga del enemigo. La primera versión del Saqueador no huye con ese oro; introducir una huida exige un aviso y una oportunidad concreta de respuesta.
+
+El veneno es un efecto de combate temporal, no una nueva simulación de enfermedades. Su acumulación tiene techo y duración limitada. La defensa que lo evita se explica antes del ataque; el antídoto mejora la preparación pero no es obligatorio para que una clase pueda superar la región.
+
+### Seis élites con patrones propios
+
+| Variante | Cambio reconocible | Respuesta y recompensa |
+|---|---|---|
+| Carcelero del cerrojo | Dos impactos anunciados en una secuencia | Una defensa válida cubre la secuencia; recuperación más larga |
+| Saqueador de cuchillas | Alterna intención de robo y ataque a extremidad | Iconos distintos permiten interrumpir o defender |
+| Guardia relicario | Protege al aliado más peligroso una ronda | Atacar guardia o conservar recursos hasta la apertura |
+| Plañidera del coro roto | Se vincula a su único aliado y refuerza temporalmente a ambos | Una interrupción corta los vínculos anunciados |
+| Forjador del horno vivo | Acumula calor y después se sobrecalienta | Defender la culminación abre dos rondas de exposición |
+| Recaudador del pacto | Amenaza temporalmente un beneficio activo | Cortar preparación; si no hay beneficio usa su patrón normal |
+
+Las élites se anuncian en una ubicación opcional o mediante una señal clara antes del compromiso. Ofrecen valor extra y componentes regionales. Su recompensa no supera necesariamente todo el equipo ordinario y no depende exclusivamente de inflar la salud del enemigo.
+
+### Presupuesto de encuentros
+
+El generador combina roles dentro de un presupuesto de amenaza y un máximo de dos combatientes activos por bando. El mismo límite rige invocaciones, reanimaciones, alertas y rituales. Un tercero no se incorpora como refuerzo oculto; sigue las reglas del apartado 30. No suma libremente dos preparaciones que solo puedan evitarse atacando objetivos distintos durante el mismo turno. Una defensa general o una ventana más larga debe ofrecer una respuesta válida cuando se combinan patrones.
+
+Como punto de partida, se permite una amenaza urgente por ronda en encuentros de aprendizaje. Las etapas avanzadas pueden combinar dos si existe una respuesta común viable. Se limita el número de invocaciones y de adversarios activos. Las patrullas exteriores siguen la regla temporal del plan y no entran por un temporizador visual independiente.
+
+La anatomía y las resistencias dependen del perfil de criatura. Los esqueletos pueden ignorar sangrado, pero ningún encuentro obligatorio deja sin respuesta al guerrero o al mago por una inmunidad total a su daño básico. Los estados temporales de protección necesitan duración y señal.
+
+### Identidad y producción de contenido
+
+Cada ficha de enemigo debe incluir identificador estable, región, subzonas, rol, atributos, patrón, estados, intención, formas de respuesta, anatomía, resistencias, botín, EXP, presupuesto de amenaza y pruebas para ambas clases. Las invocaciones declaran a qué encuentro y fuente de recompensa pertenecen.
+
+La producción prevé silueta, sprite o modelo compatible con el motor, animaciones de reposo, movimiento, preparación, ataque, impacto y muerte, efectos de estado e información de audio. Los mercenarios necesitan además retrato e icono de rol. Claude debe inventariar recursos existentes y faltantes y planificar su creación, sin dar por disponibles imágenes o animaciones que no existan.
+
+Una reanimación conserva la identidad de recompensa del enemigo original. No genera nueva EXP completa ni un segundo inventario de botín. Recargar, cambiar de sector o repetir una animación de invocación no crea más enemigos o recompensas.
+
+## 25 Jefes regionales y encuentros principales
+
+Se propone un jefe principal al cerrar la Mazmorra en S3, otro al cerrar la Cripta en S6 y Belzar en S10. Los dos primeros amplían los objetivos de acceso: derrotarlos y regresar abre la región siguiente. Su aparición y cualquier prueba requerida están garantizadas, sin llaves opcionales aleatorias.
+
+Cada jefe prueba mecánicas aprendidas antes de enfrentarlo. La arena muestra entrada, amenaza y condiciones de retirada. Los tres pueden derrotarse con cualquiera de las clases y sin mercenario. Si el combate actual no tiene movimiento táctico, sus ataques se responden con acciones disponibles; no se pide salir de un círculo imposible de esquivar.
+
+### S3 El Alcaide de las Cuatro Cadenas
+
+Función: comprobar lectura de intenciones, defensa y elección de objetivo.
+
+En la primera fase alterna vigilancia y golpe de cadena. La preparación anuncia el impacto y deja una recuperación en la que atacar. La segunda añade un carcelero auxiliar una sola vez; el jugador puede eliminarlo o defender durante su protección temporal. La tercera reduce la protección del jefe y aumenta el peligro de sus golpes, con recuperaciones también mayores.
+
+Las transiciones se producen en umbrales visibles de salud y se calibran tras probar el combate. No curan al jefe ni cancelan el daño ya causado. Cada transición se resuelve una vez al cerrar la acción correspondiente.
+
+La recompensa incluye una prueba garantizada de acceso a la Cripta, un componente regional y la Llave del Alcaide para un cofre opcional compatible en esa misma incursión. Ese cofre aporta botín adicional y no contiene otro requisito obligatorio de progresión.
+
+### S6 La Madre del Último Canto
+
+Función: comprobar prioridad de objetivos y gestión de ventanas ofensivas.
+
+En la primera fase dirige a un custodio y prepara cantos breves. Atacar al custodio reduce presión; atacar a la Madre corta un refuerzo. En la segunda prepara un gran lamento durante dos rondas completas del jugador. Dos avances de interrupción rompen la preparación. Una acción ofensiva que impacta, del personaje o de su aliado, puede añadir un avance, con un máximo de uno por ronda completa. Se muestra 0 de 2, 1 de 2 o interrumpido. La ayuda del mercenario permite al personaje realizar otra acción útil, sin cerrar automáticamente la ventana por una habilidad de varios impactos. La tercera alterna una ronda de silencio vulnerable y una respuesta anunciada.
+
+Las ventanas se comprueban con el orden de iniciativa real: el contador comienza después de que el jugador pueda leer la preparación y permita dos oportunidades completas. La defensa sigue ofreciendo una opción viable si no se interrumpe. No refleja automáticamente toda magia ni exige una habilidad rara de interrupción.
+
+La recompensa incluye una prueba garantizada de acceso al Infierno, un componente de resistencia y una llave de archivo opcional. Si el archivo no está en ese mapa, la llave se presenta expresamente como destinada a una incursión futura y preparable en el Bastión.
+
+### S10 Belzar
+
+Función: culminar preparación, lectura de amenazas, tratamiento y retirada.
+
+La primera fase marca una región anatómica antes de golpear; defender mitiga el ataque y su recuperación permite responder. La segunda activa el horno abisal y anuncia una descarga con dos rondas completas de preparación. El jugador decide si tratarse, atacar o preparar defensa. La tercera rompe la protección del jefe y alterna amenazas fuertes con ventanas de ataque claras, sin recuperar toda su salud.
+
+La recompensa de campaña y un componente legendario garantizado requieren extraerse conforme a sus reglas. El componente único conserva la exclusión del bolsillo seguro. Las repeticiones posteriores pueden entregar materiales avanzados y botín, mientras que el premio narrativo de primera victoria solo se consolida una vez.
+
+Tras vencer aparece la salida estable cercana ya prevista. Los efectos pendientes de salud siguen resolviéndose y el jugador puede tratarse antes de activarla. El jefe no obtiene un ataque sorpresa después de quedar muerto ni se reinicia al recargar la escena de victoria.
+
+### Reglas compartidas de jefes
+
+La retirada usa la huida del sistema actual con sus costes y consecuencias anunciados. Nunca se bloquea silenciosamente la salida al entrar en una sala. Al huir, el jefe conserva dentro de esa incursión salud, fase, invocaciones gastadas y recompensas pendientes. Puede recuperarse únicamente mediante una regla visible que se pruebe expresamente, no por recargar el sector.
+
+Una nueva incursión genera otro intento completo si sigue disponible. Derrotar al jefe y morir después no abre la región ni entrega sus premios al banco. Las victorias del historial y los hitos consolidados son eventos distintos. Los requisitos de llave, resistencia o equipo nunca dependen del propio premio del jefe que se intenta superar.
+
+## 26 Catálogo de mercenarios reclutables
+
+Los mercenarios amplían la variedad de personajes y acompañamientos. Son distintos de los ocho comerciantes del Bastión. La primera versión conserva un compañero simultáneo, contratos claros y autonomía suficiente para no exigir gestionar dos inventarios y dos cuerpos completos.
+
+Se proponen seis personajes, con nombres provisionales. Su rol describe una ayuda concreta y su personalidad regula condiciones del contrato; no determina una traición aleatoria inevitable.
+
+| Mercenario | Acceso | Función | Límite |
+|---|---|---|---|
+| Edda la Muralla | S3 con Grizk | Ayuda a defender o intercepta una amenaza anunciada | Enfriamiento y protección limitada |
+| Tavia Ojos de Lince | S4 | Detecta indicios de emboscadas y secretos cercanos | No revela todo el mapa ni abre cerraduras |
+| Soren Vendaclara | S5 | Aplica tratamientos básicos | Suministros propios declarados y finitos |
+| Bram del Arco Gris | S5 | Presiona a enemigos de apoyo | Daño moderado; no interrumpe automáticamente toda preparación |
+| Iria del Velo | S6 | Protección temporal ante una amenaza mágica | Duración corta y sin inmunidad permanente |
+| Rook Remachador | S7 | Facilita mantenimiento de emergencia | Usa materiales y cargas; no repara equipo ilimitadamente |
+
+Todos se pueden rechazar sin bloquear campaña o secretos principales. Grizk mantiene un contrato inicial disponible desde S3 y amplía su catálogo según progreso y reputación. Los encuentros de campo pueden desbloquear roles u ofrecer contratación opcional, pero encontrar aleatoriamente un NPC no es necesario para preparar una salida acompañado.
+
+La primera implementación reutiliza la contratación actual y utiliza Edda o un aliado existente equivalente como acompañante de referencia. Después se prueban Tavia y Soren, y se amplía al resto cuando la contratación, la navegación, la extracción y el guardado estén resueltos.
+
+### Capacidades y recursos propios
+
+Cada aliado declara cuándo actúa, su prioridad de objetivos, su intervención especial, sus recursos y enfriamiento. Una acción aliada no genera otro pulso de necesidades por sí misma. Su turno se integra en la ronda normal y no otorga recursos al jugador por un callback de animación.
+
+Los tratamientos de Soren y los kits de Rook tienen un inventario de cargas persistente de la incursión. Contratar, despedir y volver a contratar no los rellena. Tavia puede revelar una pista, pero el estado de la puerta y la llave necesaria permanecen separados.
+
+Los aliados no aumentan la capacidad de carga del jugador en esta primera versión. Su botín reservado utiliza el contenedor contractual ya previsto; evitar una bonificación temporal de mochila impide expulsar objetos si el NPC muere o se retira.
+
+### Personalidad y lealtad
+
+Se pueden usar tres perfiles visibles: honorable, pragmático y codicioso. Todos comunican su precio y reparto antes de aceptar. El honorable tolera una rectificación; el pragmático exige cumplir el acuerdo; el codicioso solicita una condición de botín mayor. Cumplir un pacto mantiene una vía fiable de cooperación en los tres.
+
+La ruptura se resuelve con los estados y avisos del apartado 20. Un cambio de región no convierte automáticamente al NPC en traidor. La muerte, retirada o extracción del personaje cierra su contrato y sus reservas una sola vez.
+
+## 27 Salas secretas llaves y accesos especiales
+
+Esta ampliación convierte la exploración en una fuente de decisiones y descubrimientos. Una habitación cerrada tiene una puerta visible que necesita un acceso especial. Una sala secreta tiene una entrada que primero debe descubrirse; después puede estar abierta, cerrada con llave o protegida por un mecanismo. La mayoría de puertas ordinarias siguen abriéndose sin requisitos especiales.
+
+### Descubrir y abrir
+
+Las pistas pueden ser marcas, una corriente de aire, un relieve, un suelo desgastado o un material distinto. Cualquier pista sonora tiene equivalente visual. Al acercarse o inspeccionar aparece una interacción accesible con ratón, teclado y táctil. No se exige acertar en un píxel ni tener una clase concreta.
+
+Cada sala mantiene tres estados separados: descubrimiento, acceso y contenido. Revelar una entrada no abre su cerradura; abrirla no recoge el botín. Volver al sector o recargar conserva los tres estados y todos los enemigos y objetos ya resueltos.
+
+Los accesos opcionales pueden admitir llaves, mecanismos, ganzúas o herramientas. Las ganzúas son consumibles; el pico y las tenazas son herramientas reutilizables con desgaste. Cada cerradura declara las alternativas admitidas: llevar un pico no permite atravesar cualquier pared del mapa.
+
+### Tipos de llave
+
+| Tipo | Obtención y uso | Regla de pérdida |
+|---|---|---|
+| Ordinaria reutilizable | Botín, comercio o misión; abre una familia de puertas | Se conserva salvo pérdida de la carga expuesta |
+| Consumible | Tesoro, encargo o comercio; abre una vez | Solo se consume cuando la apertura se confirma |
+| De misión principal | Obtención garantizada antes del obstáculo | Se repone la oportunidad si una derrota impide avanzar |
+| De la incursión actual | Existe una cerradura compatible en ese mapa | Se muestra su utilidad actual sin prometer otra sala |
+| Para futuras incursiones | Recompensa cuyo destino se prepara en el Bastión | La ficha indica región y subzonas compatibles |
+
+Las llaves usan reglas de usos o cargas, no el desgaste de armas. Una llave reutilizable no se rompe por una tirada oculta. Las ordinarias admitidas pueden protegerse en el bolsillo seguro. Las vinculadas a objetivos de extracción conservan sus restricciones de misión.
+
+Una ganzúa permite abrir únicamente cerraduras simples expresamente compatibles. En la primera versión, la apertura usa una carga y un pulso y es determinista: se muestra el coste, se confirma y se abre. Cerraduras rúnicas o especiales exigen su llave o mecanismo. No se añade otra prueba obligatoria de reflejos a cada puerta.
+
+### Preparar una llave de destino
+
+Antes de entrar, se puede seleccionar una llave compatible para garantizar la aparición de su sala. La primera versión admite una llave preparada por incursión. Otras llaves pueden transportarse, pero se indica que sus destinos no están garantizados.
+
+La llave seleccionada debe estar realmente en la carga al confirmar la salida. Prepararla no la consume. El generador incluye una sala compatible y alcanzable, con una pista de acceso cuando sea secreta. Si falla, utiliza una plantilla compatible; si tampoco puede generarla, no inicia la incursión ni gasta recursos.
+
+La garantía afecta a la existencia del destino y a una categoría mínima de recompensa anunciada. No garantiza descubrirlo automáticamente, sobrevivir a su guardián ni obtener un legendario concreto. Una llave encontrada durante la partida solo se etiqueta como utilizable ahora cuando existe un destino adecuado; en otro caso sirve para una salida futura.
+
+Soltar la llave no elimina la sala. Una llave consumida y una puerta abierta se confirman juntas. Una muerte posterior no devuelve una llave ya gastada. Reabrir una puerta no consume otra carga ni renueva el contenido.
+
+### Seis espacios especiales propuestos
+
+| Región y espacio | Descubrimiento y acceso | Recompensa y decisión |
+|---|---|---|
+| Mazmorra S1 a S2 Alijo del contrabandista | Panel con marcas visibles; sin llave ni herramienta | Provisiones y materiales modestos; enseñar a observar |
+| Mazmorra S2 a S3 Armería del portero | Puerta visible; llave de hierro reutilizable preparable | Equipo deteriorado y metal; cargar para usar reparar o desguazar |
+| Cripta S4 a S5 Osario del cartógrafo | Relieve oculto y llave de hueso consumible | Tesoro e información sobre rutas opcionales |
+| Cripta S5 a S6 Cámara del juramento roto | Sepulcro y llave de misión secundaria | Reliquia de reputación y guardián anunciado |
+| Infierno S7 a S8 Depósito de vidrio negro | Entrada reconocible y llave de obsidiana preparable | Reactivos y equipo alquímico en un desvío con riesgo |
+| Infierno S8 a S9 Archivo de las cenizas | Símbolos próximos revelan un mecanismo sin llave | Plano o información útil para un enemigo avanzado |
+
+Estos nombres son propuestas de contenido. El acceso al depósito de S7 puede hacerse por una ruta segura sin exigir productos de Eldrin. La información del cartógrafo facilita orientarse, pero la extracción estable sigue siendo localizable sin ella.
+
+Las salas especiales tienen una identidad de recompensa: provisiones, materiales, información, equipo o tesoro. El contenido aleatorio respeta un suelo de utilidad definido para su coste. No se promete un beneficio de reventa superior al precio de cada llave; se calibra riesgo, duración y reutilización para que comprar y abrir salas no genere oro sin límite.
+
+La salida estable y los objetivos obligatorios nunca dependen de una sala opcional rara. Una llave principal no aparece detrás de su puerta ni en un cofre reservado a un mercenario. Las llaves garantizadas de misión y las llaves opcionales preparadas son dos reglas distintas.
+
+## 28 Mecánicas adicionales dentro de la mazmorra
+
+Se incorporan tres mecánicas prioritarias y tres en una segunda tanda de la misma expansión. Comparten el reloj, los estados y las transacciones existentes. La primera subzona enseña solo una o dos; no presenta todos los sistemas a la vez.
+
+### Trampas que se pueden evitar desarmar o aprovechar
+
+Ejemplos: una placa de pinchos en la Mazmorra, un sello funerario en la Cripta y una válvula de vapor en el Infierno. Cada trampa muestra una pista, un área de peligro y un efecto comprensible antes de activarse. La primera aparición permite verla sin recibir daño inevitable.
+
+El jugador puede rodearla, desarmarla con una herramienta compatible o atraer a un enemigo a su área durante exploración. Las trampas simples admiten desarmado manual para ambas clases a cambio de tres pulsos, frente al pulso inicial con tenazas; las especiales pueden exigir herramienta si existe una ruta para evitarlas. Si el combate actual no permite mover figuras sobre una cuadrícula, una trampa cercana habilita una acción contextual con objetivo y coste de turno. Esa acción requiere que el encuentro declare la trampa accesible y aplica su efecto una sola vez.
+
+Las tenazas pierden la durabilidad anunciada al desarmar. Si carecen de resistencia suficiente, la operación se rechaza antes de gastar tiempo. Activarla voluntariamente advierte del riesgo. Si ofrece materiales al desarmar, ese resultado excluye obtener además su beneficio completo de ataque. Su estado puede ser armada, desarmada o disparada; inspeccionar y recargar no la rearma. Un mecanismo reutilizable, si se añade después, tendrá un número visible de cargas y una acción de rearme.
+
+### Atajos que preparar para la retirada
+
+Ejemplos: abrir un rastrillo desde dentro, bajar una escalera, liberar un puente o despejar un paso lateral con un pico. El jugador invierte tiempo o desgaste ahora para reducir el camino de regreso con más botín y heridas.
+
+El atajo debe conectar sectores que ya forman parte de un mapa válido. Se muestra qué recorrido aproxima y su coste antes de intervenir. Ninguna herramienta es imprescindible para conservar la única ruta de extracción. Los puentes y mecanismos quedan estables una vez abiertos y no se cobran de nuevo al cruzarlos.
+
+Abrir un atajo no concede extracción automática. Si un pico se rompe después de completar el trabajo, el paso permanece abierto. Dejar una tarea sin confirmar no consume durabilidad ni cambia parcialmente la colisión.
+
+### Altares con un beneficio y un precio visibles
+
+Un altar ofrece un pacto voluntario, consultable antes de aceptar. Propuesta inicial: otorgar una protección temporal a cambio de una reducción máxima del 10 % del recurso de clase, o mejorar una recompensa opcional a cambio de activar un guardián anunciado. El contenido concreto se equilibra por región.
+
+Solo puede mantenerse un pacto activo. Para reducciones del máximo de Ímpetu o Maná, necesidades y pacto suman sus efectos con un techo conjunto inicial del 30 %; al finalizar el pacto se recupera capacidad, no el recurso ya gastado. Su coste se integra en los límites globales de penalización y se indica su duración: encuentro, resto de incursión o hasta abandonar una sala. No afecta al oro del banco desde la mazmorra ni destruye objetos sin seleccionarlos expresamente.
+
+Una aceptación confirma a la vez beneficio, precio y estado del altar. Rechazarlo o leerlo no genera un castigo. La primera versión evita maldiciones irreversibles, resultados ocultos y acumulación ilimitada de pactos. Un personaje no puede entrar en un pacto que elimine toda acción legal.
+
+### Respiros limitados con descanso o reparación
+
+En ciertos sectores despejados aparece un punto de respiro. Permite una elección por incursión entre recuperar una cantidad moderada de Descanso o usar un kit propio para reparar equipo. No regenera vida, cura fracturas ni rellena Maná por una regla implícita.
+
+Propuesta de descanso: tres pulsos comprometidos para recuperar 15 puntos de Descanso al completar; Saciedad e Hidratación siguen consumiéndose. Cada punto solo puede utilizarse una vez y existe un máximo inicial de un punto por incursión elegible. No se convierten en estaciones de recarga ilimitada.
+
+La carga del punto de respiro se compromete al empezar. Las patrullas pueden interrumpir la acción y el sector no se presenta como invulnerable. Una interrupción consume ese uso, conserva el tiempo ya transcurrido y no entrega la recuperación pendiente. En el banco del punto de respiro, la misma carga de kit recupera hasta 35 puntos porcentuales con un techo del 75 %, frente a 25 y 60 % en campo abierto. Esa ventaja justifica consumir su uso. La reparación mantiene la duración de dos pulsos del kit, mientras descansar dura tres. Cerrar la aplicación suspende y conserva la elección, el progreso y la reserva.
+
+### Rituales opcionales por etapas
+
+Una sala puede ofrecer un ritual de dos o tres etapas con un resumen previo de amenaza y categoría de premio. Cada etapa propone una decisión: continuar para mejorar la recompensa o terminar y conservar lo ganado hasta entonces. Lo conseguido sigue siendo carga expuesta que habrá que extraer.
+
+Las etapas pueden ser un combate, una interacción con símbolos o una elección de coste. Se reutilizan los sistemas existentes en vez de añadir tres minijuegos independientes. No comienzan mientras el jugador lee un menú. Las oleadas y el máximo de enemigos activos están limitados.
+
+Salir voluntariamente cierra el evento y no permite volver a la primera etapa para cobrarla otra vez. Cada premio, enemigo y etapa se guarda por instancia. Una derrota aplica la pérdida normal de la incursión. El ritual no bloquea la extracción estable ni es un requisito oculto de la misión principal.
+
+### Alerta local por acciones ruidosas
+
+Se incorpora después de validar las cinco mecánicas anteriores. Un medidor local puede aumentar al forzar un mecanismo o completar un ritual ruidoso. El aviso anticipa la consecuencia: una patrulla cambia de ruta o aparece un encuentro de refuerzo declarado.
+
+La alerta pertenece a un sector o a un evento, no aumenta todos los enemigos de la mazmorra indefinidamente. Se limita a un refuerzo por fuente en la primera versión. Sus señales son visuales y sonoras. No roba turnos durante una animación ni añade enemigos ilimitados a un combate existente.
+
+No se reduce permaneciendo en menús ni esperando delante de una puerta. Se resuelve al abandonar el sector por la ruta indicada o al superar el encuentro que provocó. Se guarda su nivel, causa y refuerzo ya activado. Las salas de S1 que enseñan controles no combinan alerta, trampa y élite en el mismo primer encuentro.
+
+### Prioridad y combinación
+
+Primero: trampas, atajos y altares. Después: respiros limitados, rituales y alerta local. Esta secuencia permite comprobar si cada mecánica añade una decisión útil antes de aumentar combinaciones.
+
+La generación utiliza un presupuesto de eventos. Como inicio, S1 presenta un secreto sencillo y una trampa evitable; S2 añade un atajo; los primeros altares aparecen en S3; la Cripta desarrolla rituales y respiros; el Infierno combina variantes ya aprendidas con alerta. No se activan todos en cada mapa ni se garantiza un premio extraordinario por cada desvío.
+
+## 29 Durabilidad de armas equipo y herramientas
+
+La durabilidad forma parte de la preparación y de las decisiones de la expedición. Un arma golpeada, una coraza usada y unas tenazas tienen causas de desgaste distintas. Cada instancia conserva su estado; no se puede transferir a otra pieza abriendo y cerrando el inventario.
+
+### Qué se desgasta
+
+| Categoría | Desencadenante | Estado al llegar a cero |
+|---|---|---|
+| Arma de contacto | Ataque confirmado con contacto o bloqueo agresivo declarado | Se conserva rota; no permite su ataque normal |
+| Arco o ballesta | Disparo confirmado | Se conserva rota; necesita reparación o sustitución |
+| Bastón o foco | Uso de una habilidad que requiera ese foco | Pierde las funciones dependientes del foco; queda acción mágica de emergencia |
+| Armadura o escudo | Impacto directo que la pieza protege | Pierde su protección para impactos posteriores |
+| Pico o palanca | Trabajo opcional confirmado sobre un acceso o recurso | No puede iniciar otro trabajo |
+| Tenazas | Desarmado confirmado de una trampa compatible | No puede iniciar otro desarmado |
+| Ganzúa o kit consumible | Uso explícito | Gasta una carga según su definición |
+
+Las llaves usan cargas o reutilización y no se confunden con durabilidad. Mochila, bolsa de oro y bolsillo seguro no sufren desgaste en esta primera versión, para evitar pérdida o expulsión de contenido por la rotura de un contenedor. Ropa decorativa y objetos que no declaran durabilidad tampoco la reciben automáticamente.
+
+### Desgaste comprensible y valores iniciales
+
+La interfaz muestra porcentaje y, en herramientas, trabajos aproximados restantes. Las fichas definen durabilidad máxima, estado actual, coste de uso, reparación y materiales. Como valores de prototipo: un arma normal puede tener 100 unidades y gastar una por uso elegible; una acción especialmente exigente puede gastar dos si lo anuncia. Las herramientas pueden tener 20 unidades y trabajos de dos a cinco unidades.
+
+La protección pierde durabilidad al recibir un impacto que cubre; el coste parte de la magnitud protegida y se limita por acción para que un ataque con varias animaciones no cobre varias veces accidentalmente. Sangrado, hambre y veneno interno no desgastan armadura. Un golpe evitado no daña la pieza. La corrosión es un efecto explícito y limitado, con señal y tratamiento o retirada posibles.
+
+Estos números son referencias de prueba. El equipo ordinario recién reparado debe permitir al menos una incursión de su etapa con margen, salvo un peligro de desgaste anunciado. Se comparan guerrero y mago: una clase no puede pagar mantenimiento en cada ataque mientras la otra utilice indefinidamente su equipo equivalente sin coste previsto.
+
+Al 25 % aparece aviso de desgaste y al 10 % aviso crítico. Por encima de cero conserva las estadísticas base; no se añade una degradación gradual oculta de daño a todas las penalizaciones de hambre y heridas. Una calidad superior puede ampliar durabilidad, sin cambiar la rareza del objeto.
+
+### Rotura durante una acción
+
+La acción valida su equipo al empezar. Un arma con una unidad restante puede completar un último uso elegible y después quedar a cero. El daño, el gasto de recurso y el desgaste se confirman juntos. La armadura protege el impacto que provoca su rotura según su estado al comienzo de ese impacto; pierde protección para los siguientes.
+
+No se destruye el objeto ni se elimina de la ranura. La interfaz muestra roto y ofrece reparar, sustituir o usar la acción de emergencia. El daño excedente de una habilidad que reduzca durabilidad no se convierte en daño extra al personaje salvo que la habilidad lo declare.
+
+Las herramientas empleadas en trabajos indivisibles requieren durabilidad suficiente para el coste completo. Si un pico necesita cuatro unidades y tiene dos, el trabajo no empieza. Si tiene exactamente cuatro, abre el paso y queda roto. Una interacción inválida no gasta herramienta, consumible ni pulso.
+
+### Reparar en la base y durante una incursión
+
+Desde el inicio se ofrece reparación básica para equipo inicial de ambas clases mediante el depósito o Nira. Orik añade autoservicio y reparación de herramientas; Brand y Valerius especializan armas y armaduras, y Eldrin ofrece soluciones avanzadas para focos y efectos alquímicos. Un equipo obligatorio de S1 no depende de un mercader tardío para poder repararse.
+
+La reparación de base consume oro o materiales y puede recuperar el 100 %. No reduce permanentemente el máximo en cada reparación. Las piezas a cero se pueden reparar o desguazar; ninguna es un residuo imposible de gestionar.
+
+Los kits de campo se llevan en la mochila y tienen cargas finitas. Propuesta inicial: una carga recupera hasta 25 puntos porcentuales, con un techo de reparación de campo del 60 % del máximo. Se calcula la mejora efectiva antes de reservar: si es cero o negativa, incluso exactamente en el techo, se rechaza sin consumir carga ni tiempo. El panel muestra el resultado exacto antes de aceptar. El punto de respiro puede aplicar su mejora específica anunciada, sin cambiar la reparación ordinaria.
+
+Una reparación de campo dura dos pulsos y requiere estar fuera de combate. Reserva el kit, pausa la exploración libre del personaje y deja avanzar patrullas y peligros. Al completar, aplica la mejora y consume una carga una sola vez. Si se interrumpe antes, no repara y devuelve la reserva al mismo inventario; conserva el tiempo y los peligros ya sufridos. En muerte, la reserva se resuelve con la pérdida de carga. Cerrar el juego suspende y permite reanudar.
+
+La reparación de campo tiene una política de interrupción diferente de la cirugía y debe indicarse en su ficha. No existe reparación gratuita por esperar, desmontar y volver a equipar, cambiar de sector o repetir un punto de respiro.
+
+### Integración económica y guardados
+
+El precio de venta y el rendimiento de desguace tienen en cuenta el estado. Reparar y vender no debe producir más beneficio que el coste total de compra y reparación de forma repetible. Las piezas de préstamo conservan las restricciones de venta y desguace.
+
+Una pila solo mezcla herramientas si coinciden sus propiedades y estado, aunque la recomendación inicial es no apilar herramientas reutilizables. Una migración conserva cualquier durabilidad válida ya existente; si el objeto anterior no tenía ese sistema, se crea íntegro. La actualización nunca entrega equipo roto por defecto.
+
+Cada pieza simulada tiene identidad y propietario; nunca se modifica la definición compartida del catálogo ni una pieza ajena por error. Si los NPC actuales utilizan atributos abstractos, se conserva ese modelo sin añadir desgaste implícito al reutilizar el resolvedor del personaje. El equipo individual que ya exista mantiene su estado y la contratación dentro de una misma incursión no lo restaura gratis. El botín crea o transfiere una instancia una sola vez y Rook solo repara la pieza seleccionada.
+
+Los ataques de enemigos, las trampas y los pactos que desgasten equipo utilizan el mismo cálculo de durabilidad. Se registra causa y cantidad. Cualquier fuente que pueda afectar una llave, mochila o bolsillo se rechaza salvo una ampliación futura que defina expresamente sus consecuencias.
+
+## 30 Combate por grupos y contratación mediante Grizk
+
+Pau indica que la mecánica de contratar mercenarios ya existe. La auditoría debe localizarla, comprobar sus reglas y reutilizarla. No se da por comprobado que el motor actual admita dos combatientes por bando. Esta ampliación convierte los contactos simultáneos en un único combate grupal, en vez de encadenar dos duelos individuales.
+
+### Formatos y límite de participantes
+
+| Formato | Bando del jugador | Bando hostil | Uso |
+|---|---|---|---|
+| 1 contra 1 | Personaje | Un enemigo | Aprendizaje y encuentro ordinario |
+| 1 contra 2 | Personaje | Dos enemigos | Desventaja anunciada que se puede afrontar o evitar |
+| 2 contra 1 | Personaje y mercenario | Un enemigo | Ventaja ganada mediante preparación y contrato |
+| 2 contra 2 | Personaje y mercenario | Dos enemigos | Coordinación y selección de objetivos |
+
+El máximo es dos combatientes activos por bando en esta expansión. Este límite se aplica a encuentros ordinarios, jefes, invocaciones, reanimaciones, rituales, trampas y alertas. Un mercenario aporta una segunda oportunidad de acción y apoyo, pero no garantiza igualar las estadísticas o dificultad de cualquier pareja de enemigos.
+
+El diseño no escala automáticamente todos los encuentros a dos enemigos por haber contratado un aliado. Un 2 contra 1 puede seguir siendo una ventaja útil. Las rutas y jefes principales continúan siendo completables en solitario con preparación razonable.
+
+### Cómo se forma el combate
+
+En el primer contacto hostil se captura el estado del mundo. Entra el enemigo que inicia el encuentro y, si existe, un segundo enemigo vivo que ya esté persiguiendo al grupo, tenga acceso o visibilidad válidos y se encuentre dentro del radio de incorporación. Un grupo de dos diseñado expresamente puede declarar su vínculo.
+
+La selección usa el mismo paso de simulación. No depende del orden de fotogramas ni incluye a todo enemigo que esté en una sala lejana. El radio se ajusta al mapa real y las señales de amenaza permiten anticipar que el encuentro puede ser doble. Entre varios candidatos se elige por distancia transitable y, en empate, por identidad estable.
+
+El compañero contratado y activo se incorpora salvo separación explícita ya comunicada. Un fallo de navegación no lo deja fuera silenciosamente. Antes de confirmar la transición se reagrupa en un punto válido fuera de colisiones; no se añade después como una acción gratuita extra.
+
+Si existe un tercer atacante, permanece en el mundo y se congela con las patrullas externas. No entra en una cola oculta de oleadas. Al regresar a exploración hay un margen inicial de dos segundos simulados para recuperar control antes de otro contacto; necesidades y peligros siguen sus reglas. El tercero se mantiene señalado si sigue cerca. La generación evita posiciones en las que ese margen no permita ninguna decisión útil.
+
+### Rondas iniciativa e intenciones
+
+Cada actor vivo dispone de una oportunidad de acción por ronda. La iniciativa efectiva determina el orden al comenzar; los empates utilizan prioridad estable y visible. Los cambios de iniciativa afectan la ronda siguiente, evitando que un actor gane dos turnos por modificar su posición a mitad de la secuencia.
+
+Una ronda completa avanza un solo pulso global tanto con dos como con cuatro actores. Los enfriamientos y efectos se actualizan una vez según su unidad declarada. Las animaciones, respuestas e intervenciones del compañero no descuentan hambre o sed adicionales.
+
+El HUD muestra las cartas o paneles de ambos enemigos, salud, estados, intención y objetivo previsto, además del orden de actuación. Consultar un panel no cambia la intención. Si su objetivo muere, el sistema selecciona otro válido al confirmar y actualiza la señal conforme a una regla explícita; nunca cobra una acción imposible.
+
+Una defensa ordinaria protege durante la ventana anunciada. La configuración objetivo mantiene su efecto hasta la próxima oportunidad del actor, para poder responder a una secuencia de dos atacantes sin necesitar dos turnos propios. La auditoría debe adaptar la defensa actual y su texto de forma conjunta. La magnitud de mitigación se calibra; defender no concede invulnerabilidad.
+
+Las preparaciones que prometen dos oportunidades de respuesta deben permitirlas con cualquier orden de iniciativa. Si todos los enemigos mueren antes de completar la secuencia, se cierra la ronda una sola vez y se aplican los efectos pendientes antes del botín. La muerte del personaje termina inmediatamente la incursión según el orden global.
+
+### Control del mercenario
+
+El jugador controla a su personaje. El aliado actúa mediante su rol y una orden persistente: Apoyar, Concentrar en el objetivo marcado, Proteger o Conservar recursos. La interfaz permite cambiar la orden antes de confirmar una acción; no genera un turno extra ni interrumpe una resolución iniciada.
+
+Si el mercenario ya actuó, la nueva orden se aplica en su siguiente oportunidad. Si el objetivo marcado muere, utiliza sus prioridades para seleccionar uno válido. Una cura sin paciente válido se reevalúa antes de gastar suministros. El control manual completo de dos personajes queda como variante posterior.
+
+Los cambios de órdenes, la IA y las intenciones se guardan. Contratar o recuperar la pantalla de combate no reinicia las cargas ni los enfriamientos del aliado.
+
+### Objetivos curación y ataques de área
+
+Las habilidades declaran objetivos válidos: propio actor, aliado vivo, enemigo vivo o ambos enemigos. Se distingue claramente seleccionar habilidad de confirmar objetivo. Antes de resolver se valida de nuevo la selección y su coste.
+
+Una cura del jugador al mercenario consume su acción y objeto. Una cura del mercenario utiliza sus cargas propias. El personaje mantiene siete regiones; el aliado usa salud simplificada y el tratamiento declara su equivalencia. No se puede revivir un actor muerto mediante una cura ordinaria.
+
+Los ataques de área muestran daño por objetivo y número máximo de objetivos. Después se resuelve la protección y, cuando corresponda, el reparto anatómico dentro de cada objetivo. Un ataque que anuncia 12 puntos a cada enemigo puede resolver dos impactos de 12; no multiplica ese valor otra vez por cada parte del cuerpo. El fuego amigo permanece desactivado.
+
+Una protección o intercepción identifica beneficiario, duración, coste y límite. Solo puede redirigir una vez un mismo impacto; no permite una cadena infinita entre personaje y mercenario. Los enemigos muestran sus prioridades y los efectos que fijan objetivo, sin exigir una nueva barra general de amenaza.
+
+### Muerte retirada y refuerzos
+
+Si muere el aliado, el combate continúa como 1 contra 1 o 1 contra 2 y se elimina su acción pendiente. Si muere el personaje, termina la incursión aunque el aliado siga vivo. El NPC no completa el combate, resucita al personaje ni extrae su mochila automáticamente.
+
+La huida es una acción del personaje que afecta al grupo. Si tiene éxito, salen los supervivientes; si falla, continúa la misma ronda. Conserva los costes y consecuencias anunciados del sistema actual, sin reiniciar salud enemiga o enfriamientos. La ronda parcial cuenta una sola vez; los efectos vencidos se resuelven antes de confirmar una retirada segura.
+
+Un jefe con un auxiliar ocupa ambos puestos hostiles. Una invocación solo entra en un puesto libre y actúa como pronto en la siguiente ronda. Cada fase tiene un máximo de invocaciones. Una reanimación recupera la plaza del aliado caído, conserva su identidad y no vuelve a conceder su premio completo.
+
+La ruptura de un contrato durante combate puede quedar anunciada y suspender la colaboración, pero la confrontación hostil se resuelve después del encuentro. El mercenario no cambia instantáneamente de bando y crea un 1 contra 3. Su retirada tampoco introduce un sustituto gratuito.
+
+### Grizk como intermediario de contratos
+
+Grizk conserva compra de tesoros, gemas y mejoras de transporte y añade la sección Mercenarios. Desde su desbloqueo en S3 ofrece al menos un contrato básico disponible, inicialmente Edda. Los demás roles amplían el catálogo al progresar. No es necesario encontrar al NPC aleatoriamente en cada salida.
+
+La propuesta inicial es contratar para una incursión. La ficha muestra rol, habilidades, suministros, tarifa y reparto. En el Bastión se reserva la tarifa del banco al elegir el contrato y se consume una sola vez al iniciar la salida. Cancelar antes devuelve esa reserva. Tras entrar, muerte, abandono o despido no reembolsan el contrato.
+
+Cuando termina la incursión, el contrato se cierra tanto si el aliado sobrevive como si no. Contratar de nuevo requiere un nuevo pago y proporciona las condiciones anunciadas para esa salida. Despedir y volver a contratar dentro de la misma incursión no rellena equipo o cargas gratuitamente.
+
+La contratación encontrada dentro de la mazmorra puede conservarse como oportunidad opcional; utiliza exclusivamente oro transportado. No se puede contratar durante un combate ni añadir un segundo compañero. Sustituirlo exige resolver el contrato actual fuera de combate.
+
+Si el sistema existente permite propiedad permanente, contratos de otra duración o acceso anterior a S3, Claude debe documentarlo y conservar los derechos, pagos y personajes ya adquiridos al plantear la adaptación. No convierte silenciosamente un reclutamiento permanente existente en un alquiler que desaparece.
+
+### Aprendizaje y comprobaciones técnicas
+
+S1 enseña 1 contra 1. S2 puede introducir un 1 contra 2 opcional y señalado, con alternativa de ruta. Grizk permite preparar una salida acompañado desde S3; S4 desarrolla sinergias y roles. Desbloquear a Grizk y volver es posible antes del jefe regional, si el jugador quiere contratar para ese combate.
+
+Claude debe revisar si el código asume un único enemigo en selección de objetivo, barra de vida, iniciativa, victoria, huida, botín o guardado. El cambio central es una lista de participantes con bando e identidad; adaptar solo la pantalla no crea un combate grupal real.
+
+El guardado conserva participantes, orden, actor pendiente, ronda, objetivos, intenciones, estados, órdenes del aliado, invocaciones y contrato. Recargar continúa la misma situación confirmada y no crea nuevos turnos o cobros.
+
+## 31 Arquitectura e integración técnica
+
+### Auditoría antes de implementar
+
+Claude debe identificar los archivos reales que controlan arranque, estado del personaje, combate, exploración, generación, inventario, equipo, economía, habilidades, muerte, extracción, persistencia, HUD, entrada táctil y audio. El informe tendrá las columnas sistema, archivo o módulo, comportamiento actual, cambio propuesto y riesgo.
+
+Debe registrar una partida de referencia que incluya compra, entrada, combate, consumo de una habilidad, saqueo, extracción y carga posterior. Ese recorrido permite detectar regresiones. No se afirma que el juego use un framework concreto hasta comprobarlo.
+
+Si la lógica está concentrada en un archivo grande, se separan primero las responsabilidades que impiden verificar los cambios. No se reestructura toda la aplicación por motivos estéticos. Los identificadores internos con un nombre anterior del juego no se renombran masivamente como parte de esta expansión.
+
+### Estado autorizado y presentación
+
+Una única representación del estado de juego decide recursos, daño, objetos y progresión. Los componentes visuales leen ese estado y solicitan acciones. Las barras y los números flotantes no guardan una segunda versión de la verdad.
+
+La presentación puede anticipar una animación, pero no confirmar un coste o recompensa inexistente. Un callback de sonido o animación no tiene autoridad para conceder oro, restar salud ni completar una misión.
+
+### Entidades conceptuales
+
+| Entidad | Campos y responsabilidad |
+|---|---|
+| Perfil | Versión de esquema, revisión, personaje, base, progreso y una incursión activa |
+| Personaje | Clase, atributos, siete partes, efectos, necesidades, recurso y enfriamientos |
+| Incursión | Identidad, fase, subzona, semilla, reloj, mapa, carga y resultado |
+| Definición de objeto | Tamaño, peso, apilamiento, usos, categoría y contenedores admitidos |
+| Instancia de objeto | Identidad, cantidad, calidad, durabilidad, propietario y posición |
+| Misión | Estado, condiciones, objetos reservados y recompensa ya reclamada |
+| Mercader | Desbloqueo, reputación, stock y ciclo de ofertas |
+| Fabricación | Receta versionada, reserva, fase, resultado y reclamación |
+| Refugio | Módulos, niveles, almacén y recepción |
+| Transacción | Identidad, revisión de origen, operación y resultado aplicado |
+| Encuentro y adversario | Rol, intención, fase, invocaciones y recompensas resueltas |
+| Elemento de exploración | Descubrimiento, acceso, estado, coste y resultado de una sala o mecanismo |
+| Trabajo de campo | Herramienta o kit reservado, progreso, interrupción y resultado |
+
+La nomenclatura y distribución en archivos se adaptan al repositorio. Las definiciones de contenido se separan de las instancias persistentes. Cambiar el texto de una poción no cambia su identificador ni rompe los objetos guardados.
+
+### Máquina de estados
+
+Los estados de alto nivel son Bastión, Incursión activa, Resolución y Recuperación de guardado. La incursión contiene Exploración, Combate, Activación de extracción y Pausa. La pausa conserva el estado anterior y sus acumuladores.
+
+Una incursión solo puede terminar como extraída, muerta o abandonada. Tras confirmar uno de esos estados no admite acciones nuevas. Los eventos tardíos llevan la identidad de su incursión y se descartan si ya terminó o si pertenece a otra sesión.
+
+La implementación puede utilizar el patrón existente sin incorporar una biblioteca nueva. Lo imprescindible es que las transiciones sean verificables y no se produzcan desde cinco pantallas independientes.
+
+### Transacciones e invariantes
+
+Mover, equipar, consumir, recoger, comprar, vender, desguazar, fabricar, mejorar, reclamar y extraer pasan por operaciones únicas. Cada una valida, calcula, aplica y guarda. Si una validación falla, el estado anterior se conserva íntegro.
+
+Invariantes obligatorios:
+
+1. Una instancia de objeto tiene un único propietario y una única ubicación.
+2. No hay solapamientos ni posiciones fuera de cuadrícula.
+3. Las cantidades, monedas y recursos no pueden ser negativos ni no finitos.
+4. Las transferencias conservan cantidades salvo consumo o generación explícitos.
+5. Las reservas de materiales no se gastan en otra operación.
+6. Cada recompensa y desenlace se aplican una sola vez.
+7. No puede existir más de una incursión activa por perfil.
+8. La salud y los efectos se consultan desde un único modelo.
+9. Los menús no reinician acumuladores temporales.
+10. El estado mostrado como guardado corresponde a una escritura confirmada.
+
+Se utiliza una revisión para rechazar acciones sobre un estado desactualizado. El doble toque y la repetición de un evento con la misma identidad devuelven el resultado anterior o se ignoran sin volver a consumir ni recompensar.
+
+### Reloj y navegador
+
+La aplicación utiliza eventos de visibilidad para saber cuándo la página se oculta y pausar el juego. La documentación de Page Visibility describe esta capacidad y el comportamiento distinto de los temporizadores en segundo plano [T2]. La simulación no debe depender de que un temporizador del navegador se ejecute exactamente cada cierto tiempo.
+
+Los acumuladores de tiempo de simulación y los de presentación se mantienen separados. En una pausa se conserva la fracción de pulso pendiente. Una caída de rendimiento no genera decenas de segundos de daño acumulado al recuperar una pestaña; se pausa y se reanuda desde un límite consistente.
+
+## 32 Guardado migración y recuperación
+
+### Soporte y alcance
+
+Se conserva el guardado local exportable. Si el soporte actual resulta suficiente para snapshots acotados y escrituras verificables, no se cambia solo por introducir la expansión. Si el volumen de mapas y estados o las transacciones lo justifican, se valora IndexedDB, que ofrece almacenamiento estructurado y transacciones asíncronas [T1].
+
+El guardado local está asociado al origen de la aplicación. localStorage conserva datos entre sesiones, pero el uso privado y las políticas del navegador pueden limitar esa persistencia [T3]. Exportar e importar proporciona una copia trasladable; no se promete sincronización automática entre PC y móvil.
+
+### Información que se guarda
+
+Además del personaje y el Bastión, se guarda la incursión activa: mapa, posición, enemigos, cofres, objetos retirados, estados de portales, aliado, semilla y secuencias aleatorias, fase de combate, enfriamientos, reservas, efectos y acumuladores temporales. Exportar una partida debe permitir continuar la misma situación. Se incluyen también intenciones y fases de jefes, reanimaciones, llaves preparadas, puertas, secretos, trampas, atajos, pactos, etapas de ritual, alertas, puntos de respiro y durabilidad y trabajos de campo. El estado nuevo no se reconstruye de cero al volver al sector.
+
+El guardado incluye versión de esquema, versión de contenido y revisión. Una suma de comprobación puede detectar corrupción accidental, pero no se presenta como protección contra modificaciones deliberadas. Al ser una experiencia local exportable, restaurar voluntariamente una copia antigua no puede impedirse de forma absoluta sin cambiar el modelo del producto.
+
+### Momentos de persistencia
+
+Guardar después de acciones comprometidas que cambian inventario, economía, combate o progreso y mediante puntos periódicos razonables durante exploración. No depender únicamente de cerrar la pestaña. Mantener una copia anterior válida y un archivo exportable.
+
+Cuando se resuelve una acción con resultado aleatorio, ese resultado y sus costes se guardan juntos. Al cargar se recupera el estado confirmado, sin volver a tirar el botín ni cobrar de nuevo.
+
+### Migración de partidas anteriores
+
+1. Conservar una copia íntegra del formato original.
+2. Validar la estructura y determinar versión.
+3. Ejecutar transformaciones consecutivas en una copia de trabajo.
+4. Validar objetos, progreso, salud, recursos y referencias.
+5. Escribir una versión candidata y volver a leerla.
+6. Activarla solo si supera las comprobaciones.
+7. Mantener la copia previa y facilitar exportación.
+
+Una migración fallida no borra el archivo original ni inicia silenciosamente una partida nueva.
+
+| Caso anterior | Regla de migración |
+|---|---|
+| Salud global única | Distribuir su proporción por regiones sin inventar sangrados o fracturas |
+| Personaje vivo con salud muy baja | Conservar al menos una unidad en cabeza y tórax mediante una corrección mínima registrada |
+| Inventario sin cuadrícula | Colocación determinista; excedentes a recepción |
+| Objeto retirado del catálogo | Conservar datos en recuperación, sin venderlo o destruirlo |
+| Necesidades inexistentes | Iniciar las tres a 100 |
+| Mercader nuevo de una región ya superada | Desbloquear servicio según hitos demostrables, sin repetir premios |
+| Tutorial inexistente | Activar solo ayudas de sistemas nuevos |
+| Oro antes representado con un solo saldo | Determinar su significado en el código; no duplicarlo como banco y carga |
+| Receta en curso | Usar la versión reservada o devolver sus materiales si no se puede resolver |
+| Pieza sin durabilidad anterior | Iniciar íntegra; si ya tenía un valor válido, conservarlo |
+| Región desbloqueada antes de añadir su jefe | Mantener acceso sin regalar premios nuevos ni exigir repetir progreso |
+| Mapa activo anterior a secretos y eventos | Mantener su versión; no insertar puertas o trampas debajo del jugador |
+| Incursión antigua activa | Completar con compatibilidad temporal o resolver mediante una ruta explícita sin pérdida |
+
+La ruta preferida para una incursión antigua es continuar bajo las reglas anteriores hasta su desenlace y migrar después en el Bastión. Si mantener ese adaptador no es viable, Claude debe presentar una salida de compatibilidad concreta que conserve equipo y progreso y no conceda objetivos nuevos por defecto. No se decide silenciosamente que el jugador muera o extraiga con todas las recompensas.
+
+### Fallos e importación
+
+Una importación se valida antes de reemplazar la partida vigente. Se rechazan versiones futuras no compatibles, referencias inválidas, cantidades imposibles, tamaños excesivos o contenido ejecutable. Los textos importados se tratan como datos, no como HTML autorizado.
+
+La aplicación permite una sesión escritora por perfil. Una segunda pestaña ofrece consulta o traspaso explícito y no sobrescribe una revisión más reciente. Se prueban suspensión de pestañas y recuperación del control tras cierre inesperado.
+
+Si falla una escritura, se muestra que el progreso todavía no está guardado, se conserva en memoria y se ofrece exportación. La aplicación pausa las operaciones que necesitarían una reserva duradera hasta recuperar consistencia. No anuncia extracción guardada o fabricación consolidada mientras la persistencia haya fallado.
+
+## 33 Alcance de la primera entrega jugable
+
+Antes de extender el contenido se construye una prueba completa en S1. Debe permitir preparar, entrar, explorar, combatir, recibir una lesión, tratarla, recoger un objeto espacial, extraer o morir, guardar, cargar y salir otra vez.
+
+La prueba se realiza con guerrero y mago. No se considera suficiente demostrarla con una clase y dar por supuesto que la otra comparte todas las reglas.
+
+Contenido mínimo de esa prueba:
+
+- Un mapa de S1 generado con varias semillas y una plantilla de respaldo.
+- Dos arquetipos sencillos de enemigo con señales y respuestas accesibles a guerrero y mago.
+- Arma y protección básicas de ambas clases.
+- Venda, hemostático, férula, curación, agua y ración.
+- Dos materiales, un objeto deteriorado, una gema y oro transportable.
+- Mochila inicial, bolsillo seguro y almacén con recepción.
+- Una extracción estable, un desenlace de muerte y un conjunto de recuperación.
+- Un objetivo de regreso y los primeros tutoriales.
+- Un secreto sin llave, una trampa evitable y un atajo sencillo.
+- Desgaste de un arma y una protección, una herramienta y reparación básica de base.
+
+El desguace y una receta se prueban inmediatamente después, usando un acceso de desarrollo o un pequeño recorrido por S2, sin activar artificialmente a Orik en una partida pública nueva. Los accesos de depuración no alteran las reglas finales de desbloqueo.
+
+La anatomía final tiene siete regiones desde que se activa para jugadores. Una adaptación temporal con salud global solo se admite como paso interno claramente delimitado; no se presenta una silueta anatómica funcional si sus regiones todavía no gobiernan el daño.
+
+## 34 Fases de implementación y dependencias
+
+Las fases ordenan trabajo, no comprometen fechas. Claude estimará esfuerzo después de conocer el repositorio, la calidad de los recursos existentes y los dispositivos de prueba. La interfaz táctil y las migraciones se atienden desde el comienzo, no al final.
+
+| Fase | Entrega verificable | Dependencia y criterio de cierre |
+|---|---|---|
+| 0 Auditoría | Mapa del código y comportamiento actual | Ciclo de referencia y conflictos identificados |
+| 1 Fundamentos | Estado, participantes por bando, transacciones, reloj y guardado | Partida actual carga y conserva recursos |
+| 2 Carga y desenlaces | Cuadrícula, oro, bolsillo, desgaste y desenlaces | Sin duplicación ni pérdida por capacidad o rotura |
+| 3 Supervivencia | Anatomía, tratamientos, necesidades y combate 1 contra 2 | Ambas clases completan el ciclo y responden a grupos |
+| 4 Base y Mazmorra | S1 a S3, Grizk, contratación existente, combate 2 contra 2, secretos y jefe | Progresión viable con trampas, atajos y recuperación básica |
+| 5 Producción | Refugio, desguace, herramientas, kits y recetas | Economía sin arbitraje y trabajos reanudables |
+| 6 Cripta | S4 a S6, Brand, Valerius, aliados y jefe regional | Contratos, rituales iniciales y respiros funcionan sin bloqueos |
+| 7 Infierno | Eldrin, S7 a S10, bestiario avanzado, secretos y Belzar | Ruta viable, recursos accesibles y campaña resoluble |
+| 8 Presentación | Recursos visuales, minijuegos, tutorial, audio y alerta local | Paridad de controles y sincronización de eventos |
+| 9 Equilibrio | Ajustes y revisión de regresiones | Partida nueva y migrada recorren el ciclo completo |
+
+La fase 8 completa y pule sistemas que ya tienen interfaz utilizable en sus fases previas. No se espera hasta entonces para comprobar si el inventario funciona con el dedo o si la información médica es legible.
+
+Cada fase termina con una entrega jugable, cambios identificados, pruebas relevantes y valores aún provisionales. Se reutiliza el mecanismo de ramas y versiones del proyecto. No se publica una actualización que migre partidas sin haber validado la recuperación.
+
+Los sistemas nuevos pueden habilitarse de forma controlada durante desarrollo. Desactivar una opción no debe hacer que un guardado con el esquema nuevo se lea como si fuera antiguo. La reversión requiere una ruta de datos compatible, no solo ocultar botones.
+
+### Dependencias críticas
+
+El reloj precede al desgaste; las transacciones preceden a la fabricación; la identidad de objetos precede a la cuadrícula; los desenlaces preceden a recompensas; el catálogo de recetas precede al minijuego; las garantías de navegación preceden a portales dinámicos. Los mercenarios se integran cuando ya estén estables combate, botín, extracción y guardado. Las salas de llave preparada requieren generación compatible; las herramientas requieren durabilidad; los jefes necesitan intenciones y fases persistentes. El catálogo se entrega por región, sin producir todos los recursos artísticos antes de validar el primer patrón jugable.
+
+## 35 Matriz de aceptación y casos límite
+
+Los siguientes casos son requisitos de validación para la implementación. Las pruebas automatizadas se centran en estado, transacciones, migración y generación. Los controles, la lectura del HUD, el ritmo y la sincronización audiovisual requieren además revisión jugable. No son resultados de pruebas ya ejecutadas sobre el juego.
+
+### Combate anatomía y tiempo
+
+| ID | Situación | Resultado exigido |
+|---|---|---|
+| A01 | Habilidad anuncia coste de tres puntos | Descuenta tres y todas las vistas reflejan el mismo saldo |
+| A02 | Recurso cambia antes de confirmar | Revalidación sin recurso negativo ni descuento parcial |
+| A03 | Termina combate con enfriamiento pendiente | El siguiente encuentro conserva el valor restante |
+| A04 | Dos enemigos y un compañero en lugar de un duelo | Necesidades avanzan por ronda, no por cada actor |
+| A05 | Diez minutos en inventario o segundo plano | Sin desgaste ni recuperación acumulada al regresar |
+| A06 | Se pausa con medio pulso transcurrido | El medio pulso se conserva al reanudar |
+| A07 | Cabeza o tórax llega a cero por un golpe | Muerte inmediata; no hay acción posterior del actor |
+| A08 | Exceso de daño sobre brazo incapacitado | Redistribución conserva exactamente el daño final |
+| A09 | Siete sangrados superan el techo | Reparto proporcional y límite global respetados |
+| A10 | Cura y sangrado al final de ronda | La cura válida ocurre primero; no resucita muertos |
+| A11 | Torniquete sobre lesión del abdomen | Acción rechazada con explicación y sin consumo |
+| A12 | Cirugía interrumpida en segunda ronda | Equipo consumido una vez y región no recuperada |
+| A13 | Cirugía suspendida por cerrar navegador | Se reanuda sin devolución ni doble consumo |
+| A14 | Beber eleva el máximo efectivo de Maná | Capacidad recuperada sin rellenar el gasto previo |
+| A15 | Repetir comida o descanso de preparación | Renueva una fuente; no acumula bonificaciones infinitas |
+| A16 | Se rompe arma o se agotan recursos | Existe acción básica, defensa o retirada legal |
+
+### Inventario economía y fabricación
+
+| ID | Situación | Resultado exigido |
+|---|---|---|
+| A17 | Rotación colisiona con borde u objeto | Posición original intacta |
+| A18 | Arrastrar fuera del panel o girar móvil | Objeto vuelve a origen sin desaparecer |
+| A19 | Dividir y fusionar pila | Cantidad total y propiedades conservadas |
+| A20 | Cambiar a mochila donde no cabe todo | Cambio rechazado antes de mover contenido |
+| A21 | Recogida elevaría peso del 149 al 170 % | Se bloquea por el peso resultante |
+| A22 | Lesión reduce capacidad por debajo de la carga | No se borra equipo; movilidad mínima y descarte disponibles |
+| A23 | Bolsa admite solo parte del oro | Recogida parcial y resto conservado en origen |
+| A24 | Reabrir cadáver o reproducir animación | Sin EXP ni monedas duplicadas |
+| A25 | Meter objeto prohibido en bolsillo seguro | Rechazo y explicación; ningún traslado parcial |
+| A26 | Morir con gema permitida en bolsillo | Se conserva la gema sin conceder hito de extracción |
+| A27 | Extraer con almacén lleno | Excedentes persistentes en recepción |
+| A28 | Recepción llena de objetos esenciales | Depósito de misión y gestión directa permiten resolverla |
+| A29 | Derrota sin oro ni equipo | Recuperación permite una salida viable por S1 |
+| A30 | Vender o desguazar el préstamo | Operación bloqueada sin ingresos ni materiales |
+| A31 | Entrar y abandonar sin actividad | No renueva la oferta especial |
+| A32 | Comprar, fabricar, desguazar y vender repetidamente | Sin beneficio ilimitado sin riesgo |
+| A33 | Dos acciones intentan consumir el mismo ingrediente | Solo una puede reservarlo |
+| A34 | Cerrar al finalizar un minijuego | Mismo resultado y materiales gastados una vez |
+| A35 | Falla una receta con componente único | Se aplica la política anunciada y se conserva el componente |
+| A36 | Se llena almacén antes de recibir fabricación | Resultado llega a recepción sin perderse |
+
+### Mundo progreso y compañeros
+
+| ID | Situación | Resultado exigido |
+|---|---|---|
+| A37 | Semilla sin ruta a extracción | Se rechaza antes de iniciar |
+| A38 | Llave detrás de su cerradura | Validador detecta dependencia imposible |
+| A39 | Diez generaciones fallidas | Se carga plantilla de respaldo válida |
+| A40 | Se cierra portal opcional | Sigue existiendo una ruta a salida estable |
+| A41 | Ventana de portal vence mientras se canaliza | Respeta la reserva temporal aceptada |
+| A42 | Impacto interrumpe portal de pago | Cancelación y devolución de reserva sin duplicación |
+| A43 | Extracción y daño letal coinciden | Un único resultado terminal, según prioridad global |
+| A44 | Morir tras rescatar NPC sin haber regresado | Misión repetible; no se pierde acceso para siempre |
+| A45 | Personaje llega a S7 sin Eldrin | Rescate y ruta básica viables con recursos anteriores |
+| A46 | Se roba botín reservado a compañero | Advertencia, devolución posible y ruptura registrada |
+| A47 | Se mata compañero para vender su equipo inicial | No produce ese equipo como beneficio repetible |
+| A48 | Aliado queda atrás al extraer | Decisión explícita; sin duplicar botín o compañero |
+| A49 | Belzar muere y el jugador muere después | Victoria registrada; campaña no completada sin regreso |
+| A50 | Todos los tutoriales se omiten | Mecánicas y progresión permanecen accesibles |
+
+### Persistencia dispositivos y presentación
+
+| ID | Situación | Resultado exigido |
+|---|---|---|
+| A51 | Guardado antiguo con demasiados objetos | Conservación total mediante colocación y recepción |
+| A52 | Migración falla a mitad | Archivo original y última copia válida intactos |
+| A53 | Archivo importado futuro o malformado | Rechazo sin sustituir la partida |
+| A54 | Dos pestañas escriben el mismo perfil | Una escritora; ninguna revisión vieja pisa una nueva |
+| A55 | Falla guardado después de saqueo | Aviso, pausa consistente y exportación del estado en memoria |
+| A56 | Doble pulsación en extracción o recompensa | Efecto aplicado una sola vez |
+| A57 | Orientación cambia en combate o minijuego | Estado conservado y pausa cuando sea necesaria |
+| A58 | Uso completo con teclado o sin arrastrar | Todas las acciones esenciales son accesibles |
+| A59 | Animación se acelera, omite o termina tarde | Daño y recompensas inalterados; audio no anticipa resultado |
+| A60 | Sonido desactivado y color poco distinguible | El peligro sigue siendo comprensible mediante texto o iconos |
+
+### Nuevos adversarios secretos exploración y durabilidad
+
+| ID | Situación | Resultado exigido |
+|---|---|---|
+| A61 | Enemigo o jefe obligatorio frente a cada clase | Respuesta viable con acciones básicas y equipo de la etapa |
+| A62 | Dos preparaciones peligrosas coinciden | El presupuesto garantiza una respuesta común o ventanas suficientes |
+| A63 | Saqueador toma oro | Solo afecta carga transportada; cantidad acotada y recuperable |
+| A64 | Enemigo reanimado o invocación recargada | Sin nueva recompensa completa ni duplicación de instancias |
+| A65 | Jefe cruza un umbral de fase | Conserva daño y no obtiene un turno adicional invisible |
+| A66 | Huida y recarga ante un jefe herido | Salud, fase y usos especiales persistentes |
+| A67 | Despedir y volver a contratar un aliado | Cargas médicas o de reparación no se rellenan gratis |
+| A68 | Tavia revela un secreto | Revela la entrada; no abre la cerradura ni entrega el contenido |
+| A69 | Se prepara una llave de destino compatible | Sala alcanzable o rechazo de inicio sin gasto |
+| A70 | Aparece llave sin destino en el mapa actual | Se identifica como llave de una futura incursión |
+| A71 | Cierre durante apertura de una puerta | Consumo de llave y estado abierto se confirman juntos |
+| A72 | Se pierde una llave principal por derrota | Vía garantizada para volver a obtenerla sin repetir premios |
+| A73 | Acceso especial visitado por ambas clases | Pistas y opciones comunes; herramientas solo bloquean oportunidades opcionales |
+| A74 | Una sala opcional no aparece | Campaña y extracción estable siguen siendo viables |
+| A75 | Trampa desarmada o utilizada en combate | Un resultado válido; sin reaparecer ni dar doble beneficio completo |
+| A76 | Pico se agota al abrir un atajo | Paso permanece abierto y herramienta rota se conserva |
+| A77 | Pacto reduce recurso y después termina | Límite y duración correctos; no devuelve recurso gastado |
+| A78 | Respiro se interrumpe o recarga | Uso, tiempo, reservas y recuperación siguen la política anunciada |
+| A79 | Ritual se cierra tras una etapa | Premios únicos y evento cerrado sin reinicio rentable |
+| A80 | Alerta local y cambio de pestaña | Sin refuerzos duplicados ni reducción por menús |
+| A81 | Ataque falla o daño periódico ocurre | Solo se desgasta el equipo según su desencadenante declarado |
+| A82 | Arma o armadura llega a cero en un impacto | Ese uso se resuelve y la rotura afecta a los siguientes |
+| A83 | Herramienta carece de durabilidad suficiente | Trabajo rechazado antes de consumir tiempo o materiales |
+| A84 | Kit se usa sobre pieza que ya alcanza el techo de campo | Sin consumo y explicación de que no mejoraría |
+| A85 | Se cierra durante reparación de campo | Trabajo y reserva se reanudan sin duplicar cargas ni reparación |
+| A86 | Migración de piezas con y sin durabilidad | Valores anteriores conservados; estado nuevo íntegro |
+| A87 | Corrosión alcanza equipo protegido por categoría | No rompe mochilas, llaves o bolsillo fuera de las reglas |
+| A88 | Muere el jugador con una reserva de trabajo | La reserva se cierra con el desenlace sin devolver carga al banco |
+
+### Combate por grupos y contratos
+
+| ID | Situación | Resultado exigido |
+|---|---|---|
+| A89 | Dos enemigos contactan sin compañero | Un encuentro 1 contra 2 y dos objetivos seleccionables |
+| A90 | El mismo contacto con compañero activo | Un encuentro 2 contra 2 con órdenes y recursos propios |
+| A91 | Cuatro actores completan la ronda | Una oportunidad por actor y un solo pulso global |
+| A92 | Existe un tercer atacante o una invocación adicional | Límite de dos respetado y estado restante conservado |
+| A93 | Objetivo marcado muere antes del turno aliado | Objetivo válido y ningún consumo duplicado |
+| A94 | Muere el aliado durante un 2 contra 2 | Continúa 1 contra 2 sin su turno pendiente |
+| A95 | Muere el personaje pero el aliado sigue vivo | Incursión termina sin rescate o extracción automática |
+| A96 | Huida de un grupo y contacto posterior | Salen supervivientes; enemigos, costes y ronda no se reinician |
+| A97 | Ataque de área o cura cambia varios participantes | Objetivos y daño por objetivo correctos y sin fuego amigo |
+| A98 | Contrato se rompe durante un 2 contra 2 | Confrontación posterior; no se crea un 1 contra 3 |
+| A99 | Contrato en Grizk se cancela o se inicia salida dos veces | Reserva devuelta o tarifa cobrada una sola vez |
+| A100 | Carga de combate grupal o migración de un aliado adquirido | Orden, participantes, pagos y derechos conservados |
+
+### Validación combinada
+
+Además de los ejemplos aislados, se prueban secuencias que combinen sistemas: sangrado, sobrepeso y extracción; cirugía y recarga; botín reservado a un compañero y mochila llena; misión entregada desde recepción; y cambio de versión con fabricación en curso.
+
+Para el generador, ejecutar inicialmente al menos cien semillas por subzona y por perfil de reglas que cambie accesibilidad. Se amplía el lote solo si aparece un riesgo concreto o se modifica el generador. Se conservan las semillas que reproduzcan fallos. Las pruebas de inventario generan secuencias de movimientos y verifican conservación, ubicaciones y cantidades.
+
+## 36 Equilibrio criterios de calidad y riesgos
+
+### Qué medir
+
+Registrar localmente, en herramientas de desarrollo, duración simulada, causa de muerte, valor extraído, coste de preparación, peso de retorno, objetos descartados, tratamientos usados, disponibilidad de recursos y motivos de retirada. No hace falta enviar datos personales a un servicio externo.
+
+Comparar guerrero y mago con equipo equivalente por etapa. Si el mago pierde menos espacio, sufre menos lesiones de brazos y necesita menos suministros, puede estar recibiendo tres ventajas simultáneas. Si el guerrero necesita armadura más pesada, su capacidad y movilidad deben revisarse conjuntamente.
+
+Los objetivos iniciales de calibración son:
+
+- Una salida corta de S1 es viable con equipo inicial y provisiones básicas.
+- Un error comprensible puede recuperarse; varios errores acumulados elevan el riesgo real.
+- El jugador conoce la causa principal de una derrota.
+- Una incursión larga exige al menos una decisión útil sobre provisiones o retirada.
+- Un objeto grande y valioso compite con varios pequeños, sin un tamaño siempre dominante.
+- Recuperarse tras una derrota permite volver a jugar en pocos pasos de base.
+- La fabricación estándar repetida no exige volver a superar una prueba de reflejos.
+- La preparación, el peso y las necesidades no convierten la mitad de la sesión en menús.
+
+No se impone una tasa universal de éxito antes de conocer la habilidad de los jugadores y el objetivo de dificultad. Se separan partidas de aprendizaje, partidas preparadas y desafíos voluntarios. Una tasa de extracción baja causada por mapas imposibles o información confusa es un defecto, no una señal de buen diseño hardcore.
+
+### Riesgos y respuestas
+
+| Riesgo | Prioridad | Respuesta |
+|---|---|---|
+| Duplicación o pérdida de progreso | Crítica | Estado único, transacciones y recuperación probadas |
+| Partidas anteriores inutilizables | Crítica | Migración sobre copia y ruta para incursiones activas |
+| Mapas sin salida o llave accesible | Crítica | Validadores y plantilla de respaldo |
+| Escalada de penalizaciones irreversible | Alta | Topes por atributo y recuperación básica |
+| Clase sin suministros al inicio | Alta | Depósito básico para ambas clases |
+| Muerte por azar sin aviso | Alta | Ataques letales anticipables y lectura clara |
+| Acumulación de tareas de mantenimiento | Alta | Menús ágiles, fabricación estándar y tutorial progresivo |
+| Rentabilidad infinita en el Bastión | Alta | Verificación de ciclos y límites de demanda |
+| Traición percibida como castigo arbitrario | Media | Contrato, causa visible y respuesta posible |
+| Mala experiencia táctil | Alta | Alternativas al arrastre y pruebas desde S1 |
+| Diez mapas sobre sistemas inestables | Alta | Validar primero un recorrido completo |
+| Pérdida de ritmo por mapas enormes | Media | Sectores con propósito y retorno legible |
+
+### Condiciones para no avanzar con una parte afectada
+
+No se amplía un sistema si su migración pierde objetos, si se puede duplicar una recompensa, si la simulación utiliza significados incompatibles de turno o si la generación permite un bloqueo obligatorio. Claude debe aislar el problema, proponer la corrección mínima y continuar con trabajo independiente que no dependa del fallo.
+
+La entrega final se considera completa cuando una partida nueva y una migrada pueden completar el ciclo de preparación, incursión, extracción o muerte, recuperación y nueva salida en ambas clases, con guardado y carga coherentes.
+
+## 37 Ejemplos completos de experiencia
+
+### Primera salida de un guerrero
+
+El jugador recibe espada básica, protección, una venda, una cura, agua y una ración. Aprende a colocar un objeto al recoger su primer botín. Un enemigo anuncia un ataque que puede provocar sangrado; después del impacto aparece la ayuda médica. La venda detiene la hemorragia pero no devuelve la salud, de modo que la diferencia entre tratamiento y curación se entiende mediante una acción real.
+
+Encuentra oro y un objeto deteriorado. El oro aparece como transportado, no como ingreso en el banco. Llega a la salida, completa su activación y regresa. Solo entonces se ingresa la bolsa. La primera extracción abre S2 y presenta el valor futuro del desguace.
+
+### Retirada de un mago en la Cripta
+
+El mago sale de un combate con una habilidad todavía en enfriamiento. No se reinicia al cerrar la pantalla. Tiene Hidratación en 8 y su máximo efectivo de Maná reducido; beber recupera la capacidad, pero no le devuelve el Maná ya gastado.
+
+Encuentra una ballesta de dos por dos y necesita decidir qué dejar. La colocación cabe, pero el peso resultante superaría el límite de recogida. El sistema explica el problema y conserva el arma en el contenedor. Puede soltar un objeto pesado, cambiar su plan o regresar sin ella. Abrir inventario no hace avanzar las patrullas ni los sangrados.
+
+### Derrota con progreso parcial
+
+Un jugador protege una gema admitida y lleva en la mochila una prueba que exige extracción. Muere antes de regresar. Conserva la gema, la EXP válida y los mercaderes ya desbloqueados, pero pierde la prueba y no completa su misión.
+
+En el Bastión recibe estabilización y, si cumple las condiciones, el préstamo básico. Puede repetir la subzona. El nuevo mapa garantiza otra oportunidad de conseguir la prueba. La derrota cuesta equipo y preparación, pero no elimina la posibilidad de continuar.
+
+### Fabricación suspendida y almacén lleno
+
+El jugador reserva ingredientes de una receta y cierra el navegador durante el minijuego. Al volver, se recupera el mismo trabajo. Lo completa y recibe el resultado una vez. Si el almacén se llenó por otra operación válida, el objeto queda en recepción.
+
+Puede vender o desguazar desde recepción sin un hueco intermedio. Un objeto de misión esencial se conserva en el depósito correspondiente. No se pierde el resultado ni se exige comprar una ampliación para desbloquear la partida.
+
+### Último tramo del Infierno
+
+El jugador conoce una salida estable y descubre un portal inestable más cercano. Su ventana permite completar la activación, pero una patrulla puede interrumpirla. Decide tratar una hemorragia antes de acercarse. Si el portal opcional se cierra antes de usarlo, la ruta estable permanece disponible.
+
+En S10 derrota a Belzar y aparece la salida cercana. Si sobrevive hasta extraer, completa la campaña y conserva su botín. Si muere por una lesión antes, la victoria sobre el jefe puede figurar en su historial, pero el regreso requerido sigue pendiente.
+
+## 38 Encargo inicial para Claude
+
+Utiliza este documento como especificación propuesta de la expansión de Gravevow. Empieza por la fase 0 de auditoría del repositorio. Lee las instrucciones del proyecto y examina el código antes de proponer archivos o tecnologías. No implementes toda la expansión de una vez.
+
+Tu primera respuesta debe entregar:
+
+1. Un resumen de cómo funciona actualmente el juego y qué partes del documento ya existen.
+2. Una tabla de sistemas y archivos reales que necesitarán cambios.
+3. Las contradicciones entre el estado actual y las reglas propuestas, con una solución recomendada para cada una.
+4. Un modelo de estados y un orden de resolución compatibles con exploración real y combate por turnos.
+5. La estrategia de guardado, migración y recuperación, incluidos inventarios antiguos y expediciones en curso.
+6. Un plan de implementación por fases con entregables jugables y criterios de aceptación.
+7. El alcance exacto de la primera prueba completa en S1 para guerrero y mago.
+8. Los datos de equilibrio que debes medir antes de fijar cifras definitivas.
+9. Un catálogo de nuevos enemigos, élites, jefes y mercenarios, comparado con los existentes, con señales y respuestas para ambas clases.
+10. Las reglas y estados de salas secretas, llaves, trampas, atajos, altares, respiros, rituales y alerta.
+11. La durabilidad y reparación de armas, protección y herramientas, con costes visibles y recuperación ante rotura.
+12. Un inventario de sprites, animaciones, retratos, iconos y audio que deberán crearse para el nuevo contenido.
+13. El funcionamiento actual de la contratación y los cambios necesarios para 1 contra 2 y 2 contra 2, incluidos turnos, objetivos, IA aliada, muerte, huida y guardado.
+14. La incorporación de Grizk como intermediario de contratos y una migración que conserve aliados o derechos ya adquiridos.
+
+Conserva Ímpetu para el guerrero, Maná para los personajes mágicos, costes coherentes en interfaz y simulación, enfriamientos entre combates y elección de habilidades por parte del jugador. Separa EXP de transferencias de oro y revisa el circuito actual para evitar duplicaciones.
+
+Adopta las configuraciones recomendadas del documento como objetivo de diseño. Las variantes son alternativas, no una lista de funciones que debas sumar. El catálogo nuevo y las mecánicas de mazmorra forman parte del objetivo de la expansión y deben integrarse por fases, junto con sus recursos visuales y pruebas. Si una decisión depende de algo que solo puede saberse al leer el código, identifícalo y propón la adaptación mínima.
+
+La tarea inicial es de análisis y planificación: entrega la auditoría y el plan antes de modificar la implementación. Cuando se encargue implementar, trabaja por fases y verifica cada ciclo completo antes de ampliar contenido. No presentes valores de prueba como equilibrio demostrado ni afirmes haber ejecutado pruebas que no has realizado.
+
+## 39 Referencias y glosario de trabajo
+
+### Fuentes de diseño
+
+Documento de origen: Expansion Gravevow.txt, facilitado por Pau. Los sistemas, personajes y regiones del original se desarrollan en esta especificación. Las configuraciones nuevas, los valores de prueba, los límites y la secuencia de implementación son propuestas de este plan.
+
+Decisiones previas de Pau incorporadas: exploración en tiempo real, combate por turnos, un jugador, guardado local, diferenciación de Ímpetu y Maná, persistencia de enfriamientos, elección de habilidades y revisión de la coherencia de costes y recompensas. Su implementación efectiva se comprueba durante la auditoría. Pau indica además que contratar mercenarios ya es posible; el soporte actual de 1 contra 2 y 2 contra 2 queda por verificar en el código.
+
+Ampliación solicitada por Pau en esta versión: nuevos enemigos, mercenarios y jefes, salas secretas y llaves, otras mecánicas dentro de la mazmorra y durabilidad de armas, equipo y herramientas; y combate 1 contra 2 y 2 contra 2 con contratación mediante Grizk. Pau indica que contratar mercenarios ya existe y pide ampliar su utilidad. Los catálogos y ejemplos que las desarrollan son propuestas originales del plan.
+
+### Referencias técnicas de plataforma
+
+[T1] MDN Web Docs. IndexedDB API. Almacenamiento estructurado, acceso asíncrono y transacciones. Consulta del 9 de noviembre de 2026.
+https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
+
+[T2] MDN Web Docs. Page Visibility API. Visibilidad de la página y comportamiento de tareas en segundo plano. Consulta del 9 de noviembre de 2026.
+https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API
+
+[T3] MDN Web Docs. Window localStorage property. Persistencia por origen y limitaciones relevantes. Consulta del 9 de noviembre de 2026.
+https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
+
+Estas referencias respaldan decisiones de plataforma; no validan el equilibrio ni las mecánicas propuestas para Gravevow.
+
+### Términos
+
+Incursión: expedición independiente a una subzona, con una carga y un desenlace.
+
+Subzona: familia de mapas procedurales seleccionable y repetible.
+
+Pulso: unidad de supervivencia propuesta, equivalente a seis segundos activos o una ronda completa.
+
+Ronda: ciclo de iniciativa del combate, no cada acción de cada enemigo.
+
+Carga expuesta: equipo, objetos y oro que se pierden al morir según las reglas de contenedor.
+
+Bolsillo seguro: pequeño contenedor que conserva categorías admitidas tras una muerte.
+
+Recepción: destino persistente de excedentes, gestionable desde el Bastión.
+
+Transacción: operación que cambia varios datos de forma coherente y se aplica una sola vez.
+
+Semilla: valor inicial para reproducir generación; requiere además conservar los cambios ocurridos durante la partida.
+
+Migración: transformación controlada de una partida antigua a un nuevo esquema.
+
+Invariante: condición que debe ser verdadera después de cualquier operación válida.
+
+Prueba completa: recorrido jugable de preparación, expedición, desenlace y vuelta a empezar que demuestra la integración entre sistemas.

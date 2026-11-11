@@ -430,3 +430,39 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 
 /* Durabilidad (Fase 3): barrita abajo en la casilla cuando el objeto está gastado o roto */
 .slot-wear{position:absolute;left:3px;bottom:2px;height:3px;max-width:calc(100% - 6px);pointer-events:none;box-shadow:0 0 0 1px #000a}
+
+/* ── Anatomía (Fase 4): silueta y panel de heridas ── */
+.body-btn{display:inline-flex;align-items:center;justify-content:center;padding:2px;background:#0d0c11;border:2px solid #57534e;cursor:pointer;line-height:0}
+.body-btn:hover{border-color:#e8b33a}
+.body-btn.hurt{border-color:#c4283b}
+.is-touch .body-btn{min-width:44px;min-height:44px}
+.body-row{display:flex;align-items:center;gap:6px;padding:2px 4px;background:#0006;border:1px solid #2a2628;min-height:32px}
+.body-swatch{width:10px;height:10px;flex:none;border:1px solid #0d0b0c}
+.body-treat{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;font-size:12px;min-height:30px}
+.body-treat.touch{min-width:44px;min-height:44px;justify-content:center}
+.frame-body{display:flex;align-items:center;gap:6px;margin:2px 0}
+/* Mapa del cuerpo: silueta neutra y etiquetas sencillas, con el estilo de los demás paneles */
+.body-panel{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.body-map{position:relative;width:300px;height:330px;flex:none;background:#0000004d;border:1px solid #292524}
+.body-ghost{position:absolute;left:50%;top:7%;height:78%;transform:translateX(-50%);opacity:.5;image-rendering:pixelated}
+.body-tag{position:absolute;width:32%;min-width:88px;text-align:left;background:#0d0c11e6;border:1px solid #44403c;padding:2px 5px 3px;cursor:pointer;font:inherit;color:#d6d3d1}
+.body-tag:hover{border-color:#78716c}
+.body-tag-name{display:flex;align-items:center;gap:4px;font-size:12px;line-height:14px;white-space:nowrap}
+.body-tag-name b{margin-left:auto;font-weight:400;color:#a8a29e;font-size:10px}
+.body-tag-row{display:flex;align-items:center;gap:4px;margin-top:3px;min-height:10px}
+.body-tag-bar{position:relative;display:block;flex:1;height:3px;background:#292524}
+.body-tag-bar span{position:absolute;inset:0 auto 0 0}
+.body-tag.on{border-color:#e8b33a}
+.body-tag.on .body-tag-name{color:#e8b33a}
+.body-tag.off{opacity:.75}
+.is-touch .body-tag{min-height:44px}
+.body-ico{font-style:normal;font-size:10px;line-height:1}
+.body-ico.bleed{color:#ff4050}.body-ico.bleed.heavy{color:#ff2030}
+.body-ico.frac{color:#f2ead8}.body-ico.off{color:#8c8693}
+.body-total{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:13px;color:#a8a29e}
+.body-total b{color:#e9e1cc;font-weight:400}
+.body-total.dead b{color:#d23a3a}
+.body-side{flex:1;min-width:180px}
+.body-detail{background:#0000004d;border:1px solid #292524;padding:6px 8px}
+@media (max-height:560px){.body-map{width:260px;height:270px}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

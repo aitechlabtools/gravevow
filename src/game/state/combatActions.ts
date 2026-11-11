@@ -22,6 +22,7 @@ import { noticeText, wearEquipment } from '../../core/durability';
 import { combatLevel, enemyLevel, invError, set, state, subzoneDepth, toast } from './internals';
 import type { Bag, CombatKind } from './internals';
 import { actions } from './store';
+import { headHitsHere } from './medicalActions';
 
 export const combatActions = {
   // ── Combate ──
@@ -30,7 +31,8 @@ export const combatActions = {
     const s = state;
     if (!s.profile || !s.expedition || s.combat) return;
     const ch = s.profile.character;
-    const player = playerCombatant(ch, s.expedition.equipment, s.expedition.hp, s.expedition.mp, s.expedition.cooldowns, s.profile.classSkills.equipped);
+    if (s.expedition.surgery) actions.interruptSurgery('Te atacan');
+    const player = playerCombatant(ch, s.expedition.equipment, s.expedition.hp, s.expedition.mp, s.expedition.cooldowns, s.profile.classSkills.equipped, { body: state.expedition!.body, headHits: headHitsHere(), noInjuries: !!s.tutorial });
     const list = [player];
     let title = '';
     let canFlee = true;
@@ -108,6 +110,7 @@ export const combatActions = {
     }
     const pl = getCombatant(next, 'player');
     exp.hp = pl.hp;
+    if (pl.body) exp.body = pl.body;
     exp.mp = pl.mp;
     exp.cooldowns = { ...(pl.cooldowns ?? {}) };
     let rival = s.rival;
@@ -125,6 +128,7 @@ export const combatActions = {
         exp.equipment = w.equipment;
         for (const n of w.notices) toast(noticeText(n), n.level === 'worn' ? 'info' : 'danger');
       }
+      if (pl.surgery) toast('El combate termina con la cirugía a medias: el equipo se ha perdido.', 'danger');
       // Si huyes después de abatir a uno de los dos, su botín también cae al suelo
       const killedFoe = next.outcome === 'fled' && next.combatants.some((c) => c.side === 'B' && c.hp <= 0 && c.ref && c.ref !== 'rival');
       if (next.outcome === 'victory' || killedFoe) {

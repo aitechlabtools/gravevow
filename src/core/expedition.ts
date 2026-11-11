@@ -4,6 +4,7 @@ import { cloneGrid, gridValue, equippedValue } from './inventory';
 import { computeStats, applyXp } from './stats';
 import { updateQuests } from './quests';
 import { emptyEquipment, emptyGrid } from './inventory';
+import { fromWounds, stabilize, summaryHp, toWounds, type Body, type Region } from './anatomy';
 
 // ════════════════════════════════════════════════════════════════════
 // Reglas de extracción:
@@ -25,7 +26,12 @@ export interface ExpeditionState {
   /** Bolsillo seguro durante la expedición (vuelve al perfil pase lo que pase). */
   pocket: Grid;
   equipment: Equipment;
+  /** Resumen de la vida: la suma de las regiones de `body` (0 si ha muerto). */
   hp: number;
+  /** Anatomía de siete regiones (Fase 4). */
+  body: Body;
+  /** Cirugía de campo en marcha: región y pulsos que faltan (el equipo ya está reservado). */
+  surgery?: { region: Region; left: number } | null;
   mp: number;
   goldFound: number;
   xpGained: number;
@@ -78,7 +84,8 @@ export function startExpedition(p: Profile, now: number): { profile: Profile; ex
     backpack: cloneGrid(p.backpack),
     pocket: cloneGrid(p.pocket),
     equipment: { ...p.equipment },
-    hp: stats.maxHp,
+    hp: 0,
+    body: fromWounds(p.wounds, stats.maxHp),
     mp: stats.maxMp,
     goldFound: 0,
     xpGained: 0,
@@ -86,6 +93,7 @@ export function startExpedition(p: Profile, now: number): { profile: Profile; ex
     found: [],
     riskedValue: gridValue(p.backpack) + equippedValue(p.equipment),
   };
+  expedition.hp = summaryHp(expedition.body);
   return {
     profile: { ...p, activeExpedition: { startedAt: now }, stats: { ...p.stats, expeditions: p.stats.expeditions + 1 } },
     expedition,
@@ -117,6 +125,8 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
     pocket: cloneGrid(e.pocket ?? p.pocket),
     quests,
     activeExpedition: null,
+    // Estabilización gratuita del Bastión: sin sangrados y cada región al menos al 50 % (las fracturas siguen)
+    wounds: e.body ? toWounds(stabilize(e.body)) : p.wounds ?? null,
     stats: {
       ...p.stats,
       extractions: p.stats.extractions + (extracted ? 1 : 0),

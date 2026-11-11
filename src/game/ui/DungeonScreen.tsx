@@ -10,6 +10,8 @@ import { getItem, RARITY_INFO } from '../../core/data/items';
 import { countItem, gridValue, type Loc } from '../../core/inventory';
 import { timeLeft } from '../../core/expedition';
 import { CombatScreen } from './CombatScreen';
+import { BodyFigure, BodyPanel } from './BodyFigure';
+import { expBody } from '../state/medicalActions';
 import { Bar, EquipmentView, GridView, StatsList, ItemIcon } from './inventory';
 import { PlayerSprite, MonsterSprite, Modal, formatTime, ItemActions, GoldAmount } from './common';
 import { SettingsModal } from './TitleScreen';
@@ -109,6 +111,7 @@ export function DungeonScreen() {
       {modal?.type === 'interact' && <InteractMenu options={modal.options} />}
       {modal?.type === 'captive' && <CaptiveModal mercId={modal.mercId} />}
       {modal?.type === 'merc' && <MercModal />}
+      {modal?.type === 'body' && <BodyModal />}
       {combat && <CombatScreen />}
       {!profile.tutorialSeen.dungeon && !tutorial && !modal && !combat && <DungeonTutorial />}
       {tutorial && <TutorialGuide />}
@@ -134,10 +137,11 @@ function Hud() {
           <div className="absolute left-3 top-3 panel p-3 w-64 z-10" data-testid="hud-player">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-10 h-10 bg-[#0d0c11] border-2 border-stone-700 flex items-end justify-center overflow-hidden"><PlayerSprite scale={2} animate={false} /></div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="truncate">{ch.name}</div>
                 <div className="text-xs text-stone-400">{CLASSES[ch.classId].name} · Nv {ch.level}</div>
               </div>
+              <BodyFigure body={exp.body} unit={3} onClick={() => actions.openModal({ type: 'body' })} testId="hud-body" />
             </div>
             <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label="Vida" testId="hud-hp" />
             <div className="h-1" />
@@ -253,10 +257,11 @@ function TouchTopHud() {
       <div className={`absolute z-10 panel ${phone ? 'p-2 w-48' : 'p-3 w-60'}`} style={{ left: safe('left', edge), top: safe('top', edge) }} data-testid="hud-player">
         <div className="flex items-center gap-2 mb-1.5">
           <div className={`${phone ? 'w-7 h-7' : 'w-9 h-9'} bg-[#0d0c11] border-2 border-stone-700 flex items-end justify-center overflow-hidden shrink-0`}><PlayerSprite scale={phone ? 1 : 2} animate={false} /></div>
-          <div className="min-w-0 leading-tight">
+          <div className="min-w-0 leading-tight flex-1">
             <div className="truncate text-sm">{ch.name}</div>
-            <div className="text-[11px] text-stone-400">{CLASSES[ch.classId].name} · Nv {ch.level}</div>
+            <div className="text-[11px] text-stone-400 truncate">{CLASSES[ch.classId].name} · Nv {ch.level}</div>
           </div>
+          <BodyFigure body={exp.body} unit={3} onClick={() => actions.openModal({ type: 'body' })} testId="hud-body" />
         </div>
         <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label={phone ? undefined : 'Vida'} testId="hud-hp" />
         <div className="h-1" />
@@ -405,6 +410,20 @@ function CaptiveModal({ mercId }: { mercId: string }) {
         <button className="btn" onClick={() => actions.closeModal()}>Dejarlo para luego</button>
       </div>
       {busy && <p className="text-sm text-blood mt-2">Ya te acompaña un mercenario: solo puedes llevar uno.</p>}
+    </Modal>
+  );
+}
+
+function BodyModal() {
+  const exp = useGame((s) => s.expedition);
+  const profile = useGame((s) => s.profile);
+  if (!exp || !profile) return null;
+  return (
+    <Modal onClose={() => actions.closeModal()} wide testId="body-modal">
+      <h2 className="font-display text-2xl mb-2">Heridas</h2>
+      <BodyPanel body={expBody(exp, profile)} backpack={exp.backpack} surgery={exp.surgery} onTreat={(id, r) => actions.treat(id, r)}
+        note="Se muere si la cabeza o el tórax llegan a cero. Tratar fuera de combate no gasta turno; la cirugía tarda dos pulsos." />
+      <button className="btn mt-3 text-sm" onClick={() => actions.closeModal()} data-testid="body-close">Cerrar</button>
     </Modal>
   );
 }

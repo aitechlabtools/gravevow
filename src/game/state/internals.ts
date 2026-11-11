@@ -1,6 +1,7 @@
 // Estado interno compartido por store.ts y sus acciones de expedición y combate.
 // La interfaz importa siempre desde store.ts.
 import { newClock, type GameClock } from '../../core/clock';
+import { resizeBody, summaryHp } from '../../core/anatomy';
 import { useSyncExternalStore } from 'react';
 import type { Appearance, ClassId, Grid, ItemStack, Profile, Rarity } from '../../core/types';
 import { AFFIXES, RARITY_RULES } from '../../core/data/rarity';
@@ -72,6 +73,8 @@ export type Modal =
   | { type: 'interact'; options: string[] }
   | { type: 'captive'; mercId: string }
   | { type: 'merc' }
+  /** Panel de heridas: silueta de siete regiones y tratamientos. */
+  | { type: 'body' }
   | null;
 
 export interface Bag { id: string; x: number; y: number; grid: Grid; label: string; /** Saco de un combate en el que luchó el errante aliado: espera su parte. */ allyShare?: boolean }
@@ -293,7 +296,9 @@ export function applyContainers(c: Containers, lootId?: string) {
     const patch: Partial<GameState> = {};
     if (s.screen === 'dungeon' && s.expedition) {
       const stats = computeStats(s.profile.character.classId, s.profile.character.level, c.equipment);
-      patch.expedition = { ...s.expedition, backpack: c.backpack, pocket: c.pocket, equipment: c.equipment, hp: Math.min(s.expedition.hp, stats.maxHp), mp: Math.min(s.expedition.mp, stats.maxMp) };
+      // La anatomía se ajusta a la nueva vida máxima conservando la parte de cada región
+      const body = resizeBody(s.expedition.body, stats.maxHp);
+      patch.expedition = { ...s.expedition, backpack: c.backpack, pocket: c.pocket, equipment: c.equipment, body, hp: summaryHp(body), mp: Math.min(s.expedition.mp, stats.maxMp) };
     } else {
       patch.profile = { ...s.profile, backpack: c.backpack, equipment: c.equipment, stash: c.stash, shared: s.profile.shared ? c.shared : null, pocket: c.pocket };
     }

@@ -41,6 +41,8 @@ import type { MercStance } from '../../core/types';
 import { sfx, setVolume } from '../audio';
 import { expeditionActions } from './expeditionActions';
 import { combatActions } from './combatActions';
+import { medicalActions, expBody, withBody } from './medicalActions';
+import { healBody } from '../../core/anatomy';
 import { applyContainers, containersFor, dev, equipCtx, getSave, getState, initial, invError, kept, recordFound, refreshRoster, requestPersist, saveNow, set, ss, state, toast } from './internals';
 import type { Bag, GameState, Screen } from './internals';
 
@@ -424,8 +426,10 @@ export const actions = {
     const stats = computeStats(s.profile.character.classId, s.profile.character.level, s.expedition.equipment);
     const exp = { ...s.expedition };
     if (def.use.kind === 'heal') {
-      if (exp.hp >= stats.maxHp) return invError('Ya tienes la vida al máximo.');
-      exp.hp = Math.min(stats.maxHp, exp.hp + potionAmount(def.use.amount, stats.maxHp));
+      // Anatomía: la poción reparte la vida entre las regiones que funcionan (no cierra heridas ni suelda huesos)
+      const h = healBody(expBody(exp, s.profile), potionAmount(def.use.amount, stats.maxHp));
+      if (h.healed <= 0) return invError('Ya tienes la vida al máximo (lo inutilizado solo se recupera con cirugía).');
+      Object.assign(exp, withBody(exp, h.body));
     } else if (def.use.kind === 'mana') {
       const cls = CLASSES[s.profile.character.classId];
       if (def.resource && def.resource !== cls.resource) return invError(`Esto no te sirve: tú usas ${cls.resourceName.toLowerCase()}.`);
@@ -436,6 +440,9 @@ export const actions = {
       if (!r.repaired) return invError('No llevas nada dañado.');
       exp.equipment = r.equipment;
       exp.backpack = r.backpack;
+    } else if (def.use.kind === 'treat') {
+      // Vendas, férulas…: se eligen la herida y la región en el panel de heridas
+      return actions.openModal({ type: 'body' });
     } else if (def.use.kind === 'cleanse') {
       // Veneno, quemadura y sangrado solo existen dentro del combate: fuera no gastes el antídoto
       return invError('El antídoto solo sirve en combate, contra veneno, quemadura o sangrado.');
@@ -774,6 +781,7 @@ export const actions = {
   },
   ...expeditionActions,
   ...combatActions,
+  ...medicalActions,
 };
 
 export function exposeDebug(extra: Record<string, unknown> = {}) {

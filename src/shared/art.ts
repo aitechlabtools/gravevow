@@ -1052,6 +1052,10 @@ const ICON_SHAPES: Record<string, string[]> = {
   gem: ['............', '............', '....aaaa....', '...ahhaaA...', '..ahaaaaAA..', '..aaaaaaAA..', '...aaaaAA...', '....aaAA....', '.....AA.....', '............', '............', '............'],
   mace: ['............', '.......aaa..', '......ahaaA.', '......aaaaA.', '.......aAA..', '......bB....', '.....bB.....', '.....bB.....', '....bB......', '....bB......', '...gg.......', '............'],
   ore: ['............', '............', '............', '....AAA.....', '...AahAA....', '..AaaahaA...', '..AaghaaaA..', '.AaaaagaaA..', '.AaaaaaaaA..', '..AAAAAAA...', '............', '............'],
+  bandage: ['............', '............', '...aaaaaa...', '..aaaaaaaa..', '..ahaaaaaA..', '..ahaggaaA..', '..ahaggaaA..', '..ahaaaaaA..', '..aaaaaaaa.a', '...AAAAAAaa.', '............', '............'],
+  splint: ['............', '..bb....bb..', '..bB....bB..', '..bBaaaabB..', '..bBaaaabB..', '..bB....bB..', '..bB....bB..', '..bBaaaabB..', '..bBaaaabB..', '..bB....bB..', '..BB....BB..', '............'],
+  strap: ['............', '...aaaaaa...', '..aA....Aa..', '.aA......Aa.', '.a........a.', '.a...gg...a.', '.aA..gg..Aa.', '..aAaggaAa..', '...aaggaa...', '.....aa.....', '.....aa.....', '............'],
+  medkit: ['............', '....aaaa....', '....a..a....', '.bbbbbbbbbb.', '.bBBBggBBBb.', '.bBBBggBBBb.', '.bBggggggBb.', '.bBBBggBBBb.', '.bBBBggBBBb.', '.bbbbbbbbbb.', '............', '............'],
   kit: ['............', '....aaaa....', '....a..a....', '.bbbbbbbbbb.', '.bBBBBBBBBb.', '.bBgBBBBgBb.', '.bBBBBBBBBb.', '.bBBBBBBBBb.', '.bbbbbbbbbb.', '............', '............', '............'],
   pick: ['............', '..aaaa......', '.a....aa....', '......bAa...', '.....bB..a..', '....bB....a.', '...bB......', '..bB........', '.bB.........', 'bB..........', '............', '............'],
   // ── Formas nuevas (C4, provisionales hasta que estén los iconos definitivos) ──
@@ -1172,6 +1176,12 @@ const ICONS: Record<string, IconVariant> = {
   pick: { shape: 'pick', a: PAL.steel2, A: PAL.steel1 },
   pick_steel: { shape: 'pick', a: PAL.steel3, A: PAL.ice },
   repair_kit: { shape: 'kit', a: PAL.steel2 },
+  bandage: { shape: 'bandage', a: '#e9e1cc', A: '#a89f88', h: '#ffffff', g: PAL.threat2 },
+  painkiller: { shape: 'potion', a: '#b48ad8', A: '#5a3a78', h: '#ecd8ff' },
+  hemostatic: { shape: 'potion', a: '#7a1a24', A: '#3e0d12', h: '#e0a0a0' },
+  tourniquet: { shape: 'strap', a: '#6a4a32', A: '#3a281a', g: PAL.steel2 },
+  splint: { shape: 'splint', a: '#e9e1cc' },
+  surgery_kit: { shape: 'medkit', a: PAL.steel2, g: PAL.threat2 },
 };
 
 export function drawIcon(key: string): Canvas {

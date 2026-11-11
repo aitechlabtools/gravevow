@@ -62,7 +62,8 @@ async function run(c) {
   await page.waitForTimeout(700);
   check(!!(await page.$('[data-testid=touch-stick]')), 'el joystick no aparece bajo el pulgar');
   // Segundo dedo en la poción mientras el primero sigue en el joystick (multitáctil)
-  await D(() => { const G = window.__GRAVEVOW__; G.setState({ expedition: { ...G.getState().expedition, hp: 10 } }); });
+  // Con anatomía, la vida es la suma de las regiones: se hiere el cuerpo, no solo la cifra
+  await D(() => { const G = window.__GRAVEVOW__, e = G.getState().expedition, body = structuredClone(e.body); let hp = 0; for (const p of Object.values(body.parts)) { p.hp = Math.max(1, Math.round(p.hp * 0.1)); hp += p.hp; } window.__hp0 = hp; G.setState({ expedition: { ...e, body, hp } }); });
   const [px, py] = await center('[data-testid=touch-potion]');
   await touch('touchMove', [[sx + 60, sy], [px, py]]);
   await page.waitForTimeout(80);
@@ -73,7 +74,7 @@ async function run(c) {
   const after = await pos();
   check(Math.hypot(after[0] - before[0], after[1] - before[1]) > 0.5, `el joystick no mueve (${before} → ${after})`);
   check(!(await page.$('[data-testid=touch-stick]')), 'el joystick no se suelta al levantar el dedo');
-  check(await D(() => window.__GRAVEVOW__.getState().expedition.hp > 10), 'la poción no se bebe con un segundo dedo');
+  check(await D(() => window.__GRAVEVOW__.getState().expedition.hp > window.__hp0), 'la poción no se bebe con un segundo dedo');
   // Al quedar parado no debe seguir andando
   const p1 = await pos(); await page.waitForTimeout(400); const p2 = await pos();
   check(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) < 0.05, 'el personaje sigue andando sin tocar nada');
