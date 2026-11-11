@@ -40,6 +40,8 @@ export interface CombatSession {
   state: CombatState;
   kind: CombatKind;
   entityId: string | null;
+  /** Enemigos del mapa que entraron en el combate (hasta dos). */
+  entityIds?: string[];
   title: string;
   rewards: { xp: number; gold: number; items: ItemStack[]; overflow: boolean; /** Saco del suelo con el botín. */ bagId?: string | null } | null;
 }

@@ -2,7 +2,7 @@
 type Handler = (payload: never) => void;
 
 export interface BusEvents {
-  'combat-ended': { entityId: string | null; outcome: 'victory' | 'defeat' | 'fled'; kind: string };
+  'combat-ended': { entityId: string | null; entityIds: string[]; killed: string[]; outcome: 'victory' | 'defeat' | 'fled'; kind: string };
   'rival-changed': undefined;
   /** El errante traidor da su aviso: su triángulo tiembla. */
   'rival-warn': undefined;

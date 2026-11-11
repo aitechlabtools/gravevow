@@ -116,7 +116,10 @@ fs.mkdirSync(OUT, { recursive: true });
     const s = await st();
     await shot('09-combat-result');
     if (s.outcome !== 'victory') throw new Error('resultado: ' + s.outcome);
+    // A veces el enemigo no suelta nada: entonces le damos oro para probar el saco del botín
+    const noLoot = !(await page.$('[data-testid=combat-bag-note]'));
     await page.click('[data-testid=btn-combat-continue]');
+    if (noLoot) await page.evaluate(() => { const G = window.__GRAVEVOW__; const st = G.getState(); const [x, y] = st.hud.playerTile; const b = { id: 'bag-e2e', x, y, grid: [{ uid: 'c', itemId: 'gold_coins', qty: 5 }, ...Array(11).fill(null)], label: 'Saco del combate' }; G.setState({ bags: { ...st.bags, [b.id]: b } }); G.actions.openBag(b.id); });
   });
   await step('Oro físico: el botín cae en un saco en el suelo y se abre solo', async () => {
     await page.waitForSelector('[data-testid=loot-modal]', { timeout: 4000 });

@@ -3,7 +3,7 @@ import type { ItemStack } from '../../core/types';
 import { rollStacks } from '../../core/data/rarity';
 import { addManyToGrid, countItem, emptyGrid, removeItem, isCover } from '../../core/inventory';
 import { coins as coinsStack } from '../../core/gold';
-import { createCombat, performAction, runAITurn, currentActor, getCombatant, type CombatAction, type CombatState } from '../../core/combat';
+import { createCombat, distinctNames, performAction, runAITurn, currentActor, getCombatant, type CombatAction, type CombatState } from '../../core/combat';
 import { knowledge, noteKill, noteSeen } from '../../core/bestiary';
 import { ZONES } from '../../core/data/zones';
 import { getSubzone } from '../../core/data/subzones';
@@ -24,7 +24,8 @@ import { actions } from './store';
 
 export const combatActions = {
   // ── Combate ──
-  startCombat(kind: CombatKind, entityId: string | null, enemyId?: string) {
+  /** `partner`: segundo enemigo que ya te perseguía y entra en el mismo combate (1 contra 2 o 2 contra 2). */
+  startCombat(kind: CombatKind, entityId: string | null, enemyId?: string, partner?: { entityId: string; enemyId: string }) {
     const s = state;
     if (!s.profile || !s.expedition || s.combat) return;
     const ch = s.profile.character;
@@ -34,14 +35,21 @@ export const combatActions = {
     let canFlee = true;
     if (kind === 'pve' && enemyId) {
       const e = getEnemy(enemyId);
-      if (s.rival.disposition === 'allied') list.push(rivalCombatant(s.rival.who, s.rival.hp, 'A', s.rival.potions, combatLevel()));
+      // Máximo dos por bando: con mercenario contratado, Kael no entra en este combate
       if (s.merc?.alive) list.push(mercCombatant(s.merc, 'A', combatLevel()));
+      else if (s.rival.disposition === 'allied') list.push(rivalCombatant(s.rival.who, s.rival.hp, 'A', s.rival.potions, combatLevel()));
       list.push(enemyCombatant(enemyId, entityId ?? 'enemy', 'B', enemyLevel(entityId)));
-      const firstTime = knowledge(s.profile.bestiary, enemyId) === 0;
-      set({ profile: { ...s.profile, bestiary: noteSeen(s.profile.bestiary, enemyId) } });
-      if (firstTime) toast(`Nueva entrada en el Bestiario: ${e.name}`, 'info');
-      title = e.boss ? `¡${e.name}!` : e.name;
-      canFlee = !e.boss;
+      const second = partner && partner.entityId !== entityId && !e.boss ? partner : null;
+      if (second) list.push(enemyCombatant(second.enemyId, second.entityId, 'B', enemyLevel(second.entityId)));
+      let bestiary = s.profile.bestiary;
+      for (const id of new Set([enemyId, ...(second ? [second.enemyId] : [])])) {
+        if (knowledge(bestiary, id) === 0) toast(`Nueva entrada en el Bestiario: ${getEnemy(id).name}`, 'info');
+        bestiary = noteSeen(bestiary, id);
+      }
+      set({ profile: { ...s.profile, bestiary } });
+      const e2 = second ? getEnemy(second.enemyId) : null;
+      title = e.boss ? `¡${e.name}!` : e2 ? (e2.id === e.id ? `Dos: ${e.name}` : `${e.name} y ${e2.name}`) : e.name;
+      canFlee = !e.boss && !e2?.boss;
     } else {
       const rc = rivalCombatant(s.rival.who, s.rival.hp, 'B', s.rival.potions, combatLevel());
       const name = getWanderer(s.rival.who).name;
@@ -56,11 +64,14 @@ export const combatActions = {
       // Traiciones: no hay huida posible. Solo el combate hostil (atacar a un neutral o un errante hostil) permite escapar.
       canFlee = kind === 'hostile';
     }
-    const combat = createCombat(list, randomSeed(), { canFlee });
-    combat.log.unshift(kind === 'pve' ? `¡${title.replace(/[¡!]/g, '')} te cierra el paso!` : s.rival.disposition === 'hostile' && !s.rival.betrayed && getWanderer(s.rival.who).lines.hostile ? getWanderer(s.rival.who).lines.hostile! : 'Las armas salen de sus vainas.');
-    if (s.rival.disposition === 'allied' && kind === 'pve') combat.log.push(`${getWanderer(s.rival.who).name} combate a tu lado.`);
+    const combat = createCombat(distinctNames(list), randomSeed(), { canFlee });
+    const foesB = list.filter((c) => c.side === 'B');
+    combat.log.unshift(kind === 'pve' ? (foesB.length > 1 ? `¡${getEnemy(foesB[0].ref!).name} te cierra el paso y ${getEnemy(foesB[1].ref!).name.toLowerCase()} se suma a la pelea!` : `¡${title.replace(/[¡!]/g, '')} te cierra el paso!`) : s.rival.disposition === 'hostile' && !s.rival.betrayed && getWanderer(s.rival.who).lines.hostile ? getWanderer(s.rival.who).lines.hostile! : 'Las armas salen de sus vainas.');
+    if (s.rival.disposition === 'allied' && kind === 'pve' && s.merc?.alive) combat.log.push(`${getWanderer(s.rival.who).name} se queda atrás: tu mercenario ocupa su sitio.`);
+    else if (s.rival.disposition === 'allied' && kind === 'pve') combat.log.push(`${getWanderer(s.rival.who).name} combate a tu lado.`);
     if (s.merc?.alive) combat.log.push(`${getMerc(s.merc.id).name} combate a tu lado (${STANCE_NAME[s.merc.stance].toLowerCase()}).`);
-    set({ combat: { state: combat, kind, entityId, title, rewards: null }, modal: null });
+    const entityIds = foesB.map((c) => c.id).filter((id) => id !== 'rival' && id !== 'enemy');
+    set({ combat: { state: combat, kind, entityId, entityIds, title, rewards: null }, modal: null });
     bus.emit('cancel-channel');
   },
 
@@ -107,12 +118,14 @@ export const combatActions = {
     let rewards = s.combat.rewards;
 
     if (next.outcome) {
-      if (next.outcome === 'victory') {
+      // Si huyes después de abatir a uno de los dos, su botín también cae al suelo
+      const killedFoe = next.outcome === 'fled' && next.combatants.some((c) => c.side === 'B' && c.hp <= 0 && c.ref && c.ref !== 'rival');
+      if (next.outcome === 'victory' || killedFoe) {
         const rng = makeRng(randomSeed());
         let xp = 0, gold = 0;
         const items: ItemStack[] = [];
         const kills = { ...exp.kills };
-        for (const c of next.combatants.filter((x) => x.side === 'B')) {
+        for (const c of next.combatants.filter((x) => x.side === 'B' && (next.outcome === 'victory' || x.hp <= 0))) {
           if (c.ref && c.ref !== 'rival') {
             const e = getEnemy(c.ref);
             xp += enemyXp(e.xp, enemyLevel(c.id));
@@ -129,7 +142,7 @@ export const combatActions = {
           }
         }
         let rivalBag: Bag | null = null;
-        if (rc && rc.side === 'B') {
+        if (rc && rc.side === 'B' && rc.hp <= 0) {
           {
             xp += 60;
             const rivalCoins = rival.gold;
@@ -164,16 +177,16 @@ export const combatActions = {
         }
         if (dropped.length && !(rivalBag && foeOnly)) {
           const [x, y] = s.hud.playerTile;
-          const foe = next.combatants.find((c) => c.side === 'B' && c.ref && c.ref !== 'rival');
-          const bag: Bag = { id: makeUid('bag'), x, y, grid: addManyToGrid(emptyGrid(Math.max(12, dropped.length)), dropped).grid, label: foe ? `Saco de ${getEnemy(foe.ref!).name}` : 'Saco del combate', allyShare: state.rival.disposition === 'allied' && next.combatants.some((c) => c.id === 'rival' && c.side === 'A' && c.hp > 0) };
+          const foe = next.combatants.filter((c) => c.side === 'B' && c.ref && c.ref !== 'rival' && c.hp <= 0);
+          const bag: Bag = { id: makeUid('bag'), x, y, grid: addManyToGrid(emptyGrid(Math.max(12, dropped.length)), dropped).grid, label: foe.length === 1 ? `Saco de ${getEnemy(foe[0].ref!).name}` : 'Saco del combate', allyShare: state.rival.disposition === 'allied' && next.combatants.some((c) => c.id === 'rival' && c.side === 'A' && c.hp > 0) };
           bagId = bag.id;
           set((st) => ({ bags: { ...st.bags, [bag.id]: bag } }));
           bus.emit('bags-changed');
         }
         rewards = { xp, gold, items, overflow: false, bagId };
         // Tu mercenario se venda las heridas tras cada victoria
-        if (merc?.alive && mc && mc.hp > 0) { const max = mercBaseStats(getMerc(merc.id)).maxHp; merc = { ...merc, hp: Math.min(max, merc.hp + Math.round(max * 0.15)) }; }
-        sfx('victory');
+        if (next.outcome === 'victory' && merc?.alive && mc && mc.hp > 0) { const max = mercBaseStats(getMerc(merc.id)).maxHp; merc = { ...merc, hp: Math.min(max, merc.hp + Math.round(max * 0.15)) }; }
+        if (next.outcome === 'victory') sfx('victory');
       } else if (next.outcome === 'defeat') {
         sfx('defeat');
       }
@@ -200,9 +213,11 @@ export const combatActions = {
       void actions.finishExpedition('died');
       return;
     }
-    const lootBag = outcome === 'victory' ? s.combat.rewards?.bagId : null;
+    const lootBag = s.combat.rewards?.bagId ?? null;
+    const killed = s.combat.state.combatants.filter((c) => c.side === 'B' && c.hp <= 0).map((c) => c.id);
+    const entityIds = s.combat.entityIds ?? (entityId ? [entityId] : []);
     set({ combat: null });
-    bus.emit('combat-ended', { entityId, outcome, kind });
+    bus.emit('combat-ended', { entityId, entityIds, killed, outcome, kind });
     // El saco del botín se abre solo: coges lo que quieras y el resto se queda en el suelo
     if (lootBag && state.bags[lootBag]) actions.openBag(lootBag);
     bus.emit('rival-changed');

@@ -616,7 +616,8 @@ export class DungeonScene extends Phaser.Scene {
         if (Math.abs(dx - dy) > 0.05) e.sprite.setFlipX(dx - dy < 0);
         if (dist < 0.75) {
           this.path = [];
-          actions.startCombat('pve', e.id, e.enemyId);
+          const mate = this.joiningEnemy(e);
+          actions.startCombat('pve', e.id, e.enemyId, mate ? { entityId: mate.id, enemyId: mate.enemyId } : undefined);
           return;
         }
       } else {
@@ -642,6 +643,30 @@ export class DungeonScene extends Phaser.Scene {
         } else e.moving = false;
       }
     }
+  }
+
+  /** Radio (casillas) en el que un segundo perseguidor entra en el mismo combate. */
+  static JOIN_RADIUS = 4;
+
+  /**
+   * Segundo enemigo de un combate: uno vivo que ya te persigue (te ve, está cerca de su guarida) dentro del radio.
+   * Entre varios, el más cercano y, si empatan, el de id menor. Nunca un jefe ni un tercero: máximo dos por bando.
+   */
+  joiningEnemy(first: { id: string; boss?: boolean }) {
+    if (first.boss) return null;
+    const p = this.player;
+    let best: (typeof this.enemies)[number] | null = null;
+    let bestD = Infinity;
+    for (const o of this.enemies) {
+      if (o.dead || o.id === first.id || o.boss) continue;
+      const d = Math.hypot(p.x - o.x, p.y - o.y);
+      if (d > DungeonScene.JOIN_RADIUS || d > o.aggro) continue;
+      if (Math.hypot(o.x - o.homeX, o.y - o.homeY) >= 7) continue;
+      const tv = this.tileIndex.get(`${Math.floor(o.x)},${Math.floor(o.y)}`);
+      if ((tv?.bright ?? 0) <= 0.1 || !this.losClear(Math.floor(o.x), Math.floor(o.y), Math.floor(p.x), Math.floor(p.y))) continue;
+      if (d < bestD - 1e-6 || (Math.abs(d - bestD) <= 1e-6 && best && o.id < best.id)) { best = o; bestD = d; }
+    }
+    return best;
   }
 
   updateRival(dt: number) {
@@ -927,15 +952,20 @@ export class DungeonScene extends Phaser.Scene {
     }
   }
 
-  onCombatEnded(p: { entityId: string | null; outcome: string; kind: string }) {
-    const e = this.enemies.find((x) => x.id === p.entityId);
-    if (p.outcome === 'victory' && e) {
-      e.dead = true;
-      this.tweens.add({ targets: [e.sprite, e.shadow], alpha: 0, duration: 500, onComplete: () => { e.sprite.destroy(); e.shadow.destroy(); } });
-    } else if (p.outcome === 'fled') {
-      this.grace = 2.5;
-      if (e) { e.x = e.homeX; e.y = e.homeY; e.target = null; }
+  onCombatEnded(p: { entityId: string | null; entityIds: string[]; killed: string[]; outcome: string; kind: string }) {
+    for (const id of p.entityIds) {
+      const e = this.enemies.find((x) => x.id === id);
+      if (!e || e.dead) continue;
+      if (p.outcome === 'victory' || p.killed.includes(id)) {
+        e.dead = true;
+        this.tweens.add({ targets: [e.sprite, e.shadow], alpha: 0, duration: 500, onComplete: () => { e.sprite.destroy(); e.shadow.destroy(); } });
+      } else if (p.outcome === 'fled') {
+        e.x = e.homeX; e.y = e.homeY; e.target = null;
+      }
     }
+    // Margen para recuperar el control antes de otro contacto (un tercer enemigo cercano sigue en el mapa)
+    if (p.outcome === 'fled') this.grace = 2.5;
+    else if (p.outcome === 'victory') this.grace = Math.max(this.grace, 2);
     this.refreshRival();
     this.refreshBags();
   }

@@ -97,7 +97,26 @@ export const DOOM_ROUND = 25;
 
 const DAMAGE_K = 60;
 
+/** Máximo de combatientes por bando (jefes, invocaciones y refuerzos incluidos). */
+export const MAX_PER_SIDE = 2;
+
+/** Dos enemigos con el mismo nombre se distinguen con I y II (también en el registro). */
+export function distinctNames(combatants: Combatant[]): Combatant[] {
+  const count = new Map<string, number>();
+  for (const c of combatants) count.set(c.name, (count.get(c.name) ?? 0) + 1);
+  const seen = new Map<string, number>();
+  return combatants.map((c) => {
+    if ((count.get(c.name) ?? 0) < 2) return c;
+    const n = (seen.get(c.name) ?? 0) + 1;
+    seen.set(c.name, n);
+    return { ...c, name: `${c.name} ${'I'.repeat(n)}` };
+  });
+}
+
 export function createCombat(combatants: Combatant[], seed: number, opts: { canFlee?: boolean } = {}): CombatState {
+  for (const side of ['A', 'B'] as const) {
+    if (combatants.filter((c) => c.side === side).length > MAX_PER_SIDE) throw new Error(`Demasiados combatientes en el bando ${side} (máximo ${MAX_PER_SIDE})`);
+  }
   const s: CombatState = {
     round: 0,
     combatants: combatants.map((c) => ({ ...c, statuses: c.statuses.map((x) => ({ ...x })) })),
@@ -216,9 +235,12 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
   if (source === 'hit') {
     if (amount > 0) gainImpetus(target, IMPETUS_WHEN_HIT);
     // Estados que se gastan al recibir un golpe (bloqueo con escudo)
+    // El bloqueo frena de lleno el primer golpe y deja al defensor en guardia (mitad de daño) hasta su próximo turno:
+    // así cubre también al segundo atacante de un 1 contra 2 sin ser invulnerable.
     for (const st of target.statuses.filter((x) => STATUSES[x.id].consumedOnHit)) {
       s.events.push({ type: 'status', targetId: target.id, status: st.id, applied: false });
-      s.log.push(`${target.name} detiene el golpe con el escudo.`);
+      s.log.push(`${target.name} detiene el golpe con el escudo y sigue en guardia.`);
+      if (target.hp - amount > 0) target.defending = true;
     }
     target.statuses = target.statuses.filter((x) => !STATUSES[x.id].consumedOnHit);
   }
@@ -306,6 +328,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
       const target = resolveTarget(s, actor, action.targetId);
       if (!target) return;
       const atk = actor.basicAttack;
+      const vs = opponents(s, actor).length > 1 ? ` contra ${target.name}` : '';
       s.events.push({ type: 'action', actorId: actor.id, label: atk.name, fx: atk.fx, targetId: target.id });
       if (evaded(s, actor, target, atk.name)) return;
       const r = rollDamage(actor, target, atk.kind, atk.power, rng);
@@ -313,7 +336,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
         s.events.push({ type: 'miss', targetId: target.id });
         s.log.push(`${actor.name} usa ${atk.name}, pero ${target.name} lo esquiva.`);
       } else {
-        s.log.push(`${actor.name} usa ${atk.name}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
+        s.log.push(`${actor.name} usa ${atk.name}${vs}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
         dealDamage(s, target, r.amount, r.crit, 'hit');
         gainImpetus(actor, IMPETUS_ON_HIT);
         onHitAffixes(s, actor, target, r.amount, rng, true);
@@ -337,6 +360,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
       // Golpes a todos: el objetivo elegido primero y luego el resto
       const targets = sk.aoe && sk.target === 'enemy' ? [target, ...opponents(s, actor).filter((x) => x !== target)] : [target];
       const landedOn = new Set<Combatant>();
+      const many = opponents(s, actor).length > 1;
       if (sk.kind && sk.power && sk.target === 'enemy') {
         for (const t of targets) {
           if (evaded(s, actor, t, sk.name)) continue;
@@ -346,7 +370,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
             s.log.push(`${actor.name} usa ${sk.name}, pero ${t.name} lo esquiva.`);
           } else {
             landedOn.add(t);
-            s.log.push(`${actor.name} usa ${sk.name}${targets.length > 1 ? ` contra ${t.name}` : ''}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
+            s.log.push(`${actor.name} usa ${sk.name}${targets.length > 1 || many ? ` contra ${t.name}` : ''}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
             dealDamage(s, t, r.amount, r.crit, 'hit');
             onHitAffixes(s, actor, t, r.amount, rng, false);
             if (sk.lifesteal && alive(actor)) {

@@ -127,6 +127,8 @@ const OUT = process.argv[3] || '/tmp/claude-0/social';
   await enter('osario', 35, { forceWanderer: 'odo' });
   await toRival();
   await G(() => { const d = window.__GRAVEVOW__; d.actions.interactRival(); d.actions.rivalPropose(); d.actions.closeModal(); const s = d.getState(); const bp = [...s.expedition.backpack]; for (let k = 0; k < 5; k++) { const i = bp.indexOf(null); bp[i] = { uid: 'oro' + k, itemId: 'gold_coins', qty: 10 }; } d.setState({ expedition: { ...s.expedition, backpack: bp } }); }); // 50 monedas cogidas tras aliaros
+  // En el portal te pide su parte; se la pagas y luego extraes
+  await G(() => { const a = window.__GRAVEVOW__.actions; a.requestExtract(); a.payRival(); });
   await G(() => window.__GRAVEVOW__.actions.finishExpedition('extracted'));
   await page.waitForSelector('[data-testid=wanderer-note]');
   ok((await page.textContent('[data-testid=wanderer-note]')).includes('de oro'), 'al extraer se despide y se lleva su parte del oro');

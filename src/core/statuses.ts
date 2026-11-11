@@ -27,7 +27,7 @@ export const STATUSES: Record<StatusId, StatusDef> = {
   stun: { id: 'stun', name: 'Aturdimiento', description: 'Pierde su próximo turno.', color: '#e8d24a', skipsTurn: true, harmful: true },
   protect: { id: 'protect', name: 'Protección', description: 'Recibe un 40% menos de daño.', color: '#8fa8c8', damageTakenMult: 0.6, harmful: false },
   empower: { id: 'empower', name: 'Furia', description: 'Causa un 30% más de daño.', color: '#ff8a3a', damageDealtMult: 1.3, harmful: false },
-  block: { id: 'block', name: 'Bloqueo', description: 'El próximo golpe recibido se reduce un 85%.', color: '#d9d3c1', damageTakenMult: 0.15, consumedOnHit: true, harmful: false },
+  block: { id: 'block', name: 'Bloqueo', description: 'El próximo golpe recibido se reduce un 85%; después quedas en guardia (mitad de daño) hasta tu turno.', color: '#d9d3c1', damageTakenMult: 0.15, consumedOnHit: true, harmful: false },
   endure: { id: 'endure', name: 'Aguante', description: 'No puede bajar de 1 punto de vida.', color: '#f2c95a', harmful: false },
   evade: { id: 'evade', name: 'Parpadeo', description: 'Esquiva el próximo ataque.', color: '#c79bff', harmful: false },
   weaken: { id: 'weaken', name: 'Debilidad', description: 'Causa un 30% menos de daño.', color: '#9a7bb0', damageDealtMult: 0.7, harmful: true },

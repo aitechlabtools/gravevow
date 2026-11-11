@@ -145,6 +145,8 @@ export function CombatScreen() {
       }
       if (!playerTurn) return;
       const n = Number(e.key);
+      // Tab cambia de objetivo cuando hay dos enemigos (en la Mochila pasa de página)
+      if (e.key === 'Tab' && menu !== 'bag' && foes.length > 1) { e.preventDefault(); const i = foes.findIndex((f) => f.id === tgt?.id); setTarget(foes[(i + 1) % foes.length].id); return; }
       if (menu === 'main') {
         if (n >= 1 && n <= 5) { e.preventDefault(); const c = mainCmds[n - 1]; if (!c.disabled) c.onUse(); }
         return;
@@ -183,7 +185,9 @@ export function CombatScreen() {
               const c = cs.combatants.find((x) => x.id === id)!;
               if (c.hp <= 0) return null;
               const on = i === cs.turnIndex && !cs.outcome;
-              return <span key={id + i} className={`px-1.5 py-0.5 border bg-black/60 ${on ? 'border-gold text-gold' : 'border-stone-700 text-stone-300'} ${c.side === 'B' ? 'italic' : ''}`}>{c.name.split(' ')[0]}</span>;
+              const w = c.name.split(' ');
+              const short = w[0] + (w.length > 1 && /^I+$/.test(w[w.length - 1]) ? ` ${w[w.length - 1]}` : '');
+              return <span key={id + i} className={`px-1.5 py-0.5 border bg-black/60 ${on ? 'border-gold text-gold' : 'border-stone-700 text-stone-300'} ${c.side === 'B' ? 'italic' : ''}`}>{short}</span>;
             })}
           </div>
         </div>
@@ -201,8 +205,8 @@ export function CombatScreen() {
         {allies.map((c, i) => <StageFighter key={c.id} c={c} x={allies.length > 1 ? 36 + i * 13 : 39} bottom={allies.length > 1 ? 11 - i * 3 : 9} h={allies.length > 1 ? 37 : 40} shadowW={allies.length > 1 ? 11 : 12} shadowBottom={allies.length > 1 ? 11.5 - i * 3 : 9.5} anim={anim} floats={floats} active={actor?.id === c.id} dim />)}
         <StageFighter c={player} x={playerX} bottom={4.5} h={52} shadowW={17} shadowBottom={5} anim={anim} floats={floats} active={actor?.id === player.id} hero={{ classId: profile.character.classId, appearance: profile.character.appearance, equipment: expedition?.equipment ?? profile.equipment, skin: wornSkin(profile) }} />
 
-        <div className="absolute left-[3%] top-[5%] flex flex-col gap-2 info-stack">
-          {sideB.map((c) => <InfoFrame key={c.id} c={c} level={c.level} />)}
+        <div className={`absolute left-[3%] top-[5%] flex flex-col info-stack ${sideB.length > 1 ? 'gap-1.5 info-duo' : 'gap-2'}`}>
+          {sideB.map((c) => <InfoFrame key={c.id} c={c} level={c.level} duo={sideB.length > 1} target={foes.length > 1 && c.hp > 0 ? { on: tgt?.id === c.id, pick: () => setTarget(c.id) } : undefined} />)}
         </div>
         <div className="absolute right-[3%] bottom-[6%] flex flex-col items-end gap-2 info-stack info-stack-br">
           {allies.map((c) => <InfoFrame key={c.id} c={c} small />)}
@@ -286,21 +290,23 @@ function EntryInfo({ e, res }: { e: Slot; res: string }) {
   );
 }
 
-function InfoFrame({ c, nums, sub, small, level, spend = 0 }: { c: Combatant; nums?: boolean; sub?: string; small?: boolean; level?: number; spend?: number }) {
+function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo }: { c: Combatant; nums?: boolean; sub?: string; small?: boolean; level?: number; spend?: number; target?: { on: boolean; pick: () => void }; duo?: boolean }) {
   const kind = c.boss ? 'boss' : c.side === 'A' && c.control !== 'player' ? 'ally' : '';
+  // Con dos enemigos, tocar su ficha lo marca como objetivo (zona táctil grande)
+  const pick = target ? { role: 'button', tabIndex: -1, 'aria-pressed': target.on, onClick: target.pick, style: { cursor: 'pointer', outline: target.on ? '2px solid #c4283b' : undefined, outlineOffset: 1 } } : {};
   return (
-    <div className={`frame ${kind} ${small ? 'frame-sm' : ''}`} data-testid={`info-${c.id}`}>
+    <div className={`frame ${kind} ${small ? 'frame-sm' : ''} ${duo ? 'frame-duo' : ''}`} data-testid={`info-${c.id}`} {...pick}>
       <div className="flex items-center gap-2.5">
         {!small && level !== undefined && <span className={`lvl ${c.boss ? 'boss' : ''}`} title={`Nivel ${level}`}>{level}</span>}
         <div className="flex-1 min-w-0">
-          <div className={`fname ${c.side === 'B' ? 'text-[#ffb3a8]' : ''}`}>{c.name}{kind === 'ally' ? <span className="text-heal text-xs"> · aliado</span> : ''}</div>
+          <div className={`fname ${c.side === 'B' ? 'text-[#ffb3a8]' : ''}`}>{target?.on ? <span className="text-blood" data-testid={`target-${c.id}`} aria-label="Objetivo">▶ </span> : ''}{c.name}{kind === 'ally' ? <span className="text-heal text-xs"> · aliado</span> : ''}</div>
           {sub && !small && <div className="text-[11px] text-stone-400 truncate">{sub}</div>}
         </div>
         {small && <span className="text-xs text-stone-400">{c.hp} / {c.stats.maxHp}</span>}
       </div>
       <div className="hprow"><span className="text-[#ff7a6a]">PV</span><Bar value={c.hp} max={c.stats.maxHp} color="#c4283b" testId={`hp-${c.id}`} />{nums && <b className="hpnum" data-testid={`hpnum-${c.id}`}>{c.hp}<i> / {c.stats.maxHp}</i></b>}</div>
       {!small && c.stats.maxMp > 0 && <div className="hprow"><span className={c.resourceName === 'Ímpetu' ? 'text-[#ffc08a]' : 'text-[#9cc3ff]'}>{c.resourceName === 'Ímpetu' ? 'IM' : 'MA'}</span><Bar value={c.mp} max={c.stats.maxMp} color={c.resourceName === 'Ímpetu' ? '#e08a3d' : '#3d7be0'} spend={spend} testId={`mp-${c.id}`} />{nums && <b className="hpnum" data-testid={`mpnum-${c.id}`}>{c.mp}<i> / {c.stats.maxMp}</i></b>}</div>}
-      {!small && (
+      {!small && (!duo || c.defending || c.statuses.length > 0) && (
         <div className="flex justify-between items-center mt-1 min-h-[16px] gap-2">
           <span className="flex flex-wrap gap-1">
             {c.defending && <span className="chip" style={{ color: '#d9d3c1', borderColor: '#8c8693' }}>En guardia</span>}

@@ -81,7 +81,7 @@ export const SKILLS: Record<string, SkillDef> = {
   holy_light: { id: 'holy_light', name: 'Luz sagrada', description: 'Daño mágico (x1.2), el doble contra no-muertos.', cost: 5, target: 'enemy', kind: 'magical', power: 1.2, bonusVsUndead: 2, fx: 'holy' },
 
   // ── Escudos ──
-  block: { id: 'block', name: 'Bloqueo', description: 'Levantas el escudo: el próximo golpe se reduce un 85%.', cost: 2, target: 'self', applies: [{ status: 'block', chance: 1, turns: 2, self: true }], fx: 'shield' },
+  block: { id: 'block', name: 'Bloqueo', description: 'Levantas el escudo: el próximo golpe se reduce un 85% y los demás, a la mitad, hasta tu siguiente turno.', cost: 2, target: 'self', applies: [{ status: 'block', chance: 1, turns: 2, self: true }], fx: 'shield' },
   shield_bash: { id: 'shield_bash', name: 'Embestida', description: 'Golpe con el escudo (x0.7) con 40% de aturdir.', cost: 4, target: 'enemy', kind: 'physical', power: 0.7, applies: [{ status: 'stun', chance: 0.4, turns: 1 }], fx: 'smash' },
   iron_wall: { id: 'iron_wall', name: 'Muro de hierro', description: 'Te proteges (-40% de daño) y regeneras vida durante 3 turnos.', cost: 5, target: 'self', applies: [{ status: 'protect', chance: 1, turns: 3, self: true }, { status: 'regen', chance: 1, turns: 3, self: true }], fx: 'shield' },
 
