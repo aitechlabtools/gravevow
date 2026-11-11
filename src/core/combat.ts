@@ -7,6 +7,8 @@ import { getSkill } from './data/skills';
 import { getItem } from './data/items';
 import { STATUSES } from './statuses';
 import { ANATOMY } from '../config/anatomy';
+import { DEFEND_TELEGRAPHED, EXPOSED_MULT, DRAIN_PCT } from '../config/intents';
+import { getMove, type BossPhaseDef, type PatternDef } from './data/intents';
 import { tickPain, addBleed, bleedTick, applyTreatment, damageRegion, damageSpread, healBody, initiativeMult, offenseMult, rollInjury, rollRegion, summaryHp, treatError, REGION_NAME, type Body, type Region } from './anatomy';
 
 // ════════════════════════════════════════════════════════════════════
@@ -78,7 +80,29 @@ export interface Combatant {
   surgery?: { region: Region };
   /** Última región golpeada (ahí se abre el sangrado de una habilidad). */
   lastRegion?: Region;
+  /** Ataques anunciados (Fase 8): patrón, intención en curso y acciones normales desde la última. */
+  pattern?: PatternDef;
+  intent?: Intent;
+  sinceIntent?: number;
+  /** Siguiente movimiento de la lista del patrón. */
+  patternIdx?: number;
+  /** Turnos propios que pierde recuperándose tras descargar (tambaleo). */
+  recovering?: number;
+  /** Turnos propios que sigue expuesto (recibe más daño) tras descargar. */
+  exposed?: number;
+  /** Jefes regionales: fases por umbral, la fase actual (0 = la primera) y su auxiliar aún fuera del combate. */
+  phases?: BossPhaseDef[];
+  phase?: number;
+  reserve?: Combatant;
+  /** Llamado por un jefe: su premio es el del jefe (no da experiencia ni botín propios). */
+  summoned?: boolean;
 }
+
+/** Lo que recuerda un jefe del que te retiras, hasta el final de la incursión: vida, fase y si ya gastó su auxiliar. */
+export interface BossMemory { hp: number; phase: number; summoned: boolean }
+
+/** Ataque anunciado en preparación: a quién, dónde (si apunta a una región), turnos que faltan y golpes que lo cortan. */
+export interface Intent { move: string; targetId: string; region?: Region; wait: number; breaks: number; breakRound?: number }
 
 export type CombatAction =
   | { type: 'attack'; targetId: string }
@@ -87,7 +111,9 @@ export type CombatAction =
   | { type: 'item'; itemId: string; /** Región a tratar (vendas, férulas…). */ region?: Region }
   | { type: 'flee' }
   /** Segunda ronda de una cirugía empezada (o `cancel` para dejarla: el equipo se pierde). */
-  | { type: 'surgery'; cancel?: boolean };
+  | { type: 'surgery'; cancel?: boolean }
+  /** Solo la IA: seguir preparando el ataque anunciado o descargarlo (el anuncio va al final de una acción normal). */
+  | { type: 'unleash' };
 
 export type CombatEvent =
   | { type: 'action'; actorId: string; label: string; fx: Fx | 'item' | 'defend' | 'flee'; targetId?: string }
@@ -99,7 +125,8 @@ export type CombatEvent =
   | { type: 'skip'; actorId: string; status: StatusId }
   | { type: 'death'; targetId: string }
   | { type: 'flee'; actorId: string; success: boolean }
-  | { type: 'itemUsed'; actorId: string; itemId: string };
+  | { type: 'itemUsed'; actorId: string; itemId: string }
+  | { type: 'intent'; actorId: string; label: string; targetId?: string; broken?: boolean };
 
 export type Outcome = 'victory' | 'defeat' | 'fled';
 
@@ -230,6 +257,7 @@ export function rollDamage(att: Combatant, def: Combatant, kind: DamageKind, pow
     if (m && st.turns > 0) dmg *= m;
   }
   if (def.defending) dmg *= 0.5;
+  if (def.exposed && def.exposed > 0) dmg *= EXPOSED_MULT;
   for (const st of def.statuses) {
     const m = STATUSES[st.id].damageTakenMult;
     if (m && st.turns > 0) dmg *= m;
@@ -255,7 +283,7 @@ function gainImpetus(c: Combatant, n: number) {
   c.mp = Math.min(c.stats.maxMp, c.mp + n);
 }
 
-interface HitInfo { status?: StatusId; rng?: Rng; kind?: DamageKind }
+interface HitInfo { status?: StatusId; rng?: Rng; kind?: DamageKind; /** Golpe anunciado a una región. */ region?: Region; noInjury?: boolean; by?: Combatant }
 
 function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boolean, source: 'hit' | 'dot' | 'doom', info: HitInfo = {}) {
   const status = info.status;
@@ -276,11 +304,11 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
     // Anatomía: el golpe cae en una región; el daño de estados y el tributo se reparten por todo el cuerpo
     const lethal = floor === 0;
     if (source === 'hit' && info.rng) {
-      region = rollRegion(info.rng, !!target.headHits);
+      region = info.region ?? rollRegion(info.rng, !!target.headHits);
       target.lastRegion = region;
       target.body = damageRegion(target.body, region, amount, { lethal }).body;
       if (amount > 0) s.log.push(`El golpe alcanza a ${target.name} en ${regionWith(region)}.`);
-      if (info.kind === 'physical' && amount > 0 && !target.noInjuries && summaryHp(target.body) > 0) {
+      if (info.kind === 'physical' && amount > 0 && !target.noInjuries && !info.noInjury && summaryHp(target.body) > 0) {
         const inj = rollInjury(target.body, region, crit, info.rng);
         target.body = inj.body;
         if (inj.injury?.bleed) s.log.push(`${REGION_NAME[region]}: sangrado ${inj.injury.bleed === 2 ? 'grave' : 'leve'}.`);
@@ -307,6 +335,21 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
     target.statuses = target.statuses.filter((x) => !STATUSES[x.id].consumedOnHit);
   }
   s.events.push({ type: 'damage', targetId: target.id, amount, crit, source, status, region });
+  // Un golpe que impacta hace avanzar la interrupción de una preparación que se puede cortar (como mucho uno por ronda)
+  if (source === 'hit' && amount > 0 && target.intent && target.hp > 0) {
+    const mv = getMove(target.intent.move);
+    if (mv.breakAt && target.intent.breakRound !== s.round) {
+      target.intent.breaks += 1;
+      target.intent.breakRound = s.round;
+      if (target.intent.breaks >= mv.breakAt) {
+        target.intent = undefined;
+        s.events.push({ type: 'intent', actorId: target.id, label: mv.name, broken: true });
+        s.log.push(`¡Interrumpido! ${target.name} pierde ${mv.name.toLowerCase()}.`);
+      } else s.log.push(`${mv.name}: ${target.intent.breaks} de ${mv.breakAt} para romperlo.`);
+    }
+  }
+  // Fases de los jefes regionales: al cruzar cada umbral, una sola vez, sin curarse
+  if (target.phases && target.hp > 0) enterPhases(s, target);
   // Segunda fase de los jefes: por debajo de la mitad de la vida cambian de habilidades y avisan
   if (target.phase2 && !target.enraged && target.hp > 0 && target.hp <= target.stats.maxHp / 2) {
     target.enraged = true;
@@ -317,6 +360,104 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
   if (target.hp === 0) {
     s.events.push({ type: 'death', targetId: target.id });
     s.log.push(`${target.name} cae derrotado.`);
+  }
+}
+
+/** Entra en las fases cuyos umbrales ya ha cruzado. No cura ni cancela el daño hecho; el auxiliar entra si hay sitio. */
+function enterPhases(s: CombatState, boss: Combatant) {
+  const phases = boss.phases!;
+  while ((boss.phase ?? 0) < phases.length && boss.hp <= boss.stats.maxHp * phases[boss.phase ?? 0].at) {
+    const ph = phases[boss.phase ?? 0];
+    applyPhase(boss, ph);
+    s.log.push(ph.line);
+    s.events.push({ type: 'intent', actorId: boss.id, label: `Fase ${(boss.phase ?? 0) + 1}` });
+    if (ph.summon && boss.reserve) {
+      const aux = boss.reserve;
+      boss.reserve = undefined;
+      if (s.combatants.filter((c) => c.side === boss.side && alive(c)).length < MAX_PER_SIDE) {
+        // Sustituye a un caído del mismo bando si lo hay (máximo dos por bando, también contando cuerpos)
+        const dead = s.combatants.findIndex((c) => c.side === boss.side && !alive(c));
+        if (dead >= 0 || s.combatants.filter((c) => c.side === boss.side).length < MAX_PER_SIDE) {
+          if (dead >= 0) s.combatants.splice(dead, 1, aux); else s.combatants.push(aux);
+          s.log.push(`${aux.name} se une al combate (actúa desde la próxima ronda).`);
+        }
+      }
+    }
+  }
+}
+
+/** Efectos permanentes de una fase (patrón y guardia rota). El auxiliar lo trae `enterPhases`. */
+function applyPhase(boss: Combatant, ph: BossPhaseDef) {
+  boss.phase = (boss.phase ?? 0) + 1;
+  if (ph.pattern) { boss.pattern = ph.pattern; boss.patternIdx = 0; }
+  if (ph.guard) boss.stats = { ...boss.stats, def: Math.round(boss.stats.def * ph.guard), res: Math.round(boss.stats.res * ph.guard) };
+}
+
+/** Recuerdo de un jefe vivo al acabar un combate del que te has retirado. */
+export function bossMemory(c: Combatant): BossMemory {
+  return { hp: c.hp, phase: c.phase ?? 0, summoned: !c.reserve };
+}
+
+/** Un jefe recién creado retoma su recuerdo: misma vida, misma fase (sin volver a anunciarla) y sin un segundo auxiliar. */
+export function restoreBoss(c: Combatant, m: BossMemory): Combatant {
+  const b: Combatant = { ...c, stats: { ...c.stats }, hp: Math.max(1, Math.min(c.stats.maxHp, m.hp)) };
+  for (let i = 0; i < m.phase && b.phases && i < b.phases.length; i++) applyPhase(b, b.phases[i]);
+  if (m.summoned) b.reserve = undefined;
+  return b;
+}
+
+/** Anuncia el siguiente ataque del patrón: objetivo y, si apunta, la región. */
+function telegraph(s: CombatState, actor: Combatant, rng: Rng) {
+  const pt = actor.pattern!;
+  const mv = getMove(pt.moves[(actor.patternIdx ?? 0) % pt.moves.length]);
+  actor.patternIdx = ((actor.patternIdx ?? 0) + 1) % pt.moves.length;
+  actor.sinceIntent = 0;
+  const foes = opponents(s, actor);
+  const target = foes.find((f) => f.control === 'player') && rng.chance(0.7) ? foes.find((f) => f.control === 'player')! : rng.pick(foes);
+  const region = mv.regions ? rng.pick(mv.regions.filter((r) => r !== 'head' || target.headHits)) : undefined;
+  actor.intent = { move: mv.id, targetId: target.id, region, wait: mv.prep ?? 1, breaks: 0 };
+  const text = mv.tell.replace('{n}', actor.name).replace('{t}', mv.aoe ? 'todos' : target.name).replace('{r}', region ? regionWith(region) : '');
+  s.events.push({ type: 'intent', actorId: actor.id, label: mv.name, targetId: target.id });
+  s.log.push(`⚠ ${text}`);
+}
+
+/** Sigue preparando o descarga el ataque anunciado. La guardia del objetivo lo mitiga; después queda expuesto. */
+function unleash(s: CombatState, actor: Combatant, rng: Rng) {
+  const it = actor.intent!;
+  const mv = getMove(it.move);
+  if (it.wait > 1) {
+    it.wait -= 1;
+    s.events.push({ type: 'intent', actorId: actor.id, label: mv.name, targetId: it.targetId });
+    s.log.push(`${actor.name} sigue preparando ${mv.name.toLowerCase()} (${(mv.prep ?? 1) - it.wait} de ${mv.prep ?? 1}).`);
+    return;
+  }
+  actor.intent = undefined;
+  const chosen = s.combatants.find((c) => c.id === it.targetId && alive(c) && c.side !== actor.side) ?? opponents(s, actor)[0];
+  if (!chosen) return;
+  s.events.push({ type: 'action', actorId: actor.id, label: mv.name, fx: mv.damage === 'magical' ? 'dark' : 'smash', targetId: chosen.id });
+  if (mv.kind === 'drain') {
+    const real = Math.min(chosen.mp, Math.round(chosen.stats.maxMp * DRAIN_PCT));
+    chosen.mp -= real;
+    s.events.push({ type: 'mana', targetId: chosen.id, amount: -real });
+    s.log.push(`${actor.name} usa ${mv.name}: ${chosen.name} pierde ${real} de ${chosen.resourceName.toLowerCase()}.`);
+  } else {
+    const targets = mv.aoe ? [chosen, ...opponents(s, actor).filter((x) => x !== chosen)] : [chosen];
+    for (const t of targets) {
+      for (let h = 0; h < (mv.hits ?? 1) && alive(t); h++) {
+        // Guardia o Bloqueo con escudo: los dos cuentan como defensa ante un ataque anunciado
+        const guarded = t.defending || hasStatus(t, 'block');
+        const r = rollDamage(actor, t, mv.damage!, mv.power!, rng);
+        if (r.miss) { s.events.push({ type: 'miss', targetId: t.id }); s.log.push(`${actor.name} usa ${mv.name}, pero ${t.name} lo esquiva.`); continue; }
+        const amount = guarded ? Math.max(1, Math.round(r.amount * DEFEND_TELEGRAPHED)) : r.amount;
+        s.log.push(`${actor.name} usa ${mv.name}${targets.length > 1 || (mv.hits ?? 1) > 1 ? ` contra ${t.name}` : ''}: ${amount} de daño${guarded ? ' (en guardia)' : ''}${r.crit ? ' ¡CRÍTICO!' : ''}.`);
+        dealDamage(s, t, amount, r.crit, 'hit', { rng, kind: mv.damage, region: it.region && t.id === chosen.id ? it.region : undefined, noInjury: guarded });
+      }
+    }
+  }
+  if (alive(actor) && (mv.exposed || mv.stagger)) {
+    actor.exposed = (mv.stagger ?? 0) + (mv.exposed ?? 0);
+    actor.recovering = mv.stagger ?? 0;
+    s.log.push(mv.stagger ? `${actor.name} se tambalea y queda expuesto.` : `${actor.name} queda expuesto tras el golpe.`);
   }
 }
 
@@ -553,6 +694,11 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
       applyItemEffect(s, actor, def.use);
       return;
     }
+    case 'unleash': {
+      if (actor.control !== 'ai' || !actor.intent) throw new Error('Acción no disponible');
+      unleash(s, actor, rng);
+      return;
+    }
     case 'flee': {
       s.events.push({ type: 'action', actorId: actor.id, label: 'Huir', fx: 'flee' });
       if (!s.canFlee) {
@@ -690,6 +836,16 @@ function advance(s: CombatState, rng: Rng) {
     const actor = getCombatant(s, s.order[s.turnIndex]);
     if (!alive(actor)) continue;
     actor.defending = false;
+    // Recuperación tras un ataque anunciado: pierde el turno y sigue expuesto hasta que acaba
+    if (actor.recovering && actor.recovering > 0) {
+      actor.recovering -= 1;
+      s.events.push({ type: 'intent', actorId: actor.id, label: 'Se recupera' });
+      actor.exposed = Math.max(0, (actor.exposed ?? 0) - 1);
+      s.log.push(`${actor.name} se recupera del golpe${actor.exposed ? '' : ' y recompone la guardia'}.`);
+      endOfTurn(s, actor);
+      checkOutcome(s);
+      continue;
+    }
     const skip = actor.statuses.find((x) => STATUSES[x.id].skipsTurn && x.turns > 0);
     if (skip) {
       skip.turns -= 1;
@@ -717,7 +873,20 @@ export function performAction(state: CombatState, action: CombatAction): CombatS
   const rng = makeRng(s.rngState);
   const actor = currentActor(s);
   if (!actor) throw new Error('No hay combatiente activo');
+  const wasExposed = action.type !== 'unleash' && (actor.exposed ?? 0) > 0;
   executeAction(s, actor, action, rng);
+  // Tras actuar, el expuesto recompone la guardia; y quien sigue un patrón anuncia el siguiente ataque en este mismo turno
+  if (wasExposed) actor.exposed = (actor.exposed ?? 1) - 1;
+  if (actor.pattern && action.type !== 'unleash') {
+    actor.sinceIntent = (actor.sinceIntent ?? 0) + 1;
+    checkOutcome(s);
+    // Mientras su auxiliar sigue en pie, el jefe no anuncia: la presión la pone el auxiliar
+    const auxUp = s.combatants.some((c) => c.id === `${actor.id}_aux` && alive(c));
+    // Una sola amenaza anunciada a la vez por bando: así una guardia siempre es una respuesta válida
+    const mates = s.combatants.filter((c) => c !== actor && c.side === actor.side && alive(c));
+    const busy = mates.some((c) => c.intent || (c.exposed ?? 0) > 0) || (!!actor.pattern.solo && mates.length > 0);
+    if (!s.outcome && alive(actor) && !actor.intent && !auxUp && !busy && actor.sinceIntent >= actor.pattern.every && opponents(s, actor).length) telegraph(s, actor, rng);
+  }
   checkOutcome(s);
   if (!s.outcome) {
     endOfTurn(s, actor, action.type === 'skill' ? action.skillId : undefined);
@@ -726,6 +895,31 @@ export function performAction(state: CombatState, action: CombatAction): CombatS
   if (!s.outcome) advance(s, rng);
   s.rngState = rng.state;
   return s;
+}
+
+/** Daño esperado de un ataque anunciado contra `def` sin guardia (sin crítico ni esquiva): lo enseña la ficha. */
+export function intentDamage(att: Combatant, def: Combatant): number {
+  if (!att.intent) return 0;
+  const mv = getMove(att.intent.move);
+  if (mv.kind !== 'strike') return 0;
+  const off = mv.damage === 'physical' ? att.stats.atk : att.stats.mag;
+  const mit = mv.damage === 'physical' ? def.stats.def : def.stats.res;
+  let dmg = mv.power! * off * (DAMAGE_K / (DAMAGE_K + Math.max(0, mit)));
+  if (att.body) dmg *= offenseMult(att.body);
+  if (def.body) dmg *= ANATOMY.damageTaken;
+  for (const st of att.statuses) { const m = STATUSES[st.id].damageDealtMult; if (m && st.turns > 0) dmg *= m; }
+  for (const st of def.statuses) { const m = STATUSES[st.id].damageTakenMult; if (m && st.turns > 0) dmg *= m; }
+  return Math.max(1, Math.round(dmg)) * (mv.hits ?? 1);
+}
+
+/** Lectura de intenciones para `c`: el golpe anunciado que le caerá antes de su próximo turno, la preparación que aún
+ *  se puede cortar y el enemigo expuesto. Lo usan la IA aliada, las simulaciones de equilibrio y la interfaz. */
+export function readIntents(s: CombatState, c: Combatant): { threat: Combatant | null; breakable: Combatant | null; exposed: Combatant | null } {
+  const foes = opponents(s, c);
+  const threat = foes.find((f) => f.intent && f.intent.wait <= 1 && getMove(f.intent.move).kind === 'strike' && (f.intent.targetId === c.id || getMove(f.intent.move).aoe)) ?? null;
+  const breakable = foes.find((f) => f.intent && getMove(f.intent.move).breakAt) ?? null;
+  const exposed = foes.find((f) => f.exposed) ?? null;
+  return { threat, breakable, exposed };
 }
 
 // ── IA de combate ──
@@ -737,6 +931,8 @@ export function chooseAIAction(state: CombatState): CombatAction {
   const rng = makeRng(state.rngState ^ 0x9e3779b9 ^ state.step);
   const foes = opponents(state, actor);
   const hpPct = actor.hp / actor.stats.maxHp;
+  // Ataques anunciados: primero se termina lo preparado; después, tras `every` acciones normales, se anuncia el siguiente
+  if (actor.intent) return { type: 'unleash' };
 
   // Prudente: se cura antes y se protege más; agresivo: aguanta hasta el límite y remata al más débil.
   const cautious = actor.stance === 'cautious';

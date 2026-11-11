@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createCombat, performAction, runAITurn, currentActor, canUseSkill, getCombatant, type CombatState, type CombatAction } from '../src/core/combat';
+import { intentResponse } from './intentPlayer';
+import { opponents, createCombat, performAction, runAITurn, currentActor, canUseSkill, getCombatant, type CombatState, type CombatAction } from '../src/core/combat';
 import { getSkill } from '../src/core/data/skills';
 import { enemyCombatant, playerCombatant } from '../src/core/combatants';
 import { createProfile } from '../src/core/profile';
@@ -24,11 +25,15 @@ function simulate(cls: ClassId, enemyId: string, runs = 300, potions = 2, level 
       // Jugador razonable: usa su habilidad de clase cuando conviene y el mejor ataque que pueda pagar
       const offensive = me.skills.map(getSkill).filter((k) => k.target === 'enemy' && canUseSkill(me, k.id)).sort((x, y) => (y.power ?? 0) - (x.power ?? 0));
       const cheapest = Math.min(...me.skills.map(getSkill).filter((k) => k.target === 'enemy').map((k) => k.cost));
-      let action: CombatAction = { type: 'attack', targetId: 'e' };
+      const read = intentResponse(s, me);
+      if (read) { s = performAction(s, read); continue; }
+      // Con un auxiliar del jefe en juego, primero el más débil
+      const tgt = opponents(s, me).sort((x, y) => x.hp - y.hp)[0].id;
+      let action: CombatAction = { type: 'attack', targetId: tgt };
       void cheapest;
       if (me.skills.includes('mana_shield') && canUseSkill(me, 'mana_shield') && !me.shield) action = { type: 'skill', skillId: 'mana_shield' };
       else if (me.skills.includes('war_cry') && canUseSkill(me, 'war_cry') && !me.statuses.some((x) => x.id === 'empower') && s.round <= 1) action = { type: 'skill', skillId: 'war_cry' };
-      else if (offensive.length && (seed % 2 === 0 || me.mp >= me.stats.maxMp - 4)) action = { type: 'skill', skillId: offensive[0].id, targetId: 'e' };
+      else if (offensive.length && (seed % 2 === 0 || me.mp >= me.stats.maxMp - 4)) action = { type: 'skill', skillId: offensive[0].id, targetId: tgt };
       s = performAction(s, action);
     }
     if (s.outcome === 'victory') wins++;

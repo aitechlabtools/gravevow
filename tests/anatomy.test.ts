@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { intentResponse } from './intentPlayer';
 import {
   applyTreatment, bleedTick, bodyHp, damageRegion, damageSpread, fromWounds, fullBody, healBody, initiativeMult, isDead,
   offenseMult, regionMaxes, REGIONS, rollRegion, tickPain, stabilize, summaryHp, toWounds, treatError, urgencies, bestTreatment, vesperPrice, type Body,
@@ -217,6 +218,8 @@ function playOut(s: CombatState, potions: number): CombatState {
     const vital = me.body ? Math.min(me.body.parts.thorax.hp / regionMaxes(me.body.total).thorax, me.body.parts.head.hp / regionMaxes(me.body.total).head) : 1;
     if ((me.hp / me.stats.maxHp < 0.4 || vital < 0.4) && left > 0) { left--; s = performAction(s, { type: 'item', itemId: 'health_potion' }); continue; }
     const off = me.skills.map(getSkill).filter((k) => k.target === 'enemy' && canUseSkill(me, k.id)).sort((x, y) => Number(!!y.aoe) - Number(!!x.aoe) || (y.power ?? 0) - (x.power ?? 0));
+    const read = intentResponse(s, me);
+    if (read) { s = performAction(s, read); continue; }
     let action: CombatAction = { type: 'attack', targetId: foes[0].id };
     if (me.skills.includes('mana_shield') && canUseSkill(me, 'mana_shield') && !me.shield) action = { type: 'skill', skillId: 'mana_shield' };
     else if (off.length) action = { type: 'skill', skillId: off[0].id, targetId: foes[0].id };

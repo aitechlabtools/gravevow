@@ -119,7 +119,8 @@ describe('Criaturas y escenarios de las subzonas', () => {
       expect(MONSTER_SPECS[e.sprite] || BEAST_SPECS[e.sprite] || FLYER_SPECS[e.sprite], e.id).toBeTruthy();
       for (const sk of [...e.skills, ...(e.phase2?.skills ?? [])]) expect(SKILLS[sk], `${e.id}: ${sk}`).toBeTruthy();
       expect(BESTIARY_LORE[e.id], e.id).toBeTruthy();
-      if (e.boss) expect(e.phase2, e.id).toBeTruthy();
+      // Fase 8: los jefes regionales cambian por fases (`phases`); el resto conserva su segunda fase
+      if (e.boss) expect(e.phase2 ?? e.phases, e.id).toBeTruthy();
     }
   });
 });

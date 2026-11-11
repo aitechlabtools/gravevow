@@ -1,3 +1,4 @@
+import type { BossMemory } from './combat';
 import { baseSupply, needsOf, toSaved, type Needs } from './needs';
 import { gridGold } from './gold';
 import type { Equipment, Grid, ItemStack, Profile } from './types';
@@ -35,6 +36,8 @@ export interface ExpeditionState {
   needs?: Needs;
   /** Pacto de altar activo (Fase 7): uno como máximo, hasta el final de la incursión. */
   pact?: string | null;
+  /** Jefes de los que te retiraste (Fase 8): conservan vida, fase y auxiliar gastado hasta el final de la incursión. */
+  bosses?: Record<string, BossMemory>;
   /** Cirugía de campo en marcha: región y pulsos que faltan (el equipo ya está reservado). */
   surgery?: { region: Region; left: number } | null;
   mp: number;

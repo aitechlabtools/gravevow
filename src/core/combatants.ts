@@ -13,6 +13,7 @@ import { ZONE_NORMALIZE, subzoneGrowth } from '../config/subzones';
 import { ZONES, ZONE_ORDER } from './data/zones';
 import { effectiveMaxMp, type Needs } from './needs';
 import { getPact } from './data/altars';
+import { AUX_SCALE } from '../config/intents';
 import { resizeBody, summaryHp, type Body } from './anatomy';
 
 /** Zona de origen de una criatura (la de su archivo de datos). Las nuevas, diseñadas a escala de la Mazmorra, no se tocan. */
@@ -85,7 +86,18 @@ export function enemyCombatant(enemyId: string, instanceId: string, side: Side =
     basicAttack: e.basicAttack, control: 'ai', skillChance: e.skillChance,
     undead: e.undead, defending: false, potions: 0, boss: e.boss, ref: enemyId, level,
     phase2: e.phase2,
+    pattern: e.pattern, phases: e.phases,
+    // Auxiliar de un jefe: preparado ahora y fuera del combate hasta que su fase lo llame (una sola vez)
+    reserve: e.phases?.find((p) => p.summon) ? auxiliary(e.phases.find((p) => p.summon)!.summon!, `${instanceId}_aux`, side, level) : undefined,
   };
+}
+
+/** Auxiliar de un jefe: la criatura de su nivel, más débil (AUX_SCALE), para que eliminarlo sea una opción real. */
+function auxiliary(enemyId: string, id: string, side: Side, level: number): Combatant {
+  const c = enemyCombatant(enemyId, id, side, level);
+  const stats = { ...c.stats };
+  for (const k of ['maxHp', 'atk', 'mag'] as const) stats[k] = Math.max(1, Math.round(stats[k] * AUX_SCALE));
+  return { ...c, stats, hp: stats.maxHp, pattern: undefined, summoned: true };
 }
 
 /** Vida de Kael tras un combate, de vuelta a su escala base. */

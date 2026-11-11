@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { actions, useGame } from '../state/store';
-import { cooldownLeft, currentActor, fleeChance, opponents, type Combatant, type CombatEvent } from '../../core/combat';
+import { cooldownLeft, currentActor, fleeChance, intentDamage, opponents, readIntents, type Combatant, type CombatEvent } from '../../core/combat';
+import { getMove } from '../../core/data/intents';
+import { DEFEND_TELEGRAPHED } from '../../config/intents';
 import { getSkill } from '../../core/data/skills';
 import { combatLoadout } from '../../core/loadout';
 import { getItem } from '../../core/data/items';
@@ -76,6 +78,8 @@ export function CombatScreen() {
       else if (e.type === 'mana' && e.amount > 0) nf.push({ id: ++floatId.current, targetId: e.targetId, text: `+${e.amount}`, color: '#6fa8ff' });
       else if (e.type === 'miss') { anyMiss = true; nf.push({ id: ++floatId.current, targetId: e.targetId, text: 'Esquiva', color: '#d9d3c1' }); }
       else if (e.type === 'status' && e.applied) nf.push({ id: ++floatId.current, targetId: e.targetId, text: STATUSES[e.status].name, color: STATUSES[e.status].color });
+      else if (e.type === 'mana' && e.amount < 0) nf.push({ id: ++floatId.current, targetId: e.targetId, text: `${e.amount}`, color: '#6fa8ff' });
+      else if (e.type === 'intent') nf.push({ id: ++floatId.current, targetId: e.actorId, text: e.broken ? '¡Interrumpido!' : e.label === 'Se recupera' || e.label.startsWith('Fase') ? e.label : `⚠ ${e.label}`, color: e.broken ? '#5fd19a' : '#f8dc7a' });
       else if (e.type === 'skip') nf.push({ id: ++floatId.current, targetId: e.actorId, text: 'Pierde el turno', color: STATUSES[e.status].color });
     }
     const actorC = act ? cs.combatants.find((c) => c.id === act.actorId) : null;
@@ -169,12 +173,18 @@ export function CombatScreen() {
   const fleeTxt = cs.canFlee ? `${Math.round(fleeChance(player, foes) * 100)} %` : combat.kind.startsWith('betrayal') ? 'A muerte' : 'Imposible';
   const openSpecial = () => { setMenu('special'); setFocus(0); };
   const openBag = () => { setMenu('bag'); setPage(0); setFocus(0); };
-  const mainCmds = [
+  // Ataque anunciado contra ti: la Guardia se marca y dice cuánto ahorra
+  const threat = cs.outcome ? null : readIntents(cs, player).threat;
+  const threatDmg = threat ? intentDamage(threat, player) : 0;
+  const guardTxt = threat ? `≈${threatDmg} → ≈${Math.max(1, Math.round(threatDmg * 0.5 * DEFEND_TELEGRAPHED))}` : 'Mitad de daño';
+  const mainCmds: { label: string; sub: string; color: string; icon: string; onUse: () => void; testId: string; disabled: boolean; alert?: boolean }[] = [
     { label: 'Atacar', sub: `${player.basicAttack.name} · sin coste`, color: '#ff6a5a', icon: player.basicAttack.fx ?? 'slash', onUse: doAttack, testId: 'act-attack', disabled: false },
     { label: 'Ataque especial', sub: specials.length ? `${ready} listo${ready === 1 ? '' : 's'}${waiting ? ` · ${waiting} en recarga` : ''}` : 'Ninguno', color: '#a56bff', icon: specials[0]?.fx ?? 'slash', onUse: openSpecial, testId: 'act-special', disabled: !specials.length },
     { label: classSlot?.name ?? 'Habilidad', sub: !classSlot ? '—' : classCd ? `Recarga: ${classCd} turno${classCd > 1 ? 's' : ''}` : classSlot.cost ? `${classSlot.cost} ${res.toLowerCase()}` : 'sin coste', color: '#e8b33a', icon: classSlot?.fx ?? 'holy', onUse: () => classSlot && !classSlot.disabled && classSlot.onUse(), testId: 'act-class', disabled: !classSlot || classSlot.disabled },
     { label: 'Mochila', sub: bagEntries.length ? `${bagEntries.length} usable${bagEntries.length > 1 ? 's' : ''}` : 'Nada', color: '#e8b33a', icon: 'bag', onUse: openBag, testId: 'act-bag', disabled: !bagEntries.length },
     { label: 'Huir', sub: fleeTxt, color: '#8c8693', icon: 'flee', onUse: () => actions.combatAct({ type: 'flee' }), testId: 'act-flee', disabled: !cs.canFlee },
+    // Guardia (Fase 8): la respuesta de cualquier clase a un ataque anunciado
+    { label: 'Guardia', sub: guardTxt, color: '#d9d3c1', icon: 'shield', onUse: () => actions.combatAct({ type: 'defend' }), testId: 'act-guard', disabled: false, alert: !!threat },
   ];
   // Cirugía a medias: el primer botón la termina (cualquier otra acción la abandona y el equipo se pierde)
   if (player.surgery) mainCmds[0] = { label: 'Terminar cirugía', sub: `2 de 2 · ${REGION_NAME[player.surgery.region]}`, color: '#7fd65a', icon: 'holy', onUse: () => actions.combatAct({ type: 'surgery' }), testId: 'act-surgery', disabled: false };
@@ -196,7 +206,7 @@ export function CombatScreen() {
       // Tab cambia de objetivo cuando hay dos enemigos (en la Mochila pasa de página)
       if (e.key === 'Tab' && menu !== 'bag' && foes.length > 1) { e.preventDefault(); const i = foes.findIndex((f) => f.id === tgt?.id); setTarget(foes[(i + 1) % foes.length].id); return; }
       if (menu === 'main') {
-        if (n >= 1 && n <= 5) { e.preventDefault(); const c = mainCmds[n - 1]; if (!c.disabled) c.onUse(); }
+        if (n >= 1 && n <= 6) { e.preventDefault(); const c = mainCmds[n - 1]; if (!c.disabled) c.onUse(); }
         return;
       }
       if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); back(); return; }
@@ -254,7 +264,7 @@ export function CombatScreen() {
         <StageFighter c={player} x={playerX} bottom={4.5} h={52} shadowW={17} shadowBottom={5} anim={anim} floats={floats} active={actor?.id === player.id} hero={{ classId: profile.character.classId, appearance: profile.character.appearance, equipment: expedition?.equipment ?? profile.equipment, skin: wornSkin(profile) }} />
 
         <div className={`absolute left-[3%] top-[5%] flex flex-col info-stack ${sideB.length > 1 ? 'gap-1.5 info-duo' : 'gap-2'}`}>
-          {sideB.map((c) => <InfoFrame key={c.id} c={c} level={c.level} duo={sideB.length > 1} target={foes.length > 1 && c.hp > 0 ? { on: tgt?.id === c.id, pick: () => setTarget(c.id) } : undefined} />)}
+          {sideB.map((c) => <InfoFrame key={c.id} c={c} level={c.level} duo={sideB.length > 1} intent={intentLine(c, cs.combatants)} target={foes.length > 1 && c.hp > 0 ? { on: tgt?.id === c.id, pick: () => setTarget(c.id) } : undefined} />)}
         </div>
         <div className="absolute right-[3%] bottom-[6%] flex flex-col items-end gap-2 info-stack info-stack-br">
           {allies.map((c) => <InfoFrame key={c.id} c={c} small />)}
@@ -283,7 +293,7 @@ export function CombatScreen() {
                 <>
                   {mainCmds.slice(0, 3).map((c, i) => <Cmd key={c.testId} k={i + 1} label={c.label} sub={c.sub} color={c.color} icon={c.icon} disabled={!playerTurn || c.disabled} testId={c.testId} onClick={c.onUse} on={playerTurn && i === focus} onHover={() => setFocus(i)} />)}
                   <div className="cmdsplit">
-                    {mainCmds.slice(3).map((c, i) => <Cmd key={c.testId} k={i + 4} label={c.label} sub={c.sub} color={c.color} icon={c.icon} disabled={!playerTurn || c.disabled} testId={c.testId} onClick={c.onUse} on={playerTurn && i + 3 === focus} onHover={() => setFocus(i + 3)} half />)}
+                    {mainCmds.slice(3).map((c, i) => <Cmd key={c.testId} k={i + 4} label={c.label} sub={c.sub} color={c.color} icon={c.icon} disabled={!playerTurn || c.disabled} testId={c.testId} onClick={c.onUse} on={playerTurn && (i + 3 === focus || !!c.alert)} alert={playerTurn && c.alert} onHover={() => setFocus(i + 3)} half />)}
                   </div>
                 </>
               ) : (
@@ -311,10 +321,10 @@ export function CombatScreen() {
 const SRC_COLOR: Record<string, string> = { basic: '#d9d3c1', class: '#e8b33a', weapon: '#a56bff', offhand: '#8fa8c8' };
 const CLASS_NAME: Record<string, string> = { warrior: 'Guerrero', mage: 'Mago', rogue: 'Pícaro', cleric: 'Clérigo' };
 
-function Cmd({ k, label, sub, color, icon, itemId, disabled, on, onClick, onHover, onLong, testId, half, cd }: { k: number; label: string; sub: string; color: string; icon: string; itemId?: string; disabled?: boolean; on?: boolean; onClick?: () => void; onHover?: () => void; onLong?: () => void; testId: string; half?: boolean; cd?: number }) {
+function Cmd({ k, label, sub, color, icon, itemId, disabled, on, onClick, onHover, onLong, testId, half, cd, alert }: { k: number; label: string; sub: string; color: string; icon: string; itemId?: string; disabled?: boolean; on?: boolean; onClick?: () => void; onHover?: () => void; onLong?: () => void; testId: string; half?: boolean; cd?: number; alert?: boolean }) {
   const lp = useLongPress(() => onLong?.());
   return (
-    <button className={`cmd ${on && !disabled ? 'on' : ''} ${half ? 'half' : ''} ${cd ? 'cd' : ''}`} aria-disabled={disabled || undefined} style={{ ['--c' as string]: color }} disabled={disabled && !onLong} {...(onLong ? lp.handlers : {})}
+    <button className={`cmd ${on && !disabled ? 'on' : ''} ${half ? 'half' : ''} ${cd ? 'cd' : ''} ${alert ? 'cmd-alert' : ''}`} aria-disabled={disabled || undefined} style={{ ['--c' as string]: color }} disabled={disabled && !onLong} {...(onLong ? lp.handlers : {})}
       onClick={() => { if (lp.consume() || disabled) return; onClick?.(); }} onPointerEnter={(e) => { if (e.pointerType === 'mouse') onHover?.(); }} data-testid={testId}>
       <span className="cur">▶</span><kbd>{k}</kbd>
       {itemId ? <ItemIcon itemId={itemId} size={24} /> : <ActionIcon fx={icon} size={24} color={color} />}
@@ -338,7 +348,23 @@ function EntryInfo({ e, res }: { e: Slot; res: string }) {
   );
 }
 
-function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo }: { c: Combatant; nums?: boolean; sub?: string; small?: boolean; level?: number; spend?: number; target?: { on: boolean; pick: () => void }; duo?: boolean }) {
+/** Lo que prepara un enemigo, en una línea: ataque, objetivo, región, daño esperado y qué hacer (Fase 8). */
+function intentLine(c: Combatant, all: Combatant[]): { text: string; hint: string } | null {
+  if (!c.intent || c.hp <= 0) return null;
+  const mv = getMove(c.intent.move);
+  const t = all.find((x) => x.id === c.intent!.targetId);
+  const who = mv.aoe ? 'todos' : t?.control === 'player' ? 'ti' : t?.name.split(' ')[0] ?? '—';
+  const dmg = mv.kind === 'strike' && t ? intentDamage(c, t) : 0;
+  const when = c.intent.wait > 1 ? ` · en ${c.intent.wait} turnos` : '';
+  const brk = mv.breakAt ? ` · ${c.intent.breaks} de ${mv.breakAt} para romperlo` : '';
+  return {
+    text: `⚠ ${mv.name} → ${who}${c.intent.region ? ` (${REGION_NAME[c.intent.region].toLowerCase()})` : ''}${dmg ? ` ≈${dmg}` : ''}`,
+    hint: `${mv.hint}${when}${brk}`,
+  };
+}
+
+function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent }: { c: Combatant; nums?: boolean; sub?: string; small?: boolean; level?: number; spend?: number; target?: { on: boolean; pick: () => void }; duo?: boolean; intent?: { text: string; hint: string } | null }) {
+  const exposed = (c.exposed ?? 0) > 0 && c.hp > 0;
   const kind = c.boss ? 'boss' : c.side === 'A' && c.control !== 'player' ? 'ally' : '';
   // Con dos enemigos, tocar su ficha lo marca como objetivo (zona táctil grande)
   const pick = target ? { role: 'button', tabIndex: -1, 'aria-pressed': target.on, onClick: target.pick, style: { cursor: 'pointer', outline: target.on ? '2px solid #c4283b' : undefined, outlineOffset: 1 } } : {};
@@ -360,9 +386,11 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo }: { c: 
       )}
       <div className="hprow"><span className="text-[#ff7a6a]">PV</span><Bar value={c.hp} max={c.stats.maxHp} color="#c4283b" testId={`hp-${c.id}`} />{nums && <b className="hpnum" data-testid={`hpnum-${c.id}`}>{c.hp}<i> / {c.stats.maxHp}</i></b>}</div>
       {!small && c.stats.maxMp > 0 && <div className="hprow"><span className={c.resourceName === 'Ímpetu' ? 'text-[#ffc08a]' : 'text-[#9cc3ff]'}>{c.resourceName === 'Ímpetu' ? 'IM' : 'MA'}</span><Bar value={c.mp} max={c.stats.maxMp} color={c.resourceName === 'Ímpetu' ? '#e08a3d' : '#3d7be0'} spend={spend} testId={`mp-${c.id}`} />{nums && <b className="hpnum" data-testid={`mpnum-${c.id}`}>{c.mp}<i> / {c.stats.maxMp}</i></b>}</div>}
-      {!small && (!duo || c.defending || c.statuses.length > 0) && (
+      {!small && (!duo || c.defending || c.statuses.length > 0 || intent || exposed) && (
         <div className="flex justify-between items-center mt-1 min-h-[16px] gap-2">
-          <span className="flex flex-wrap gap-1">
+          <span className="flex flex-wrap gap-1 min-w-0">
+            {intent && <span className="intent" data-testid={`intent-${c.id}`} title={intent.hint}><b>{intent.text}</b><span className="opacity-80">· {intent.hint}</span></span>}
+            {exposed && <span className="intent exposed" data-testid={`exposed-${c.id}`} title="Recibe más daño hasta que se recupere">Expuesto</span>}
             {c.defending && <span className="chip" style={{ color: '#d9d3c1', borderColor: '#8c8693' }}>En guardia</span>}
             {c.statuses.map((st) => <span key={st.id} className="chip" style={{ color: STATUSES[st.id].color, borderColor: STATUSES[st.id].color }} title={STATUSES[st.id].description}>{STATUSES[st.id].name} {st.turns}</span>)}
           </span>

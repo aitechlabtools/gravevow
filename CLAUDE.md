@@ -26,6 +26,7 @@ Capas: datos → lógica → estado → interfaz y motor.
 - `src/core/data`: datos del juego (clases, enemigos, armas, objetos, rarezas, subzonas, tutorial, atuendos…).
 - `src/core`: lógica pura y determinista, con semilla en `rng.ts`. **No importa nunca React ni Phaser.**
   - Combate: `combat.ts` y `combatants.ts`. Máximo dos combatientes por bando (`MAX_PER_SIDE`).
+  - Ataques anunciados (Fase 8): patrones y movimientos en `data/intents.ts`, cifras en `config/intents.ts`. La IA anuncia al final de una acción normal y descarga en su siguiente turno; la Guardia lo mitiga; después queda expuesto. Una sola amenaza anunciada por bando. Jefes regionales (S3, S6, S10) con fases por umbral; al huir, `Expedition.bosses` guarda vida y fase.
   - Durabilidad: `durability.ts` (desgaste, avisos al 25 % y 10 %, roto sin destruir, kit de campo) y `repair.ts` (yunque de Brand); cifras en `config/durability.ts`.
   - Anatomía: `anatomy.ts` (7 regiones, muerte solo por cabeza o tórax, exceso de daño, sangrado por pulso con techo, fracturas, tratamientos, estabilización y heridas guardadas en `Profile.wounds`); cifras en `config/anatomy.ts`. Solo el jugador tiene cuerpo (`Combatant.body`); la vida `hp` es su resumen.
   - Necesidades: `needs.ts` (Saciedad, Hidratación y Descanso de 0 a 100; se gastan por pulso de 6 s o por ronda; recortan el máximo de Ímpetu o Maná; a cero, sed y hambre hieren el tórax; guardadas en `Profile.needs`); cifras en `config/needs.ts`.
@@ -89,6 +90,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Necesidades: `node scripts/necesidades-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Inventario y peso: `node scripts/inventario-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Exploración: `node scripts/exploracion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Ataques anunciados y jefes: `node scripts/intenciones-check.cjs <url>/play/ <carpeta> [dispositivo]`.
 - Pasa solo las pruebas relacionadas con lo que has tocado, pero no te saltes ninguna necesaria.
 
 ## Ahorro de tokens

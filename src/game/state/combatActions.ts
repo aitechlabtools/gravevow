@@ -4,7 +4,7 @@ import type { ItemStack } from '../../core/types';
 import { rollStacks } from '../../core/data/rarity';
 import { addManyToGrid, countItem, emptyGrid, removeItem, isCover } from '../../core/inventory';
 import { coins as coinsStack } from '../../core/gold';
-import { createCombat, distinctNames, performAction, runAITurn, currentActor, getCombatant, type CombatAction, type CombatState } from '../../core/combat';
+import { bossMemory, restoreBoss, createCombat, distinctNames, performAction, runAITurn, currentActor, getCombatant, type CombatAction, type CombatState } from '../../core/combat';
 import { knowledge, noteKill, noteSeen } from '../../core/bestiary';
 import { ZONES } from '../../core/data/zones';
 import { getSubzone } from '../../core/data/subzones';
@@ -42,7 +42,11 @@ export const combatActions = {
       // Máximo dos por bando: con mercenario contratado, Kael no entra en este combate
       if (s.merc?.alive) list.push(mercCombatant(s.merc, 'A', combatLevel()));
       else if (s.rival.disposition === 'allied') list.push(rivalCombatant(s.rival.who, s.rival.hp, 'A', s.rival.potions, combatLevel()));
-      list.push(enemyCombatant(enemyId, entityId ?? 'enemy', 'B', enemyLevel(entityId)));
+      { // Un jefe del que te retiraste vuelve con la vida, la fase y el auxiliar que tenía
+        const foe = enemyCombatant(enemyId, entityId ?? 'enemy', 'B', enemyLevel(entityId));
+        const mem = entityId ? s.expedition.bosses?.[entityId] : undefined;
+        list.push(mem ? restoreBoss(foe, mem) : foe);
+      }
       const second = partner && partner.entityId !== entityId && !e.boss ? partner : null;
       if (second) list.push(enemyCombatant(second.enemyId, second.entityId, 'B', enemyLevel(second.entityId)));
       let bestiary = s.profile.bestiary;
@@ -53,7 +57,8 @@ export const combatActions = {
       set({ profile: { ...s.profile, bestiary } });
       const e2 = second ? getEnemy(second.enemyId) : null;
       title = e.boss ? `¡${e.name}!` : e2 ? (e2.id === e.id ? `Dos: ${e.name}` : `${e.name} y ${e2.name}`) : e.name;
-      canFlee = !e.boss && !e2?.boss;
+      // Fase 8: también se puede uno retirar de un jefe (con la huida de siempre); conserva sus heridas en esta incursión
+      canFlee = true;
     } else {
       const rc = rivalCombatant(s.rival.who, s.rival.hp, 'B', s.rival.potions, combatLevel());
       const name = getWanderer(s.rival.who).name;
@@ -71,6 +76,7 @@ export const combatActions = {
     const combat = createCombat(distinctNames(list), randomSeed(), { canFlee });
     const foesB = list.filter((c) => c.side === 'B');
     combat.log.unshift(kind === 'pve' ? (foesB.length > 1 ? `¡${getEnemy(foesB[0].ref!).name} te cierra el paso y ${getEnemy(foesB[1].ref!).name.toLowerCase()} se suma a la pelea!` : `¡${title.replace(/[¡!]/g, '')} te cierra el paso!`) : s.rival.disposition === 'hostile' && !s.rival.betrayed && getWanderer(s.rival.who).lines.hostile ? getWanderer(s.rival.who).lines.hostile! : 'Las armas salen de sus vainas.');
+    if (kind === 'pve' && getEnemy(enemyId!).boss) combat.log.push(s.expedition.bosses?.[entityId ?? ''] ? `${getEnemy(enemyId!).name} aún lleva las heridas de vuestro último encuentro.` : 'Puedes retirarte con «Huir»: el jefe conservará sus heridas en esta incursión.');
     if (s.rival.disposition === 'allied' && kind === 'pve' && s.merc?.alive) combat.log.push(`${getWanderer(s.rival.who).name} se queda atrás: tu mercenario ocupa su sitio.`);
     else if (s.rival.disposition === 'allied' && kind === 'pve') combat.log.push(`${getWanderer(s.rival.who).name} combate a tu lado.`);
     if (s.merc?.alive) combat.log.push(`${getMerc(s.merc.id).name} combate a tu lado (${STANCE_NAME[s.merc.stance].toLowerCase()}).`);
@@ -124,6 +130,12 @@ export const combatActions = {
     let rewards = s.combat.rewards;
 
     if (next.outcome) {
+      // Jefes: si te retiras, recuerdan vida y fase; si caen, se olvidan
+      for (const c of next.combatants.filter((x) => x.side === 'B' && x.boss && !x.summoned)) {
+        const bosses = { ...(exp.bosses ?? {}) };
+        if (next.outcome === 'fled' && c.hp > 0) bosses[c.id] = bossMemory(c); else delete bosses[c.id];
+        exp.bosses = bosses;
+      }
       // Desgaste del equipo: el arma por cada ataque y la armadura por cada golpe encajado (al morir da igual: se pierde)
       if (next.outcome !== 'defeat' && pl.wear) {
         const w = wearEquipment(exp.equipment, pl.wear.swings, pl.wear.hits);
@@ -139,7 +151,8 @@ export const combatActions = {
         const items: ItemStack[] = [];
         const kills = { ...exp.kills };
         for (const c of next.combatants.filter((x) => x.side === 'B' && (next.outcome === 'victory' || x.hp <= 0))) {
-          if (c.ref && c.ref !== 'rival') {
+          // El auxiliar de un jefe no da premio propio: el premio es el del jefe
+          if (c.ref && c.ref !== 'rival' && !c.summoned) {
             const e = getEnemy(c.ref);
             xp += enemyXp(e.xp, enemyLevel(c.id));
             if (e.boss && !state.profile!.bossesDefeated.includes(e.id)) {

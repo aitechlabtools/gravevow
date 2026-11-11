@@ -4,6 +4,7 @@ import { MAZMORRA_ENEMIES } from './zones/mazmorra';
 import { CRIPTA_ENEMIES } from './zones/cripta';
 import { INFIERNO_ENEMIES } from './zones/infierno';
 import { SUBZONE_ENEMIES, EXISTING_BOSS_PHASES } from './zones/subzoneEnemies';
+import { ENEMY_PATTERNS, REGIONAL_BOSSES, type BossPhaseDef, type PatternDef } from './intents';
 
 export interface EnemyDef {
   id: string;
@@ -24,6 +25,10 @@ export interface EnemyDef {
   boss?: boolean;
   /** Jefes: habilidades y frase de la segunda fase (por debajo del 50 % de vida). */
   phase2?: { skills: string[]; line: string; skillChance?: number };
+  /** Ataques anunciados (Fase 8): tras unas acciones normales prepara uno de la lista. */
+  pattern?: PatternDef;
+  /** Jefes regionales: fases por umbral de vida (sustituyen a `phase2`). */
+  phases?: BossPhaseDef[];
   /** Comportamiento en exploración */
   wander: { speed: number; aggroRange: number };
 }
@@ -68,6 +73,8 @@ export const ENEMIES: Record<string, EnemyDef> = {
 
 Object.assign(ENEMIES, MAZMORRA_ENEMIES, CRIPTA_ENEMIES, INFIERNO_ENEMIES, SUBZONE_ENEMIES);
 for (const [id, ph] of Object.entries(EXISTING_BOSS_PHASES)) if (ENEMIES[id]) ENEMIES[id].phase2 = ph;
+for (const [id, pt] of Object.entries(ENEMY_PATTERNS)) if (ENEMIES[id]) ENEMIES[id].pattern = pt;
+for (const [id, b] of Object.entries(REGIONAL_BOSSES)) if (ENEMIES[id]) { ENEMIES[id].pattern = b.pattern; ENEMIES[id].phases = b.phases; delete ENEMIES[id].phase2; if (b.hp) ENEMIES[id].stats = { ...ENEMIES[id].stats, maxHp: Math.round(ENEMIES[id].stats.maxHp * b.hp) }; }
 
 export function getEnemy(id: string): EnemyDef {
   const e = ENEMIES[id];

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { intentResponse } from './intentPlayer';
 import { createCombat, performAction, runAITurn, currentActor, canUseSkill, getCombatant, opponents, distinctNames, MAX_PER_SIDE, type CombatState, type CombatAction, type Combatant } from '../src/core/combat';
 import { getSkill } from '../src/core/data/skills';
 import { enemyCombatant, playerCombatant, rivalCombatant } from '../src/core/combatants';
@@ -23,6 +24,8 @@ function playOut(s: CombatState, potions: number, seed: number, fleeAt = 0): Com
     if (fleeAt && me.hp / me.stats.maxHp < fleeAt) { s = performAction(s, { type: 'flee' }); continue; }
     if (me.hp / me.stats.maxHp < 0.4 && left > 0) { left--; s = performAction(s, { type: 'item', itemId: 'health_potion' }); continue; }
     const off = me.skills.map(getSkill).filter((k) => k.target === 'enemy' && canUseSkill(me, k.id)).sort((x, y) => Number(!!y.aoe) - Number(!!x.aoe) || (y.power ?? 0) - (x.power ?? 0));
+    const read = intentResponse(s, me);
+    if (read) { s = performAction(s, read); continue; }
     let action: CombatAction = { type: 'attack', targetId: foes[0].id };
     if (me.skills.includes('mana_shield') && canUseSkill(me, 'mana_shield') && !me.shield) action = { type: 'skill', skillId: 'mana_shield' };
     else if (me.skills.includes('block') && canUseSkill(me, 'block') && seed % 3 === 0 && !me.statuses.some((x) => x.id === 'block')) action = { type: 'skill', skillId: 'block' };
