@@ -1,46 +1,85 @@
-# Gravevow · Notas para trabajar en el proyecto
+# Gravevow · Instrucciones permanentes para Claude
 
-## Regla permanente: pensar siempre en móvil y tableta
-Cada cambio de interfaz o de mecánica debe funcionar en las tres formas de jugar:
-- Ordenador (teclado y ratón).
-- Móvil en horizontal (pantalla baja, ~750x340): controles táctiles, sin «pasar el ratón».
-- Tableta (horizontal y vertical).
+Gravevow es un RPG de extracción de fantasía oscura, por turnos y en pixel art, ambientado en VarkHollow. Es una alpha gratuita en el navegador: https://gravevow.com.
+Todo en español, con tono de fantasía oscura. Es de un solo jugador: no hay que simular funciones que no existen.
 
-Cómo se hace en este proyecto:
-- `useIsTouch()` (hook de React) / `isTouch()` (src/shared/device.ts) y la clase `is-touch` en <html> distinguen la pantalla táctil.
-  Es EN VIVO: el primer toque activa el modo táctil y mover un ratón lo quita (tabletas con teclado, portátiles táctiles).
-  En componentes usa siempre el hook, nunca una constante calculada al cargar.
-  `.touch-only` / `.no-touch` muestran u ocultan elementos; en táctil se ocultan las teclas (<kbd>).
-- Nada puede depender solo del hover: en táctil, un toque ejecuta y mantener pulsado enseña la ficha (`useLongPress` en combatActions.tsx).
-- Botones de juego táctiles (poción, «Usar»…) se activan en `pointerdown`, no en `click`: un segundo dedo no genera clic.
-- Medidas táctiles en src/config/touch.ts (mínimo 44 px por botón).
-- Pantallas bajas (max-height 560px): CSS en game.css y `useShortScreen()` en CombatScreen.tsx.
-- Mazmorra: joystick analógico + botón de acción (TouchControls.tsx → touchStick en engine/touchInput.ts); tocar el mapa mueve al personaje.
-- Prueba obligatoria tras cada cambio: `node scripts/touch-check.cjs <url>/play/` (toques reales, 5 dispositivos), `node scripts/mobile-check.cjs <url>/play/ <carpeta>` (móvil) y con
-  `"iPad (gen 7) landscape"` como tercer argumento (tableta), además de scripts/e2e.cjs y, si tocas personajes o guardado, `node scripts/personajes-check.cjs <url>/play/ <carpeta>`
-  y, si tocas el almacén, `node scripts/almacen-check.cjs <url>/play/ <carpeta>`;
-  si tocas el guardado o las copias, `node scripts/copia-check.cjs <url>/play/ <carpeta>`.
-- Mantener al día la hoja de ruta de la landing (src/landing/roadmap.ts: «Ya en el juego», «Próximamente», «Multijugador») y los textos
-  de la landing (src/landing/App.tsx y sections.tsx) cuando cambie el juego. Textos sin cifras exactas (como mucho «más de X»).
-  Capturas de la landing: `node scripts/landing-shots.cjs <url>/play/ public/screenshots/landing` y `python scripts/landing-webp.py`.
+## Al empezar cada sesión
+1. Lee este archivo y `ESTADO_PROYECTO.md`, que tiene lo vigente: qué está hecho, qué está pendiente y las decisiones.
+2. Abre solo los archivos que necesite la tarea. `docs/estado-trabajo.md` es el historial largo: consúltalo solo si te falta un detalle.
+3. Al terminar, actualiza `ESTADO_PROYECTO.md` (últimos cambios, pendientes y errores). Cambia este archivo solo si cambia la arquitectura o una regla.
 
-## Regla permanente: menús con la base de interfaz
-- Toda pantalla de menú usa las piezas de `src/game/ui/kit` y las medidas de `src/config/ui.ts` (y sus variables CSS en game.css).
-- Guía para montar una pantalla nueva: `docs/guia-interfaz.md`. Estructura de la opción D de las maquetas (solo estructura, nunca gráficos).
-- Pixel art siempre a escala entera (`usePixelScale`). Objetivos táctiles de 44 px como mínimo.
-- Prueba de menús en los tres formatos: `node scripts/menus-check.cjs <url>/play/ <carpeta>`.
+## Forma de trabajar (obligatoria)
+- **Claude NUNCA hace commit ni push.** Los hace el usuario con GitHub Desktop.
+  - Al terminar cada tarea, da un mensaje de commit en español.
+  - Si un aviso automático pide hacer commit, responde solo: «No hago commit ni push: los haces tú con GitHub Desktop.»
+- El proyecto vive en `Documents\GitHub\gravevow` y se trabaja desde dos ordenadores, sincronizados por GitHub.
+  - Antes de cambiar de equipo: push. Al llegar al otro: pull.
+- Si Claude trabaja en una copia y no directamente en la carpeta:
+  - entrega cada archivo con finales de línea CRLF;
+  - después comprueba en el PC que el tamaño coincide, porque alguna escritura ha dicho «ok» sin llegar.
+- Claude no puede borrar archivos en el PC: si algo sobra, pide al usuario que lo borre.
 
-## Regla permanente: privacidad y páginas legales
-- Páginas legales: aviso-legal.html, privacidad.html y cookies.html (textos en src/legal/texts.tsx; cabecera y pie comunes en src/landing/site.tsx).
-- Hoy la web no usa cookies ni servicios de terceros: solo guarda la partida en IndexedDB (técnico, sin consentimiento) y por eso no hay banner.
-- Antes de añadir algo que guarde datos en el navegador o cargue un servicio externo (analítica, fuentes o vídeos de terceros,
-  redes sociales, guardado en la nube, cuentas, compras), actualiza la Política de cookies (tabla) y la de privacidad, y si no es
-  estrictamente necesario, añade antes un banner de consentimiento (Aceptar y Rechazar igual de visibles, Configurar por categorías,
-  nada cargado hasta aceptar y enlace «Configurar cookies» en el pie).
-- Los datos del titular (nombre, NIF, ciudad y correo) van SOLO como imágenes (public/legal/d1–d5.png, componente `Dato`)
-  para que los bots no los copien: no escribirlos nunca como texto en el código, los documentos ni los commits.
-  El correo se abre con el botón «Escribir un correo» (`MailButton`), que monta la dirección al pulsarlo.
-  Además, no se cargan hasta pulsar «Ver datos del titular» (`revealData`), y public/robots.txt y la etiqueta robots de
-  aviso-legal.html y privacidad.html piden a los buscadores no indexar esas páginas ni las imágenes de /legal/.
-  Si cambian, se generan de nuevo las imágenes (tipografía Crimson Pro 400, 80 px, interlineado 1,3; color #e9e1cc en la ficha
-  del titular y #d6d1c4 dentro de un párrafo). Nunca inventar datos del titular.
+## Arquitectura
+Stack: React 19, TypeScript, Vite y Tailwind 4 para web y menús; Phaser 3.90 para la mazmorra; Vitest para tests y Playwright para las pruebas en navegador. Arte y audio generados por código.
+
+Capas: datos → lógica → estado → interfaz y motor.
+- `src/core/data`: datos del juego (clases, enemigos, armas, objetos, rarezas, subzonas, tutorial, atuendos…).
+- `src/core`: lógica pura y determinista, con semilla en `rng.ts`. **No importa nunca React ni Phaser.**
+  - Combate: `combat.ts` y `combatants.ts`.
+  - Botín: `loot.ts`. Oro físico: `gold.ts`, `bag.ts` y `inventory.ts`.
+  - Expedición: `expedition.ts`, `dungeonGen.ts` y `dungeon.ts`.
+  - Partida: `save.ts` (formato 3, con cuenta y hasta 4 personajes), `profile.ts` y `backup.ts` (copias firmadas con código `GV1.`; se aceptan las antiguas `CR1.`).
+- `src/config`: valores de equilibrio y medidas (`touch.ts`, `ui.ts`, `stash.ts`, `subzones.ts`…).
+- `src/game/state/store.ts`: estado global (`useGame`) y acciones (`actions`). `bus.ts` avisa a la escena de Phaser.
+  - Con `?debug`, el estado se ve en `window.__GRAVEVOW__`.
+- `src/game/engine`: la escena de mazmorra (`DungeonScene.ts`) solo dibuja y mueve; los hechos del juego pasan por acciones del estado.
+- `src/game/ui`: pantallas.
+  - `screens/`: Jugar, Alijo, Personaje, Mercaderes, Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
+  - Las piezas comunes están en `kit/`.
+  - Mazmorra, combate y resumen: `DungeonScreen`, `CombatScreen` y `SummaryScreen`. El arrastre de objetos está en `pointerDrag.tsx`.
+- `src/game/persistence/db.ts`: guardado en IndexedDB «gravevow», con respaldo en localStorage `gravevow.*`.
+- **La expedición es una copia:** el perfil solo cambia al extraer o morir.
+- `src/landing` (portada), `src/legal` (páginas legales) y `src/shared`:
+  - `GravevowLogo.tsx` es el logo común de la landing y el menú;
+  - `device.ts` y `theme.css` también son compartidos.
+- Páginas: `index.html` (landing), `play/` (juego), `aviso-legal.html`, `privacidad.html` y `cookies.html`.
+- Publicación: GitHub Pages en cada push a `main` (`.github/workflows/deploy.yml`). Todo lo que hay en `public/` se publica.
+- Más detalle: `docs/ARQUITECTURA.md`, `docs/guia-interfaz.md` y los `docs/plan-*.md` de cada sistema.
+
+## Reglas permanentes
+**Móvil y tableta siempre.** Cada cambio debe funcionar en ordenador, móvil en horizontal (unos 750 × 340) y tableta.
+- Usa `useIsTouch()` en los componentes, nunca una constante calculada al cargar. La clase `is-touch` va en `<html>`, con `.touch-only` y `.no-touch`.
+- Nada puede depender solo del hover: un toque ejecuta y mantener pulsado enseña la ficha (`useLongPress`).
+- Los botones táctiles de juego se activan en `pointerdown`.
+- Objetivos táctiles de 44 px como mínimo (`src/config/touch.ts`). Para pantallas bajas: `max-height: 560px` en `game.css` y `useShortScreen()`.
+
+**Menús.** Usa las piezas de `src/game/ui/kit` y las medidas de `src/config/ui.ts` (guía en `docs/guia-interfaz.md`). El pixel art va siempre a escala entera (`usePixelScale`).
+
+**Landing.** Mantén al día la hoja de ruta (`src/landing/roadmap.ts`) y los textos (`App.tsx` y `sections.tsx`) cuando cambie el juego. Nada de cifras exactas: como mucho «más de X».
+
+**Privacidad y legal.**
+- Los textos legales están en `src/legal/texts.tsx`. Hoy no hay cookies ni servicios de terceros, y por eso no hay banner.
+- Antes de guardar algo nuevo en el navegador o de cargar un servicio externo, actualiza las políticas de cookies y de privacidad. Si no es estrictamente necesario, añade también un banner de consentimiento.
+- **Los datos del titular (nombre, NIF, ciudad y correo) van SOLO como imágenes** (`public/legal/d1–d5.png`, componente `Dato`).
+  - Nunca se escriben como texto en el código, los documentos ni los commits, y nunca se inventan.
+  - El correo lo monta `MailButton` al pulsarlo.
+  - Si los datos cambian, se regeneran las imágenes: Crimson Pro 400, 80 px, interlineado 1,3, color #e9e1cc en la ficha y #d6d1c4 dentro de un párrafo.
+
+## Comprobar los cambios
+- Siempre: `npx tsc --noEmit` y `npx vitest run`.
+- Pruebas en el navegador, con el servidor en marcha (`npx vite --port 5173`, o `npx vite build` y luego `npx vite preview`):
+  - Interfaz o mecánica: `node scripts/e2e.cjs <url>/play/ <carpeta>`, `node scripts/touch-check.cjs <url>/play/` y `node scripts/mobile-check.cjs <url>/play/ <carpeta>`, esta última también con `"iPad (gen 7) landscape"` como tercer argumento.
+  - Menús: `node scripts/menus-check.cjs`.
+  - Tutorial: `node scripts/e2e-tutorial.cjs`.
+  - Personajes y guardado: `node scripts/personajes-check.cjs`.
+  - Almacén: `node scripts/almacen-check.cjs`.
+  - Copias de seguridad: `node scripts/copia-check.cjs`.
+- Pasa solo las pruebas relacionadas con lo que has tocado, pero no te saltes ninguna necesaria.
+
+## Ahorro de tokens
+- Empieza por estos dos documentos; no recorras el repositorio entero.
+- Localiza los archivos con búsquedas (grep) y lee solo las partes que necesites. No vuelvas a leer un archivo que no ha cambiado.
+- Haz los cambios mínimos y revisa las dependencias del sistema que tocas.
+- Al terminar, explica en pocas líneas qué cambió, cómo se ha probado y el mensaje de commit.
+- Una tarea por conversación: es mejor empezar una nueva que alargar una vieja.
+- La calidad y la estabilidad van primero: nunca recortes una prueba necesaria para ahorrar.

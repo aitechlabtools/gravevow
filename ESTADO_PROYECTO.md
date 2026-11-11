@@ -1,0 +1,81 @@
+# Gravevow · Estado del proyecto
+
+Última actualización: 11/11/2026. Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
+
+## Cómo retomar el trabajo
+- En un ordenador nuevo o en otra sesión: haz pull en GitHub Desktop y escribe a Claude «Lee CLAUDE.md y ESTADO_PROYECTO.md» seguido de la tarea.
+- Al terminar: Claude actualiza este archivo y da el mensaje de commit. Tú haces commit y push.
+
+## Hecho y funcionando (alpha v0.1)
+- **Nombre y web:**
+  - Gravevow (antes DREADBOUND y Crypt Raiders), en https://gravevow.com, publicado con GitHub Pages.
+  - cryptraiders.es redirige con un 301.
+  - Repositorio `aitechlabtools/gravevow`.
+- **Interfaz (plan de 10 fases terminado):**
+  - controles táctiles, pantalla completa y horizontal, app instalable;
+  - controles en pantalla de mazmorra y combate;
+  - base de interfaz (`kit`);
+  - pantallas Jugar, Crear y Elegir personaje, Alijo, Personaje, Mercaderes (con forja y contratos), Misiones, Bestiario y Atuendos (con la Tienda).
+- **Mundo:** 10 subzonas en 3 zonas: Mazmorra (1–30), Cripta (30–60) e Infierno (60–100).
+  - Se pasa de zona venciendo al jefe de la última subzona de la anterior.
+  - Mercenarios errantes que pueden ser aliados o traidores, entre ellos Kael y Osric, con reparto del botín.
+- **Combate:**
+  - barra de acciones con ataque básico por familia de arma, dos especiales por mano y una habilidad de clase;
+  - Ímpetu (Guerrero) y Maná (Mago);
+  - recargas que se mantienen durante toda la expedición;
+  - rarezas con atributos;
+  - más de 50 armas por subzona;
+  - habilidades de clase a elegir en los niveles 20, 40, 60 y 80.
+- **Economía:**
+  - oro físico, con saco y bolsillo seguro;
+  - botón «Agrupar oro» en el Alijo y en la mazmorra;
+  - almacén por páginas (120 casillas), páginas de pago y una página «Compartido».
+- **Partidas:**
+  - hasta 4 personajes por cuenta;
+  - copia de seguridad en archivo o código (`GV1.`), con opción de deshacer y recordatorio cada 7 días o 10 expediciones.
+- **Tutorial de 13 pasos:**
+  - pulido el 5–6/11;
+  - el paso de la poción solo aparece tras la trampa;
+  - con Osric solo se puede elegir la alianza;
+  - la guía se oculta al canalizar el portal;
+  - enseña a agrupar el oro arrastrando o con el botón.
+- **Landing:**
+  - logo común (`GravevowLogo`), VarkHollow, mecánicas, galería y hoja de ruta;
+  - tráiler v5 (`public/trailer/gravevow-trailer.*`);
+  - botón «Apoyar» con un enlace de pago de Stripe.
+- **Legal:** aviso legal, privacidad y cookies. Los datos del titular solo van en imagen y el correo de contacto también.
+
+## En curso / por verificar
+- Comprobar en un móvil real que el arrastre de objetos se nota suave. Se optimizó el 5/11 y las pruebas automáticas pasan.
+- Configuración externa, que hace el usuario:
+  - **Enforce HTTPS** en GitHub Pages y que `www.gravevow.com` funcione;
+  - el buzón del correo de contacto;
+  - nombre e imagen en Stripe (la imagen nueva de «Apoyo a la expedición» ya está hecha).
+- Falta subir `public/sitemap.xml` (ya generado) y referenciarlo en `public/robots.txt`.
+
+## Errores conocidos
+- Ninguno abierto en este momento.
+- Las pruebas e2e fallan de vez en cuando por tiempo de espera en el modal de botín. Al repetirlas, pasan.
+
+## Decisiones vigentes
+- **Steam:** el juego se llamará solo «Gravevow». VarkHollow es la región del lore, no el nombre del juego.
+- **Partidas:** las de cryptraiders.es se pierden con el cambio de dominio (aceptado; es una alpha). Las copias antiguas (`cryptraiders-backup` y `CR1.`) se siguen aceptando.
+- **Arte:** el arte actual es provisional y está hecho por código. El usuario diseñará el definitivo; la lista de assets está en `docs/plan-subzonas.md`, sección 9.
+- **Atuendos:** solo estéticos y se compran con oro del juego. No hay compras con dinero real.
+- **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
+
+## Últimos cambios
+- 11/11: `CLAUDE.md` reorganizado y este archivo creado para trabajar entre sesiones y ordenadores.
+- 6/11:
+  - cambio de nombre a Gravevow en el juego, la landing, los textos legales, el tráiler y las pruebas;
+  - logo común con un filete que mide lo mismo que el nombre;
+  - el lema cabe en una línea en el móvil.
+- 5–6/11: pulido del tutorial, botón «Agrupar oro» en la mazmorra y arrastre táctil más suave.
+
+## Próximos pasos (por decidir con el usuario)
+- Arte definitivo de los atuendos y de las subzonas.
+- Clases nuevas: Pícaro y Clérigo.
+- Tráiler nuevo cuando haya contenido nuevo.
+- Más adelante: redes sociales, Steam, guardado en la nube y multijugador.
+  - El diseño propuesto está en `docs/ARQUITECTURA.md`.
+  - Antes de nada de esto hay que actualizar las políticas legales.
