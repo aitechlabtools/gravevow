@@ -466,3 +466,29 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .body-detail{background:#0000004d;border:1px solid #292524;padding:6px 8px}
 @media (max-height:560px){.body-map{width:260px;height:270px}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* Necesidades (Fase 5) */
+.needs-strip{display:flex;gap:4px;margin-top:4px}
+.needs-cell{flex:1;min-width:0}
+.needs-lbl{display:flex;justify-content:space-between;font-size:10px;line-height:11px;color:#a8a29e}
+.needs-lbl b{font-weight:400;color:#e8b33a}
+.needs-cell.critical .needs-lbl b,.needs-cell.empty .needs-lbl b{color:#ff4050}
+.needs-cell.critical .needs-bar,.needs-cell.empty .needs-bar{animation:needs-blink 1.2s steps(2) infinite}
+.needs-bar{position:relative;display:block;height:3px;background:#292524}
+.needs-bar.big{height:5px;margin:3px 0}
+.needs-bar span{position:absolute;inset:0 auto 0 0}
+@keyframes needs-blink{50%{opacity:.35}}
+.needs-panel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.needs-row{background:#0000004d;border:1px solid #292524;padding:6px 8px;display:flex;flex-direction:column;gap:2px}
+.needs-row.low{border-color:#e8b33a66}.needs-row.critical,.needs-row.empty{border-color:#d23a3a99}
+.needs-row-top{display:flex;justify-content:space-between;font-size:13px}
+.needs-row-top b{font-weight:400;color:#e9e1cc}
+.needs-row.low .needs-name{color:#e8b33a}.needs-row.critical .needs-name,.needs-row.empty .needs-name{color:#ff4050}
+.needs-hint{font-size:11px;color:#a8a29e;min-height:28px}
+.needs-row .btn{margin-top:4px;align-self:flex-start}
+.needs-note{grid-column:1/-1;font-size:11px;color:#78716c}
+@media (max-width:520px){.needs-panel{grid-template-columns:1fr}}
+.body-side .needs-panel{grid-template-columns:1fr;gap:4px}
+.body-side .needs-row{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px;padding:4px 6px}
+.body-side .needs-row .needs-row-top,.body-side .needs-row .needs-bar,.body-side .needs-row .needs-hint{grid-column:1}
+.body-side .needs-row .btn{grid-column:2;grid-row:1/4;margin:0;align-self:center}
+.body-side .needs-hint{min-height:0}

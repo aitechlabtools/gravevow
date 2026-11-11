@@ -1,3 +1,5 @@
+import { NEED_LOW, NEED_NAME, type Need } from '../config/needs';
+import { effectiveMaxMp, exhaustionLoss, tickNeeds, type NeedLevel, type Needs } from './needs';
 import { potionAmount, resourcePotionAmount, resourceGain, skillCost, turnRegen, IMPETUS_ON_HIT, IMPETUS_WHEN_HIT } from '../config/progression';
 import type { DamageKind, ItemEffect, SkillDef, Stats, StatusId, StatusInstance } from './types';
 import { makeRng, type Rng } from './rng';
@@ -65,6 +67,9 @@ export interface Combatant {
   headHits?: boolean;
   /** Sin lesiones (tutorial): los golpes quitan vida por regiones, pero no abren sangrados ni rompen huesos. */
   noInjuries?: boolean;
+  /** Necesidades (Fase 5, solo el jugador): se gastan una vez por ronda. `baseMaxMp` es el máximo sin hambre ni sed. */
+  needs?: Needs;
+  baseMaxMp?: number;
   /** Cirugía en curso (dos turnos propios): la región. Un golpe la interrumpe. */
   surgery?: { region: Region };
   /** Última región golpeada (ahí se abre el sangrado de una habilidad). */
@@ -173,7 +178,8 @@ export function opponents(s: CombatState, c: Combatant): Combatant[] {
 
 /** Velocidad efectiva: las piernas rotas o inutilizadas restan iniciativa. */
 export function speedOf(c: Combatant): number {
-  return c.body ? c.stats.spd * initiativeMult(c.body) : c.stats.spd;
+  if (c.body) return c.stats.spd * initiativeMult(c.body, c.needs ? exhaustionLoss(c.needs) : 0);
+  return c.needs ? c.stats.spd * Math.max(ANATOMY.minInitiative, 1 - exhaustionLoss(c.needs)) : c.stats.spd;
 }
 
 export function turnOrder(combatants: Combatant[]): string[] {
@@ -611,6 +617,32 @@ function checkOutcome(s: CombatState) {
   if (s.outcome === 'defeat') s.log.push('Has caído...');
 }
 
+/** Una ronda es un pulso también para el hambre, la sed y el cansancio. */
+function tickCombatNeeds(s: CombatState, c: Combatant) {
+  const t = tickNeeds(c.needs!, c.body!, c.body!.total);
+  c.needs = t.needs;
+  if (c.baseMaxMp !== undefined) {
+    c.stats.maxMp = effectiveMaxMp(c.baseMaxMp, t.needs);
+    c.mp = Math.min(c.mp, c.stats.maxMp);
+  }
+  for (const x of t.crossed) if (x.level !== 'ok') s.log.push(needLog(x.need, x.level));
+  if (t.dealt > 0) {
+    c.body = t.body;
+    c.hp = summaryHp(c.body);
+    s.events.push({ type: 'damage', targetId: c.id, amount: t.dealt, crit: false, source: 'dot', region: 'thorax' });
+    s.log.push(`${c.name} desfallece de ${t.needs.hyd <= 0 ? 'sed' : 'hambre'}: -${t.dealt} en el tórax.`);
+    if (c.hp === 0) { s.events.push({ type: 'death', targetId: c.id }); s.log.push(`${c.name} cae, consumido.`); }
+  }
+}
+
+/** Texto del registro o del aviso cuando una necesidad cruza un umbral. */
+export function needLog(need: Need, level: NeedLevel): string {
+  const what = NEED_NAME[need].toLowerCase();
+  if (level === 'empty') return need === 'rest' ? 'Estás agotado: tu iniciativa cae.' : need === 'hyd' ? 'La sed te quema: pronto empezará a herirte.' : 'El hambre te roe: pronto empezará a herirte.';
+  if (level === 'critical') return `${NEED_LOW[need]} grave (${what} 10 o menos): tu Ímpetu o Maná máximo cae un 20 %.`;
+  return `${NEED_LOW[need]}: ${what} en 30 o menos; tu Ímpetu o Maná máximo cae un 10 %.`;
+}
+
 function startRound(s: CombatState) {
   s.round += 1;
   s.order = turnOrder(s.combatants);
@@ -621,6 +653,8 @@ function startRound(s: CombatState) {
       const was = c.body!.painFree;
       c.body = tickPain(c.body!);
       if (was && !c.body.painFree) s.log.push(`El analgésico deja de hacer efecto en ${c.name}.`);
+      if (c.needs) tickCombatNeeds(s, c);
+      if (!alive(c)) continue;
       const r = bleedTick(c.body!);
       if (!r.bleeding.length) continue;
       c.body = r.body;

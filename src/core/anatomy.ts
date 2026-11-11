@@ -288,8 +288,9 @@ export function offenseMult(b: Body): number {
 }
 
 /** Multiplicador de la iniciativa (velocidad en combate): piernas. Nunca baja del 50 %. */
-export function initiativeMult(b: Body): number {
-  return Math.max(ANATOMY.minInitiative, 1 - limbLoss(b, LEGS, ANATOMY.legFracture, ANATOMY.legDisabled));
+/** `extra`: otras pérdidas que comparten el tope (el agotamiento de la Fase 5). */
+export function initiativeMult(b: Body, extra = 0): number {
+  return Math.max(ANATOMY.minInitiative, 1 - limbLoss(b, LEGS, ANATOMY.legFracture, ANATOMY.legDisabled) - extra);
 }
 
 /** Multiplicador del paso al explorar: piernas. Nunca baja del 40 %. */

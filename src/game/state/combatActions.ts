@@ -1,4 +1,5 @@
 // Acciones del combate: empezar, actuar, turno de la IA, resultado y cierre.
+import { needsOf } from '../../core/needs';
 import type { ItemStack } from '../../core/types';
 import { rollStacks } from '../../core/data/rarity';
 import { addManyToGrid, countItem, emptyGrid, removeItem, isCover } from '../../core/inventory';
@@ -32,7 +33,7 @@ export const combatActions = {
     if (!s.profile || !s.expedition || s.combat) return;
     const ch = s.profile.character;
     if (s.expedition.surgery) actions.interruptSurgery('Te atacan');
-    const player = playerCombatant(ch, s.expedition.equipment, s.expedition.hp, s.expedition.mp, s.expedition.cooldowns, s.profile.classSkills.equipped, { body: state.expedition!.body, headHits: headHitsHere(), noInjuries: !!s.tutorial });
+    const player = playerCombatant(ch, s.expedition.equipment, s.expedition.hp, s.expedition.mp, s.expedition.cooldowns, s.profile.classSkills.equipped, { body: state.expedition!.body, headHits: headHitsHere(), noInjuries: !!s.tutorial, needs: s.tutorial ? undefined : needsOf(s.expedition.needs) });
     const list = [player];
     let title = '';
     let canFlee = true;
@@ -111,6 +112,7 @@ export const combatActions = {
     const pl = getCombatant(next, 'player');
     exp.hp = pl.hp;
     if (pl.body) exp.body = pl.body;
+    if (pl.needs) exp.needs = pl.needs;
     exp.mp = pl.mp;
     exp.cooldowns = { ...(pl.cooldowns ?? {}) };
     let rival = s.rival;

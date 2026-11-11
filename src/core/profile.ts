@@ -153,5 +153,7 @@ export function grantRecruitKit(p: Profile): Profile {
     else backpack = addToGrid(backpack, stack).grid;
   }
   backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'health_potion', qty: 1 }).grid;
+  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'ration', qty: 1 }).grid;
+  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'water', qty: 1 }).grid;
   return { ...p, backpack, equipment };
 }

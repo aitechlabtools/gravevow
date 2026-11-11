@@ -265,7 +265,7 @@ fs.mkdirSync(OUT, { recursive: true });
     await shot('18-death');
     await page.click('[data-testid=btn-back-lobby]');
     const s = await st();
-    if (s.backpack.join() !== 'health_potionx1') throw new Error('tras morir la mochila debería tener solo la poción del kit: ' + s.backpack);
+    if (s.backpack.join() !== 'health_potionx1,rationx1,waterx1') throw new Error('tras morir la mochila debería tener solo la poción, la ración y el agua del kit: ' + s.backpack);
     const weapon = await page.evaluate(() => window.__GRAVEVOW__.getState().profile.equipment.mainHand?.itemId);
     if (weapon !== 'rusty_sword') throw new Error('el kit de recluta no equipó el arma: ' + weapon);
     await page.click('[data-testid=tab-stash]');

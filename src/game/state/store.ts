@@ -2,6 +2,7 @@
 // Estado global del juego y acciones. Orquesta el núcleo (lógica pura),
 // la persistencia y la comunicación con la escena de Phaser.
 // ════════════════════════════════════════════════════════════════════
+import { feed, needsOf, sleep, toSaved } from '../../core/needs';
 import type { Appearance, ClassId, ItemStack, Profile } from '../../core/types';
 import { createProfile, grantRecruitKit, needsRecruitKit } from '../../core/profile';
 import { clearUndo, loadSave, loadUndo, saveSave, saveUndo } from '../persistence/db';
@@ -422,6 +423,7 @@ export const actions = {
     if (!st) return;
     const def = getItem(st.itemId);
     if (!def.use) return invError('Este objeto no se puede usar.');
+    if (def.use.kind === 'need') return actions.eat(loc);
     if (s.screen !== 'dungeon' || !s.expedition) return invError(def.use.kind === 'repair' ? 'El kit se usa en la mazmorra; en la base, Maese Brand repara mejor.' : 'Las pociones solo se usan durante una expedición.');
     const stats = computeStats(s.profile.character.classId, s.profile.character.level, s.expedition.equipment);
     const exp = { ...s.expedition };
@@ -453,6 +455,49 @@ export const actions = {
     sfx(def.use.kind === 'repair' ? 'equip' : 'heal');
     set({ expedition: exp });
     toast(def.use.kind === 'repair' ? 'Remiendas tu equipo con el kit.' : `Usas ${def.name}.`, 'good', def.icon);
+  },
+
+  /** Comer o beber (Fase 5): en la mazmorra fuera de combate y también en el Bastión antes de salir. */
+  eat(loc: Loc) {
+    const s = state;
+    const c = containersFor(s);
+    if (!c || !s.profile) return;
+    const st = stackAt(c, loc);
+    if (!st) return;
+    const def = getItem(st.itemId);
+    if (def.use?.kind !== 'need') return;
+    if (s.combat) return invError('No hay tiempo para comer en mitad de un combate.');
+    const inDungeon = s.screen === 'dungeon' && !!s.expedition;
+    const cur = needsOf(inDungeon ? s.expedition!.needs : s.profile.needs);
+    const next = feed(cur, { sat: def.use.sat, hyd: def.use.hyd, rest: def.use.rest });
+    if (!next) return invError(def.use.hyd ? 'No tienes sed.' : 'No tienes hambre.');
+    if (loc.kind !== 'grid') return;
+    const grid = [...c[loc.container]];
+    grid[loc.index] = st.qty > 1 ? { ...st, qty: st.qty - 1 } : null;
+    applyContainers({ ...c, [loc.container]: grid });
+    if (inDungeon) set((s2) => ({ expedition: s2.expedition ? { ...s2.expedition, needs: next } : s2.expedition }));
+    else { set((s2) => ({ profile: s2.profile ? { ...s2.profile, needs: toSaved(next) } : s2.profile })); }
+    sfx('heal');
+    toast(`${def.use.hyd ? 'Bebes' : 'Comes'}: ${def.name.toLowerCase()}.`, 'good', def.icon);
+  },
+
+  /** Comer o beber el primero de la mochila (panel de necesidades). */
+  eatItem(itemId: string) {
+    const c = containersFor(state);
+    const idx = c ? c.backpack.findIndex((x) => x?.itemId === itemId) : -1;
+    if (idx < 0) return invError(`No llevas ${getItem(itemId).name.toLowerCase()}.`);
+    actions.eat({ kind: 'grid', container: 'backpack', index: idx });
+  },
+
+  /** Catre del Bastión: Descanso a 100, gratis y al momento. */
+  sleepCot() {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const n = needsOf(p.needs);
+    if (n.rest >= 100) return invError('Ya estás descansado.');
+    set({ profile: { ...p, needs: toSaved(sleep(n)) } });
+    sfx('heal');
+    toast('Duermes en el catre del Bastión. Descanso recuperado.', 'good');
   },
 
   drinkPotion() {

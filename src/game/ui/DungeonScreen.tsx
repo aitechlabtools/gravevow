@@ -1,3 +1,5 @@
+import { NeedsPanel, NeedsStrip } from './NeedsBars';
+import { effectiveMaxMp, needsOf } from '../../core/needs';
 import { useClearOnDrop } from './pointerDrag';
 import { gridGold, isCoins } from '../../core/gold';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -127,6 +129,7 @@ function Hud() {
   if (!exp || !s.profile) return null;
   const ch = s.profile.character;
   const stats = computeStats(ch.classId, ch.level, exp.equipment);
+  const needs = needsOf(exp.needs);
   const left = timeLeft(exp, s.now);
   const potions = countItem(exp.backpack, 'health_potion');
   const urgent = left < 120000;
@@ -145,7 +148,8 @@ function Hud() {
             </div>
             <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label="Vida" testId="hud-hp" />
             <div className="h-1" />
-            <Bar value={exp.mp} max={stats.maxMp} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={CLASSES[ch.classId].resourceName} />
+            <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={CLASSES[ch.classId].resourceName} />
+            {!tutorial && <NeedsStrip needs={needs} />}
             <button className="btn w-full mt-2 text-sm flex items-center justify-center gap-2" onClick={() => actions.drinkPotion()} disabled={!potions} data-testid="btn-potion">
               <ItemIcon itemId="health_potion" size={20} /> Poción ({potions}) <kbd className="text-xs opacity-60">Q</kbd>
             </button>
@@ -247,6 +251,7 @@ function TouchTopHud() {
   const exp = s.expedition!;
   const ch = s.profile!.character;
   const stats = computeStats(ch.classId, ch.level, exp.equipment);
+  const needs = needsOf(exp.needs);
   const left = timeLeft(exp, s.now);
   const urgent = left < 120000;
   const edge = TOUCH_CFG.edge[size];
@@ -265,7 +270,8 @@ function TouchTopHud() {
         </div>
         <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label={phone ? undefined : 'Vida'} testId="hud-hp" />
         <div className="h-1" />
-        <Bar value={exp.mp} max={stats.maxMp} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={phone ? undefined : CLASSES[ch.classId].resourceName} />
+        <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={phone ? undefined : CLASSES[ch.classId].resourceName} />
+        {!tutorial && <NeedsStrip needs={needs} />}
         <div className="text-[11px] mt-1.5 flex items-center gap-1 flex-wrap">Botín: <span className="text-gold" data-testid="hud-loot-value">{gridValue(exp.backpack)}</span> · Oro encima: <GoldAmount value={gridGold(exp.backpack)} /></div>
       </div>
 
@@ -416,13 +422,16 @@ function CaptiveModal({ mercId }: { mercId: string }) {
 
 function BodyModal() {
   const exp = useGame((s) => s.expedition);
+  const tutorial = useGame((s) => !!s.tutorial);
   const profile = useGame((s) => s.profile);
   if (!exp || !profile) return null;
   return (
     <Modal onClose={() => actions.closeModal()} wide testId="body-modal">
-      <h2 className="font-display text-2xl mb-2">Heridas</h2>
+      <h2 className="font-display text-2xl mb-2">Heridas y necesidades</h2>
       <BodyPanel body={expBody(exp, profile)} backpack={exp.backpack} surgery={exp.surgery} onTreat={(id, r) => actions.treat(id, r)}
-        note="Se muere si la cabeza o el tórax llegan a cero. Tratar fuera de combate no gasta turno; la cirugía tarda dos pulsos." />
+        note="Se muere si la cabeza o el tórax llegan a cero. Tratar fuera de combate no gasta turno; la cirugía tarda dos pulsos.">
+        {!tutorial && <NeedsPanel needs={needsOf(exp.needs)} body={exp.body} backpack={exp.backpack} onUse={(id) => actions.eatItem(id)} />}
+      </BodyPanel>
       <button className="btn mt-3 text-sm" onClick={() => actions.closeModal()} data-testid="body-close">Cerrar</button>
     </Modal>
   );

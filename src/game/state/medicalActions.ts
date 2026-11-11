@@ -2,7 +2,8 @@
 // sangrado por pulso al explorar y el tratamiento completo de Hermana Vesper en el Bastión.
 import { ANATOMY, REGION_NAME } from '../../config/anatomy';
 import { tickPain, applyTreatment, bleedTick, bestTreatment, damageRegion, fromWounds, isDead, resizeBody, rollInjury, summaryHp, treatError, urgencies, vesperPrice, type Body, type Region, type Treatment } from '../../core/anatomy';
-import { regionWith } from '../../core/combat';
+import { needLog, regionWith } from '../../core/combat';
+import { needsOf, tickNeeds } from '../../core/needs';
 import { computeStats } from '../../core/stats';
 import { countItem, removeItem } from '../../core/inventory';
 import { getItem } from '../../core/data/items';
@@ -112,10 +113,17 @@ export const medicalActions = {
       const b = bleedTick(body);
       body = tickPain(b.body);
       if (b.dead) break;
+      // Necesidades: el mismo pulso gasta Saciedad, Hidratación y Descanso
+      const t = tickNeeds(needsOf(exp.needs), body, body.total);
+      exp = { ...exp, needs: t.needs };
+      body = t.body;
+      for (const x of t.crossed) if (x.level !== 'ok') toast(needLog(x.need, x.level), x.level === 'low' ? 'info' : 'danger', x.need === 'hyd' ? 'water' : x.need === 'sat' ? 'ration' : undefined);
+      if (t.dealt > 0) toast(`${t.needs.hyd <= 0 ? 'La sed' : 'El hambre'} te hiere: -${t.dealt} en el tórax.`, 'danger');
+      if (t.dead) break;
     }
     exp = withBody(exp, body);
     set({ expedition: exp });
-    if (isDead(body)) { toast('Te has desangrado.', 'danger'); void actions.finishExpedition('died'); return; }
+    if (isDead(body)) { toast(exp.needs && (exp.needs.hyd <= 0 || exp.needs.sat <= 0) && !Object.values(body.parts).some((x) => x.bleed) ? 'El hambre y la sed han podido contigo.' : 'Te has desangrado.', 'danger'); void actions.finishExpedition('died'); return; }
     // Aviso de hemorragia, sin repetirlo más de una vez cada 30 s
     const heavy = (Object.values(body.parts) as Body['parts'][Region][]).some((p) => p.bleed === 2);
     const any = (Object.values(body.parts) as Body['parts'][Region][]).some((p) => p.bleed > 0);

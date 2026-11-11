@@ -28,7 +28,9 @@ export type ItemEffect =
   /** Kit de campo: repara parte del equipo (solo fuera de combate). */
   | { kind: 'repair' }
   /** Tratamientos de la anatomía (venda, hemostático, torniquete, férula, cirugía): se aplican a una región. */
-  | { kind: 'treat'; treat: 'bandage' | 'hemostatic' | 'tourniquet' | 'splint' | 'surgery' | 'painkiller' };
+  | { kind: 'treat'; treat: 'bandage' | 'hemostatic' | 'tourniquet' | 'splint' | 'surgery' | 'painkiller' }
+  /** Comida y bebida (Fase 5): suben Saciedad, Hidratación o Descanso. Fuera de combate. */
+  | { kind: 'need'; sat?: number; hyd?: number; rest?: number };
 
 /** Familias de armas y objetos de mano izquierda (ver data/weapons.ts). */
 export type WeaponFamily =
@@ -235,6 +237,8 @@ export interface Profile {
   tutorialSeen: { lobby: boolean; dungeon: boolean };
   /** Heridas que traes de la última incursión (ya estabilizadas en el Bastión). Sin valor: entero. */
   wounds?: { pct: Partial<Record<'head' | 'thorax' | 'abdomen' | 'armL' | 'armR' | 'legL' | 'legR', number>>; fractures: ('head' | 'thorax' | 'abdomen' | 'armL' | 'armR' | 'legL' | 'legR')[] } | null;
+  /** Saciedad, Hidratación y Descanso (Fase 5) al volver al Bastión. Sin valor: llenas. */
+  needs?: { sat: number; hyd: number; rest: number } | null;
   /** Tiempo de juego activo acumulado en expediciones (ms, reloj de juego). Formato de guardado 4. */
   playMs?: number;
   /** Tutorial guiado de la primera expedición completado (o saltado). Las partidas con expediciones lo tienen hecho. */

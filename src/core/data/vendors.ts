@@ -24,7 +24,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
     id: 'orvel', name: 'Orvel el Quincallero', role: 'Comerciante', sprite: 'vendor_orvel', color: '#e8b33a', buysItems: true,
     blurb: 'Se compra, se vende, no se pregunta. Si sobrevives, vuelve: a los buenos clientes les hago precio.',
     stock: [
-      { itemId: 'health_potion', rank: 0 }, { itemId: 'mana_potion', rank: 0 }, { itemId: 'focus_tonic', rank: 0 }, { itemId: 'antidote', rank: 0 }, { itemId: 'bandage', rank: 0 }, { itemId: 'iron_key', rank: 0 },
+      { itemId: 'health_potion', rank: 0 }, { itemId: 'mana_potion', rank: 0 }, { itemId: 'focus_tonic', rank: 0 }, { itemId: 'antidote', rank: 0 }, { itemId: 'bandage', rank: 0 }, { itemId: 'ration', rank: 0 }, { itemId: 'water', rank: 0 }, { itemId: 'iron_key', rank: 0 },
       { itemId: 'rusty_sword', rank: 0 }, { itemId: 'iron_sword', rank: 0 }, { itemId: 'battle_axe', rank: 0 }, { itemId: 'wooden_shield', rank: 0 }, { itemId: 'iron_shield', rank: 0 },
       { itemId: 'iron_helm', rank: 0 }, { itemId: 'chainmail', rank: 0 }, { itemId: 'gauntlets', rank: 0 },
       { itemId: 'apprentice_staff', rank: 0 }, { itemId: 'ember_staff', rank: 0 }, { itemId: 'arcane_tome', rank: 0 }, { itemId: 'wizard_hat', rank: 0 }, { itemId: 'linen_robe', rank: 0 },

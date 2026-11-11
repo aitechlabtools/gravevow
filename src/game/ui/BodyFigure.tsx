@@ -1,7 +1,7 @@
 // Anatomía en pantalla (Fase 4): silueta de siete regiones y panel de heridas con sus tratamientos.
 // El color siempre va con símbolo o texto: un brazo rojo, uno roto y uno inutilizado se distinguen.
 import { ANATOMY, BODY_COLOR, REGION_NAME, type Region } from '../../config/anatomy';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { bodyHp, isDisabled, isLimb, painfulRegions, summaryHp, regionCap, regionMaxes, REGIONS, treatError, TREATMENT_NAME, urgencies, bestTreatment, type Body, type Treatment } from '../../core/anatomy';
 import { countItem } from '../../core/inventory';
 import type { Grid } from '../../core/types';
@@ -116,9 +116,9 @@ function RegionTag({ body, r, on, onPick }: { body: Body; r: Region; on: boolean
  * Panel de heridas: mapa del cuerpo (silueta tenue con una etiqueta por región) y, al lado, la región
  * elegida con sus lesiones y los tratamientos que llevas y sirven ahí. Lo que no sirve no aparece.
  */
-export function BodyPanel({ body, backpack, onTreat, surgery, note }: {
+export function BodyPanel({ body, backpack, onTreat, surgery, note, children }: {
   body: Body; backpack?: Grid; onTreat?: (itemId: string, region: Region) => void;
-  surgery?: { region: Region; left: number } | null; note?: string;
+  surgery?: { region: Region; left: number } | null; note?: string; children?: ReactNode;
 }) {
   const touch = useIsTouch();
   const have = (t: Treatment) => !!backpack && countItem(backpack, TREATMENT_ITEM[t]) > 0;
@@ -173,6 +173,7 @@ export function BodyPanel({ body, backpack, onTreat, surgery, note }: {
         </div>
         {onTreat && !REGIONS.some((r) => options(r).length) && urgencies(body).length > 0 && <p className="text-xs text-stone-400 mt-2">No llevas nada que sirva para estas heridas. Hermana Vesper vende vendas, torniquetes, férulas y hemostáticos.</p>}
         {!urgencies(body).length && <p className="text-xs text-stone-400 mt-2">Sin sangrados ni fracturas.{REGIONS.some((r) => isLimb(r) && body.parts[r].hp < regionCap(body, r)) ? ' La vida perdida se recupera con pociones.' : ''}</p>}
+        {children}
       </div>
     </div>
   );

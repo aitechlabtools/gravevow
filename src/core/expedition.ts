@@ -1,3 +1,4 @@
+import { baseSupply, needsOf, toSaved, type Needs } from './needs';
 import { gridGold } from './gold';
 import type { Equipment, Grid, ItemStack, Profile } from './types';
 import { cloneGrid, gridValue, equippedValue } from './inventory';
@@ -30,6 +31,8 @@ export interface ExpeditionState {
   hp: number;
   /** Anatomía de siete regiones (Fase 4). */
   body: Body;
+  /** Saciedad, Hidratación y Descanso (Fase 5). Las expediciones antiguas no tienen: llenas. */
+  needs?: Needs;
   /** Cirugía de campo en marcha: región y pulsos que faltan (el equipo ya está reservado). */
   surgery?: { region: Region; left: number } | null;
   mp: number;
@@ -86,6 +89,7 @@ export function startExpedition(p: Profile, now: number): { profile: Profile; ex
     equipment: { ...p.equipment },
     hp: 0,
     body: fromWounds(p.wounds, stats.maxHp),
+    needs: needsOf(p.needs),
     mp: stats.maxMp,
     goldFound: 0,
     xpGained: 0,
@@ -127,6 +131,8 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
     activeExpedition: null,
     // Estabilización gratuita del Bastión: sin sangrados y cada región al menos al 50 % (las fracturas siguen)
     wounds: e.body ? toWounds(stabilize(e.body)) : p.wounds ?? null,
+    // Suministro comunitario: Saciedad e Hidratación vuelven al menos a 60 (el Descanso se recupera en el catre)
+    needs: toSaved(baseSupply(needsOf(e.needs ?? p.needs))),
     stats: {
       ...p.stats,
       extractions: p.stats.extractions + (extracted ? 1 : 0),
