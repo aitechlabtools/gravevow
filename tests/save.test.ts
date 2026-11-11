@@ -27,7 +27,7 @@ describe('Partida (formato 3): migración desde un solo personaje', () => {
   it('un perfil de la versión 2 pasa al hueco 1 sin perder nada', () => {
     const old = veteran();
     const s = migrateProfileToSave(json(old))!;
-    expect(s.version).toBe(3);
+    expect(s.version).toBe(4);
     expect(s.characters).toHaveLength(1);
     expect(s.characters[0].slot).toBe(0);
     expect(s.account.lastCharacterId).toBe(s.characters[0].id);
@@ -138,5 +138,31 @@ describe('Partida: guardar, cargar y varios personajes', () => {
     const fixed = sanitizeSave(raw)!;
     expect(fixed.characters).toHaveLength(4);
     expect(new Set(fixed.characters.map((x) => x.slot)).size).toBe(4);
+  });
+});
+
+describe('Partida (formato 4): migración desde el formato 3', () => {
+  it('una partida 3 carga igual y añade el tiempo de juego a 0', () => {
+    let s = emptySave(1000);
+    s = addCharacter(s, createProfile('Aldric', 'warrior', { cloak: 1, skin: 2 }))!.save;
+    s = addCharacter(s, createProfile('Ilsa', 'mage', { cloak: 0, skin: 1 }))!.save;
+    const v3 = json(s) as unknown as Record<string, unknown> & { characters: Record<string, unknown>[] };
+    v3.version = 3;
+    for (const c of v3.characters) delete c.playMs;
+    const m = sanitizeSave(v3)!;
+    expect(m.version).toBe(4);
+    expect(m.characters).toHaveLength(2);
+    expect(m.characters.map((c) => c.character.name)).toEqual(['Aldric', 'Ilsa']);
+    expect(m.characters.every((c) => c.playMs === 0)).toBe(true);
+    expect(m.characters.map((c) => c.backpack)).toEqual(s.characters.map((c) => c.backpack));
+    expect(m.characters.map((c) => c.stashPages)).toEqual(s.characters.map((c) => c.stashPages));
+  });
+  it('el tiempo de juego se conserva al guardar y cargar', () => {
+    let s = emptySave(1000);
+    const r = addCharacter(s, createProfile('Aldric', 'warrior', { cloak: 1, skin: 2 }))!;
+    s = r.save;
+    const p = composeProfile(s, r.id)!;
+    s = applyProfile(s, { ...p, playMs: 90_000 }, r.id);
+    expect(composeProfile(sanitizeSave(json(s))!, r.id)!.playMs).toBe(90_000);
   });
 });

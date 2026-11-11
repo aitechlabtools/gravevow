@@ -33,7 +33,7 @@ Este archivo resume la auditoría, las decisiones del usuario y las fases. El pl
 | Salud | `Combatant.hp` | Barra única; no hay anatomía, sangrado por zonas ni fracturas |
 | Necesidades | — | No existen |
 | Guardado | `core/save.ts` (formato 3), `persistence/db.ts` (IndexedDB) | Con migraciones; la expedición es una copia que solo cambia el perfil al extraer o morir |
-| Estado global | `game/state/store.ts` (1.851 líneas) | Hay que separar combate y expedición antes de ampliar |
+| Estado global | `game/state/store.ts` + `internals.ts`, `expeditionActions.ts`, `combatActions.ts` | Separado en la Fase 1 |
 
 ## Riesgos
 - Tamaño: el plan completo son meses; primero lo que cambia la forma de jugar, el contenido al final.
@@ -44,7 +44,7 @@ Este archivo resume la auditoría, las decisiones del usuario y las fases. El pl
 | Fase | Contenido | Criterio de cierre |
 |---|---|---|
 | 0 | Este documento | Hecho (11/11) |
-| 1 | Base técnica: separar combate y expedición de `store.ts`; guardado formato 4 con migración; reloj de juego (pulso) que se pausa en menús y al ocultar la pestaña | Las partidas actuales cargan igual; todas las pruebas pasan |
+| 1 | Base técnica: separar combate y expedición de `store.ts`; guardado formato 4 con migración; reloj de juego (pulso) que se pausa en menús y al ocultar la pestaña | Hecho (11/11): `internals.ts`, `expeditionActions.ts`, `combatActions.ts`; formato 4 (`playMs`); `core/clock.ts` |
 | 2 | Combate 1 contra 2 y 2 contra 2: dos enemigos, elegir objetivo, dos fichas, máximo 2 por bando, defensa que cubre hasta tu próximo turno | Ambas clases ganan y huyen de un 1 contra 2; guardado del combate |
 | 3 | Durabilidad de armas, armaduras y herramientas; avisos al 25 % y 10 %; roto no se destruye; reparación con Brand y kits de campo | Sin pérdida de objetos; siempre queda una acción básica |
 | 4 | Anatomía de 7 zonas, sangrado, fracturas y tratamientos (venda, hemostático, torniquete, férula, cirugía) | Muerte solo por cabeza o tórax; interfaz legible en móvil |

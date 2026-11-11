@@ -54,7 +54,7 @@
 - Falta subir `public/sitemap.xml` (ya generado) y referenciarlo en `public/robots.txt`.
 
 ## Errores conocidos
-- Ninguno abierto en este momento.
+- `almacen-check` falla en escritorio («la página debe verse entera sin desplazar», 117 casillas visibles). Ya fallaba antes de la Fase 1; tableta y móvil pasan. Pendiente de revisar.
 - Las pruebas e2e fallan de vez en cuando por tiempo de espera en el modal de botín. Al repetirlas, pasan.
 
 ## Decisiones vigentes
@@ -66,6 +66,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 11/11: Fase 1 de la expansión. `store.ts` separado en `internals.ts` (estado y guardado), `expeditionActions.ts` y `combatActions.ts` (la interfaz sigue importando de `store.ts`). Guardado formato 4 con migración desde el 3 (`playMs` por personaje). Reloj de juego `core/clock.ts` (`state.clock`): pulsos de 1 s, en pausa con menú, resumen o pestaña oculta; suma al `playMs` al terminar la expedición. Siguiente: Fase 2 (combate 1 contra 2 y 2 contra 2).
 - 11/11: plan de la expansión analizado y decisiones del usuario guardadas en `docs/plan-expansion.md` (Fase 0). Siguiente: Fase 1 (base técnica).
 - 11/11: botones Apoyar (Ko-fi, sustituye a Stripe) y Discord en la landing y el juego; privacidad y cookies actualizadas; iconos provisionales en la lista de assets.
 - 11/11: `CLAUDE.md` reorganizado y este archivo creado para trabajar entre sesiones y ordenadores.
@@ -76,7 +77,7 @@
 - 5–6/11: pulido del tutorial, botón «Agrupar oro» en la mazmorra y arrastre táctil más suave.
 
 ## Próximos pasos (por decidir con el usuario)
-- **Expansión por fases** (`docs/plan-expansion.md`): Fase 0 hecha; siguiente, Fase 1.
+- **Expansión por fases** (`docs/plan-expansion.md`): Fases 0 y 1 hechas; siguiente, Fase 2.
 - Arte definitivo de los atuendos y de las subzonas.
 - Clases nuevas: Pícaro y Clérigo.
 - Tráiler nuevo cuando haya contenido nuevo.

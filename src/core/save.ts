@@ -1,4 +1,4 @@
-// Partida completa del jugador (formato 3): datos de la cuenta y hasta 4 personajes.
+// Partida completa del jugador (formato 4): datos de la cuenta y hasta 4 personajes.
 // El juego sigue trabajando con un `Profile` (el personaje activo con los datos de la cuenta encima):
 // `composeProfile` lo monta y `applyProfile` lo vuelve a repartir antes de guardar.
 // Preparado para un futuro guardado en la nube: la cuenta tiene un identificador propio y fechas de cambio.
@@ -15,7 +15,8 @@ import { STASH_PAGE_SIZE } from '../config/stash';
 export const SAVE_FORMAT = 'gravevow-save';
 /** Formato de partida con el nombre anterior del juego: se sigue aceptando. */
 export const OLD_SAVE_FORMAT = 'cryptraiders-save';
-export const SAVE_VERSION = 3;
+/** 4 = expansión: tiempo de juego activo por personaje (`playMs`). Las partidas 3 se migran al cargarlas. */
+export const SAVE_VERSION = 4;
 export const MAX_CHARACTERS = 4;
 const DEFAULT_SETTINGS: Settings = { volume: 0.6, music: true };
 
@@ -242,6 +243,8 @@ export function sanitizeSave(raw: unknown, now = Date.now()): SaveData | null {
       if (n > 0) account.notes = [...account.notes, `El oro ahora pesa: las ${n} monedas de ${p.character.name} están en sacos en su almacén. Lo que lleves encima a la mazmorra lo arriesgas.`];
     }
     p.gold = gridGold(p.stash);
+    // Formato 4: tiempo de juego activo (las partidas anteriores empiezan en 0)
+    p.playMs = num(cs.playMs, 0);
     used.add(slot);
     const repaired = toCharacter(p, id, slot);
     repaired.lastPlayedAt = num(cs.lastPlayedAt, now);

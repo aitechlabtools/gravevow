@@ -28,9 +28,11 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Combate: `combat.ts` y `combatants.ts`.
   - Botín: `loot.ts`. Oro físico: `gold.ts`, `bag.ts` y `inventory.ts`.
   - Expedición: `expedition.ts`, `dungeonGen.ts` y `dungeon.ts`.
-  - Partida: `save.ts` (formato 3, con cuenta y hasta 4 personajes), `profile.ts` y `backup.ts` (copias firmadas con código `GV1.`; se aceptan las antiguas `CR1.`).
+  - Partida: `save.ts` (formato 4, con cuenta y hasta 4 personajes; migra los formatos anteriores), `profile.ts` y `backup.ts` (copias firmadas con código `GV1.`; se aceptan las antiguas `CR1.`).
 - `src/config`: valores de equilibrio y medidas (`touch.ts`, `ui.ts`, `stash.ts`, `subzones.ts`…).
-- `src/game/state/store.ts`: estado global (`useGame`) y acciones (`actions`). `bus.ts` avisa a la escena de Phaser.
+- `src/game/state/store.ts`: estado global (`useGame`) y acciones (`actions`); la interfaz importa siempre de aquí. `bus.ts` avisa a la escena de Phaser.
+  - `internals.ts`: el estado, `set`, el guardado y las ayudas comunes. `expeditionActions.ts` y `combatActions.ts`: acciones de expedición y de combate, que `store.ts` une en `actions`.
+  - Reloj de juego (`core/clock.ts`, `state.clock`): solo avanza en la mazmorra, sin menú abierto y con la pestaña visible.
   - Con `?debug`, el estado se ve en `window.__GRAVEVOW__`.
 - `src/game/engine`: la escena de mazmorra (`DungeonScene.ts`) solo dibuja y mueve; los hechos del juego pasan por acciones del estado.
 - `src/game/ui`: pantallas.

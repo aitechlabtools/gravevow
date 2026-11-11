@@ -227,6 +227,8 @@ export interface Profile {
   /** Marca de expedición en curso, para detectar recargas a mitad de partida. */
   activeExpedition: { startedAt: number } | null;
   tutorialSeen: { lobby: boolean; dungeon: boolean };
+  /** Tiempo de juego activo acumulado en expediciones (ms, reloj de juego). Formato de guardado 4. */
+  playMs?: number;
   /** Tutorial guiado de la primera expedición completado (o saltado). Las partidas con expediciones lo tienen hecho. */
   tutorialDone: boolean;
   /** Kael el Errante: expediciones a la Mazmorra seguidas sin encontrarlo (para la aparición garantizada). */

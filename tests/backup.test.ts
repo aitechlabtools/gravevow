@@ -1,3 +1,4 @@
+import { SAVE_VERSION } from '../src/core/save';
 import { describe, expect, it } from 'vitest';
 import { createProfile } from '../src/core/profile';
 import { addCharacter, composeProfile, migrateProfileToSave } from '../src/core/save';
@@ -68,7 +69,7 @@ describe('Copia de seguridad', () => {
     const r = parseBackup(backupToJson(b));
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.save.version).toBe(3);
+    expect(r.save.version).toBe(SAVE_VERSION);
     expect(composeProfile(r.save, r.save.characters[0].id)!.gold).toBe(60); // (100 + 500 devueltos) ÷ 10
   });
 
