@@ -26,14 +26,14 @@ export function Lobby() {
   const [tab, setTab] = useState<LobbyTab>('play');
   const [settings, setSettings] = useState(false);
   const [switcher, setSwitcher] = useState(false);
-  /** Acceso directo a un mercader concreto (p. ej., «Contrato» en Jugar abre los contratos de Garra Roja). */
+  /** Acceso directo a un mercader concreto (p. ej., «Contrato» en Jugar abre los contratos de Grizk). */
   const [vendorTarget, setVendorTarget] = useState<VendorTarget | null>(null);
   const layout = useLayout();
   const ch = profile.character;
   const cls = CLASSES[ch.classId];
   const questsReady = readyQuestCount(profile);
   const tabs: PillTab<LobbyTab>[] = [
-    { id: 'play', label: 'Jugar' }, { id: 'character', label: 'Personaje' }, { id: 'stash', label: 'Alijo' }, { id: 'merchants', label: 'Mercaderes' },
+    { id: 'play', label: 'Jugar' }, { id: 'character', label: 'Personaje' }, { id: 'stash', label: 'Intendencia' }, { id: 'merchants', label: 'Bastión' },
     { id: 'quests', label: 'Misiones', badge: questsReady }, { id: 'bestiary', label: 'Bestiario' }, { id: 'shop', label: 'Tienda' },
   ];
   const go = (t: LobbyTab) => { setTab(t); sfx('click'); };
@@ -65,7 +65,7 @@ export function Lobby() {
 
       <main className="flex-1 min-h-0 relative">
         <div key={tab} className="fade-in h-full">
-          {tab === 'play' && <Jugar onNavigate={(t) => { if (t === 'contracts') setVendorTarget({ vendor: 'garra', view: 'contracts' }); go(t === 'contracts' ? 'merchants' : t); }} />}
+          {tab === 'play' && <Jugar onNavigate={(t) => { if (t === 'contracts') setVendorTarget({ vendor: 'grizk', view: 'contracts' }); go(t === 'contracts' ? 'merchants' : t); }} />}
           {tab === 'character' && <Personaje onStash={() => go('stash')} />}
           {tab === 'stash' && <Alijo onDetails={() => go('character')} onShop={() => go('shop')} />}
           {tab === 'merchants' && <Mercaderes target={vendorTarget} onConsumed={() => setVendorTarget(null)} />}
@@ -127,9 +127,9 @@ function LobbyTutorial() {
     <Modal onClose={() => actions.markTutorial('lobby')} testId="tutorial">
       <h2 className="panel-title text-xl mb-3">Bienvenido al Bastión de Ceniza</h2>
       <ol className="font-body text-lg space-y-2 list-decimal pl-5">
-        <li><b>Alijo:</b> tu equipo, tu mochila y el almacén. Arrastra los objetos, o tócalos y luego toca la casilla donde los quieres.</li>
+        <li><b>Intendencia:</b> tu equipo, tu mochila y el almacén; en «Estado», tus heridas, el hambre, la sed y el cansancio. Arrastra los objetos, o tócalos y luego toca la casilla donde los quieres.</li>
         <li><b>Almacén:</b> lo que guardes ahí está a salvo. Lo que lleves a la mazmorra, no.</li>
-        <li><b>Mercaderes:</b> habla con ellos para comprar pociones, vender lo que no necesites y aceptar encargos.</li>
+        <li><b>Bastión:</b> los mercaderes, cada uno en su lugar: compra, vende, acepta encargos y duerme en el catre. Llegan más a medida que bajas.</li>
         <li><b>Jugar:</b> elige zona y pulsa <b>Descender</b>. Saquea, sobrevive y encuentra el portal antes de que acabe el tiempo.</li>
       </ol>
       <p className="font-body italic text-stone-300 mt-3">Y no te fíes de nadie que encuentres ahí abajo. O sí. Tú decides.</p>

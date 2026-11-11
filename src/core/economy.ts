@@ -3,6 +3,7 @@ import type { ItemStack } from './types';
 import type { Profile } from './types';
 import { getItem } from './data/items';
 import { SELL_RATIO } from './data/merchant';
+import { vendorUnlocked } from './vendors';
 import { VENDORS, type VendorId } from './data/vendors';
 import { REP_RANKS, rankOf } from '../config/reputation';
 import { addToGrid, anchorIndex, cloneGrid, isCover, LAYOUTS, removeAt } from './inventory';
@@ -25,7 +26,8 @@ export function sellPrice(itemId: string, stack?: Pick<ItemStack, 'rarity' | 'af
   return Math.max(1, Math.floor(def.value * GOLD_SCALE * SELL_RATIO * k * k * extra));
 }
 
-export function buy(p: Profile, itemId: string, vendorId: VendorId = 'orvel'): EconomyResult {
+export function buy(p: Profile, itemId: string, vendorId: VendorId = 'nira'): EconomyResult {
+  if (!vendorUnlocked(p, vendorId)) return { ok: false, error: `${VENDORS[vendorId].name} aún no ha llegado al Bastión.` };
   const entry = VENDORS[vendorId].stock.find((s) => s.itemId === itemId);
   if (!entry) return { ok: false, error: 'Este vendedor no vende eso.' };
   const rep = p.reputation?.[vendorId] ?? 0;
@@ -52,17 +54,17 @@ export function buy(p: Profile, itemId: string, vendorId: VendorId = 'orvel'): E
 }
 
 /** Vende una unidad (o toda la pila si all=true) desde la mochila o el almacén. */
-/** ¿Lo compra este mercader? Orvel compra de todo; el Coleccionista, solo joyas y tesoros (y paga mejor). */
+/** ¿Lo compra este mercader? Nira compra de todo; Grizk, solo joyas y tesoros (y paga mejor). */
 export function buysThis(vendor: VendorId, itemId: string): boolean {
-  if (vendor === 'coleccionista') return COLLECTOR_BUYS.includes(getItem(itemId).category);
+  if (vendor === 'grizk') return COLLECTOR_BUYS.includes(getItem(itemId).category);
   return VENDORS[vendor].buysItems;
 }
 export function vendorSellPrice(vendor: VendorId, itemId: string, stack?: Pick<ItemStack, 'rarity' | 'affixes'>): number {
   const base = sellPrice(itemId, stack);
-  return vendor === 'coleccionista' ? Math.max(1, Math.round(base * COLLECTOR_PRICE_MULT)) : base;
+  return vendor === 'grizk' ? Math.max(1, Math.round(base * COLLECTOR_PRICE_MULT)) : base;
 }
 
-export function sell(p: Profile, container: 'backpack' | 'stash', index: number, all = false, vendor: VendorId = 'orvel'): EconomyResult {
+export function sell(p: Profile, container: 'backpack' | 'stash', index: number, all = false, vendor: VendorId = 'nira'): EconomyResult {
   const grid = cloneGrid(p[container]);
   index = anchorIndex(grid, index); // una casilla tapada por un saco vende el saco
   const s = index >= 0 ? grid[index] : null;

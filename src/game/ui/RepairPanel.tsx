@@ -49,7 +49,7 @@ export function RepairPanel() {
           })}
         </div>
       )}
-      <p className="font-body text-sm text-stone-400 italic">El oro se coge del almacén. En la mazmorra, un kit de reparación (lo vende Brand) remienda lo que llevas puesto y tus picos.</p>
+      <p className="font-body text-sm text-stone-400 italic">El oro se coge del almacén. En la mazmorra, un kit de reparación (lo venden Nira, Orik y Brand) remienda lo que llevas puesto y tus picos.</p>
     </div>
   );
 }

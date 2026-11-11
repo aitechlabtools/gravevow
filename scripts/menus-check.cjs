@@ -27,12 +27,13 @@ const VIEWS = [
   { name: 'alijo', tab: 'stash' },
   { name: 'alijo-almacen', tab: 'stash', steps: ['seg-storage'], optional: true },
   { name: 'mercaderes', tab: 'merchants' },
-  { name: 'mercader-orvel', tab: 'merchants', steps: ['vendor-orvel'] },
-  { name: 'mercader-vender', tab: 'merchants', steps: ['vendor-orvel', 'vendor-view-sell'] },
+  { name: 'mercader-nira', tab: 'merchants', steps: ['vendor-nira'] },
+  { name: 'mercader-vender', tab: 'merchants', steps: ['vendor-nira', 'vendor-view-sell'] },
   { name: 'mercader-forja', tab: 'merchants', steps: ['vendor-brand', 'vendor-view-forge'] },
-  { name: 'mercader-coleccionista', tab: 'merchants', steps: ['vendor-coleccionista'] },
-  { name: 'coleccionista-vender', tab: 'merchants', steps: ['vendor-coleccionista', 'vendor-view-sell'] },
-  { name: 'mercader-contratos', tab: 'merchants', steps: ['vendor-garra', 'vendor-view-contracts'] },
+  { name: 'mercader-grizk', tab: 'merchants', steps: ['vendor-grizk'] },
+  { name: 'grizk-vender', tab: 'merchants', steps: ['vendor-grizk', 'vendor-view-sell'] },
+  { name: 'intendencia-estado', tab: 'stash', steps: ['seg-status'] },
+  { name: 'mercader-contratos', tab: 'merchants', steps: ['vendor-grizk', 'vendor-view-contracts'] },
   { name: 'misiones', tab: 'quests' },
   { name: 'bestiario', tab: 'bestiary' },
   { name: 'alijo-atuendo', tab: 'stash', steps: ['slot-skin'], close: true },
@@ -58,7 +59,7 @@ async function run(s) {
   await act('btn-create');
   await act('btn-tutorial-ok');
   // Un poco de todo para que las pantallas no salgan vacías
-  await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; pr.gold = 4860; pr.stats.expeditions = 3; G.setState({ profile: { ...pr } }); });
+  await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; pr.gold = 4860; pr.stats.expeditions = 3; pr.character.level = 45; pr.bossesDefeated = [...new Set([...(pr.bossesDefeated || []), 'ossuary_lord'])]; G.setState({ profile: { ...pr } }); });
   for (const v of VIEWS) {
     try {
       await act(`tab-${v.tab}`);

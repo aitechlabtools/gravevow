@@ -43,7 +43,7 @@ describe('Partida (formato 3): migración desde un solo personaje', () => {
     expect(p.equipment).toEqual(old.equipment);
     expect(p.skins).toEqual(old.skins);
     expect(p.stats).toEqual(old.stats);
-    expect(p.reputation).toEqual(old.reputation);
+    expect(p.reputation).toEqual({ nira: 120 }) // la de Orvel pasa a Nira (Fase 5b);
     expect(p.bestiary).toEqual(old.bestiary);
   });
 

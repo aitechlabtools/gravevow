@@ -102,7 +102,7 @@ describe('Inventario', () => {
 describe('Economía', () => {
   it('comprar una poción descuenta oro y la añade', () => {
     const p = warriorProfile();
-    const r = buy(p, 'health_potion');
+    const r = buy(p, 'health_potion', 'vesper');
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.profile.gold).toBe(p.gold - Math.round(ITEMS.health_potion.value / 10)); // economía ÷10

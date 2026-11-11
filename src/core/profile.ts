@@ -1,3 +1,4 @@
+import { migrateReputation } from './vendors';
 import { BAG_SIZES, STARTING_BAG, STARTING_COINS } from '../config/gold';
 import { coins } from './gold';
 import { adaptDrops } from './loot';
@@ -116,6 +117,7 @@ export function sanitizeProfile(raw: unknown): Profile | null {
   p.mercsRescued = p.mercsRescued.filter((id) => MERCENARIES[id]);
   if (!Array.isArray(p.mercDiscounts)) p.mercDiscounts = [];
   if (!p.reputation || typeof p.reputation !== 'object') p.reputation = {};
+  p.reputation = migrateReputation(p.reputation);
   if (!p.bestiary || typeof p.bestiary !== 'object') p.bestiary = {};
   if (!Array.isArray(p.pocket)) p.pocket = emptyGrid(POCKET_SIZE);
   p.pocket = p.pocket.map(known) as Profile['pocket'];

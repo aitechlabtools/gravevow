@@ -32,11 +32,11 @@ describe('Mercenarios', () => {
     expect(contractPrice(p, 'bram', 1)).toBe(6);
     expect(contractPrice(p, 'bram', 3)).toBe(Math.round(6 * 3 * 0.85));
     expect(contractPrice(p, 'bram', 5)).toBe(Math.round(6 * 5 * 0.7));
-    const rep = { ...p, reputation: { garra: 300 } }; // De confianza: 10 %
+    const rep = { ...p, reputation: { grizk: 300 } }; // De confianza: 10 %
     expect(contractPrice(rep, 'bram', 1)).toBe(Math.round(6 * 0.9));
   });
 
-  it('el rango de Garra limita a quién puedes contratar; los prisioneros, solo si los rescataste', () => {
+  it('el rango de Grizk limita a quién puedes contratar; los prisioneros, solo si los rescataste', () => {
     const p = base();
     expect(hireBlock(p, MERCENARIES.lysa)).toMatch(/Conocido/);
     expect(hireBlock(p, MERCENARIES.tobias)).toMatch(/Rescátalo/);

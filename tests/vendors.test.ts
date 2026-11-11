@@ -1,3 +1,5 @@
+import { vendorUnlocked, migrateReputation } from '../src/core/vendors';
+import type { VendorId } from '../src/core/data/vendors';
 import { withGold } from './helpers';
 import { describe, expect, it } from 'vitest';
 import { VENDORS, VENDOR_ORDER } from '../src/core/data/vendors';
@@ -16,8 +18,8 @@ describe('Vendedores y reputación', () => {
   it('toda la mercancía existe y cada vendedor tiene misiones', () => {
     for (const id of VENDOR_ORDER) {
       for (const s of VENDORS[id].stock) expect(ITEMS[s.itemId], `${id} → ${s.itemId}`).toBeTruthy();
-      // El Coleccionista no da encargos (solo comercia)
-      if (id !== 'coleccionista') expect(QUESTS.filter((q) => q.vendor === id).length, id).toBeGreaterThanOrEqual(4);
+      // Los que aún no tienen encargos propios (Fase 9) solo comercian
+      if (['vesper', 'garth', 'nira', 'brand'].includes(id)) expect(QUESTS.filter((q) => q.vendor === id).length, id).toBeGreaterThanOrEqual(4);
     }
   });
   it('las misiones apuntan a criaturas y objetos que existen', () => {
@@ -36,7 +38,7 @@ describe('Vendedores y reputación', () => {
     const p = withGold(createProfile('A', 'warrior', { cloak: 0, skin: 0 }), 10_000);
     expect(buy(p, 'bone_key', 'vesper').ok).toBe(false);
     expect(buy({ ...p, reputation: { vesper: 300 } }, 'bone_key', 'vesper').ok).toBe(true);
-    expect(buy(p, 'bone_key', 'orvel').ok).toBe(false);
+    expect(buy(p, 'bone_key', 'nira').ok).toBe(false);
   });
 });
 
@@ -99,7 +101,32 @@ describe('Aviso de misiones listas', () => {
     expect(readyQuestCount({ ...p, quests: done })).toBe(0);
     const acc = done.map((q) => (q.id === 'q_garra_bandits' ? { ...q, accepted: true } : q));
     expect(readyQuestCount({ ...p, quests: acc })).toBe(1);
-    expect(readyQuestCount({ ...p, quests: acc }, 'garra')).toBe(1);
-    expect(readyQuestCount({ ...p, quests: acc }, 'orvel')).toBe(0);
+    expect(readyQuestCount({ ...p, quests: acc }, 'garth')).toBe(1);
+    expect(readyQuestCount({ ...p, quests: acc }, 'nira')).toBe(0);
+  });
+});
+
+describe('Fase 5b: los ocho mercaderes del Bastión', () => {
+  it('Vesper, Garth y Nira están desde el principio; los demás llegan con su subzona', () => {
+    const p = createProfile('A', 'warrior', { cloak: 0, skin: 0 });
+    expect(['vesper', 'garth', 'nira'].every((v) => vendorUnlocked(p, v as VendorId))).toBe(true);
+    expect(['orik', 'grizk', 'brand', 'valerius', 'eldrin'].some((v) => vendorUnlocked(p, v as VendorId))).toBe(false);
+    const p12 = { ...p, character: { ...p.character, level: 12 } };
+    expect(vendorUnlocked(p12, 'orik')).toBe(true);
+    expect(vendorUnlocked(p12, 'grizk')).toBe(false);
+    expect(buy(withGold(p, 100), 'backpack_30', 'grizk').ok).toBe(false);
+  });
+  it('quien ya tenía un mercenario rescatado conserva a Grizk', () => {
+    const p = createProfile('A', 'warrior', { cloak: 0, skin: 0 });
+    expect(vendorUnlocked({ ...p, mercsRescued: ['x'] }, 'grizk')).toBe(true);
+  });
+  it('lo básico nunca falta: ración, agua, pociones, vendas, armas de ambas clases, saquitos y kit de reparación', () => {
+    const p = createProfile('A', 'warrior', { cloak: 0, skin: 0 });
+    const open = VENDOR_ORDER.filter((v) => vendorUnlocked(p, v)).flatMap((v) => VENDORS[v].stock.filter((s) => s.rank === 0).map((s) => s.itemId));
+    for (const id of ['ration', 'water', 'health_potion', 'mana_potion', 'focus_tonic', 'bandage', 'iron_sword', 'apprentice_staff', 'gold_pouch', 'gold_sack', 'repair_kit', 'miner_pick']) expect(open, id).toContain(id);
+  });
+  it('la reputación de Orvel pasa a Nira y la de Garra Roja a Grizk; la del Coleccionista se pierde', () => {
+    expect(migrateReputation({ orvel: 300, garra: 120, coleccionista: 50, vesper: 10 })).toEqual({ nira: 300, grizk: 120, vesper: 10 });
+    expect(migrateReputation({ nira: 500, orvel: 100 })).toEqual({ nira: 500 });
   });
 });

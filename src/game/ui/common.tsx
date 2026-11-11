@@ -106,8 +106,8 @@ export function ItemActions({ loc, mode, onClear, lootId, buttonsOnly = false }:
   const unsellable = isCoins(st) || (st.gold ?? 0) > 0;
   if (mode === 'merchant' && inGrid && unsellable && (loc.container === 'backpack' || loc.container === 'stash')) btns.push(<span key="nosell" className="text-xs text-stone-400 self-center">{isCoins(st) ? 'Las monedas ya son oro.' : 'Vacía el saco para venderlo.'}</span>);
   if (mode === 'merchant' && inGrid && !unsellable && (loc.container === 'backpack' || loc.container === 'stash')) {
-    const vend = s.activeVendor ?? 'orvel';
-    if (!buysThis(vend, def.id)) btns.push(<span key="nobuy" className="text-xs text-stone-400 self-center">El Coleccionista solo compra joyas y tesoros.</span>);
+    const vend = s.activeVendor ?? 'nira';
+    if (!buysThis(vend, def.id)) btns.push(<span key="nobuy" className="text-xs text-stone-400 self-center">Grizk solo compra joyas y tesoros.</span>);
     else btns.push(b(`Vender (${vendorSellPrice(vend, def.id, st)})`, () => { actions.sell(loc.container as 'backpack' | 'stash', loc.index); if (st.qty <= 1) onClear(); }, 'btn-gold', 'act-sell'));
     if (st.qty > 1 && buysThis(vend, def.id)) btns.push(b(`Vender todo (${vendorSellPrice(vend, def.id, st) * st.qty})`, () => { actions.sell(loc.container as 'backpack' | 'stash', loc.index, true); onClear(); }));
   }

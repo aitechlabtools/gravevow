@@ -1,7 +1,5 @@
 // Pantalla «Jugar» (opción D): héroe grande en el centro bajo un haz de luz, tarjeta de zona arriba a la izquierda,
 // panel de expedición con «Descender» abajo a la izquierda y nivel + accesos rápidos abajo a la derecha.
-import { NeedsStrip } from '../NeedsBars';
-import { needsOf } from '../../../core/needs';
 import { useEffect, useState } from 'react';
 import { actions, useGame } from '../../state/store';
 import { CLASSES } from '../../../core/data/classes';
@@ -52,7 +50,6 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
   const lock = firstTime ? null : subzoneLock(sub, ch.level, profile.bossesDefeated);
   const easy = !firstTime && overlevelPenalty(sub.levels[1], ch.level);
   const potions = countItem(profile.backpack, 'health_potion');
-  const needs = needsOf(profile.needs);
   const risk = gridValue(profile.backpack) + equippedValue(profile.equipment);
   const merc = profile.contract ? getMerc(profile.contract.mercId) : null;
   const questsReady = readyQuestCount(profile);
@@ -116,11 +113,7 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
           )}
           {!phone && <div className="text-[11px] text-stone-400 mt-1">{EXPEDITION_DURATION_MS / 60000} minutos para encontrar el portal. Si caes, pierdes lo que llevas.</div>}
           {lock && <div className="text-xs text-blood mt-1" data-testid="zone-lock">{lock}</div>}
-          {!profile.equipment.mainHand && <div className="text-xs text-ember mt-1">Vas sin arma. Revisa tu equipo en el Alijo.</div>}
-          <div className="flex items-end gap-2 mt-1.5" data-testid="base-needs">
-            <div className="flex-1 min-w-0"><NeedsStrip needs={needs} /></div>
-            <button className="btn text-xs shrink-0" onClick={() => actions.sleepCot()} disabled={needs.rest >= 100} title="Descanso a 100, gratis" data-testid="btn-cot">Catre</button>
-          </div>
+          {!profile.equipment.mainHand && <div className="text-xs text-ember mt-1">Vas sin arma. Revisa tu equipo en la Intendencia.</div>}
           <button className="btn btn-gold cta w-full mt-2" onClick={descend} disabled={!!lock} data-testid="btn-enter-dungeon">Descender</button>
         </div>
       </section>

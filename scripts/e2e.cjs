@@ -38,13 +38,15 @@ fs.mkdirSync(OUT, { recursive: true });
   await step('Comprar una poción', async () => {
     goldBefore = (await st()).gold;
     await page.click('[data-testid=tab-merchants]');
-    await page.click('[data-testid=vendor-orvel]');
+    await page.click('[data-testid=vendor-vesper]');
     await page.click('[data-testid=buy-health_potion]');
     const s = await st();
     if (s.gold !== goldBefore - 2) throw new Error('el oro no bajó: ' + s.gold); // 2 monedas (economía ÷10)
     await shot('03-merchant');
   });
   await step('El aspecto cambia al equiparse un yelmo', async () => {
+    await page.click('[data-testid=vendor-back]');
+    await page.click('[data-testid=vendor-nira]');
     await page.click('[data-testid=buy-leather_hood]');
     await page.click('[data-testid=tab-stash]');
     const before = await page.$eval('[data-testid=alijo-hero] [data-testid=hero-sprite]', (i) => i.src);

@@ -6,20 +6,23 @@ import { buy, buysThis, sell, sellPrice, vendorSellPrice } from '../src/core/eco
 import { addToGrid } from '../src/core/inventory';
 import { withGold } from './helpers';
 
-describe('El Coleccionista', () => {
+/** Grizk llega al abrir Las mazmorras del Bastión (nivel 20). */
+const lvl = <T extends { character: { level: number } }>(p: T): T => ({ ...p, character: { ...p.character, level: 25 } });
+
+describe('Grizk', () => {
   it('vende saquitos (5) y sacos (25) que van a la mochila', () => {
-    let p = withGold(createProfile('A', 'warrior', { cloak: 0, skin: 0 }), 100);
-    const r = buy(p, 'gold_pouch', 'coleccionista');
+    let p = withGold(lvl(createProfile('A', 'warrior', { cloak: 0, skin: 0 })), 100);
+    const r = buy(p, 'gold_pouch', 'grizk');
     expect(r.ok && r.profile.gold).toBe(95);
     if (!r.ok) return; p = r.profile;
-    const r2 = buy(p, 'gold_sack', 'coleccionista');
+    const r2 = buy(p, 'gold_sack', 'grizk');
     expect(r2.ok && r2.profile.gold).toBe(70);
     expect(r2.ok && r2.profile.backpack.filter((x) => x?.itemId === 'gold_sack')).toHaveLength(1);
   });
   it('mochilas: comprar una más grande te la pone y la vieja pasa a tu mochila como objeto', () => {
-    let p = withGold(createProfile('A', 'warrior', { cloak: 0, skin: 0 }), 1000);
+    let p = withGold(lvl(createProfile('A', 'warrior', { cloak: 0, skin: 0 })), 1000);
     expect(p.bag.itemId).toBe('backpack_basic');
-    const r = buy(p, 'backpack_30', 'coleccionista');
+    const r = buy(p, 'backpack_30', 'grizk');
     expect(r.ok).toBe(true);
     if (!r.ok) return; p = r.profile;
     expect(p.bag.itemId).toBe('backpack_30');
@@ -27,8 +30,8 @@ describe('El Coleccionista', () => {
     expect(p.backpack.some((x) => x?.itemId === 'backpack_basic')).toBe(true);
   });
   it('cambiar de mochila: a una más pequeña solo con las últimas casillas vacías', () => {
-    let p = withGold(createProfile('A', 'warrior', { cloak: 0, skin: 0 }), 1000);
-    const r = buy(p, 'backpack_36', 'coleccionista');
+    let p = withGold(lvl(createProfile('A', 'warrior', { cloak: 0, skin: 0 })), 1000);
+    const r = buy(p, 'backpack_36', 'grizk');
     if (!r.ok) throw new Error(r.error); p = r.profile;
     const i = p.backpack.findIndex((x) => x?.itemId === 'backpack_basic');
     p.backpack[35] = { uid: 'z', itemId: 'iron_sword', qty: 1 };
@@ -42,26 +45,26 @@ describe('El Coleccionista', () => {
     expect(r2.profile.backpack.some((x) => x?.itemId === 'backpack_36')).toBe(true);
   });
   it('la mochila puesta no se pierde al morir', () => {
-    let p = withGold(createProfile('A', 'warrior', { cloak: 0, skin: 0 }), 1000);
-    const r = buy(p, 'backpack_30', 'coleccionista'); if (!r.ok) throw new Error(r.error); p = r.profile;
+    let p = withGold(lvl(createProfile('A', 'warrior', { cloak: 0, skin: 0 })), 1000);
+    const r = buy(p, 'backpack_30', 'grizk'); if (!r.ok) throw new Error(r.error); p = r.profile;
     const { profile, expedition } = startExpedition(p, 0);
     const d = endExpedition(profile, expedition, 'died', 1);
     expect(d.profile.bag.itemId).toBe('backpack_30');
     expect(d.profile.backpack).toHaveLength(30);
   });
   it('compra joyas y tesoros (cálices, gemas, anillos, amuletos) y paga mejor; lo demás, no', () => {
-    expect(buysThis('coleccionista', 'golden_chalice')).toBe(true);
-    expect(buysThis('coleccionista', 'blood_gem')).toBe(true);
-    expect(buysThis('coleccionista', 'copper_ring')).toBe(true);
-    expect(buysThis('coleccionista', 'iron_sword')).toBe(false);
-    expect(vendorSellPrice('coleccionista', 'golden_chalice')).toBeGreaterThan(sellPrice('golden_chalice'));
-    const p = withGold(createProfile('A', 'warrior', { cloak: 0, skin: 0 }), 0);
+    expect(buysThis('grizk', 'golden_chalice')).toBe(true);
+    expect(buysThis('grizk', 'blood_gem')).toBe(true);
+    expect(buysThis('grizk', 'copper_ring')).toBe(true);
+    expect(buysThis('grizk', 'iron_sword')).toBe(false);
+    expect(vendorSellPrice('grizk', 'golden_chalice')).toBeGreaterThan(sellPrice('golden_chalice'));
+    const p = withGold(lvl(createProfile('A', 'warrior', { cloak: 0, skin: 0 })), 0);
     let bp = addToGrid(p.backpack, { uid: 'c', itemId: 'golden_chalice', qty: 1 }).grid;
     bp = addToGrid(bp, { uid: 's', itemId: 'iron_sword', qty: 1 }).grid;
     const q = { ...p, backpack: bp };
     const ci = bp.findIndex((x) => x?.uid === 'c'), si = bp.findIndex((x) => x?.uid === 's');
-    expect(sell(q, 'backpack', si, false, 'coleccionista').ok).toBe(false);
-    const r = sell(q, 'backpack', ci, false, 'coleccionista');
-    expect(r.ok && r.profile.gold).toBe(vendorSellPrice('coleccionista', 'golden_chalice'));
+    expect(sell(q, 'backpack', si, false, 'grizk').ok).toBe(false);
+    const r = sell(q, 'backpack', ci, false, 'grizk');
+    expect(r.ok && r.profile.gold).toBe(vendorSellPrice('grizk', 'golden_chalice'));
   });
 });

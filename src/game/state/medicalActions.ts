@@ -1,10 +1,11 @@
 // Acciones de la anatomía (Fase 4): tratar heridas fuera de combate, cirugía de campo en dos pulsos,
 // sangrado por pulso al explorar y el tratamiento completo de Hermana Vesper en el Bastión.
 import { ANATOMY, REGION_NAME } from '../../config/anatomy';
-import { tickPain, applyTreatment, bleedTick, bestTreatment, damageRegion, fromWounds, isDead, resizeBody, rollInjury, summaryHp, treatError, urgencies, vesperPrice, type Body, type Region, type Treatment } from '../../core/anatomy';
+import { healBody, toWounds, tickPain, applyTreatment, bleedTick, bestTreatment, damageRegion, fromWounds, isDead, resizeBody, rollInjury, summaryHp, treatError, urgencies, vesperPrice, type Body, type Region, type Treatment } from '../../core/anatomy';
 import { needLog, regionWith } from '../../core/combat';
 import { needsOf, tickNeeds } from '../../core/needs';
 import { computeStats } from '../../core/stats';
+import { potionAmount } from '../../config/progression';
 import { countItem, removeItem } from '../../core/inventory';
 import { getItem } from '../../core/data/items';
 import { spendGold } from '../../core/wallet';
@@ -148,6 +149,42 @@ export const medicalActions = {
     else if (inj.injury?.bleed) toast(`${REGION_NAME[region]}: sangrado leve.`, 'danger', 'bandage');
     actions.interruptSurgery('Un golpe');
     return isDead(body);
+  },
+
+  /** En el Bastión (Intendencia → Estado): trata una herida con tus propios objetos de la mochila, sin pagar a
+   *  Vesper. Aquí nadie te interrumpe, así que la cirugía termina al momento. */
+  baseTreat(itemId: string, region: Region) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const def = getItem(itemId);
+    if (def.use?.kind !== 'treat') return invError('Esto no cura heridas.');
+    if (def.use.treat === 'painkiller') return invError('En el Bastión no te hace falta: el dolor solo pesa al pelear.');
+    if (countItem(p.backpack, itemId) <= 0) return invError(`No llevas ${def.name.toLowerCase()} en la mochila.`);
+    const body = baseBody(p);
+    const err = treatError(body, def.use.treat, region);
+    if (err) return invError(err);
+    const backpack = removeItem(p.backpack, itemId, 1);
+    if (!backpack) return;
+    const r = applyTreatment(body, def.use.treat, region);
+    set({ profile: { ...p, backpack, wounds: toWounds(r.body) } });
+    sfx('heal');
+    toast(r.text, 'good', def.icon);
+  },
+
+  /** En el Bastión: una poción de vida de tu mochila reparte la vida entre las regiones que funcionan. */
+  baseHeal(itemId: string) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const def = getItem(itemId);
+    if (def.use?.kind !== 'heal') return;
+    const max = computeStats(p.character.classId, p.character.level, p.equipment).maxHp;
+    const h = healBody(baseBody(p), potionAmount(def.use.amount, max));
+    if (h.healed <= 0) return invError('Ya tienes la vida al máximo (lo inutilizado solo se recupera con cirugía).');
+    const backpack = removeItem(p.backpack, itemId, 1);
+    if (!backpack) return;
+    set({ profile: { ...p, backpack, wounds: toWounds(h.body) } });
+    sfx('heal');
+    toast(`Usas ${def.name}: recuperas ${Math.round(h.healed)} de vida.`, 'good', def.icon);
   },
 
   /** Tratamiento completo de Hermana Vesper: toda la vida y sin fracturas. Cobra del oro del almacén. */

@@ -1,11 +1,15 @@
-// Mercaderes (opción D). Fuera: una tarjeta por mercader con su retrato, rango, barra de reputación, misiones listas y
-// servicios. Al hablar: tres zonas: el mercader y sus servicios · el servicio elegido · tu mochila, tus materiales o la
-// ficha del objeto que vas a vender. La forja (Maese Brand) y los contratos (Garra Roja) viven dentro de su mercader.
+// Bastión (antes «Mercaderes»). Fuera: los ocho mercaderes, cada uno en su lugar (cocina, enfermería, forja…), con su
+// retrato, rango, barra de reputación, misiones listas y servicios; los que aún no han llegado dicen cuándo llegan. El
+// catre está en la cabecera. Al hablar: tres zonas: el mercader y sus servicios · el servicio elegido · tu mochila, tus materiales o la
+// ficha del objeto que vas a vender. La forja (Maese Brand) y los contratos (Grizk) viven dentro de su mercader.
 // En móvil, la tercera zona va en un cajón por la derecha.
 import { StashPanel } from '../StashPanel';
 import { useEffect, useState, type ReactNode, useCallback } from 'react';
 import { actions, useGame } from '../../state/store';
-import { VENDORS, VENDOR_ORDER, type VendorId } from '../../../core/data/vendors';
+import { PLACES, VENDORS, VENDOR_ORDER, type VendorId } from '../../../core/data/vendors';
+import { vendorLockText, vendorUnlocked } from '../../../core/vendors';
+import { QUESTS } from '../../../core/data/quests';
+import { needsOf } from '../../../core/needs';
 import { REP_RANKS, rankOf } from '../../../config/reputation';
 import { readyQuestCount } from '../../../core/quests';
 import { getItem } from '../../../core/data/items';
@@ -34,20 +38,23 @@ import { sfx } from '../../audio';
 const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Misiones', sell: 'Vender', forge: 'Forja', repair: 'Reparar', contracts: 'Contratos', infirmary: 'Enfermería' };
 
 function servicesOf(id: VendorId): VendorView[] {
-  const v: VendorView[] = id === 'coleccionista' ? ['shop'] : ['shop', 'quests'];
+  const v: VendorView[] = ['shop'];
+  if (QUESTS.some((q) => q.vendor === id)) v.push('quests');
   if (VENDORS[id].buysItems) v.push('sell');
-  if (id === 'garra') v.push('contracts');
-  if (id === 'brand') v.push('forge', 'repair');
+  if (id === 'grizk') v.push('contracts');
+  if (id === 'brand') v.push('forge');
+  if (id === 'brand' || id === 'nira' || id === 'orik') v.push('repair');
   if (id === 'vesper') v.push('infirmary');
   return v;
 }
 /** El servicio propio de cada mercader (se resalta en su tarjeta). */
-const SPECIAL: Partial<Record<VendorId, VendorView>> = { garra: 'contracts', brand: 'forge', orvel: 'sell', coleccionista: 'shop', vesper: 'infirmary' };
+const SPECIAL: Partial<Record<VendorId, VendorView>> = { grizk: 'contracts', brand: 'forge', nira: 'sell', vesper: 'infirmary', orik: 'repair' };
 
 export function Mercaderes({ target, onConsumed }: { target: VendorTarget | null; onConsumed: () => void }) {
   const [open, setOpen] = useState<VendorTarget | null>(target);
   useEffect(() => { if (target) { setOpen(target); onConsumed(); } }, [target]); // eslint-disable-line react-hooks/exhaustive-deps
-  return open
+  const profile = useGame((s) => s.profile)!;
+  return open && vendorUnlocked(profile, open.vendor)
     ? <VendorInterior vendor={open.vendor} initial={open.view} onBack={() => { setOpen(null); sfx('click'); }} />
     : <VendorCards onTalk={(vendor) => { setOpen({ vendor, view: 'shop' }); sfx('click'); }} />;
 }
@@ -55,26 +62,38 @@ export function Mercaderes({ target, onConsumed }: { target: VendorTarget | null
 function VendorCards({ onTalk }: { onTalk: (v: VendorId) => void }) {
   const profile = useGame((s) => s.profile)!;
   const scale = usePixelScale('vendor');
+  const needs = needsOf(profile.needs);
+  const cols = 4;
   return (
     <div className="h-full overflow-y-auto scroll-thin" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-merchants">
       <div className="min-h-full flex flex-col items-center justify-center">
-      <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em]">Mercaderes del campamento</h2>
-      <div className="grid w-full max-w-[1200px]" style={{ gridTemplateColumns: `repeat(${VENDOR_ORDER.length}, minmax(0,1fr))`, gap: 'var(--gap)' }} data-testid="vendor-list">
+      <div className="w-full max-w-[1200px] flex flex-wrap items-center justify-between gap-2 mb-2">
+        <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">El Bastión</h2>
+        <div className="flex items-center gap-2" data-testid="bastion-cot">
+          <span className="text-[12px] text-stone-300">Barracones · Descanso {Math.round(needs.rest)}</span>
+          <button className="btn text-xs" style={{ minHeight: 44 }} onClick={() => { actions.sleepCot(); sfx('click'); }} disabled={needs.rest >= 100} title="Descanso a 100, gratis" data-testid="btn-cot">Dormir en el catre</button>
+        </div>
+      </div>
+      <div className="grid w-full max-w-[1200px]" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: 'var(--gap)' }} data-testid="vendor-list">
         {VENDOR_ORDER.map((id) => {
           const v = VENDORS[id];
+          const here = vendorUnlocked(profile, id);
           const rep = profile.reputation[id] ?? 0;
-          const ready = readyQuestCount(profile, id);
+          const ready = here ? readyQuestCount(profile, id) : 0;
           const special = SPECIAL[id];
           return (
-            <Card key={id} title={v.name} badge={ready} testId={`vendor-card-${id}`}
-              art={<div className="pb-2 pt-4"><MonsterSprite sprite={v.sprite} scale={scale} /></div>}>
+            <Card key={id} title={v.name} badge={ready} testId={`vendor-card-${id}`} className={here ? '' : 'opacity-60'}
+              art={<div className="pb-2 pt-4" style={here ? undefined : { filter: 'grayscale(1) brightness(0.5)' }}><MonsterSprite sprite={v.sprite} scale={scale} /></div>}>
+              <div className="text-center text-[11px] uppercase tracking-[0.12em] text-stone-400" data-testid={`vendor-place-${id}`}>{PLACES[v.place].name}</div>
               <div className="text-center text-[12px]" style={{ color: v.color }}>{v.role}</div>
-              <RepBar rep={rep} />
-              <div className="flex flex-wrap justify-center gap-1">
-                {servicesOf(id).map((s) => <span key={s} className={`ui-tag ${s === special ? 'on' : ''}`}>{VIEW_LABEL[s]}</span>)}
-              </div>
-              <button className="btn w-full mt-auto font-display tracking-[0.12em] uppercase" style={{ minHeight: 'var(--btn-h)' }}
-                onClick={() => onTalk(id)} data-testid={`vendor-${id}`}>Hablar</button>
+              {here ? <>
+                <RepBar rep={rep} />
+                <div className="flex flex-wrap justify-center gap-1">
+                  {servicesOf(id).map((s) => <span key={s} className={`ui-tag ${s === special ? 'on' : ''}`}>{VIEW_LABEL[s]}</span>)}
+                </div>
+                <button className="btn w-full mt-auto font-display tracking-[0.12em] uppercase" style={{ minHeight: 'var(--btn-h)' }}
+                  onClick={() => onTalk(id)} data-testid={`vendor-${id}`}>Hablar</button>
+              </> : <p className="text-center text-[12px] text-stone-400 italic mt-auto" data-testid={`vendor-lock-${id}`}>{vendorLockText(id)}</p>}
             </Card>
           );
         })}
@@ -98,10 +117,10 @@ function VendorInterior({ vendor, initial, onBack }: { vendor: VendorId; initial
   const rank = rankOf(rep);
   const discount = REP_RANKS[rank].discount;
   const go = (x: VendorView) => { setView(x); setSel(null); setMarks([]); sfx('click'); };
-  // Quién compra al vender (el Coleccionista solo joyas y tesoros, y paga mejor)
+  // Quién compra al vender (Grizk solo joyas y tesoros, y paga mejor)
   useEffect(() => { actions.setActiveVendor(vendor); return () => actions.setActiveVendor(null); }, [vendor]);
 
-  const title = view === 'forge' ? `Forja de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'infirmary' ? `Enfermería de ${v.name}` : view === 'contracts' ? 'Contratos de Garra Roja' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
+  const title = view === 'forge' ? `Forja de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'infirmary' ? `Enfermería de ${v.name}` : view === 'contracts' ? 'Contratos de Grizk' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
   const center: ReactNode =
     view === 'shop' ? <ShopStock vid={vendor} cols={`grid gap-2 ${phone ? 'grid-cols-1' : 'grid-cols-2 2xl:grid-cols-3'}`} />
       : view === 'quests' ? <VendorQuests vendor={vendor} />

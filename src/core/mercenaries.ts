@@ -1,7 +1,7 @@
 import { GOLD_SCALE } from '../config/gold';
 import { spendGold } from './wallet';
 // ════════════════════════════════════════════════════════════════════
-// Mercenarios: contratos con Garra Roja, rescate de prisioneros y el
+// Mercenarios: contratos con Grizk, rescate de prisioneros y el
 // combatiente que lucha a tu lado. Lógica pura, sin interfaz.
 // ════════════════════════════════════════════════════════════════════
 import { CONTRACT_OPTIONS, MERC_POTIONS, MERC_ZONE_POWER, RESCUE_DISCOUNT } from '../config/contracts';
@@ -45,7 +45,7 @@ export function isUnlocked(p: Profile, m: MercDef): boolean {
 /** Motivo por el que aún no se puede contratar (o null si se puede). */
 export function hireBlock(p: Profile, m: MercDef): string | null {
   if (m.captive && !p.mercsRescued.includes(m.id)) return 'Está prisionero en la mazmorra. Rescátalo y extrae con él.';
-  if (!m.captive && rankOf(p.reputation.garra ?? 0) < m.rank) return `Necesitas el rango «${REP_RANKS[m.rank].name}» con Garra Roja.`;
+  if (!m.captive && rankOf(p.reputation.grizk ?? 0) < m.rank) return `Necesitas el rango «${REP_RANKS[m.rank].name}» con Grizk.`;
   return null;
 }
 
@@ -53,7 +53,7 @@ export function hireBlock(p: Profile, m: MercDef): string | null {
 export function contractPrice(p: Profile, mercId: string, expeditions: number): number {
   const m = getMerc(mercId);
   const opt = CONTRACT_OPTIONS.find((o) => o.expeditions === expeditions) ?? CONTRACT_OPTIONS[0];
-  const rep = REP_RANKS[rankOf(p.reputation.garra ?? 0)].discount;
+  const rep = REP_RANKS[rankOf(p.reputation.grizk ?? 0)].discount;
   const rescue = p.mercDiscounts.includes(mercId) ? RESCUE_DISCOUNT : 0;
   return Math.max(1, Math.round(m.price * GOLD_SCALE * opt.expeditions * opt.mult * (1 - rep) * (1 - rescue)));
 }
@@ -131,7 +131,7 @@ export function settleMerc(p: Profile, ms: MercState | null, extracted: boolean)
     if (p.mercsRescued.includes(m.id)) return { profile: p, note: null };
     return {
       profile: { ...p, mercsRescued: [...p.mercsRescued, m.id], mercDiscounts: [...p.mercDiscounts.filter((x) => x !== m.id), m.id] },
-      note: `${m.name} ha llegado al refugio. Ya puedes contratar sus servicios con Garra Roja (el primer contrato, a mitad de precio).`,
+      note: `${m.name} ha llegado al refugio. Ya puedes contratar sus servicios con Grizk (el primer contrato, a mitad de precio).`,
     };
   }
   if (!p.contract || p.contract.mercId !== m.id) return { profile: p, note: null };

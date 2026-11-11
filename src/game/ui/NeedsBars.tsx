@@ -54,7 +54,7 @@ function nextText(need: Need, n: Needs, body?: Body): string {
 }
 
 /** Panel de necesidades: valor, efecto, tiempo hasta el siguiente efecto y comer o beber si llevas con qué. */
-export function NeedsPanel({ needs, body, backpack, onUse, note }: { needs: Needs; body?: Body; backpack?: Grid; onUse?: (itemId: string) => void; note?: string }) {
+export function NeedsPanel({ needs, body, backpack, onUse, note, atBase = false }: { needs: Needs; body?: Body; backpack?: Grid; onUse?: (itemId: string) => void; note?: string; atBase?: boolean }) {
   const touch = useIsTouch();
   const loss = resourceLoss(needs);
   return (
@@ -69,7 +69,7 @@ export function NeedsPanel({ needs, body, backpack, onUse, note }: { needs: Need
               <b>{Math.floor(v)}</b>
             </div>
             <span className="needs-bar big"><span style={{ width: `${v}%`, background: NEED_COLOR[k] }} /></span>
-            <div className="needs-hint">{nextText(k, needs, body)}</div>
+            <div className="needs-hint">{atBase ? 'En el Bastión no se gasta.' : nextText(k, needs, body)}</div>
             {onUse && item && (
               <button className={`btn body-treat ${touch ? 'touch' : ''}`} disabled={!have || v >= 100} onClick={() => onUse(item)} data-testid={`need-use-${k}`}>
                 <ItemIcon itemId={item} size={18} /> {k === 'hyd' ? 'Beber' : 'Comer'} ({have})

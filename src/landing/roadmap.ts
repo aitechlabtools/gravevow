@@ -24,7 +24,7 @@ export const ROADMAP: RoadmapColumn[] = [
       'Hambre, sed y cansancio en cada incursión',
       'Armas y armaduras que se desgastan',
       'Más de cincuenta armas y piezas',
-      'Mercaderes, misiones y forja',
+      'El Bastión: ocho mercaderes, misiones y forja',
       'Aliados y mercenarios',
       'Oro físico: si caes, lo pierdes',
       'Hasta cuatro personajes',

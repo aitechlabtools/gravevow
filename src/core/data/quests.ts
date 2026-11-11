@@ -19,13 +19,13 @@ export interface QuestDef {
 }
 
 export const QUESTS: QuestDef[] = [
-  // ── Orvel el Quincallero ──
-  { id: 'q_first_escape', vendor: 'orvel', name: 'Volver para contarlo', description: 'Extrae con vida de una expedición.', type: 'extract', count: 1, reward: { gold: 3, xp: 30, rep: 40 } },
-  { id: 'q_treasure', vendor: 'orvel', name: 'Ojos de urraca', description: 'Extrae botín por valor de 25 monedas o más en una expedición.', type: 'extract_value', count: 25, reward: { gold: 6, xp: 50, rep: 60 } },
-  { id: 'q_orvel_iron', vendor: 'orvel', name: 'Cerraduras oxidadas', description: 'Abre 2 cofres de hierro en la Mazmorra.', type: 'open_chest', target: 'rich', count: 2, reward: { gold: 8, xp: 80, rep: 70 } },
-  { id: 'q_orvel_coins', vendor: 'orvel', name: 'Numismático', description: 'Entrega 10 monedas antiguas.', type: 'deliver', target: 'old_coin', count: 10, reward: { gold: 12, xp: 40, rep: 40 }, repeatable: true },
-  { id: 'q_orvel_crypt', vendor: 'orvel', name: 'Comercio sepulcral', description: 'Extrae botín por valor de 150 monedas en una expedición.', type: 'extract_value', count: 150, reward: { gold: 30, xp: 600, rep: 120 }, minLevel: 30 },
-  { id: 'q_orvel_hell', vendor: 'orvel', name: 'Mercancía caliente', description: 'Extrae con vida desde el Infierno.', type: 'extract_zone', target: 'infierno', count: 1, reward: { gold: 60, xp: 2000, rep: 200 }, minLevel: 60 },
+  // ── Nira (antes, encargos de Orvel) ──
+  { id: 'q_first_escape', vendor: 'nira', name: 'Volver para contarlo', description: 'Extrae con vida de una expedición.', type: 'extract', count: 1, reward: { gold: 3, xp: 30, rep: 40 } },
+  { id: 'q_treasure', vendor: 'nira', name: 'Ojos de urraca', description: 'Extrae botín por valor de 25 monedas o más en una expedición.', type: 'extract_value', count: 25, reward: { gold: 6, xp: 50, rep: 60 } },
+  { id: 'q_orvel_iron', vendor: 'nira', name: 'Cerraduras oxidadas', description: 'Abre 2 cofres de hierro en la Mazmorra.', type: 'open_chest', target: 'rich', count: 2, reward: { gold: 8, xp: 80, rep: 70 } },
+  { id: 'q_orvel_coins', vendor: 'nira', name: 'Numismático', description: 'Entrega 10 monedas antiguas.', type: 'deliver', target: 'old_coin', count: 10, reward: { gold: 12, xp: 40, rep: 40 }, repeatable: true },
+  { id: 'q_orvel_crypt', vendor: 'nira', name: 'Comercio sepulcral', description: 'Extrae botín por valor de 150 monedas en una expedición.', type: 'extract_value', count: 150, reward: { gold: 30, xp: 600, rep: 120 }, minLevel: 30 },
+  { id: 'q_orvel_hell', vendor: 'nira', name: 'Mercancía caliente', description: 'Extrae con vida desde el Infierno.', type: 'extract_zone', target: 'infierno', count: 1, reward: { gold: 60, xp: 2000, rep: 200 }, minLevel: 60 },
   // ── Hermana Vesper ──
   { id: 'q_bones', vendor: 'vesper', name: 'Polvo eres', description: 'Derrota a 3 esqueletos guerreros.', type: 'kill', target: 'skeleton', count: 3, reward: { gold: 4, xp: 40, rep: 50 } },
   { id: 'q_lord', vendor: 'vesper', name: 'El trono vacío', description: 'Derrota al Señor del Osario.', type: 'kill_boss', target: 'ossuary_lord', count: 1, reward: { gold: 12, xp: 100, rep: 150 } },
@@ -33,14 +33,14 @@ export const QUESTS: QuestDef[] = [
   { id: 'q_vesper_ecto', vendor: 'vesper', name: 'Relicario vacío', description: 'Entrega 5 de ectoplasma.', type: 'deliver', target: 'ectoplasm', count: 5, reward: { gold: 15, xp: 300, rep: 60 }, minLevel: 30, repeatable: true },
   { id: 'q_vesper_queen', vendor: 'vesper', name: 'Levantar el velo', description: 'Derrota a la Reina Velada.', type: 'kill_boss', target: 'veiled_queen', count: 1, reward: { gold: 50, xp: 1500, rep: 250 }, minLevel: 30 },
   { id: 'q_vesper_belzar', vendor: 'vesper', name: 'Romper las cadenas', description: 'Derrota a Belzar, Señor de las Cadenas.', type: 'kill_boss', target: 'belzar', count: 1, reward: { gold: 120, xp: 5000, rep: 400 }, minLevel: 60 },
-  // ── Garra Roja ──
-  { id: 'q_garra_bandits', vendor: 'garra', name: 'Competencia desleal', description: 'Derrota a 5 bandidos saqueadores.', type: 'kill', target: 'bandit', count: 5, reward: { gold: 7, xp: 90, rep: 60 } },
-  { id: 'q_garra_rats', vendor: 'garra', name: 'Plaga', description: 'Derrota a 6 ratas de osario.', type: 'kill', target: 'ossuary_rat', count: 6, reward: { gold: 5, xp: 60, rep: 35 }, repeatable: true },
-  { id: 'q_garra_captain', vendor: 'garra', name: 'Descabezar la banda', description: 'Derrota al Capitán de bandidos.', type: 'kill', target: 'bandit_captain', count: 1, reward: { gold: 15, xp: 200, rep: 120 } },
-  { id: 'q_garra_ghouls', vendor: 'garra', name: 'Limpieza de nichos', description: 'Derrota a 6 necrófagos.', type: 'kill', target: 'ghoul', count: 6, reward: { gold: 24, xp: 800, rep: 120 }, minLevel: 30 },
-  { id: 'q_garra_knight', vendor: 'garra', name: 'Duelo con un muerto', description: 'Derrota al Caballero del sepulcro.', type: 'kill', target: 'tomb_knight', count: 1, reward: { gold: 30, xp: 900, rep: 160 }, minLevel: 30 },
-  { id: 'q_garra_hounds', vendor: 'garra', name: 'Perrera del abismo', description: 'Derrota a 6 canes del abismo.', type: 'kill', target: 'abyss_hound', count: 6, reward: { gold: 50, xp: 2200, rep: 180 }, minLevel: 60 },
-  { id: 'q_garra_warden', vendor: 'garra', name: 'El carcelero', description: 'Derrota al Carcelero de cadenas.', type: 'kill', target: 'chain_warden', count: 1, reward: { gold: 60, xp: 2500, rep: 220 }, minLevel: 60 },
+  // ── Garth, cocinero y cazador (antes, encargos de Garra Roja) ──
+  { id: 'q_garra_bandits', vendor: 'garth', name: 'Competencia desleal', description: 'Derrota a 5 bandidos saqueadores.', type: 'kill', target: 'bandit', count: 5, reward: { gold: 7, xp: 90, rep: 60 } },
+  { id: 'q_garra_rats', vendor: 'garth', name: 'Plaga', description: 'Derrota a 6 ratas de osario.', type: 'kill', target: 'ossuary_rat', count: 6, reward: { gold: 5, xp: 60, rep: 35 }, repeatable: true },
+  { id: 'q_garra_captain', vendor: 'garth', name: 'Descabezar la banda', description: 'Derrota al Capitán de bandidos.', type: 'kill', target: 'bandit_captain', count: 1, reward: { gold: 15, xp: 200, rep: 120 } },
+  { id: 'q_garra_ghouls', vendor: 'garth', name: 'Limpieza de nichos', description: 'Derrota a 6 necrófagos.', type: 'kill', target: 'ghoul', count: 6, reward: { gold: 24, xp: 800, rep: 120 }, minLevel: 30 },
+  { id: 'q_garra_knight', vendor: 'garth', name: 'Duelo con un muerto', description: 'Derrota al Caballero del sepulcro.', type: 'kill', target: 'tomb_knight', count: 1, reward: { gold: 30, xp: 900, rep: 160 }, minLevel: 30 },
+  { id: 'q_garra_hounds', vendor: 'garth', name: 'Perrera del abismo', description: 'Derrota a 6 canes del abismo.', type: 'kill', target: 'abyss_hound', count: 6, reward: { gold: 50, xp: 2200, rep: 180 }, minLevel: 60 },
+  { id: 'q_garra_warden', vendor: 'garth', name: 'El carcelero', description: 'Derrota al Carcelero de cadenas.', type: 'kill', target: 'chain_warden', count: 1, reward: { gold: 60, xp: 2500, rep: 220 }, minLevel: 60 },
   // ── Maese Brand ──
   { id: 'q_brand_mine', vendor: 'brand', name: 'Manos a la roca', description: 'Pica 4 vetas de mineral (necesitas un pico).', type: 'mine', count: 4, reward: { gold: 7, xp: 60, rep: 60 }, repeatable: true },
   { id: 'q_brand_bone', vendor: 'brand', name: 'Polvo para el temple', description: 'Entrega 10 de polvo de hueso.', type: 'deliver', target: 'bone_dust', count: 10, reward: { gold: 6, xp: 50, rep: 40 }, repeatable: true },

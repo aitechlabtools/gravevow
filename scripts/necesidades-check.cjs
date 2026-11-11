@@ -1,4 +1,4 @@
-// Fase 5: necesidades. Tira en el Jugar y catre; tira del HUD; desgaste por pulso con aviso; beber desde el panel.
+// Fase 5 y 5b: necesidades. Catre en el Bastión; Intendencia → Estado (beber, férula y poción en la base); tira del HUD; desgaste por pulso con aviso; beber desde el panel.
 // Uso: node scripts/necesidades-check.cjs http://localhost:5173/play/ salida [dispositivo]
 const { chromium, devices } = require('playwright');
 const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = process.argv;
@@ -14,13 +14,36 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
   await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; pr.tutorialSeen.dungeon = true; g.setState({ profile: { ...pr, needs: { sat: 50, hyd: 40, rest: 20 } } }); });
-  await p.waitForSelector('[data-testid=base-needs]');
+  if (await p.$('[data-testid=base-needs]')) fail('Jugar ya no debe enseñar las necesidades');
+  await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=bastion-cot]');
+  if ((await p.$$('[data-testid^=vendor-card-]')).length !== 8) fail('el Bastión no tiene los 8 mercaderes');
+  if (!(await p.$('[data-testid=vendor-lock-eldrin]'))) fail('Eldrin debería estar por llegar');
   const cb = await box('[data-testid=btn-cot]');
   if (dev && (!cb || cb.height < 44)) fail('botón del catre menor de 44 px: ' + JSON.stringify(cb));
   await p.screenshot({ path: out + '-1.png' });
   await tap('[data-testid=btn-cot]'); await p.waitForTimeout(150);
   const n0 = await G(() => window.__GRAVEVOW__.getState().profile.needs);
   if (n0.rest !== 100 || n0.sat !== 50) fail('el catre no repuso solo el descanso: ' + JSON.stringify(n0));
+  // Intendencia → Estado: beber y curarse con lo propio
+  await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, wounds: { pct: { thorax: 0.5, legL: 0.6 }, fractures: ['legL'] } } }); });
+  await tap('[data-testid=tab-stash]'); await tap('[data-testid=seg-status]');
+  await p.waitForSelector('[data-testid=intendencia-status] [data-testid=needs-panel]');
+  if (!(await p.$('[data-testid=alijo-backpack]'))) fail('la mochila no está al lado del Estado');
+  const hb = await box('[data-testid=need-use-hyd]');
+  if (dev && (!hb || hb.height < 44)) fail('botón de beber en la base menor de 44 px');
+  await p.screenshot({ path: out + '-estado.png' });
+  await tap('[data-testid=need-use-hyd]'); await p.waitForTimeout(150);
+  const hyd = await G(() => window.__GRAVEVOW__.getState().profile.needs.hyd);
+  if (!(hyd > 40)) fail('beber en la base no subió la hidratación: ' + hyd);
+  const r = await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile;
+    const bp = pr.backpack.slice(); const free = (k) => bp.findIndex((x, i) => !x && i >= k);
+    bp[free(0)] = { uid: 'sp1', itemId: 'splint', qty: 1 }; bp[free(0)] = { uid: 'w2', itemId: 'water', qty: 1 }; bp[free(0)] = { uid: 'hp1', itemId: 'health_potion', qty: 1 };
+    g.setState({ profile: { ...pr, backpack: bp } });
+    g.actions.baseTreat('splint', 'legL'); g.actions.baseHeal('health_potion');
+    const q = g.getState().profile; return { w: q.wounds, sp: q.backpack.some((x) => x && x.itemId === 'splint') }; });
+  if (r.sp || (r.w && r.w.fractures.includes('legL'))) fail('la férula de la mochila no soldó la pierna en la base: ' + JSON.stringify(r));
+  if (r.w && r.w.pct.thorax === 0.5) fail('la poción en la base no curó: ' + JSON.stringify(r));
+  await tap('[data-testid=tab-play]');
   // En la mazmorra: tira del HUD y desgaste por pulso
   await tap('[data-testid=btn-enter-dungeon]'); await p.waitForTimeout(1200);
   if (!(await p.$('[data-testid=hud-needs]'))) fail('no hay necesidades en el HUD');

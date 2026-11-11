@@ -23,7 +23,7 @@ const DEVICE = process.argv[4];
   await tap('[data-testid=btn-tutorial-ok]');
   await page.evaluate(() => { const d = window.__GRAVEVOW__; const p = d.getState().profile; d.setState({ profile: { ...p, gold: 500, stats: { ...p.stats, expeditions: 1 } } }); });
   await tap('[data-testid=tab-merchants]');
-  await tap('[data-testid=vendor-brand]');
+  await tap('[data-testid=vendor-nira]');
   await tap('[data-testid=buy-miner_pick]');
   await tap('[data-testid=tab-play]');
   await tap('[data-testid=btn-enter-dungeon]');

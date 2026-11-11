@@ -424,6 +424,8 @@ export const actions = {
     const def = getItem(st.itemId);
     if (!def.use) return invError('Este objeto no se puede usar.');
     if (def.use.kind === 'need') return actions.eat(loc);
+    if (!s.expedition && def.use.kind === 'heal' && loc.kind === 'grid' && loc.container === 'backpack') return actions.baseHeal(st.itemId);
+    if (!s.expedition && def.use.kind === 'treat') return invError('En el Bastión, las heridas se tratan en Intendencia → Estado.');
     if (s.screen !== 'dungeon' || !s.expedition) return invError(def.use.kind === 'repair' ? 'El kit se usa en la mazmorra; en la base, Maese Brand repara mejor.' : 'Las pociones solo se usan durante una expedición.');
     const stats = computeStats(s.profile.character.classId, s.profile.character.level, s.expedition.equipment);
     const exp = { ...s.expedition };
@@ -527,7 +529,7 @@ export const actions = {
   },
 
   // ── Mercader ──
-  buy(itemId: string, vendorId: VendorId = 'orvel') {
+  buy(itemId: string, vendorId: VendorId = 'nira') {
     const p = state.profile;
     if (!p) return;
     const r = buy(p, itemId, vendorId);
@@ -676,7 +678,7 @@ export const actions = {
     const p = state.profile;
     if (!p) return;
     const item = p[container][index];
-    const vendor = state.activeVendor ?? 'orvel';
+    const vendor = state.activeVendor ?? 'nira';
     let r = sell(p, container, index, all, vendor);
     // Sin sitio para el oro: se prueba a agrupar las monedas sueltas de cada página en sus sacos y se vuelve a intentar
     if (!r.ok && r.error === NO_ROOM_FOR_GOLD) {
@@ -694,7 +696,7 @@ export const actions = {
   sellMany(locs: { container: 'backpack' | 'stash'; index: number }[]): number {
     const p0 = state.profile;
     if (!p0 || !locs.length) return 0;
-    const vendor = state.activeVendor ?? 'orvel';
+    const vendor = state.activeVendor ?? 'nira';
     let p = p0; let sold = 0; const bought: { stack: ItemStack; price: number }[] = []; let fail: string | null = null;
     for (const l of locs) {
       const item = p[l.container][l.index];

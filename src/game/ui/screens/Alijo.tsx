@@ -1,6 +1,7 @@
-// Alijo (opción D): Aventurero · Equipo (equipamiento, mochila y bolsillo seguro) · Almacén.
+// Intendencia (antes «Alijo»). Vista «Equipo»: Aventurero · Equipo (equipamiento, mochila y bolsillo seguro) · Almacén.
+// Vista «Estado»: heridas y necesidades con la mochila al lado; curarte con tus objetos sin pagar a Vesper.
 // Mover objetos: arrastrar (ordenador), o tocar un objeto (se abre su ficha) y después tocar una casilla libre.
-// En móvil no caben las tres columnas: segmentos «Equipo» y «Almacén».
+// En móvil no caben las tres columnas: segmentos «Equipo», «Almacén» y «Estado».
 import { useState, useCallback } from 'react';
 import { actions, useGame } from '../../state/store';
 import { CLASSES } from '../../../core/data/classes';
@@ -21,6 +22,11 @@ import type { EquipSlot, ItemStack } from '../../../core/types';
 import { ItemSlot, GridView, StatsList, SLOT_LABELS, type InvMode } from '../inventory';
 import { PlayerSprite, GoldAmount } from '../common';
 import { Panel, SubHead, Segmented, usePixelScale } from '../kit';
+import { BodyPanel } from '../BodyFigure';
+import { NeedsPanel } from '../NeedsBars';
+import { needsOf } from '../../../core/needs';
+import { vesperPrice } from '../../../core/anatomy';
+import { baseBody } from '../../state/medicalActions';
 import { useLayout } from '../../../config/ui';
 import { ItemCard } from './ItemCard';
 import { sfx } from '../../audio';
@@ -35,7 +41,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
   const phone = layout === 'phone';
   const [sel, setSel] = useState<Loc | null>(null);
   useClearOnDrop(useCallback(() => setSel(null), []));
-  const [view, setView] = useState<'gear' | 'storage'>('gear');
+  const [view, setView] = useState<'gear' | 'storage' | 'status'>('gear');
   const [picker, setPicker] = useState(false);
   const clear = () => setSel(null);
   const same = (a: Loc | null, b: Loc) => !!a && JSON.stringify(a) === JSON.stringify(b);
@@ -99,13 +105,22 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
       onQuick={(l) => { actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
   );
   const card = <ItemCard loc={sel} mode={MODE} onClear={clear} compact={phone} />;
+  const status = <StatusView />;
+  const seg = (opts: { id: 'gear' | 'storage' | 'status'; label: string }[]) => (
+    <Segmented options={opts} value={view} onChange={(v) => { setView(v); setSel(null); sfx('click'); }} testId="alijo-seg" />
+  );
 
   if (phone) {
     return (
       <div className="h-full flex flex-col items-center" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' }} data-testid="screen-stash">
-        <Segmented options={[{ id: 'gear', label: 'Equipo' }, { id: 'storage', label: 'Almacén' }]} value={view} onChange={(v) => { setView(v); sfx('click'); }} testId="alijo-seg" />
+        {seg([{ id: 'gear', label: 'Equipo' }, { id: 'storage', label: 'Almacén' }, { id: 'status', label: 'Estado' }])}
         <div className="flex-1 min-h-0 w-full flex justify-center" style={{ gap: 'var(--gap)' }}>
-          {view === 'gear' ? (
+          {view === 'status' ? (
+            <>
+              <Panel className="min-h-0 flex-[3]" bodyClassName="overflow-y-auto scroll-thin">{status}</Panel>
+              <Panel className="min-h-0 flex-[2]" bodyClassName="overflow-y-auto scroll-thin">{backpack}</Panel>
+            </>
+          ) : view === 'gear' ? (
             <>
               <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex items-start justify-center">{equipment}</Panel>
               <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}{pocket}</Panel>
@@ -129,9 +144,26 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
   }
 
   const side = layout === 'tablet' ? 288 : 340;
+  const deskSeg = <div className="flex justify-center shrink-0">{seg([{ id: 'gear', label: 'Equipo' }, { id: 'status', label: 'Estado' }])}</div>;
+  const padX = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
+  if (view !== 'gear') {
+    return (
+      <div className="h-full flex flex-col" data-testid="screen-stash" style={padX}>
+        {deskSeg}
+        <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: `${side}px minmax(0,1fr) ${layout === 'tablet' ? 300 : 360}px`, gap: 'var(--gap)' }}>
+          <Panel title="Aventurero" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero"><HeroColumn onDetails={onDetails} /></Panel>
+          <Panel title="Heridas y necesidades" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{status}</Panel>
+          <Panel title="Mochila" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}{sel && <div className="panel p-3 mt-3">{card}</div>}</Panel>
+        </div>
+        {pickerModal}
+      </div>
+    );
+  }
   return (
-    <div className="h-full grid" data-testid="screen-stash"
-      style={{ gridTemplateColumns: `${side}px minmax(0,1fr) auto`, gap: 'var(--gap)', padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }}>
+    <div className="h-full flex flex-col" data-testid="screen-stash" style={padX}>
+    {deskSeg}
+    <div className="flex-1 min-h-0 grid"
+      style={{ gridTemplateColumns: `${side}px minmax(0,1fr) auto`, gap: 'var(--gap)' }}>
       <Panel title="Aventurero" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero">
         <HeroColumn onDetails={onDetails} />
       </Panel>
@@ -156,6 +188,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
       </Panel>
       {storage}
       {pickerModal}
+    </div>
     </div>
   );
 }
@@ -230,10 +263,26 @@ function BagSlot({ sel, onDone }: { sel: Loc | null; onDone: () => void }) {
           <h2 className="panel-title text-lg mb-2">{def.name}</h2>
           <p className="font-body text-lg">{def.description}</p>
           <p className="text-sm text-heal mt-2">Tu mochila tiene {profile.backpack.length} casillas. La mochila puesta no se pierde al morir.</p>
-          <p className="text-xs text-stone-400 mt-2">Para cambiarla, suelta otra mochila en esta casilla (o tócala y luego toca aquí). El Coleccionista vende mochilas más grandes, y puedes pasarle una a otro personaje por la página «Compartido».</p>
+          <p className="text-xs text-stone-400 mt-2">Para cambiarla, suelta otra mochila en esta casilla (o tócala y luego toca aquí). Grizk vende mochilas más grandes, y puedes pasarle una a otro personaje por la página «Compartido».</p>
           <button className="btn mt-4" style={{ minHeight: 44 }} onClick={() => setInfo(false)}>Cerrar</button>
         </Modal>
       )}
+    </div>
+  );
+}
+
+/** Vista «Estado» de la Intendencia: heridas (curables con lo que llevas en la mochila) y necesidades (comer y beber). */
+function StatusView() {
+  const profile = useGame((s) => s.profile)!;
+  const body = baseBody(profile);
+  const price = vesperPrice(body);
+  return (
+    <div data-testid="intendencia-status">
+      <BodyPanel body={body} backpack={profile.backpack} onTreat={(id, r) => actions.baseTreat(id, r)}
+        note={price ? `Puedes curarte con lo que llevas en la mochila, o pagar ${price} de oro a Hermana Vesper en la enfermería del Bastión.` : 'Estás entero.'}>
+        <NeedsPanel needs={needsOf(profile.needs)} body={body} backpack={profile.backpack} onUse={(id) => actions.eatItem(id)} atBase
+          note="El catre está en el Bastión, en los barracones." />
+      </BodyPanel>
     </div>
   );
 }

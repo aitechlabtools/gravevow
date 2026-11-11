@@ -1,4 +1,4 @@
-// Contratos de Garra Roja: elige mercenario, duración y actitud. También muestra el contrato en vigor.
+// Contratos de Grizk: elige mercenario, duración y actitud. También muestra el contrato en vigor.
 import { useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { getMerc, MERC_ORDER } from '../../core/data/mercenaries';
@@ -60,7 +60,7 @@ export function ContractsPanel() {
             <div className="min-w-0">
               <div className="font-display text-xl text-parchment">{unlocked ? m.name : 'Prisionero desconocido'}</div>
               <div className="text-xs text-gold">{m.title} · {getZone(m.zone).name}{m.captive ? ' · rescatable' : ''}</div>
-              <p className="font-body text-base text-stone-300 leading-snug mt-1">{unlocked ? m.blurb : `Garra ha oído que alguien sigue encadenado en ${getZone(m.zone).name}. Si rompes sus cadenas y extraéis con vida, podrás contratar sus servicios.`}</p>
+              <p className="font-body text-base text-stone-300 leading-snug mt-1">{unlocked ? m.blurb : `Grizk ha oído que alguien sigue encadenado en ${getZone(m.zone).name}. Si rompes sus cadenas y extraéis con vida, podrás contratar sus servicios.`}</p>
             </div>
           </div>
           {unlocked && (

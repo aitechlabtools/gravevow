@@ -15,7 +15,7 @@ export const VARKHOLLOW = {
     'El Bastión de Ceniza es lo que quedó en pie del castillo: unos muros, unos pocos mercaderes y una puerta. Fuera, sus afueras son de los bandidos. Dentro, los salones quemados siguen guardados por quien ya no respira. Debajo, sus mazmorras bajan hasta el Osario.',
     'Las criptas de Umbravel eran de una orden de monjes. Tres criptas para tres clases de muertos: los monjes en el Osario, los pobres en las Catacumbas, los nobles en su Panteón. Ninguno descansa.',
     'Debajo, la Cripta Carmesí: la piedra suda sangre y huele a azufre. Su puerta lleva al Infierno: las Puertas del Abismo, los Ríos de Fuego y el Trono de las Cadenas, donde espera Belzar.',
-    'Los saqueadores bajan por oro, por armas y por gloria. Arriba los esperan Orvel, Vesper, Garra Roja y Maese Brand. Abajo, mercenarios errantes que ofrecen su espada. Algunos cumplen. Kael el Errante, casi siempre. Los demás, mientras les convenga.',
+    'Los saqueadores bajan por oro, por armas y por gloria. Arriba, en el Bastión, los esperan Vesper, Garth, Nira y los mercaderes que van llegando a medida que bajan. Abajo, mercenarios errantes que ofrecen su espada. Algunos cumplen. Kael el Errante, casi siempre. Los demás, mientras les convenga.',
   ],
   steam: 'En Steam se llamará Gravevow.',
 };

@@ -40,7 +40,8 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Con `?debug`, el estado se ve en `window.__GRAVEVOW__`.
 - `src/game/engine`: la escena de mazmorra (`DungeonScene.ts`) solo dibuja y mueve; los hechos del juego pasan por acciones del estado.
 - `src/game/ui`: pantallas.
-  - `screens/`: Jugar, Alijo, Personaje, Mercaderes, Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
+  - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
+  - Mercaderes: los 8 del plan maestro en `data/vendors.ts` (lugar y subzona de llegada); `core/vendors.ts` decide quién está (`vendorUnlocked`) y migra la reputación antigua.
   - Las piezas comunes están en `kit/`.
   - Mazmorra, combate y resumen: `DungeonScreen`, `CombatScreen` y `SummaryScreen`. El arrastre de objetos está en `pointerDrag.tsx`.
 - `src/game/persistence/db.ts`: guardado en IndexedDB «gravevow», con respaldo en localStorage `gravevow.*`.

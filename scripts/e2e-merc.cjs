@@ -31,9 +31,11 @@ const DEVICE = process.argv[4];
   await tap('[data-testid=btn-create]');
   await tap('[data-testid=btn-tutorial-ok]');
   // Saltamos la cripta tutorial y damos oro para el contrato
-  await page.evaluate(() => { const d = window.__GRAVEVOW__; const p = d.getState().profile; d.setState({ profile: { ...p, gold: 3000, stats: { ...p.stats, expeditions: 1 } } }); });
+  await page.evaluate(() => { const d = window.__GRAVEVOW__; const p = d.getState().profile; d.setState({ profile: { ...p, gold: 3000, character: { ...p.character, level: 25 }, stats: { ...p.stats, expeditions: 1 } } }); });
+  // Grizk llega con Las mazmorras del Bastión (nivel 20): subir de nivel abre el aviso de habilidad
+  if (await page.waitForSelector('[data-testid=btn-class-unlock-later]', { timeout: 2000 }).catch(() => null)) await tap('[data-testid=btn-class-unlock-later]');
   await tap('[data-testid=tab-merchants]');
-  await tap('[data-testid=vendor-garra]');
+  await tap('[data-testid=vendor-grizk]');
   await tap('[data-testid=vendor-view-contracts]');
   await tap('[data-testid=merc-lysa]');
   console.log('Lysa bloqueada:', await page.$eval('[data-testid=merc-block]', (e) => e.textContent));
