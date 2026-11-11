@@ -66,7 +66,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
-- 11/11: enlace de Discord actualizado a la nueva invitación (`src/shared/community.tsx`).
+- 11/11: plan de la expansión analizado y decisiones del usuario guardadas en `docs/plan-expansion.md` (Fase 0). Siguiente: Fase 1 (base técnica).
 - 11/11: botones Apoyar (Ko-fi, sustituye a Stripe) y Discord en la landing y el juego; privacidad y cookies actualizadas; iconos provisionales en la lista de assets.
 - 11/11: `CLAUDE.md` reorganizado y este archivo creado para trabajar entre sesiones y ordenadores.
 - 6/11:
@@ -76,6 +76,7 @@
 - 5–6/11: pulido del tutorial, botón «Agrupar oro» en la mazmorra y arrastre táctil más suave.
 
 ## Próximos pasos (por decidir con el usuario)
+- **Expansión por fases** (`docs/plan-expansion.md`): Fase 0 hecha; siguiente, Fase 1.
 - Arte definitivo de los atuendos y de las subzonas.
 - Clases nuevas: Pícaro y Clérigo.
 - Tráiler nuevo cuando haya contenido nuevo.
