@@ -4,7 +4,7 @@ import { heroUrl } from '../shared/art';
 import { SHOWCASE_GEAR } from '../shared/gearLook';
 import { CLASSES } from '../core/data/classes';
 import type { ClassId } from '../core/types';
-import { DonateButton, DONATE_URL, PLAY_URL, SiteFooter, SiteHeader } from './site';
+import { DiscordButton, DonateButton, DONATE_URL, PLAY_URL, SiteFooter, SiteHeader } from './site';
 import { PhoneShot, RoadmapSection, SaveSection, ShotCarousel, VarkHollowSection, type Shot } from './sections';
 import { AlliesBlock, MechanicsGrid } from './mechanics';
 
@@ -144,6 +144,7 @@ export function App() {
           <p className="font-body text-xl text-stone-300 mt-4">Crea a tu saqueador y baja. Tu progreso se guarda en este navegador.</p>
           <div className="mt-8"><PlayButton big /></div>
           {DONATE_URL && <p className="font-body text-stone-400 mt-8">Gravevow lo hace una sola persona. Si te gusta, puedes ayudar a que avance. <DonateButton className="ml-1 px-3 py-1.5 text-sm align-middle" /></p>}
+          <p className="font-body text-stone-400 mt-4">Cuenta qué te parece, avisa de fallos y sigue las novedades. <DiscordButton className="ml-1 px-3 py-1.5 text-sm align-middle" /></p>
         </div>
       </section>
 

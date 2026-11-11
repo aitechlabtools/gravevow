@@ -42,7 +42,7 @@
 - **Landing:**
   - logo común (`GravevowLogo`), VarkHollow, mecánicas, galería y hoja de ruta;
   - tráiler v5 (`public/trailer/gravevow-trailer.*`);
-  - botón «Apoyar» con un enlace de pago de Stripe.
+  - botones «Apoyar» (Ko-fi) y «Discord» en la landing, el lobby, el menú principal y Ajustes.
 - **Legal:** aviso legal, privacidad y cookies. Los datos del titular solo van en imagen y el correo de contacto también.
 
 ## En curso / por verificar
@@ -50,7 +50,7 @@
 - Configuración externa, que hace el usuario:
   - **Enforce HTTPS** en GitHub Pages y que `www.gravevow.com` funcione;
   - el buzón del correo de contacto;
-  - nombre e imagen en Stripe (la imagen nueva de «Apoyo a la expedición» ya está hecha).
+  - página de Ko-fi y servidor de Discord listos (los enlaces ya están puestos).
 - Falta subir `public/sitemap.xml` (ya generado) y referenciarlo en `public/robots.txt`.
 
 ## Errores conocidos
@@ -61,10 +61,12 @@
 - **Steam:** el juego se llamará solo «Gravevow». VarkHollow es la región del lore, no el nombre del juego.
 - **Partidas:** las de cryptraiders.es se pierden con el cambio de dominio (aceptado; es una alpha). Las copias antiguas (`cryptraiders-backup` y `CR1.`) se siguen aceptando.
 - **Arte:** el arte actual es provisional y está hecho por código. El usuario diseñará el definitivo; la lista de assets está en `docs/plan-subzonas.md`, sección 9.
+- **Comunidad:** los enlaces de Ko-fi y Discord están solo en `src/shared/community.tsx`.
 - **Atuendos:** solo estéticos y se compran con oro del juego. No hay compras con dinero real.
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 11/11: botones Apoyar (Ko-fi, sustituye a Stripe) y Discord en la landing y el juego; privacidad y cookies actualizadas; iconos provisionales en la lista de assets.
 - 11/11: `CLAUDE.md` reorganizado y este archivo creado para trabajar entre sesiones y ordenadores.
 - 6/11:
   - cambio de nombre a Gravevow en el juego, la landing, los textos legales, el tráiler y las pruebas;

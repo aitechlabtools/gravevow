@@ -1,27 +1,28 @@
 import { useEffect, useState } from 'react';
+import { DISCORD_HINT, DISCORD_URL, DiscordIcon, EXTERNAL, HeartIcon, SUPPORT_HINT, SUPPORT_URL } from '../shared/community';
 // Cabecera y pie comunes a la landing y a las páginas legales.
 // `home` es la ruta a la landing: '' en la propia landing (anclas #) y './' en las páginas legales.
 
 export const PLAY_URL = './play/';
 
-/**
- * Enlace de donaciones (Stripe Payment Link, p. ej. https://donate.stripe.com/...). Mientras sea null, el botón «Apoyar»
- * no aparece en ninguna página. Al ponerlo, también se muestran el apartado «Apoyar el proyecto» de la Política de privacidad
- * y la frase sobre las aportaciones del Aviso legal.
- * Es un enlace a la página de pago de Stripe: esta web no carga nada de Stripe ni guarda datos de pago.
- */
-const DONATE_LINK: string | null = 'https://donate.stripe.com/5kQ4gBcm6fUBdK47kS6J200';
-/** Un enlace de prueba de Stripe (lleva «/test_») solo se usa en desarrollo: en la web publicada el botón no aparece
- *  hasta poner el enlace real. Así se puede subir el código sin publicar un pago de prueba. */
-export const DONATE_URL: string | null =
-  DONATE_LINK && (!DONATE_LINK.includes('/test_') || import.meta.env.DEV) ? DONATE_LINK : null;
+/** Enlace de apoyo (Ko-fi). Si se pone a null, el botón «Apoyar» y sus menciones en los textos legales desaparecen. */
+export const DONATE_URL: string | null = SUPPORT_URL;
 
-export function DonateButton({ className = '' }: { className?: string }) {
+export function DonateButton({ className = '', iconOnly = false }: { className?: string; iconOnly?: boolean }) {
   if (!DONATE_URL) return null;
   return (
-    <a href={DONATE_URL} target="_blank" rel="noopener" className={`btn-donate ${className}`} data-testid="cta-donate"
-      aria-label="Apoyar el desarrollo de Gravevow con una aportación (se abre la página de pago de Stripe)">
-      <span aria-hidden>♥</span> Apoyar
+    <a href={DONATE_URL} {...EXTERNAL} className={`btn-donate ${iconOnly ? 'btn-icon' : ''} ${className}`} data-testid={iconOnly ? 'cta-donate-icon' : 'cta-donate'}
+      title={SUPPORT_HINT} aria-label="Apoyar el desarrollo de Gravevow en Ko-fi (se abre en una pestaña nueva)">
+      <HeartIcon size={iconOnly ? 20 : 16} />{!iconOnly && ' Apoyar'}
+    </a>
+  );
+}
+
+export function DiscordButton({ className = '', iconOnly = false }: { className?: string; iconOnly?: boolean }) {
+  return (
+    <a href={DISCORD_URL} {...EXTERNAL} className={`btn-discord ${iconOnly ? 'btn-icon' : ''} ${className}`} data-testid={iconOnly ? 'cta-discord-icon' : 'cta-discord'}
+      title={DISCORD_HINT} aria-label="Únete a la comunidad de Gravevow en Discord (se abre en una pestaña nueva)">
+      <DiscordIcon size={iconOnly ? 22 : 18} />{!iconOnly && ' Discord'}
     </a>
   );
 }
@@ -34,7 +35,7 @@ export const LEGAL_LINKS = [
 
 const NAV = [['varkhollow', 'VarkHollow'], ['mecanicas', 'Mecánicas'], ['galeria', 'Galería'], ['hoja-de-ruta', 'Hoja de ruta']] as const;
 
-/** Menú fijo: 4 enlaces (en móvil, plegados en ☰), Jugar siempre visible y Apoyar (en móvil, dentro del menú). Resalta la sección visible. */
+/** Menú fijo: 4 enlaces (en móvil, plegados en ☰), Jugar siempre visible; Apoyar y Discord con texto en escritorio y solo icono en móvil. Resalta la sección visible. */
 export function SiteHeader({ home = '' }: { home?: string }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState('');
@@ -64,13 +65,16 @@ export function SiteHeader({ home = '' }: { home?: string }) {
         <div className="ml-auto flex items-center gap-2">
           <a href={PLAY_URL} className="btn-play px-4 py-1.5 text-sm whitespace-nowrap" data-testid="nav-play">Jugar</a>
           <span className="nav-desk"><DonateButton className="px-3 py-1.5 text-sm" /></span>
+          <span className="nav-desk"><DiscordButton className="px-3 py-1.5 text-sm" /></span>
+          <span className="nav-mob"><DonateButton iconOnly /></span>
+          <span className="nav-mob"><DiscordButton iconOnly /></span>
           <button className="nav-burger" aria-expanded={open} aria-controls="menu-movil" aria-label={open ? 'Cerrar el menú' : 'Abrir el menú'} onClick={() => setOpen(!open)} data-testid="nav-burger">{open ? '✕' : '☰'}</button>
         </div>
       </nav>
       {open && (
         <div id="menu-movil" className="nav-menu" data-testid="nav-menu">
           {NAV.map(([id, label]) => <a key={id} href={`${home}#${id}`} onClick={() => setOpen(false)} className={active === id ? 'is-on' : ''}>{label}</a>)}
-          {DONATE_URL && <div className="pt-4"><DonateButton className="px-4 py-2" /></div>}
+          <div className="pt-4 flex gap-3 flex-wrap">{DONATE_URL && <DonateButton className="px-4 py-2" />}<DiscordButton className="px-4 py-2" /></div>
         </div>
       )}
     </header>
@@ -92,7 +96,8 @@ export function SiteFooter({ home = '' }: { home?: string }) {
           <ul className="space-y-1">
             <li><a href={PLAY_URL} className="footer-link">Jugar la alpha</a></li>
             {NAV.map(([id, label]) => <li key={id}><a href={`${home}#${id}`} className="footer-link">{label}</a></li>)}
-            {DONATE_URL && <li><a href={DONATE_URL} target="_blank" rel="noopener" className="footer-link">Apoya el proyecto</a></li>}
+            {DONATE_URL && <li><a href={DONATE_URL} {...EXTERNAL} title={SUPPORT_HINT} className="footer-link" data-testid="footer-kofi">Apoya el proyecto en Ko-fi</a></li>}
+            <li><a href={DISCORD_URL} {...EXTERNAL} title={DISCORD_HINT} className="footer-link" data-testid="footer-discord">Comunidad en Discord</a></li>
             <li><a href={home ? home : '#top'} className="footer-link">Volver al inicio</a></li>
           </ul>
         </nav>

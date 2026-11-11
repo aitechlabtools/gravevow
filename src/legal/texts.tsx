@@ -13,7 +13,7 @@ import type { ReactNode } from 'react';
 import { DONATE_URL } from '../landing/site';
 import { Dato, EmailInline, MailButton, StorageTable, revealData, useRevealed, type LegalSection } from './LegalPage';
 
-export const UPDATED = '6 de noviembre de 2026';
+export const UPDATED = '11 de noviembre de 2026';
 
 function Titular() {
   const shown = useRevealed();
@@ -57,7 +57,7 @@ export const AVISO: PageDef = {
     { id: 'objeto', title: 'Objeto de la web', body: <>
       <p>Esta web presenta <strong>Gravevow</strong>, un videojuego independiente en desarrollo, y da acceso gratuito a una versión alpha jugable en el navegador, en ordenador y en el móvil.</p>
       <p>La web no vende nada. Dentro de la alpha, la Tienda de atuendos solo usa el oro que se consigue jugando: no hay pagos con dinero real, y los atuendos son solo estéticos, no dan ventajas.</p>
-      {DONATE_URL && <p>Si quieres, puedes apoyar el desarrollo con una aportación voluntaria desde el botón «Apoyar», que lleva a la página de pago de Stripe. Es una aportación libre: no compra nada ni da ninguna ventaja en el juego. Las condiciones del pago son las que indica Stripe en esa página.</p>}
+      {DONATE_URL && <p>Si quieres, puedes apoyar el desarrollo con una aportación voluntaria desde el botón «Apoyar», que lleva a la página de Gravevow en Ko-fi. Es una aportación libre: no compra nada ni da ninguna ventaja en el juego. Las condiciones del pago son las que indica Ko-fi en su web.</p>}
     </> },
     { id: 'uso', title: 'Condiciones de uso', body: <>
       <p>Usar la web y la alpha es gratis y no exige registro. Al usarlas aceptas este aviso legal. Te comprometes a usarlas de forma lícita y a no hacer nada que pueda dañarlas, sobrecargarlas o impedir que otras personas las usen, como intentar acceder a sistemas o datos ajenos o introducir programas dañinos.</p>
@@ -123,16 +123,16 @@ export const PRIVACIDAD: PageDef = {
     </> },
     { id: 'contacto', title: 'Si nos escribes', body: <>
       <p>Si escribes a <Email />, el titular tratará tu dirección de correo y lo que cuentes en el mensaje solo para responderte. La base jurídica es tu consentimiento al escribir (artículo 6.1.a del RGPD). Los mensajes se guardan mientras haga falta para atender tu consulta y, después, durante los plazos legales que correspondan. No se ceden a nadie salvo obligación legal. El correo se gestiona con un proveedor de correo electrónico que actúa como encargado del tratamiento.</p>
-      <p>Gravevow no tiene redes sociales por ahora. Si en el futuro las tiene, esta política lo explicará.</p>
+      <p>Gravevow tiene una comunidad en <strong>Discord</strong>. El botón «Discord» es un simple enlace que se abre en otra pestaña: esta web no carga nada de Discord. Si entras en el servidor, tus datos los trata Discord Inc. (Estados Unidos) según su propia política de privacidad. El titular solo ve lo que tú publicas en el servidor y tu nombre de usuario, y lo usa para moderar y atender a la comunidad. Puedes salir del servidor cuando quieras.</p>
     </> },
     ...(DONATE_URL ? [{ id: 'apoyar', title: 'Si apoyas el proyecto', body: <>
-      <p>El botón «Apoyar» te lleva a una página de pago de <strong>Stripe</strong>, fuera de esta web. Esta web no carga nada de Stripe ni ve los datos de tu tarjeta: el pago lo gestiona Stripe (Stripe Payments Europe, Ltd., Irlanda), con su propia política de privacidad (stripe.com/es/privacy).</p>
+      <p>El botón «Apoyar» te lleva a la página de Gravevow en <strong>Ko-fi</strong>, fuera de esta web, y se abre en otra pestaña. Esta web no carga nada de Ko-fi ni ve los datos de tu pago: la aportación la gestiona Ko-fi (Ko-fi Labs Limited, Reino Unido) junto con su proveedor de pagos, cada uno con su propia política de privacidad.</p>
       <ul>
-        <li><strong>Qué datos recibe el titular:</strong> los que Stripe le facilita sobre cada aportación, como tu nombre, tu correo electrónico, el importe, la fecha y el país. Nunca el número completo de tu tarjeta.</li>
-        <li><strong>Finalidad:</strong> gestionar tu aportación, responderte si hace falta y cumplir las obligaciones contables y fiscales.</li>
+        <li><strong>Qué datos recibe el titular:</strong> los que Ko-fi le muestra sobre cada aportación, como el nombre que elijas, tu correo electrónico, el importe, la fecha y el mensaje que dejes. Nunca los datos de tu tarjeta.</li>
+        <li><strong>Finalidad:</strong> gestionar tu aportación, agradecértela o responderte si hace falta y cumplir las obligaciones contables y fiscales.</li>
         <li><strong>Base jurídica:</strong> la gestión de la aportación que tú decides hacer (artículo 6.1.b del RGPD) y el cumplimiento de obligaciones legales (artículo 6.1.c).</li>
         <li><strong>Conservación:</strong> el tiempo que exija la normativa contable y fiscal.</li>
-        <li><strong>Transferencias:</strong> Stripe puede tratar datos en Estados Unidos con las garantías que describe en su política de privacidad.</li>
+        <li><strong>Transferencias:</strong> Ko-fi y su proveedor de pagos pueden tratar datos fuera del Espacio Económico Europeo con las garantías que describen en sus políticas de privacidad.</li>
       </ul>
       <p>Las aportaciones son voluntarias y no dan ninguna ventaja en el juego.</p>
     </> }] : []),
@@ -178,7 +178,7 @@ export const COOKIES: PageDef = {
     </> },
     { id: 'terceros', title: 'Cookies de terceros', body: <>
       <p>Ninguna. Las tipografías, las imágenes y el tráiler se sirven desde la propia web, sin servicios externos. El alojamiento (GitHub Pages) no instala cookies en tu navegador; lo que trata se explica en la <a href="./privacidad.html">Política de privacidad</a>.</p>
-      {DONATE_URL && <p>El botón «Apoyar» es un simple enlace a la página de pago de Stripe. Esta web no carga nada de Stripe; si lo pulsas y entras en su página, Stripe puede usar allí sus propias cookies, según su política.</p>}
+      <p>Los botones «Apoyar» y «Discord» son simples enlaces a Ko-fi y a Discord, que se abren en otra pestaña. Esta web no carga nada de esos servicios; si los pulsas y entras en sus páginas, Ko-fi y Discord pueden usar allí sus propias cookies, según sus políticas.</p>
     </> },
     { id: 'borrar', title: 'Cómo borrar o bloquear estos datos', body: <>
       <p className="legal-warn"><strong>Atención:</strong> si borras los datos de este sitio, <strong>perderás tu partida</strong> (personaje, equipo y progreso), y no se puede recuperar.</p>

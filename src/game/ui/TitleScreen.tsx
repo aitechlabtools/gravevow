@@ -6,9 +6,26 @@ import { isTouch } from '../../shared/device';
 import { canFullscreen, enterFullscreen, isFullscreen } from '../../shared/fullscreen';
 import { FullscreenButton } from './FullscreenButton';
 import { GravevowLogo } from '../../shared/GravevowLogo';
+import { DISCORD_HINT, DISCORD_URL, DiscordIcon, EXTERNAL, HeartIcon, SUPPORT_HINT, SUPPORT_URL } from '../../shared/community';
 
 export function Logo() {
   return <GravevowLogo className="title-logo" />;
+}
+
+/** Apoyar (Ko-fi) y Discord: enlaces externos en una pestaña nueva, para no sacar al jugador de su partida. */
+function CommunityLinks({ testPrefix }: { testPrefix: string }) {
+  return (
+    <div className="grid grid-cols-2 gap-2" data-testid={`${testPrefix}-community`}>
+      <a className="btn flex items-center justify-center gap-2" href={SUPPORT_URL} {...EXTERNAL} title={SUPPORT_HINT}
+        aria-label={`${SUPPORT_HINT} (se abre en una pestaña nueva)`} onClick={() => sfx('click')} data-testid={`${testPrefix}-kofi`}>
+        <HeartIcon size={16} /> Apoyar
+      </a>
+      <a className="btn flex items-center justify-center gap-2" href={DISCORD_URL} {...EXTERNAL} title={DISCORD_HINT}
+        aria-label={`${DISCORD_HINT} (se abre en una pestaña nueva)`} onClick={() => sfx('click')} data-testid={`${testPrefix}-discord`}>
+        <DiscordIcon size={18} /> Discord
+      </a>
+    </div>
+  );
 }
 
 export function SettingsModal({ onClose, onExit }: { onClose: () => void; onExit?: () => void }) {
@@ -45,6 +62,10 @@ export function SettingsModal({ onClose, onExit }: { onClose: () => void; onExit
         {' · '}
         <a href="../cookies.html" target="_blank" rel="noopener" className="underline underline-offset-2 text-stone-300 hover:text-parchment inline-block py-2">Cookies</a>
       </p>
+      <div className="mt-3 pt-3 border-t border-stone-700">
+        <p className="text-sm text-stone-300 mb-2">Comunidad · se abre en otra pestaña y tu partida sigue aquí.</p>
+        <CommunityLinks testPrefix="settings" />
+      </div>
       <div className="flex gap-2 mt-4 flex-wrap">
         <button className="btn" onClick={onClose}>Cerrar</button>
         {onExit && <button className="btn" onClick={() => { onClose(); onExit(); }} data-testid="btn-exit-title">Salir al título</button>}
@@ -94,6 +115,7 @@ export function TitleScreen() {
           )}
           <button className="btn" onClick={() => setSettings(true)} data-testid="btn-settings">Ajustes</button>
           <a className="btn text-center flex items-center justify-center" href="../">Volver a la web</a>
+          <CommunityLinks testPrefix="title" />
         </div>
         <p className="title-foot mt-10 text-xs text-stone-400 max-w-md mx-auto">Alpha v0.1 · En desarrollo: puede tener fallos y cambiar. Tu progreso se guarda en este navegador: haz copias de seguridad.</p>
       </div>

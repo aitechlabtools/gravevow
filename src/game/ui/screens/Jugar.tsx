@@ -18,6 +18,7 @@ import { zoneBackdrop, zoneFor } from '../combatZones';
 import { iconUrl } from '../../../shared/art';
 import { usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
+import { DISCORD_HINT, DISCORD_URL, DiscordIcon, EXTERNAL, HeartIcon, SUPPORT_HINT, SUPPORT_URL } from '../../../shared/community';
 import { sfx, startMusic } from '../../audio';
 
 /** La subzona elegida se recuerda mientras dure la sesión (al cambiar de pestaña y volver). */
@@ -120,6 +121,11 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
 
       {/* Nivel y accesos rápidos */}
       <div className="absolute flex flex-col items-end gap-3" style={{ right: edge.right, bottom: edge.bottom }}>
+        {/* Comunidad: enlaces externos en otra pestaña (la partida sigue aquí) */}
+        <div className="flex flex-col items-center gap-2" data-testid="jugar-community">
+          <QuickLink label="Apoyar" href={SUPPORT_URL} hint={SUPPORT_HINT} icon={<HeartIcon size={22} />} testId="quick-kofi" />
+          <QuickLink label="Discord" href={DISCORD_URL} hint={DISCORD_HINT} icon={<DiscordIcon size={24} />} testId="quick-discord" />
+        </div>
         <div className="flex flex-col items-center gap-1" title={`Experiencia: ${xpPct}%`} data-testid="level-ring">
           <div className="lvl-ring" style={{ ['--p' as string]: xpPct }}><span>{ch.level}</span></div>
           <span className="text-[10px] tracking-[0.2em] uppercase text-stone-300">Nivel</span>
@@ -189,6 +195,16 @@ function ZoneArt({ sub, height }: { sub: SubzoneDef; height: number }) {
   // Ilustración provisional: el fondo de combate de la subzona (320×180), recortado. La definitiva (240×120) la dibujará el usuario.
   const src = zoneBackdrop(zoneFor(sub.backdrops, '', 0, true));
   return <div className="w-full overflow-hidden bg-black flex justify-center" style={{ height }}><img src={src} alt="" className="pixelated w-[320px] h-[180px] max-w-none" style={{ marginTop: -(180 - height) / 2 }} draggable={false} /></div>;
+}
+
+function QuickLink({ label, href, hint, icon, testId }: { label: string; href: string; hint: string; icon: React.ReactNode; testId: string }) {
+  return (
+    <a className="btn quick" href={href} {...EXTERNAL} title={hint} aria-label={`${hint} (se abre en una pestaña nueva)`} data-testid={testId}
+      onClick={() => sfx('click')}>
+      {icon}
+      <span className="leading-none">{label}</span>
+    </a>
+  );
 }
 
 function Quick({ label, icon, badge, onClick, testId }: { label: string; icon: string; badge?: number; onClick: () => void; testId: string }) {

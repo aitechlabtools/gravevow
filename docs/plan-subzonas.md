@@ -343,6 +343,12 @@ Mientras no estén, uso pixel art hecho por código como marcador (se verá en l
 
 Por zona: Mazmorra 6 criaturas comunes, 2 élites, 2 jefes · Cripta 6, 2, 2 · Infierno 13, 3, 3 (o menos con variantes).
 
+**Iconos de comunidad (provisionales desde el 11/11, en `src/shared/community.tsx`):**
+- Corazón de «Apoyar»: 9×8 px, un color (ahora #ff6a5a).
+- Icono de Discord: 12×9 px, un color (ahora #c9cdfb). Debe seguir siendo reconocible como el logo de Discord (respeta sus normas de marca).
+- Se ven a 16–24 px en pantalla (escala ×2 aprox.) dentro de botones de 44×44 (landing móvil), 48×48 (lobby en móvil) y 64×64 (lobby en escritorio).
+- Entrega en PNG transparente a 1× o en SVG de píxeles.
+
 **Mercenarios errantes:** 2–3 por zona, 20×26 px con reposo (2), andar (4), ataque (1), golpe (1).
 **Kael:** 20×26 px, mismas animaciones + linterna verde; retrato de diálogo 48×48 px.
 **Osric (tutorial):** 20×26 px, mismas animaciones; retrato 48×48 px.

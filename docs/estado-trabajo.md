@@ -466,3 +466,11 @@ Cambio de nombre a Gravevow (6/11): HECHO. Juego, app instalable, landing (logo 
 (dominio, tabla de almacenamiento, fecha), imágenes del correo d4/d5, botón de correo, tráiler v5 renderizado de nuevo
 (gravevow-trailer.mp4/.webm y póster) y scripts de prueba. Pendiente del usuario: dominio en Hostinger y GitHub Pages,
 redirección de cryptraiders.es y nombre en Stripe. Repositorio y carpeta ya renombrados a «gravevow».
+
+Apoyar (Ko-fi) y Discord (11/11): HECHO. Enlaces en src/shared/community.tsx (Ko-fi sustituye a Stripe en todas partes).
+Landing: botones Apoyar y Discord (morado azulado) junto a Jugar; en móvil, solo icono de 44×44 junto a Jugar y con texto
+en el menú plegado; también en el cierre y en el pie. Juego: dos botones cuadrados (Apoyar con corazón y Discord) encima del
+anillo de nivel en la pestaña Jugar, en el menú principal (bajo «Volver a la web») y en Ajustes. Todos en pestaña nueva
+(target _blank, rel noopener noreferrer) con ayuda al pasar el ratón. Si el navegador sale de pantalla completa al abrirlos,
+la partida sigue intacta y se vuelve con el botón de pantalla completa. Privacidad y cookies actualizadas (Ko-fi y Discord,
+fecha 11/11). Iconos provisionales apuntados en docs/plan-subzonas.md, sección 9.
