@@ -293,9 +293,9 @@ export function initiativeMult(b: Body, extra = 0): number {
   return Math.max(ANATOMY.minInitiative, 1 - limbLoss(b, LEGS, ANATOMY.legFracture, ANATOMY.legDisabled) - extra);
 }
 
-/** Multiplicador del paso al explorar: piernas. Nunca baja del 40 %. */
-export function mobilityMult(b: Body): number {
-  return Math.max(ANATOMY.minMobility, 1 - limbLoss(b, LEGS, ANATOMY.legFracture, ANATOMY.legDisabled));
+/** Multiplicador del paso al explorar: piernas. Nunca baja del 40 %. `extra`: otras pérdidas que comparten el tope (el peso de la Fase 6). */
+export function mobilityMult(b: Body, extra = 0): number {
+  return Math.max(ANATOMY.minMobility, 1 - limbLoss(b, LEGS, ANATOMY.legFracture, ANATOMY.legDisabled) - extra);
 }
 
 // ── Tratamientos ──

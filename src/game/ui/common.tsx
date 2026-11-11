@@ -1,7 +1,7 @@
 import { capacityOf, isCoins } from '../../core/gold';
 import { BAG_SIZES } from '../../config/gold';
 import { GoldAmountPicker } from './GoldAmountPicker';
-import { canPocket } from '../../core/inventory';
+import { canPocket, canRotate } from '../../core/inventory';
 import { useIsTouch } from '../../shared/device';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Loc } from '../../core/inventory';
@@ -84,6 +84,7 @@ export function ItemActions({ loc, mode, onClear, lootId, buttonsOnly = false }:
   const s = useGame((x) => x);
   const touch = useIsTouch();
   const [picker, setPicker] = useState<'withdraw' | 'split' | null>(null);
+  useHotkey('r', () => { if (loc && loc.kind === 'grid') actions.rotate(loc); }, !!loc && loc.kind === 'grid' && loc.container !== 'loot' && loc.container !== 'pocket');
   if (!loc) return <div className="text-stone-400 text-sm italic font-body">{touch ? 'Toca un objeto para ver sus acciones.' : 'Selecciona un objeto para ver sus acciones. Doble clic: acción rápida · Clic derecho: mover · Arrastra para colocar.'}</div>;
   const c = containersFor(s, lootId);
   const st = c ? stackAt(c, loc) : null;
@@ -96,6 +97,8 @@ export function ItemActions({ loc, mode, onClear, lootId, buttonsOnly = false }:
   );
   if (def.slot && inGrid && loc.container !== 'loot') btns.push(b('Equipar', () => { actions.quickEquip(loc); onClear(); }, 'btn-gold', 'act-equip'));
   if (loc.kind === 'equip') btns.push(b('Quitar', () => { actions.unequip(loc); onClear(); }, '', 'act-unequip'));
+  // Fase 6: girar 90° (mochila y almacén; en su sitio; si no cabe, no cambia nada). Con teclado: R
+  if (inGrid && loc.container !== 'loot' && loc.container !== 'pocket' && canRotate(st.itemId)) btns.push(b('Girar ⟳', () => actions.rotate(loc), '', 'act-rotate'));
   if (def.use && mode === 'dungeon' && inGrid && loc.container === 'backpack') btns.push(b('Usar', () => actions.useItem(loc), 'btn-gold', 'act-use'));
   if (mode === 'lobby' && inGrid && loc.container === 'backpack') btns.push(b('Al almacén', () => { actions.quickMove(loc, 'stash'); onClear(); }, '', 'act-stash'));
   if (mode === 'lobby' && inGrid && (loc.container === 'stash' || loc.container === 'shared')) btns.push(b('A la mochila', () => { actions.quickMove(loc, 'backpack'); onClear(); }, '', 'act-backpack'));
@@ -103,6 +106,7 @@ export function ItemActions({ loc, mode, onClear, lootId, buttonsOnly = false }:
   // Oro físico: sacar monedas de un saco y dividir un montón
   if (inGrid && loc.container !== 'loot' && capacityOf(st) > 0 && (st.gold ?? 0) > 0 && mode !== 'merchant') btns.push(b('Sacar monedas', () => setPicker('withdraw'), 'btn-gold', 'act-withdraw'));
   if (inGrid && loc.container !== 'loot' && isCoins(st) && st.qty > 1 && mode !== 'merchant') btns.push(b('Dividir', () => setPicker('split'), '', 'act-split'));
+  if (inGrid && loc.container !== 'loot' && !isCoins(st) && st.qty > 1 && mode !== 'merchant') btns.push(b('Dividir', () => actions.splitStack(loc), '', 'act-split-stack'));
   const unsellable = isCoins(st) || (st.gold ?? 0) > 0;
   if (mode === 'merchant' && inGrid && unsellable && (loc.container === 'backpack' || loc.container === 'stash')) btns.push(<span key="nosell" className="text-xs text-stone-400 self-center">{isCoins(st) ? 'Las monedas ya son oro.' : 'Vacía el saco para venderlo.'}</span>);
   if (mode === 'merchant' && inGrid && !unsellable && (loc.container === 'backpack' || loc.container === 'stash')) {

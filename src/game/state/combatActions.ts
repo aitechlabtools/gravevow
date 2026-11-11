@@ -20,7 +20,7 @@ import { mercBaseStats, mercCombatant, mercHpBack, STANCE_NAME } from '../../cor
 import { getMerc } from '../../core/data/mercenaries';
 import { sfx } from '../audio';
 import { noticeText, wearEquipment } from '../../core/durability';
-import { combatLevel, enemyLevel, invError, set, state, subzoneDepth, toast } from './internals';
+import { combatLevel, enemyLevel, invError, loadNow, set, state, subzoneDepth, toast } from './internals';
 import type { Bag, CombatKind } from './internals';
 import { actions } from './store';
 import { headHitsHere } from './medicalActions';
@@ -33,7 +33,7 @@ export const combatActions = {
     if (!s.profile || !s.expedition || s.combat) return;
     const ch = s.profile.character;
     if (s.expedition.surgery) actions.interruptSurgery('Te atacan');
-    const player = playerCombatant(ch, s.expedition.equipment, s.expedition.hp, s.expedition.mp, s.expedition.cooldowns, s.profile.classSkills.equipped, { body: state.expedition!.body, headHits: headHitsHere(), noInjuries: !!s.tutorial, needs: s.tutorial ? undefined : needsOf(s.expedition.needs) });
+    const player = playerCombatant(ch, s.expedition.equipment, s.expedition.hp, s.expedition.mp, s.expedition.cooldowns, s.profile.classSkills.equipped, { body: state.expedition!.body, headHits: headHitsHere(), noInjuries: !!s.tutorial, needs: s.tutorial ? undefined : needsOf(s.expedition.needs), restExtra: loadNow()?.restExtra ?? 0 });
     const list = [player];
     let title = '';
     let canFlee = true;

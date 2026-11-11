@@ -27,6 +27,7 @@ export const ROADMAP: RoadmapColumn[] = [
       'El Bastión: ocho mercaderes, misiones y forja',
       'Aliados y mercenarios',
       'Oro físico: si caes, lo pierdes',
+      'Mochila con tamaños y peso: elige qué te llevas',
       'Hasta cuatro personajes',
       'Copia de seguridad de tu partida',
       'Atuendos sin ventajas',

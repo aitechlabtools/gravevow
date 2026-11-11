@@ -3,7 +3,7 @@ import type { ItemStack, Profile } from '../../core/types';
 import { RARITY_ORDER, rollStacks } from '../../core/data/rarity';
 import { createProfile, grantRecruitKit, needsRecruitKit } from '../../core/profile';
 import { startExpedition, endExpedition, timeLeft, type EndReason } from '../../core/expedition';
-import { addManyToGrid, addToGrid, countItem, emptyGrid, removeItem, cloneGrid, removeAt, isCover } from '../../core/inventory';
+import { addManyToGrid, addToGrid, countItem, emptyGrid, removeItem, cloneGrid, removeAt, isCover, LAYOUTS } from '../../core/inventory';
 import { coins as coinsStack, gridGold, isCoins } from '../../core/gold';
 import { earnGoldSafe, stackGoldValue } from '../../core/wallet';
 import { computeStats } from '../../core/stats';
@@ -107,7 +107,7 @@ export const expeditionActions = {
     let { profile, summary } = endExpedition(s.profile, s.expedition, 'extracted', Date.now());
     // Recompensa: oro y objetos para empezar (config en data/tutorial.ts)
     let stash = profile.backpack;
-    for (const it of TUTORIAL_REWARD.items) stash = addToGrid(stash, { uid: makeUid(), itemId: it.itemId, qty: it.qty }).grid;
+    for (const it of TUTORIAL_REWARD.items) stash = addToGrid(stash, { uid: makeUid(), itemId: it.itemId, qty: it.qty }, LAYOUTS.stash).grid;
     profile = { ...earnGoldSafe({ ...profile, backpack: stash }, TUTORIAL_REWARD.gold), wounds: null, tutorialDone: true, tutorialSeen: { lobby: true, dungeon: true } };
     summary = { ...summary, tutorialNote: `Has sobrevivido a tu primera bajada. El intendente te da ${TUTORIAL_REWARD.gold} monedas de oro (están en tu almacén), 3 pociones y unos guantes de cuero.` };
     markTutorialDoneOnDevice();

@@ -2,7 +2,7 @@ import { spendGold, scaleCost } from './wallet';
 // Lógica de la forja: comprobar requisitos, gastar materiales y oro, y tirar la calidad.
 import type { Profile, Stats } from './types';
 import { RECIPES, QUALITIES, ENSURE_MATERIAL_MULT, type Recipe } from './data/forge';
-import { addToGrid, countItem, removeItem } from './inventory';
+import { addToGrid, countItem, LAYOUTS, removeItem } from './inventory';
 import { rankOf } from '../config/reputation';
 import type { Rng } from './rng';
 import { makeUid } from './rng';
@@ -46,10 +46,10 @@ export function forge(p: Profile, recipeId: string, ensure: boolean, rng: Rng): 
   let quality = 0;
   for (let i = 0; i < weights.length; i++) { roll -= weights[i]; if (roll < 0) { quality = i; break; } }
   const stack = { uid: makeUid(), itemId: r.result, qty: 1, quality, forgedBy: p.character.name };
-  const intoBack = addToGrid(backpack, stack);
+  const intoBack = addToGrid(backpack, stack, LAYOUTS.backpack);
   if (!intoBack.leftover) backpack = intoBack.grid;
   else {
-    const intoStash = addToGrid(stash, stack);
+    const intoStash = addToGrid(stash, stack, LAYOUTS.stash);
     if (intoStash.leftover) return { ok: false, error: 'No tienes sitio en la mochila ni en el almacén.' };
     stash = intoStash.grid;
   }

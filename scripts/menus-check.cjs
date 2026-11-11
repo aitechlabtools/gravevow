@@ -60,6 +60,8 @@ async function run(s) {
   await act('btn-tutorial-ok');
   // Un poco de todo para que las pantallas no salgan vacías
   await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; pr.gold = 4860; pr.stats.expeditions = 3; pr.character.level = 45; pr.bossesDefeated = [...new Set([...(pr.bossesDefeated || []), 'ossuary_lord'])]; G.setState({ profile: { ...pr } }); });
+  // Nivel 45 (para ver a todos los mercaderes del Bastión): cerrar el aviso de habilidad nueva
+  for (let i = 0; i < 4; i++) { const b = await p.waitForSelector('[data-testid=btn-class-unlock-later]', { timeout: 1500 }).catch(() => null); if (!b) break; await b.click(); await p.waitForTimeout(200); }
   for (const v of VIEWS) {
     try {
       await act(`tab-${v.tab}`);

@@ -13,7 +13,7 @@ import { makeRng, randomSeed } from '../../core/rng';
 import type { ExpeditionState } from '../../core/expedition';
 import type { Profile } from '../../core/types';
 import { sfx } from '../audio';
-import { invError, set, state, subzoneDepth, toast } from './internals';
+import { invError, loadNow, set, state, subzoneDepth, toast } from './internals';
 import { actions } from './store';
 
 /** Objeto de la mochila que hace este tratamiento. */
@@ -115,7 +115,7 @@ export const medicalActions = {
       body = tickPain(b.body);
       if (b.dead) break;
       // Necesidades: el mismo pulso gasta Saciedad, Hidratación y Descanso
-      const t = tickNeeds(needsOf(exp.needs), body, body.total);
+      const t = tickNeeds(needsOf(exp.needs), body, body.total, loadNow()?.restExtra ?? 0);
       exp = { ...exp, needs: t.needs };
       body = t.body;
       for (const x of t.crossed) if (x.level !== 'ok') toast(needLog(x.need, x.level), x.level === 'low' ? 'info' : 'danger', x.need === 'hyd' ? 'water' : x.need === 'sat' ? 'ration' : undefined);

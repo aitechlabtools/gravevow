@@ -103,7 +103,7 @@ describe('Objetos de 2×2 (el saco de oro)', () => {
     g = addToGrid(g, sack('S2'), LAYOUTS.backpack).grid;
     const out = sortGrid(g, LAYOUTS.backpack);
     expect(out.filter((x) => x?.itemId === 'gold_sack')).toHaveLength(2);
-    expect(covers(out)).toHaveLength(6);
+    expect(covers(out)).toHaveLength(6 + 4); // 2 sacos de 2×2 (3 marcas cada uno) y 2 espadas de 3×1 (2 cada una)
     expect(out[0]?.itemId).toBe('gold_sack');
     expect(out.filter((x) => x?.itemId === 'iron_sword')).toHaveLength(2);
   });

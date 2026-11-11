@@ -13,6 +13,7 @@ import Phaser from 'phaser';
 import { buildDungeon, CRYPTS_OF_UMBRAVEL, findPath, roomAt, type BuiltDungeon, type DungeonDef, type EntityDef } from '../../core/dungeon';
 import { getEnemy } from '../../core/data/enemies';
 import { mobilityMult } from '../../core/anatomy';
+import { loadOfMemo } from '../../core/carry';
 import { registerTextures, registerHeroTextures } from './textures';
 import { lookSignature } from '../../shared/gearLook';
 import { actions, getState, subscribe, tutorialFrozen } from '../state/store';
@@ -563,9 +564,11 @@ export class DungeonScene extends Phaser.Scene {
       sx = touchStick.x; sy = touchStick.y; mag = Math.min(1, Math.hypot(sx, sy));
     }
     const p = this.player;
-    // Piernas rotas o inutilizadas: el paso se acorta (nunca por debajo del 40 %)
-    const body = getState().expedition?.body;
-    const SPEED = PLAYER_SPEED * (body ? mobilityMult(body) : 1);
+    // Piernas rotas o inutilizadas y el peso (Fase 6): el paso se acorta (nunca por debajo del 40 %)
+    const gs = getState(), ex = gs.expedition;
+    const body = ex?.body;
+    const carry = ex && gs.profile && !gs.tutorial ? loadOfMemo({ backpack: ex.backpack, pocket: ex.pocket, equipment: ex.equipment, bag: gs.profile.bag }, gs.profile.character.classId).mobilityLoss : 0;
+    const SPEED = PLAYER_SPEED * (body ? mobilityMult(body, carry) : 1 - carry);
     if (sx || sy) {
       this.path = [];
       this.cancelChannel();

@@ -10,7 +10,8 @@ import { backupFileName, backupToCode, backupToJson, buildBackup, totalExpeditio
 import { STASH_PAGE_SIZE } from '../../config/stash';
 import { addCharacter, applyProfile, composeProfile, currentCharacterId, emptySave, MAX_CHARACTERS, removeCharacter, type SaveData } from '../../core/save';
 import { abandonInterruptedExpedition } from '../../core/expedition';
-import { addManyToGrid, addToGrid, anchorIndex, countItem, emptyGrid, isMulti, LAYOUTS, removeItem, sortGrid, transfer, isCover, quickEquip, quickMove, type ContainerId, type Loc, stackAt, clearAt } from '../../core/inventory';
+import { carryBlock } from '../../core/carry';
+import { addManyToGrid, addToGrid, anchorIndex, rotateAt, splitStack, countItem, emptyGrid, isMulti, LAYOUTS, removeItem, sortGrid, transfer, isCover, quickEquip, quickMove, type ContainerId, type Loc, stackAt, clearAt } from '../../core/inventory';
 import { buy, sell } from '../../core/economy';
 import { addToPage, buySharedPage, buyStashPage, joinPages, pageCount, pageSlice as pageSliceOf, sortPage, splitPages, type StashPage } from '../../core/stashPages';
 import { equipBag } from '../../core/bag';
@@ -44,7 +45,7 @@ import { expeditionActions } from './expeditionActions';
 import { combatActions } from './combatActions';
 import { medicalActions, expBody, withBody } from './medicalActions';
 import { healBody } from '../../core/anatomy';
-import { applyContainers, containersFor, dev, equipCtx, getSave, getState, initial, invError, kept, recordFound, refreshRoster, requestPersist, saveNow, set, ss, state, toast } from './internals';
+import { applyContainers, loadNow, containersFor, dev, equipCtx, getSave, getState, initial, invError, kept, recordFound, refreshRoster, requestPersist, saveNow, set, ss, state, toast } from './internals';
 import type { Bag, GameState, Screen } from './internals';
 
 export type { Screen, RosterEntry, Toast, CombatKind, CombatSession, LootSession, Modal, Bag, DungeonHud, TutorialRun, GameState } from './internals';
@@ -222,8 +223,8 @@ export const actions = {
     const moving = stackAt(c, from);
     const r = transfer(c, from, to, equipCtx());
     if (!r.ok) return invError(r.error);
+    if (!applyContainers(r.containers, lootId)) return;
     sfx(to.kind === 'equip' || from.kind === 'equip' ? 'equip' : 'pickup');
-    applyContainers(r.containers, lootId);
     if (moving && from.kind === 'grid' && from.container === 'loot' && !(to.kind === 'grid' && to.container === 'loot')) recordFound([moving]);
   },
 
@@ -234,6 +235,16 @@ export const actions = {
     if (!r.ok) return invError(r.error);
     sfx('equip');
     applyContainers(r.containers);
+  },
+
+  /** Gira 90° el objeto de una casilla (sin moverlo). Si no cabe girado, no cambia nada. */
+  rotate(loc: Loc, lootId?: string) {
+    const c = containersFor(state, lootId);
+    if (!c) return;
+    const r = rotateAt(c, loc);
+    if (!r.ok) return invError(r.error);
+    if (!applyContainers(r.containers, lootId)) return;
+    sfx('click');
   },
 
   unequip(slot: Loc) {
@@ -275,8 +286,8 @@ export const actions = {
     }
     const r = quickMove(c, from, target);
     if (!r.ok) return invError(r.error);
+    if (!applyContainers(r.containers, lootId)) return;
     sfx('pickup');
-    applyContainers(r.containers, lootId);
     if (moving && from.kind === 'grid' && from.container === 'loot' && target !== 'loot') recordFound([moving]);
   },
 
@@ -304,11 +315,27 @@ export const actions = {
     const pc = putCoinsPartial(c.backpack, coinsIn);
     const r = addManyToGrid(pc.grid, stacks.filter((x) => x.itemId !== COIN_ID), LAYOUTS.backpack);
     if (pc.left) r.leftovers.push(coinsStack(pc.left));
+    // Peso (Fase 6): si todo junto pasa del 150 %, se coge uno a uno hasta donde se pueda; el resto se queda en el saco
+    const before = loadNow(), all = loadNow({ ...c, backpack: r.grid });
+    let heavy = false;
+    if (before && all && carryBlock(before.weight, all.weight, all.capacity)) {
+      heavy = true;
+      let g = c.backpack;
+      r.leftovers = [];
+      for (const st of stacks) {
+        const t = st.itemId === COIN_ID ? { grid: putCoinsPartial(g, st.qty).grid, leftover: null as ItemStack | null } : addToGrid(g, st, LAYOUTS.backpack);
+        const w = loadNow({ ...c, backpack: t.grid });
+        if (t.leftover || (w && carryBlock(before.weight, w.weight, w.capacity)) || (st.itemId === COIN_ID && putCoinsPartial(g, st.qty).left)) r.leftovers.push(st);
+        else g = t.grid;
+      }
+      r.grid = g;
+    }
     const remaining = emptyGrid(c.loot.length);
     r.leftovers.forEach((s, i) => (remaining[i] = s));
-    if (stacks.length) sfx('pickup');
-    if (r.leftovers.length) invError('Tu mochila está llena. Parte del botín se queda aquí.');
-    applyContainers({ ...c, backpack: r.grid, loot: remaining }, lootId);
+    if (!applyContainers({ ...c, backpack: r.grid, loot: remaining }, lootId)) return;
+    if (stacks.length > r.leftovers.length) sfx('pickup');
+    if (heavy && r.leftovers.length) invError('Demasiado peso: parte del botín se queda aquí.');
+    else if (r.leftovers.length) invError('Tu mochila está llena. Parte del botín se queda aquí.');
     recordFound(stacks.filter((x) => !r.leftovers.some((l) => l.uid === x.uid)));
   },
 
@@ -341,6 +368,15 @@ export const actions = {
     const r = splitCoins(c[loc.container], loc.index, n);
     if (!r.ok) return invError(r.error);
     sfx('coin');
+    applyContainers({ ...c, [loc.container]: r.grid });
+  },
+  /** Divide una pila (no de monedas) en dos mitades: la nueva va a la casilla libre más cercana. */
+  splitStack(loc: Loc) {
+    const c = containersFor(state);
+    if (!c || loc.kind !== 'grid') return;
+    const r = splitStack(c[loc.container], loc.index);
+    if (!r.ok) return invError(r.error);
+    sfx('click');
     applyContainers({ ...c, [loc.container]: r.grid });
   },
   /** «Agrupar oro»: monedas sueltas a los sacos con hueco y el resto en montones de 10. En el almacén, la página vista. */
@@ -727,7 +763,7 @@ export const actions = {
     if (!p || !b) return;
     const paid = spendGold(p, b.price);
     if (!paid.ok) return invError(`Te faltan monedas: cuesta ${b.price} de oro.`);
-    const r = addToGrid(paid.profile.backpack, b.stack);
+    const r = addToGrid(paid.profile.backpack, b.stack, LAYOUTS.backpack);
     if (r.leftover) return invError('No hay sitio en la mochila para recomprarlo.');
     sfx('pickup');
     set({ profile: { ...paid.profile, backpack: r.grid }, buyback: state.buyback.filter((_, k) => k !== i) });

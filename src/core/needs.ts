@@ -23,10 +23,11 @@ export function needsOf(n: Partial<Needs> | null | undefined): Needs {
   return { ...FULL_NEEDS, ...(n ?? {}) };
 }
 
-/** Multiplicador del consumo de una necesidad (abdomen inutilizado, etc.), con sus topes. */
-export function consumptionMult(need: Need, body?: Body): number {
+/** Multiplicador del consumo de una necesidad (abdomen inutilizado, peso…), con sus topes. `restExtra`: carga (Fase 6). */
+export function consumptionMult(need: Need, body?: Body, restExtra = 0): number {
   let mod = 0;
   if (body && need !== 'rest' && isDisabled(body, 'abdomen')) mod += NEED_CFG.abdomenExtra;
+  if (need === 'rest') mod += restExtra;
   return 1 + Math.max(-NEED_CFG.maxReduction, Math.min(NEED_CFG.maxIncrease, mod));
 }
 
@@ -68,12 +69,12 @@ export interface NeedsTick {
 }
 
 /** Un pulso: gasta las tres barras y, a cero de Hidratación o Saciedad, hiere el tórax de vez en cuando. */
-export function tickNeeds(n0: Needs, body: Body, total: number): NeedsTick {
+export function tickNeeds(n0: Needs, body: Body, total: number, restExtra = 0): NeedsTick {
   const n: Needs = { ...n0 };
   const crossed: NeedsTick['crossed'] = [];
   for (const k of NEEDS) {
     const before = needLevel(n[k]);
-    n[k] = clamp(n[k] - NEED_CFG.rate[k] * consumptionMult(k, body));
+    n[k] = clamp(n[k] - NEED_CFG.rate[k] * consumptionMult(k, body, restExtra));
     const after = needLevel(n[k]);
     if (after !== before) crossed.push({ need: k, level: after });
   }
@@ -94,9 +95,9 @@ export function tickNeeds(n0: Needs, body: Body, total: number): NeedsTick {
 }
 
 /** Pulsos que faltan para el siguiente efecto grave (penalización, cero o daño) de una barra. */
-export function pulsesToNext(n: Needs, need: Need, body?: Body): number | null {
+export function pulsesToNext(n: Needs, need: Need, body?: Body, restExtra = 0): number | null {
   const v = n[need];
-  const rate = NEED_CFG.rate[need] * consumptionMult(need, body);
+  const rate = NEED_CFG.rate[need] * consumptionMult(need, body, restExtra);
   if (v > NEED_CFG.warnAt) return Math.ceil((v - NEED_CFG.warnAt) / rate);
   if (v > NEED_CFG.criticalAt) return Math.ceil((v - NEED_CFG.criticalAt) / rate);
   if (v > 0) return Math.ceil(v / rate);

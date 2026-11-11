@@ -2,7 +2,7 @@ import { earnGold } from '../src/core/wallet';
 import { describe, expect, it } from 'vitest';
 import { createProfile } from '../src/core/profile';
 import { addCharacter, applyProfile, composeProfile, currentCharacterId, emptySave, MAX_CHARACTERS, migrateProfileToSave, removeCharacter, sanitizeSave } from '../src/core/save';
-import type { Profile } from '../src/core/types';
+import type { ItemStack, Profile } from '../src/core/types';
 import { legacyLevelToNew } from '../src/config/progression';
 
 const json = <T>(x: T): T => JSON.parse(JSON.stringify(x));
@@ -37,8 +37,10 @@ describe('Partida (formato 3): migración desde un solo personaje', () => {
     const p = composeProfile(s, s.characters[0].id)!;
     expect(p.gold).toBe(Math.ceil((12480 + 16000) / 10)); // + lo pagado por las ampliaciones, todo en monedas (÷10)
     expect(p.character).toEqual(old.character);
-    expect(p.stash.slice(0, 72)).toEqual(old.stash); // todo lo que había, en la página 1 (120 casillas)
-    expect(p.stash).toHaveLength(120);
+    // Todo lo que había sigue en el almacén (Fase 6: las espadas ocupan 3×1 y se recolocan o giran; si no caben, más páginas)
+    const uids = (g: (ItemStack | null)[]) => g.filter((x): x is ItemStack => !!x && x.itemId !== 'cover').map((x) => x.uid).sort();
+    expect(uids(p.stash)).toEqual(expect.arrayContaining(uids(old.stash))); // (más el oro devuelto, con uid nuevo)
+    expect(p.stash.length % 120).toBe(0);
     expect(p.backpack).toEqual(old.backpack);
     expect(p.equipment).toEqual(old.equipment);
     expect(p.skins).toEqual(old.skins);

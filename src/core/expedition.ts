@@ -109,7 +109,7 @@ export function timeLeft(e: ExpeditionState, now: number): number {
 }
 
 function carried(e: ExpeditionState): ItemStack[] {
-  return [...Object.values(e.equipment), ...e.backpack].filter((s): s is ItemStack => !!s);
+  return [...Object.values(e.equipment), ...e.backpack].filter((s): s is ItemStack => !!s && s.itemId !== 'cover');
 }
 
 export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason, now: number): { profile: Profile; summary: ExpeditionSummary } {

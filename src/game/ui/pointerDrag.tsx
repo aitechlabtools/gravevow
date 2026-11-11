@@ -26,6 +26,9 @@ export interface DragState {
   from: Loc;
   lootId?: string;
   itemId: string;
+  /** Tamaño del objeto tal como está (Fase 6) y su uid: para enseñar el hueco que ocuparía antes de soltar. */
+  size?: { w: number; h: number };
+  uid?: string;
   x: number;
   y: number;
   touch: boolean;
@@ -81,7 +84,7 @@ function drop(d: DragState, raw: string | null): boolean {
 }
 
 /** Manejador de `pointerdown` para una casilla con objeto. */
-export function startPointerDrag(e: React.PointerEvent, from: Loc, itemId: string, lootId?: string) {
+export function startPointerDrag(e: React.PointerEvent, from: Loc, itemId: string, lootId?: string, size?: { w: number; h: number }, uid?: string) {
   if (e.button !== 0 || state) return;
   const touch = e.pointerType !== 'mouse';
   const x0 = e.clientX, y0 = e.clientY;
@@ -110,7 +113,9 @@ export function startPointerDrag(e: React.PointerEvent, from: Loc, itemId: strin
       const pt = over ? (JSON.parse(over) as DropTarget) : null;
       if (pt?.type === 'page' && pt.owned) pageTimer = window.setTimeout(() => actions.setStashPage(pt.page), PAGE_HOVER_MS);
     }
-    if (!state) set({ from, lootId, itemId, x: px, y: ty, touch, over: null });
+    if (!state) set({ from, lootId, itemId, size, uid, x: px, y: ty, touch, over });
+    // Solo los objetos grandes necesitan saber el destino (vista previa del hueco); así no se repinta en cada casilla
+    else if (size && size.w * size.h > 1 && state.over !== over) set({ ...state, over });
     placeGhost();
   };
   const move = (x: number, y: number, ev?: Event) => {

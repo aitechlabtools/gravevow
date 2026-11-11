@@ -1,4 +1,5 @@
 import { NeedsPanel, NeedsStrip } from './NeedsBars';
+import { CarryBar, OverloadChip } from './CarryBar';
 import { effectiveMaxMp, needsOf } from '../../core/needs';
 import { useClearOnDrop } from './pointerDrag';
 import { gridGold, isCoins } from '../../core/gold';
@@ -150,6 +151,7 @@ function Hud() {
             <div className="h-1" />
             <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={CLASSES[ch.classId].resourceName} />
             {!tutorial && <NeedsStrip needs={needs} />}
+            {!tutorial && <OverloadChip />}
             <button className="btn w-full mt-2 text-sm flex items-center justify-center gap-2" onClick={() => actions.drinkPotion()} disabled={!potions} data-testid="btn-potion">
               <ItemIcon itemId="health_potion" size={20} /> Poción ({potions}) <kbd className="text-xs opacity-60">Q</kbd>
             </button>
@@ -272,6 +274,7 @@ function TouchTopHud() {
         <div className="h-1" />
         <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={phone ? undefined : CLASSES[ch.classId].resourceName} />
         {!tutorial && <NeedsStrip needs={needs} />}
+            {!tutorial && <OverloadChip />}
         <div className="text-[11px] mt-1.5 flex items-center gap-1 flex-wrap">Botín: <span className="text-gold" data-testid="hud-loot-value">{gridValue(exp.backpack)}</span> · Oro encima: <GoldAmount value={gridGold(exp.backpack)} /></div>
       </div>
 
@@ -378,6 +381,7 @@ function LootModal() {
           <div className="text-sm text-stone-300 mb-2">Tu mochila · {s.expedition.backpack.filter(Boolean).length}/{s.expedition.backpack.length}</div>
           <GridView grid={s.expedition.backpack} container="backpack" cols={6} lootId={session.id} equipment={s.expedition.equipment} mode="dungeon"
             onQuick={(l) => actions.quickMove(l, 'loot', session.id)} onAlt={(l) => actions.quickMove(l, 'loot', session.id)} />
+          {!s.tutorial && <CarryBar className="mt-2" />}
         </div>
       </div>
       <p className="text-xs text-stone-400 mt-3">Doble clic o clic derecho para mover. También puedes arrastrar.</p>
@@ -578,6 +582,7 @@ function DungeonInventory() {
         <div>
           <GridView grid={s.expedition.backpack} container="backpack" cols={6} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel}
             onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
+          {!s.tutorial && <CarryBar className="mt-2" />}
           <div className="mt-3">
             <div className="text-xs text-gold mb-1">Bolsillo seguro · no se pierde al morir{gridGold(s.expedition.pocket) > 0 ? ` · oro a salvo: ${gridGold(s.expedition.pocket)}` : ''}</div>
             <GridView grid={s.expedition.pocket} container="pocket" cols={3} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} />

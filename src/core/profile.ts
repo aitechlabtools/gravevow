@@ -8,7 +8,8 @@ import { MERCENARIES } from './data/mercenaries';
 import { SKINS } from './data/skins';
 import type { Appearance, ClassId, Profile } from './types';
 import { CLASSES } from './data/classes';
-import { addToGrid, BACKPACK_SIZE, emptyEquipment, emptyGrid, LAYOUTS, repairGrid, STASH_SIZE } from './inventory';
+import { addToGrid, BACKPACK_SIZE, emptyEquipment, emptyGrid, LAYOUTS, repairGrid, repairGridEx, STASH_SIZE } from './inventory';
+import { STASH_PAGE_SIZE } from '../config/stash';
 import { getItem } from './data/items';
 import { initialQuests, migrateQuests } from './quests';
 import { makeUid } from './rng';
@@ -27,7 +28,7 @@ export function createProfile(name: string, classId: ClassId, appearance: Appear
     const def = getItem(k.itemId);
     const stack = { uid: makeUid(), itemId: k.itemId, qty: k.qty };
     if (def.slot && !equipment[def.slot]) equipment[def.slot] = stack;
-    else backpack = addToGrid(backpack, stack).grid;
+    else backpack = addToGrid(backpack, stack, LAYOUTS.backpack).grid;
   }
   return {
     version: 2,
@@ -129,8 +130,22 @@ export function sanitizeProfile(raw: unknown): Profile | null {
   p.backpack = fix(p.backpack); p.stash = fix(p.stash); p.pocket = fix(p.pocket);
   if (p.shared) p.shared = fix(p.shared);
   // Objetos de varias casillas (saco de oro): marcas de casillas tapadas al día
-  p.backpack = repairGrid(p.backpack, LAYOUTS.backpack); p.stash = repairGrid(p.stash, LAYOUTS.stash);
-  if (p.shared) p.shared = repairGrid(p.shared, LAYOUTS.shared);
+  // Fase 6 (tamaños por objeto): lo que ya no cabe en la mochila, en el bolsillo o en «Compartido» pasa al almacén;
+  // si el almacén no da para todo, se añaden páginas gratis. Nunca se pierde nada.
+  // (Un almacén antiguo sin páginas aún no se toca: save.ts lo pasa a páginas y vuelve a llamar aquí.)
+  if (p.stash.length % STASH_PAGE_SIZE !== 0) { /* se repara en la segunda pasada */ }
+  else {
+  const bp = repairGridEx(p.backpack, LAYOUTS.backpack);
+  const st = repairGridEx(p.stash, LAYOUTS.stash);
+  const sh = p.shared ? repairGridEx(p.shared, LAYOUTS.shared) : null;
+  p.backpack = bp.grid; p.stash = st.grid;
+  if (sh) p.shared = sh.grid;
+  for (const s of [...bp.overflow, ...st.overflow, ...(sh?.overflow ?? [])]) {
+    let r = addToGrid(p.stash, s, LAYOUTS.stash);
+    while (r.leftover) { p.stash = [...p.stash, ...emptyGrid(STASH_PAGE_SIZE)]; r = addToGrid(p.stash, s, LAYOUTS.stash); }
+    p.stash = r.grid;
+  }
+  }
   p.pocket = repairGrid(p.pocket);
   return p;
 }
@@ -152,10 +167,10 @@ export function grantRecruitKit(p: Profile): Profile {
     const def = getItem(k.itemId);
     const stack = { uid: makeUid(), itemId: k.itemId, qty: 1 };
     if (def.slot && !equipment[def.slot]) equipment[def.slot] = stack;
-    else backpack = addToGrid(backpack, stack).grid;
+    else backpack = addToGrid(backpack, stack, LAYOUTS.backpack).grid;
   }
-  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'health_potion', qty: 1 }).grid;
-  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'ration', qty: 1 }).grid;
-  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'water', qty: 1 }).grid;
+  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'health_potion', qty: 1 }, LAYOUTS.backpack).grid;
+  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'ration', qty: 1 }, LAYOUTS.backpack).grid;
+  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'water', qty: 1 }, LAYOUTS.backpack).grid;
   return { ...p, backpack, equipment };
 }

@@ -5,6 +5,8 @@ import { isTwoHanded } from './data/weapons';
 import { getItem, maxStack, RARITY_INFO } from './data/items';
 import { makeUid } from './rng';
 import { COIN_ID, CONTAINER_CAPACITY, GOLD_SCALE } from '../config/gold';
+import { CATEGORY_SIZE, FAMILY_SIZE, HEAVY_ARMOR_SIZE, type Size } from '../config/carry';
+import { isHeavyArmor } from './carry';
 
 export const BACKPACK_SIZE = 24; // 6 x 4
 export const STASH_SIZE = 120; // una página del almacén (8 × 15); ver config/stash.ts
@@ -21,7 +23,7 @@ export function cloneGrid(g: Grid): Grid {
   return g.map((s) => (s ? { ...s } : null));
 }
 
-// ── Objetos de varias casillas (el saco de oro, 2×2) ──
+// ── Objetos de varias casillas (Fase 6: armas, escudos, armaduras, herramientas, mochilas y el saco de oro) ──
 // El objeto vive en su casilla de arriba a la izquierda (el «ancla»); las demás casillas que tapa guardan una marca
 // `cover` (uid «cover:<uid del ancla>»). Así, todo lo que busca casillas libres las ve ocupadas sin saber nada más.
 // Solo los contenedores con forma fija (columnas iguales en todos los formatos) admiten objetos grandes.
@@ -30,7 +32,25 @@ export const LAYOUTS: Partial<Record<ContainerId, GridLayout>> & Record<"backpac
 export const COVER_ID = 'cover';
 const COVER_PREFIX = 'cover:';
 export const isCover = (s: ItemStack | null | undefined): boolean => !!s && s.itemId === COVER_ID;
-export function footprint(itemId: string): { w: number; h: number } { return getItem(itemId).size ?? { w: 1, h: 1 }; }
+/** Tamaño del objeto sin girar: el suyo propio, o por familia (armas) o categoría (config/carry.ts). */
+export function footprint(itemId: string): Size {
+  const d = getItem(itemId);
+  if (d.size) return d.size;
+  if (isHeavyArmor(d)) return HEAVY_ARMOR_SIZE;
+  if (d.family) return FAMILY_SIZE[d.family];
+  return CATEGORY_SIZE[d.category] ?? { w: 1, h: 1 };
+}
+/** Tamaño de este ejemplar tal y como está colocado (girado 90°: ancho y alto cambiados). */
+export function stackSize(s: ItemStack): Size {
+  const f = footprint(s.itemId);
+  return s.rot ? { w: f.h, h: f.w } : f;
+}
+/** Solo se giran los objetos que no son cuadrados. */
+export function canRotate(itemId: string): boolean {
+  const f = footprint(itemId);
+  return f.w !== f.h;
+}
+const turned = (s: ItemStack): ItemStack => { const n = { ...s }; if (s.rot) delete n.rot; else n.rot = true; return n; };
 export function isMulti(s: ItemStack | null | undefined): boolean {
   if (!s || isCover(s)) return false;
   const f = footprint(s.itemId);
@@ -61,7 +81,7 @@ export function canPlace(grid: Grid, L: GridLayout, i: number, w: number, h: num
 function placeAt(g: Grid, L: GridLayout | undefined, i: number, s: ItemStack) {
   g[i] = s;
   if (!L || !isMulti(s)) return;
-  const f = footprint(s.itemId);
+  const f = stackSize(s);
   for (const k of cellsAt(g.length, L, i, f.w, f.h) ?? []) if (k !== i) g[k] = { uid: COVER_PREFIX + s.uid, itemId: COVER_ID, qty: 1 };
 }
 /** Quita el objeto que ocupa la casilla `i` (con sus casillas tapadas). Modifica `g`. Devuelve dónde estaba y qué era. */
@@ -79,17 +99,44 @@ export function findPlace(grid: Grid, L: GridLayout, w: number, h: number): numb
   for (let i = 0; i < grid.length; i++) if (canPlace(grid, L, i, w, h)) return i;
   return -1;
 }
-/** Repara una rejilla cargada: quita marcas sin dueño y vuelve a marcar (o recoloca) los objetos grandes. */
-export function repairGrid(grid: Grid, L?: GridLayout): Grid {
+/** Hueco para un objeto: primero tal como está y, si no cabe, girado. Devuelve la casilla y cómo queda el objeto. */
+export function findPlaceFor(grid: Grid, L: GridLayout, s: ItemStack): { index: number; stack: ItemStack } | null {
+  for (const t of canRotate(s.itemId) ? [s, turned(s)] : [s]) {
+    const f = stackSize(t);
+    const k = findPlace(grid, L, f.w, f.h);
+    if (k >= 0) return { index: k, stack: t };
+  }
+  return null;
+}
+/** Coloca un objeto con su ancla en `i` si cabe ahí (tal como está o girado). Modifica `g`. */
+function placeHere(g: Grid, L: GridLayout, i: number, s: ItemStack, selfUid?: string): boolean {
+  for (const t of canRotate(s.itemId) ? [s, turned(s)] : [s]) {
+    const f = stackSize(t);
+    if (canPlace(g, L, i, f.w, f.h, selfUid)) { placeAt(g, L, i, t); return true; }
+  }
+  return false;
+}
+/**
+ * Repara una rejilla cargada: quita marcas sin dueño y vuelve a marcar (o recoloca, girando si hace falta) los objetos grandes.
+ * Lo que ya no cabe (partidas de antes de los tamaños) sale en `overflow`: quien llama le busca sitio; nunca se borra.
+ */
+export function repairGridEx(grid: Grid, L?: GridLayout): { grid: Grid; overflow: ItemStack[] } {
   const g: Grid = grid.map((x) => (x && !isCover(x) && !isMulti(x) ? x : null));
+  const overflow: ItemStack[] = [];
   const big = grid.map((x, i) => [x, i] as const).filter(([x]) => isMulti(x));
   for (const [x, i] of big) {
-    const f = footprint(x!.itemId);
-    if (L && canPlace(g, L, i, f.w, f.h)) placeAt(g, L, i, x!);
-    else if (L) { const k = findPlace(g, L, f.w, f.h); if (k >= 0) placeAt(g, L, k, x!); else if (!g[i]) g[i] = x; else { const free = g.indexOf(null); if (free >= 0) g[free] = x; } }
-    else if (!g[i]) g[i] = x;
+    if (!L) { if (!g[i]) g[i] = x; else overflow.push(x!); continue; }
+    if (placeHere(g, L, i, x!)) continue;
+    const p = findPlaceFor(g, L, x!);
+    if (p) placeAt(g, L, p.index, p.stack); else overflow.push(x!);
   }
-  return g;
+  return { grid: g, overflow };
+}
+export function repairGrid(grid: Grid, L?: GridLayout): Grid {
+  const r = repairGridEx(grid, L);
+  // Sin sitio: a la primera casilla libre (sin marcas), o al final, para no perderlo; profile.ts usa repairGridEx y lo lleva al almacén
+  for (const x of r.overflow) { const free = r.grid.indexOf(null); if (free >= 0) r.grid[free] = x; else r.grid.push(x); }
+  return r.grid;
 }
 
 /**
@@ -98,11 +145,10 @@ export function repairGrid(grid: Grid, L?: GridLayout): Grid {
  */
 export function addToGrid(grid: Grid, stack: ItemStack, layout?: GridLayout): { grid: Grid; leftover: ItemStack | null } {
   if (isMulti(stack) && layout) {
-    const f = footprint(stack.itemId);
-    const k = findPlace(grid, layout, f.w, f.h);
-    if (k < 0) return { grid, leftover: stack };
+    const p = findPlaceFor(grid, layout, stack);
+    if (!p) return { grid, leftover: stack };
     const g = cloneGrid(grid);
-    placeAt(g, layout, k, { ...stack });
+    placeAt(g, layout, p.index, { ...p.stack });
     return { grid: g, leftover: null };
   }
   const g = cloneGrid(grid);
@@ -139,6 +185,21 @@ export function addManyToGrid(grid: Grid, stacks: ItemStack[], layout?: GridLayo
   return { grid: g, leftovers };
 }
 
+/** Divide una pila de 1×1: separa `n` unidades (por defecto la mitad) a la casilla libre más cercana. La cantidad total se conserva. */
+export function splitStack(g0: Grid, at: number, n?: number): { ok: true; grid: Grid } | { ok: false; error: string } {
+  const s = g0[at];
+  if (!s || isCover(s) || isMulti(s) || s.qty < 2) return { ok: false, error: 'Esta pila no se puede dividir.' };
+  const take = n ?? Math.floor(s.qty / 2);
+  if (take <= 0 || take >= s.qty) return { ok: false, error: 'No se puede dividir así.' };
+  let free = -1;
+  for (let k = 1; k < g0.length && free < 0; k++) { const a = at + k, b = at - k; if (a < g0.length && !g0[a]) free = a; else if (b >= 0 && !g0[b]) free = b; }
+  if (free < 0) return { ok: false, error: 'No hay una casilla libre para separar la pila.' };
+  const g = cloneGrid(g0);
+  g[at] = { ...s, qty: s.qty - take };
+  g[free] = { ...s, uid: makeUid(), qty: take };
+  return { ok: true, grid: g };
+}
+
 export function countItem(grid: Grid, itemId: string): number {
   return grid.reduce((n, s) => n + (s && s.itemId === itemId ? s.qty : 0), 0);
 }
@@ -170,7 +231,7 @@ export function freeSlots(grid: Grid): number {
 
 const CATEGORY_ORDER = ['container', 'gold', 'weapon', 'shield', 'helmet', 'armor', 'gloves', 'boots', 'ring', 'amulet', 'jewel', 'relic', 'potion', 'tool', 'key', 'coin', 'material', 'quest'];
 
-/** Ordena: fusiona pilas y ordena por categoría, rareza y nombre. */
+/** Ordena: fusiona pilas y ordena por categoría, rareza y nombre. Si los objetos grandes no caben de otra forma, lo deja como estaba. */
 export function sortGrid(grid: Grid, layout?: GridLayout): Grid {
   let merged: Grid = emptyGrid(grid.length);
   for (const s of grid) if (s && !isCover(s)) merged = addToGrid(merged, s).grid;
@@ -188,13 +249,17 @@ export function sortGrid(grid: Grid, layout?: GridLayout): Grid {
   });
   const out = emptyGrid(grid.length);
   // Los objetos grandes, primero (arriba a la izquierda); luego los demás por orden en los huecos que quedan
+  // (de mayor a menor superficie, para que encajen mejor)
   const small: ItemStack[] = [];
-  for (const it of items) {
-    if (layout && isMulti(it)) { const f = footprint(it.itemId); const k = findPlace(out, layout, f.w, f.h); if (k >= 0) { placeAt(out, layout, k, it); continue; } }
-    small.push(it);
+  const bigs = layout ? items.filter(isMulti).sort((a, b) => { const fa = footprint(a.itemId), fb = footprint(b.itemId); return fb.w * fb.h - fa.w * fa.h; }) : [];
+  for (const it of bigs) {
+    const p = findPlaceFor(out, layout!, it);
+    if (!p) return grid;
+    placeAt(out, layout, p.index, p.stack);
   }
+  for (const it of items) if (!bigs.includes(it)) small.push(it);
   let k = 0;
-  for (const it of small) { while (k < out.length && out[k]) k++; if (k < out.length) out[k++] = it; }
+  for (const it of small) { while (k < out.length && out[k]) k++; if (k >= out.length) return grid; out[k++] = it; }
   return out;
 }
 
@@ -262,8 +327,45 @@ function toAnchor(c: Containers, loc: Loc): Loc {
   return a >= 0 ? { ...loc, index: a } : loc;
 }
 
-export const MULTI_NO_ROOM = 'No cabe ahí: el saco necesita 2×2 casillas libres.';
-export const MULTI_BLOCKED = 'Ahí está el saco: suelta el objeto en otra casilla.';
+export const MULTI_NO_ROOM = 'No cabe ahí: no hay casillas libres para su tamaño. Gíralo o busca otro hueco.';
+export const MULTI_BLOCKED = 'Ahí ya hay un objeto grande: suelta este en un hueco libre.';
+export const NO_ROOM_FOR_OLD = 'No hay sitio para lo que llevabas puesto: haz hueco antes.';
+
+/** Vuelve a meter un objeto en un contenedor: en la casilla `i` si cabe (o girado), si no donde quepa. Modifica `n`. */
+function putBack(n: Containers, container: ContainerId, i: number, s: ItemStack): boolean {
+  const g = n[container];
+  const L = LAYOUTS[container];
+  if (L) {
+    if (placeHere(g, L, i, s)) return true;
+    const p = findPlaceFor(g, L, s);
+    if (!p) return false;
+    placeAt(g, L, p.index, p.stack);
+    return true;
+  }
+  if (!g[i]) { g[i] = s; return true; }
+  const free = g.indexOf(null);
+  if (free < 0) return false;
+  g[free] = s;
+  return true;
+}
+
+/** Gira 90° el objeto de una casilla sin moverlo de sitio. Si choca con un borde u otro objeto, todo se queda igual. */
+export function rotateAt(c: Containers, loc: Loc): TransferResult {
+  if (loc.kind !== 'grid') return { ok: false, error: 'Solo se giran los objetos de la mochila o el almacén.' };
+  const L = LAYOUTS[loc.container];
+  const g0 = c[loc.container];
+  const a = anchorIndex(g0, loc.index);
+  const s = a >= 0 ? g0[a] : null;
+  if (!s || isCover(s)) return { ok: false, error: 'No hay nada que girar.' };
+  if (!L || !canRotate(s.itemId)) return { ok: false, error: 'Este objeto no se puede girar.' };
+  const t = turned(s);
+  const f = stackSize(t);
+  if (!canPlace(g0, L, a, f.w, f.h, s.uid)) return { ok: false, error: 'No hay sitio para girarlo ahí.' };
+  const n = cloneContainers(c);
+  removeAt(n[loc.container], a);
+  placeAt(n[loc.container], L, a, t);
+  return { ok: true, containers: n };
+}
 
 export function transfer(c: Containers, from0: Loc, to0: Loc, ctx: EquipContext): TransferResult {
   const from = toAnchor(c, from0);
@@ -285,16 +387,44 @@ export function transfer(c: Containers, from0: Loc, to0: Loc, ctx: EquipContext)
     n[from.container][from.index] = src.qty - moved > 0 ? { ...src, qty: src.qty - moved } : null;
     return { ok: true, containers: n };
   }
-  // Objetos grandes: se mueven a un hueco de su tamaño (sin intercambios); sobre un objeto grande no se suelta nada
+  // Objetos grandes: se mueven a un hueco de su tamaño (sin intercambios entre casillas); sobre un objeto grande no se suelta nada.
+  // Equipar o quitar uno sí intercambia: lo que llevabas puesto vuelve a su hueco o a donde quepa.
   if (isMulti(src) || (isMulti(dst) && dst!.uid !== src.uid)) {
-    if (to.kind === 'equip' || from.kind === 'equip') return { ok: false, error: 'Este objeto no se puede equipar.' };
-    if (isMulti(dst) && dst!.uid !== src.uid) return { ok: false, error: MULTI_BLOCKED };
+    if (to.kind === 'equip') {
+      if (from.kind !== 'grid') return { ok: false, error: 'Este objeto no va en esa ranura.' };
+      const err = canEquip(src.itemId, to.slot, ctx);
+      if (err) return { ok: false, error: err };
+      const n = cloneContainers(c);
+      removeAt(n[from.container], from.index);
+      const old = n.equipment[to.slot];
+      n.equipment[to.slot] = { ...src };
+      if (old && !putBack(n, from.container, from.index, { ...old })) return { ok: false, error: NO_ROOM_FOR_OLD };
+      return to.slot === 'mainHand' || to.slot === 'offHand' ? fixHands(n, to.slot) : { ok: true, containers: n };
+    }
     if (to.container === 'pocket') return { ok: false, error: POCKET_ERROR };
+    if (from.kind === 'equip') {
+      const n = cloneContainers(c);
+      n.equipment[from.slot] = null;
+      if (dst) {
+        // Soltar lo puesto sobre otro objeto: si ese objeto va en la misma ranura, se cambian
+        const err = canEquip(dst.itemId, from.slot, ctx);
+        if (err) return { ok: false, error: MULTI_BLOCKED };
+        const at = removeAt(n[to.container], to.index).index;
+        n.equipment[from.slot] = { ...dst };
+        if (!putBack(n, to.container, at, { ...src })) return { ok: false, error: MULTI_NO_ROOM };
+        return { ok: true, containers: n };
+      }
+      const L = LAYOUTS[to.container];
+      if (L ? !placeHere(n[to.container], L, to.index, { ...src }) : !!n[to.container][to.index]) return { ok: false, error: MULTI_NO_ROOM };
+      if (!L) n[to.container][to.index] = { ...src };
+      return { ok: true, containers: n };
+    }
+    if (isMulti(dst) && dst!.uid !== src.uid) return { ok: false, error: MULTI_BLOCKED };
     const n = cloneContainers(c);
     removeAt(n[from.container], from.index);
     const L = LAYOUTS[to.container];
     if (L) {
-      const f = footprint(src.itemId);
+      const f = stackSize(src);
       if (!canPlace(n[to.container], L, to.index, f.w, f.h)) return { ok: false, error: MULTI_NO_ROOM };
       placeAt(n[to.container], L, to.index, { ...src });
     } else {
@@ -341,7 +471,7 @@ function fixHands(n: Containers, placed: 'mainHand' | 'offHand'): TransferResult
   const freeSlot = placed === 'mainHand' ? 'offHand' : 'mainHand';
   const out = n.equipment[freeSlot]!;
   for (const g of ['backpack', 'stash'] as const) {
-    const r = addToGrid(n[g], out);
+    const r = addToGrid(n[g], out, LAYOUTS[g]);
     if (!r.leftover) {
       n[g] = r.grid;
       n.equipment[freeSlot] = null;
@@ -370,7 +500,7 @@ export function quickMove(c: Containers, from0: Loc, target: ContainerId): Trans
     const n = cloneContainers(c);
     if (from.kind === 'grid') removeAt(n[from.container], from.index); else setAt(n, from, null);
     const r = addToGrid(n[target], src, LAYOUTS[target]);
-    if (r.leftover) return { ok: false, error: 'No hay espacio: el saco necesita 2×2 casillas libres.' };
+    if (r.leftover) { const f = footprint(src.itemId); return { ok: false, error: `No hay espacio: necesita ${f.w}×${f.h} casillas libres.` }; }
     n[target] = r.grid;
     return { ok: true, containers: n };
   }

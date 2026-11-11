@@ -19,6 +19,7 @@ import { dragJustEnded, useDrag, useClearOnDrop } from '../pointerDrag';
 const BAG_DROP = JSON.stringify({ type: 'bag' });
 import { Modal } from '../common';
 import type { EquipSlot, ItemStack } from '../../../core/types';
+import { CarryBar } from '../CarryBar';
 import { ItemSlot, GridView, StatsList, SLOT_LABELS, type InvMode } from '../inventory';
 import { PlayerSprite, GoldAmount } from '../common';
 import { Panel, SubHead, Segmented, usePixelScale } from '../kit';
@@ -83,6 +84,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
         Mochila · {profile.backpack.filter(Boolean).length}/{profile.backpack.length}
       </SubHead>
       <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={quickFromBag} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
+      <CarryBar className="mt-1.5" />
       <div className="flex gap-1 mt-1.5" data-testid="backpack-quick">
         <button className="btn text-xs flex-1" style={{ minHeight: touchy ? 44 : 34 }} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén (no toca el equipo ni el bolsillo seguro)">Vaciar mochila</button>
         <button className="btn text-xs flex-1" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => { actions.emptyBackpack(true); clear(); }} disabled={!hasMaterials} data-testid="store-materials" title="Manda minerales y materiales al almacén">Guardar materiales</button>

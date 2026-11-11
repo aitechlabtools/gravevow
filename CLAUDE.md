@@ -30,6 +30,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Anatomía: `anatomy.ts` (7 regiones, muerte solo por cabeza o tórax, exceso de daño, sangrado por pulso con techo, fracturas, tratamientos, estabilización y heridas guardadas en `Profile.wounds`); cifras en `config/anatomy.ts`. Solo el jugador tiene cuerpo (`Combatant.body`); la vida `hp` es su resumen.
   - Necesidades: `needs.ts` (Saciedad, Hidratación y Descanso de 0 a 100; se gastan por pulso de 6 s o por ronda; recortan el máximo de Ímpetu o Maná; a cero, sed y hambre hieren el tórax; guardadas en `Profile.needs`); cifras en `config/needs.ts`.
   - Botín: `loot.ts`. Oro físico: `gold.ts`, `bag.ts` y `inventory.ts`.
+  - Inventario espacial: `inventory.ts` (objetos de varias casillas con marcas `cover`, giro `rot`, `splitStack`) y peso en `carry.ts` (carga por clase, tramos y tope del 150 %); cifras en `config/carry.ts`.
   - Expedición: `expedition.ts`, `dungeonGen.ts` y `dungeon.ts`.
   - Partida: `save.ts` (formato 4, con cuenta y hasta 4 personajes; migra los formatos anteriores), `profile.ts` y `backup.ts` (copias firmadas con código `GV1.`; se aceptan las antiguas `CR1.`).
 - `src/config`: valores de equilibrio y medidas (`touch.ts`, `ui.ts`, `stash.ts`, `subzones.ts`…).
@@ -85,6 +86,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Durabilidad y reparación: `node scripts/durabilidad-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Anatomía y heridas: `node scripts/anatomia-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Necesidades: `node scripts/necesidades-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Inventario y peso: `node scripts/inventario-check.cjs <url>/play/ <carpeta> [dispositivo]`.
 - Pasa solo las pruebas relacionadas con lo que has tocado, pero no te saltes ninguna necesaria.
 
 ## Ahorro de tokens

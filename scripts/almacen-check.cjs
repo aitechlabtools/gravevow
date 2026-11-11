@@ -23,7 +23,7 @@ async function run(s) {
   p.on('console', (m) => m.type() === 'error' && !/favicon|DevTools/.test(m.text()) && errs.push(m.text()));
   const act = async (id) => { const sel = `[data-testid=${id}]`; await p.waitForSelector(sel, { timeout: 5000 }); if (s.touch) await p.tap(sel); else await p.click(sel); await p.waitForTimeout(250); };
   const fail = (m) => { throw new Error(`${s.n}: ${m}`); };
-  const prof = () => p.evaluate(() => { const st = window.__GRAVEVOW__.getState(); return { gold: st.profile?.gold, len: st.profile?.stash.length, shared: st.profile?.shared?.filter(Boolean).length ?? null, page: st.stashPage, stash: st.profile?.stash.map((x) => x && x.uid), name: st.profile?.character.name }; });
+  const prof = () => p.evaluate(() => { const st = window.__GRAVEVOW__.getState(); return { gold: st.profile?.gold, len: st.profile?.stash.length, shared: st.profile?.shared?.filter((y) => y && y.itemId !== 'cover').length ?? null, page: st.stashPage, stash: st.profile?.stash.map((x) => x && x.uid), name: st.profile?.character.name }; });
   const small = async () => s.touch ? p.evaluate(() => [...document.querySelectorAll('button, a.btn')].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && (r.width < 43.5 || r.height < 43.5); }).map((e) => (e.getAttribute('data-testid') || e.textContent || '').trim().slice(0, 30))) : [];
   const openStash = async () => { await act('tab-stash'); if (await p.$('[data-testid=seg-storage]')) await act('seg-storage'); };
 
@@ -56,21 +56,25 @@ async function run(s) {
     const fits = await p.evaluate(() => { const g = document.querySelector('[data-testid=alijo-storage] [data-testid=grid-stash]'); const sc = g.closest('.overflow-y-auto'); return { cells: g.children.length, fits: sc.scrollHeight <= sc.clientHeight + 1 }; });
     if (!fits.fits) fail('en escritorio la página debe verse entera sin desplazar: ' + JSON.stringify(fits));
   }
-  // 1b · Saco de 2×2: de la mochila a la página 1 tocándolo y tocando una casilla libre; ocupa 4 casillas
+  // 1b · Saco de 2×2 (Fase 6: abajo, donde quedan casillas libres tras las espadas de 3×1): de la mochila a la página 1 tocándolo y tocando una casilla libre; ocupa 4 casillas
   await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; const bp = pr.backpack.map(() => null);
     bp[0] = { uid: 'SACO', itemId: 'gold_sack', qty: 1 }; for (const k of [1, 6, 7]) bp[k] = { uid: 'cover:SACO', itemId: 'cover', qty: 1 };
     G.setState({ profile: { ...pr, backpack: bp } }); });
   await p.waitForTimeout(200);
   if (await p.$('[data-testid=seg-gear]') && !(await p.$('[data-testid=slot-backpack-0]'))) await act('seg-gear');
   await act('slot-backpack-0');
+  // Primer hueco libre de 2×2 en la página 1 (tras la migración, las espadas de 3×1 ocupan sitios distintos)
+  const T = await p.evaluate(() => { const s = window.__GRAVEVOW__.getState().profile.stash; for (let i = 0; i < 112; i++) if (i % 8 < 7 && Math.floor(i / 8) % 15 < 14 && [i, i + 1, i + 8, i + 9].every((k) => !s[k])) return i; return -1; });
   // En el móvil la ficha del objeto ocupa la parte de abajo: se sube la casilla de destino antes de tocarla
   // (en el móvil la ficha del objeto tapa la parte de abajo de la pantalla: el toque se manda directamente a la casilla)
-  if (s.n === 'movil') { await p.$eval('[data-testid=slot-stash-60]', (e) => e.click()); await p.waitForTimeout(250); } else await act('slot-stash-60');
+  if (s.n === 'movil') { await p.$eval(`[data-testid=slot-stash-${T}]`, (e) => e.click()); await p.waitForTimeout(250); } else await act(`slot-stash-${T}`);
   x = await prof();
-  const st60 = await p.evaluate(() => { const s = window.__GRAVEVOW__.getState().profile.stash; return [60, 61, 68, 69].map((i) => s[i]?.itemId).join(); });
+  const st60 = await p.evaluate((T) => { const s = window.__GRAVEVOW__.getState().profile.stash; return [T, T + 1, T + 8, T + 9].map((i) => s[i]?.itemId).join(); }, T);
   if (st60 !== 'gold_sack,cover,cover,cover') fail('el saco debe ocupar 2×2 en el almacén: ' + st60);
-  const box = await p.$eval('[data-testid=slot-stash-60]', (e) => { const r = e.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; });
-  const one = await p.$eval('[data-testid=slot-stash-62]', (e) => Math.round(e.getBoundingClientRect().width));
+  // Una casilla suelta y vacía para comparar el tamaño
+  const U = await p.evaluate(() => window.__GRAVEVOW__.getState().profile.stash.findIndex((x, i) => !x && i < 120));
+  const box = await p.$eval(`[data-testid=slot-stash-${T}]`, (e) => { const r = e.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; });
+  const one = await p.$eval(`[data-testid=slot-stash-${U}]`, (e) => Math.round(e.getBoundingClientRect().width));
   if (box[0] < one * 2 || box[1] < one * 2) fail('el saco debe verse de 2×2: ' + box + ' / ' + one);
   await p.screenshot({ path: `${OUT}/${s.n}-saco.png` });
   if (await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)) fail('el Alijo se sale en horizontal (8 columnas)');
@@ -93,13 +97,13 @@ async function run(s) {
   if (gold !== 'gold_pouch:44') fail('agrupar oro: ' + gold);
   await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; G.setState({ profile: { ...pr, backpack: pr.backpack.map(() => null) } }); });
   await act('slot-backpack-5'); // suelta la elección
-  // 2 · Comprar la página 2 (oro suficiente) y la «Compartido» (con más oro)
-  await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; G.setState({ profile: { ...pr, gold: 4000 } }); });
+  // 2 · Comprar la página 2 (250) y la «Compartido» (1500). Con más oro, los sacos (2×2) no cabrían en la página 1 y el juego daría la 2 gratis
+  await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; G.setState({ profile: { ...pr, stash: pr.stash.map((x, i) => (i === 0 ? { uid: 's0', itemId: 'iron_sword', qty: 1 } : i < 3 ? { uid: 'cover:s0', itemId: 'cover', qty: 1 } : null)), gold: 1800 } }); });
   await act('stash-page-1');
   await p.screenshot({ path: `${OUT}/${s.n}-comprar.png` });
   await act('btn-buy-page');
   x = await prof();
-  if (x.len !== 240 || x.page !== 1 || x.gold !== 4000 - 250) fail('comprar la página 2: ' + JSON.stringify({ len: x.len, page: x.page, gold: x.gold }));
+  if (x.len !== 240 || x.page !== 1 || x.gold !== 1800 - 250) fail('comprar la página 2: ' + JSON.stringify({ len: x.len, page: x.page, gold: x.gold }));
   // 3 · Mover un objeto de la página 1 a la 2 tocando el objeto y luego la pestaña
   await act('stash-page-0');
   await act('slot-stash-0');

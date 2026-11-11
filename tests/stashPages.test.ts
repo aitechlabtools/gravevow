@@ -105,7 +105,7 @@ describe('Migración del almacén antiguo', () => {
     const s = migrateProfileToSave(json(p))!;
     const back = composeProfile(s, s.characters[0].id)!;
     expect(back.gold).toBe(Math.ceil((100 + 500 + 1500) / 10)); // oro antiguo + lo devuelto, en monedas (÷10)
-    expect(back.stash).toHaveLength(STASH_PAGE_SIZE);
+    expect(back.stash.length % STASH_PAGE_SIZE).toBe(0); // Fase 6: si 50 espadas de 3×1 no caben, se añade otra página gratis
     expect(back.stash.filter((x) => x?.itemId === 'iron_sword')).toHaveLength(50); // además, el oro en sacos
     expect(s.account.notes[0]).toMatch(/devolvemos/);
     // Al volver a cargar no se devuelve otra vez

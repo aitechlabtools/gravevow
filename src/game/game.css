@@ -81,6 +81,9 @@ html, body, #root {
 .slot.drop-ok { border-style: dashed; border-color: #5fd19a; background: #5fd19a1f; position: relative; }
 .slot.drop-ok::after { content: '✓'; position: absolute; right: 3px; top: 1px; color: #5fd19a; font: 700 12px system-ui, sans-serif; }
 .slot.drop-dim { opacity: .4; }
+/* Fase 6: hueco que ocuparía el objeto arrastrado (verde si cabe, rojo si no) */
+.slot.fit-ok { border-color: #5fd19a; background: #5fd19a26; }
+.slot.fit-bad { border-color: #d0533f; background: #d0533f26; }
 .drag-ghost { position: fixed; z-index: 200; pointer-events: none; will-change: transform; filter: drop-shadow(0 8px 6px #000c); }
 .drag-ghost.is-back { transition: transform .18s steps(4), opacity .18s; opacity: .2; }
 html.is-dragging, html.is-dragging * { cursor: grabbing !important; }

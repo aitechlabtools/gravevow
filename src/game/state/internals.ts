@@ -9,7 +9,8 @@ import { saveSave } from '../persistence/db';
 import { backupStatus, type BackupStatus } from '../../core/backup';
 import { applyProfile, type SaveData } from '../../core/save';
 import { type ExpeditionState, type ExpeditionSummary } from '../../core/expedition';
-import { addToGrid, emptyGrid, type Containers } from '../../core/inventory';
+import { carryBlock, loadOf, type Load } from '../../core/carry';
+import { addToGrid, emptyGrid, LAYOUTS, type Containers } from '../../core/inventory';
 import { type StashPage } from '../../core/stashPages';
 import { syncGold } from '../../core/wallet';
 import { computeStats } from '../../core/stats';
@@ -290,7 +291,20 @@ export function containersFor(s: GameState, lootId?: string): Containers | null 
   };
 }
 
-export function applyContainers(c: Containers, lootId?: string) {
+/** Carga de lo que llevas encima: en la mazmorra, lo de la expedición; en el Bastión, lo del perfil. */
+export function loadNow(c?: Pick<Containers, 'backpack' | 'pocket' | 'equipment'>): Load | null {
+  const p = state.profile;
+  if (!p) return null;
+  const e = state.screen === 'dungeon' && state.expedition ? state.expedition : null;
+  const src = c ?? (e ? { backpack: e.backpack, pocket: e.pocket, equipment: e.equipment } : { backpack: p.backpack, pocket: p.pocket, equipment: p.equipment });
+  return loadOf({ ...src, bag: p.bag }, p.character.classId);
+}
+
+/** Aplica el nuevo reparto de objetos. Si sube el peso por encima del 150 %, no cambia nada, avisa y devuelve false. */
+export function applyContainers(c: Containers, lootId?: string): boolean {
+  const before = loadNow(), after = loadNow(c);
+  const block = before && after ? carryBlock(before.weight, after.weight, after.capacity) : null;
+  if (block) { invError(block); return false; }
   set((s) => {
     if (!s.profile) return {};
     const patch: Partial<GameState> = {};
@@ -309,6 +323,7 @@ export function applyContainers(c: Containers, lootId?: string) {
     patch.invError = null;
     return patch;
   });
+  return true;
 }
 
 export function recordFound(stacks: ItemStack[]) {
@@ -376,10 +391,10 @@ export const dev: {
     for (const a of affixes ?? []) if (!AFFIXES[a]) return `Atributo desconocido: ${a}`;
     const stack: ItemStack = { uid: makeUid(), itemId, qty, ...(rarity ? { rarity } : {}), ...(affixes?.length ? { affixes } : {}) };
     if (state.expedition) {
-      const r = addToGrid(state.expedition.backpack, stack);
+      const r = addToGrid(state.expedition.backpack, stack, LAYOUTS.backpack);
       set({ expedition: { ...state.expedition, backpack: r.grid } });
     } else if (state.profile) {
-      const r = addToGrid(state.profile.backpack, stack);
+      const r = addToGrid(state.profile.backpack, stack, LAYOUTS.backpack);
       set({ profile: { ...state.profile, backpack: r.grid } });
     } else return 'No hay personaje.';
     return `Añadido: ${def.name} (${rarity ?? def.rarity})`;

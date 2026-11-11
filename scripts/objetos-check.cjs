@@ -3,6 +3,10 @@
 const { chromium } = require('playwright');
 const URL = process.argv[2] || 'http://localhost:5173/play/';
 const OUT = process.argv[3] || 'objetos-shots'; require('fs').mkdirSync(OUT, { recursive: true });
+// Fase 6: cada objeto con su casilla (los grandes tapan las de al lado)
+const AT = [0, 3, 6, 8, 9, 10, 18];
+// Casillas que tapa cada objeto grande (relativas a su ancla, mochila de 6 columnas)
+const COV = { 0: [1, 2], 1: [1, 2], 2: [1, 6, 7], 6: [1, 2] };
 const LOOT = [['knight_sword', 'rare'], ['war_mace', 'common'], ['iron_shield', 'common'], ['health_potion', null, 4], ['iron_ore', null, 6], ['bone_dust', null, 5], ['chain_axe', 'epic']];
 (async () => {
   const b = await chromium.launch();
@@ -13,9 +17,9 @@ const LOOT = [['knight_sword', 'rare'], ['war_mace', 'common'], ['iron_shield', 
     await p.goto(URL + '?debug&noclass'); await p.evaluate(() => indexedDB.deleteDatabase('gravevow')); await p.reload(); await p.waitForTimeout(700);
     await act('btn-play'); await p.evaluate(() => document.fullscreenElement && document.exitFullscreen());
     await p.fill('[data-testid=name-input]', 'Beohtord'); await act('btn-create'); await act('btn-tutorial-ok');
-    await p.evaluate((LOOT) => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; const bp = [...pr.backpack];
-      LOOT.forEach(([id, rarity, qty], i) => { bp[i] = { uid: 'bp' + i, itemId: id, qty: qty ?? 1, ...(rarity ? { rarity } : {}) }; });
-      G.setState({ profile: { ...pr, backpack: bp, character: { ...pr.character, level: 14 }, tutorialSeen: { ...pr.tutorialSeen, lobby: true, stash: true, vendors: true } } }); }, LOOT);
+    await p.evaluate(([LOOT, AT, COV]) => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; const bp = [...pr.backpack];
+      const bp0 = bp.map(() => null); bp.splice(0, bp.length, ...bp0); LOOT.forEach(([id, rarity, qty], i) => { bp[AT[i]] = { uid: 'bp' + i, itemId: id, qty: qty ?? 1, ...(rarity ? { rarity } : {}) }; for (const d of COV[i] ?? []) bp[AT[i] + d] = { uid: 'cover:' + 'bp' + i, itemId: 'cover', qty: 1 }; });
+      G.setState({ profile: { ...pr, backpack: bp, character: { ...pr.character, level: 14 }, tutorialSeen: { ...pr.tutorialSeen, lobby: true, stash: true, vendors: true } } }); }, [LOOT, AT, COV]);
     const st = () => p.evaluate(() => { const pr = window.__GRAVEVOW__.getState().profile; return { gold: pr.gold, bp: pr.backpack.filter(Boolean).map((x) => x.itemId).join(','), stash: pr.stash.filter(Boolean).map((x) => x.itemId).join(',') }; });
     await act('tab-stash');
     const ups = await p.$$eval('[data-testid=slot-upgrade]', (e) => e.length);
@@ -29,11 +33,11 @@ const LOOT = [['knight_sword', 'rare'], ['war_mace', 'common'], ['iron_shield', 
     const conf = await p.$('[data-testid=confirm-empty]'); if (conf) { await p.screenshot({ path: `${OUT}/${n}-2-confirmar-vaciar.png` }); await act('btn-confirm-empty'); }
     console.log('  vaciar mochila (confirmó:', !!conf, ') →', await st());
     // venta: devolver cosas a la mochila y marcar
-    await p.evaluate((LOOT) => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; const bp = [...pr.backpack];
-      LOOT.forEach(([id, rarity, qty], i) => { bp[i] = { uid: 'v' + i, itemId: id, qty: qty ?? 1, ...(rarity ? { rarity } : {}) }; });
-      G.setState({ profile: { ...pr, backpack: bp } }); }, LOOT);
+    await p.evaluate(([LOOT, AT, COV]) => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; const bp = [...pr.backpack];
+      const bp0 = bp.map(() => null); bp.splice(0, bp.length, ...bp0); LOOT.forEach(([id, rarity, qty], i) => { bp[AT[i]] = { uid: 'v' + i, itemId: id, qty: qty ?? 1, ...(rarity ? { rarity } : {}) }; for (const d of COV[i] ?? []) bp[AT[i] + d] = { uid: 'cover:' + 'v' + i, itemId: 'cover', qty: 1 }; });
+      G.setState({ profile: { ...pr, backpack: bp } }); }, [LOOT, AT, COV]);
     await act('tab-merchants'); await act('vendor-nira'); await act('vendor-view-sell');
-    for (const i of [1, 2]) await act(`slot-backpack-${i}`);
+    for (const i of [3, 6]) await act(`slot-backpack-${i}`);
     await act('mark-materials');
     if (n === 'movil') { await act('vendor-side').catch(() => {}); }
     await p.waitForTimeout(300);

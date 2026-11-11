@@ -70,6 +70,8 @@ export interface Combatant {
   /** Necesidades (Fase 5, solo el jugador): se gastan una vez por ronda. `baseMaxMp` es el máximo sin hambre ni sed. */
   needs?: Needs;
   baseMaxMp?: number;
+  /** Carga (Fase 6): gasto extra de Descanso por ronda. */
+  restExtra?: number;
   /** Cirugía en curso (dos turnos propios): la región. Un golpe la interrumpe. */
   surgery?: { region: Region };
   /** Última región golpeada (ahí se abre el sangrado de una habilidad). */
@@ -619,7 +621,7 @@ function checkOutcome(s: CombatState) {
 
 /** Una ronda es un pulso también para el hambre, la sed y el cansancio. */
 function tickCombatNeeds(s: CombatState, c: Combatant) {
-  const t = tickNeeds(c.needs!, c.body!, c.body!.total);
+  const t = tickNeeds(c.needs!, c.body!, c.body!.total, c.restExtra ?? 0);
   c.needs = t.needs;
   if (c.baseMaxMp !== undefined) {
     c.stats.maxMp = effectiveMaxMp(c.baseMaxMp, t.needs);

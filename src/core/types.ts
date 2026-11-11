@@ -94,6 +94,8 @@ export interface ItemStack {
   gold?: number;
   /** Rareza de este ejemplar (sin valor: la del objeto). */
   rarity?: Rarity;
+  /** Girado 90° en la rejilla (Fase 6): ancho y alto cambiados. */
+  rot?: boolean;
   /** Atributos aleatorios de este ejemplar (ids de data/rarity.ts, p. ej. «vampire»). */
   affixes?: string[];
 }
