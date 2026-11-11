@@ -427,3 +427,6 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 
 /* Logo del menú principal (el mismo que la landing) */
 .title-logo { font-size: clamp(2.6rem, calc((100vw - 2rem) / 6.75), 6.5rem); }
+
+/* Durabilidad (Fase 3): barrita abajo en la casilla cuando el objeto está gastado o roto */
+.slot-wear{position:absolute;left:3px;bottom:2px;height:3px;max-width:calc(100% - 6px);pointer-events:none;box-shadow:0 0 0 1px #000a}

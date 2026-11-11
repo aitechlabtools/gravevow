@@ -18,6 +18,7 @@ import { bus } from './bus';
 import { mercBaseStats, mercCombatant, mercHpBack, STANCE_NAME } from '../../core/mercenaries';
 import { getMerc } from '../../core/data/mercenaries';
 import { sfx } from '../audio';
+import { noticeText, wearEquipment } from '../../core/durability';
 import { combatLevel, enemyLevel, invError, set, state, subzoneDepth, toast } from './internals';
 import type { Bag, CombatKind } from './internals';
 import { actions } from './store';
@@ -118,6 +119,12 @@ export const combatActions = {
     let rewards = s.combat.rewards;
 
     if (next.outcome) {
+      // Desgaste del equipo: el arma por cada ataque y la armadura por cada golpe encajado (al morir da igual: se pierde)
+      if (next.outcome !== 'defeat' && pl.wear) {
+        const w = wearEquipment(exp.equipment, pl.wear.swings, pl.wear.hits);
+        exp.equipment = w.equipment;
+        for (const n of w.notices) toast(noticeText(n), n.level === 'worn' ? 'info' : 'danger');
+      }
       // Si huyes después de abatir a uno de los dos, su botín también cae al suelo
       const killedFoe = next.outcome === 'fled' && next.combatants.some((c) => c.side === 'B' && c.hp <= 0 && c.ref && c.ref !== 'rival');
       if (next.outcome === 'victory' || killedFoe) {

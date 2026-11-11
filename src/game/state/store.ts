@@ -19,6 +19,8 @@ import { earnGoldSafe, NO_ROOM_FOR_GOLD, putCoinsPartial, setGoldExactly } from 
 import { COIN_ID } from '../../config/gold';
 import { computeStats } from '../../core/stats';
 import { forge, recipe } from '../../core/forge';
+import { repair, type RepairRef } from '../../core/repair';
+import { fieldRepair } from '../../core/durability';
 import { QUALITIES } from '../../core/data/forge';
 import { VENDORS, type VendorId } from '../../core/data/vendors';
 import { REP_RANKS, rankOf } from '../../config/reputation';
@@ -418,7 +420,7 @@ export const actions = {
     if (!st) return;
     const def = getItem(st.itemId);
     if (!def.use) return invError('Este objeto no se puede usar.');
-    if (s.screen !== 'dungeon' || !s.expedition) return invError('Las pociones solo se usan durante una expedición.');
+    if (s.screen !== 'dungeon' || !s.expedition) return invError(def.use.kind === 'repair' ? 'El kit se usa en la mazmorra; en la base, Maese Brand repara mejor.' : 'Las pociones solo se usan durante una expedición.');
     const stats = computeStats(s.profile.character.classId, s.profile.character.level, s.expedition.equipment);
     const exp = { ...s.expedition };
     if (def.use.kind === 'heal') {
@@ -429,6 +431,11 @@ export const actions = {
       if (def.resource && def.resource !== cls.resource) return invError(`Esto no te sirve: tú usas ${cls.resourceName.toLowerCase()}.`);
       if (exp.mp >= stats.maxMp) return invError(`Ya tienes el ${cls.resourceName.toLowerCase()} al máximo.`);
       exp.mp = Math.min(stats.maxMp, exp.mp + resourcePotionAmount(def.use.amount, stats.maxMp));
+    } else if (def.use.kind === 'repair') {
+      const r = fieldRepair(exp.equipment, exp.backpack);
+      if (!r.repaired) return invError('No llevas nada dañado.');
+      exp.equipment = r.equipment;
+      exp.backpack = r.backpack;
     } else if (def.use.kind === 'cleanse') {
       // Veneno, quemadura y sangrado solo existen dentro del combate: fuera no gastes el antídoto
       return invError('El antídoto solo sirve en combate, contra veneno, quemadura o sangrado.');
@@ -436,9 +443,9 @@ export const actions = {
     const grid = removeItem(exp.backpack, st.itemId, 1);
     if (!grid) return;
     exp.backpack = grid;
-    sfx('heal');
+    sfx(def.use.kind === 'repair' ? 'equip' : 'heal');
     set({ expedition: exp });
-    toast(`Usas ${def.name}.`, 'good', def.icon);
+    toast(def.use.kind === 'repair' ? 'Remiendas tu equipo con el kit.' : `Usas ${def.name}.`, 'good', def.icon);
   },
 
   drinkPotion() {
@@ -487,6 +494,17 @@ export const actions = {
     set({ profile: r.profile });
     const res = getItem(recipe(recipeId).result);
     toast(`Maese Brand forja: ${res.name} · calidad ${QUALITIES[r.quality].name.toLowerCase()}`, r.quality === 2 ? 'loot' : 'good', res.icon);
+  },
+
+  /** Maese Brand repara un objeto o, sin `ref`, todo lo dañado (cobra del almacén). */
+  repair(ref?: RepairRef) {
+    const p = state.profile;
+    if (!p) return;
+    const r = repair(p, ref);
+    if (!r.ok) return invError(r.error);
+    sfx('equip');
+    set({ profile: r.profile });
+    toast(r.count === 1 ? `Maese Brand lo deja como nuevo por ${r.cost} de oro.` : `Maese Brand repara ${r.count} objetos por ${r.cost} de oro.`, 'good');
   },
 
   /** Compra la siguiente página propia del almacén (la confirmación la pide el Alijo). */

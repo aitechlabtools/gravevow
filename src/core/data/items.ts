@@ -82,6 +82,7 @@ const list: ItemDef[] = [
   // ── Minería ───────────────────────────────────────────
   { id: 'miner_pick', name: 'Pico de minero', description: 'Para picar vetas de mineral en las paredes de la mazmorra. Se desgasta con el uso.', icon: 'pick', category: 'tool', rarity: 'common', value: 40, stack: 1, uses: 12, mineTime: 2.6 },
   { id: 'steel_pick', name: 'Pico de acero', description: 'Más duro y más rápido. Brand lo templa para los que bajan hondo.', icon: 'pick_steel', category: 'tool', rarity: 'uncommon', value: 220, stack: 1, uses: 30, mineTime: 1.6 },
+  { id: 'repair_kit', name: 'Kit de reparación', description: 'Remaches, cuero y piedra de afilar. Fuera de combate devuelve parte de la durabilidad a todo lo que llevas puesto y a tus picos.', icon: 'repair_kit', category: 'tool', rarity: 'common', value: 45, stack: 3, use: { kind: 'repair' } },
   { id: 'copper_ore', name: 'Mena de cobre', description: 'Piedra verdosa con vetas rojizas. Se pica en la Mazmorra.', icon: 'ore_copper', category: 'material', rarity: 'common', value: 8, stack: 10 },
   { id: 'iron_ore', name: 'Mena de hierro', description: 'Pesada y oscura. Brand la funde para templar hojas.', icon: 'ore_iron', category: 'material', rarity: 'uncommon', value: 14, stack: 10 },
   { id: 'silver_ore', name: 'Mena de plata', description: 'Plata en bruto de las galerías de la Cripta.', icon: 'ore_silver', category: 'material', rarity: 'uncommon', value: 24, stack: 10 },

@@ -26,6 +26,7 @@ Capas: datos → lógica → estado → interfaz y motor.
 - `src/core/data`: datos del juego (clases, enemigos, armas, objetos, rarezas, subzonas, tutorial, atuendos…).
 - `src/core`: lógica pura y determinista, con semilla en `rng.ts`. **No importa nunca React ni Phaser.**
   - Combate: `combat.ts` y `combatants.ts`. Máximo dos combatientes por bando (`MAX_PER_SIDE`).
+  - Durabilidad: `durability.ts` (desgaste, avisos al 25 % y 10 %, roto sin destruir, kit de campo) y `repair.ts` (yunque de Brand); cifras en `config/durability.ts`.
   - Botín: `loot.ts`. Oro físico: `gold.ts`, `bag.ts` y `inventory.ts`.
   - Expedición: `expedition.ts`, `dungeonGen.ts` y `dungeon.ts`.
   - Partida: `save.ts` (formato 4, con cuenta y hasta 4 personajes; migra los formatos anteriores), `profile.ts` y `backup.ts` (copias firmadas con código `GV1.`; se aceptan las antiguas `CR1.`).
@@ -77,6 +78,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Almacén: `node scripts/almacen-check.cjs`.
   - Copias de seguridad: `node scripts/copia-check.cjs`.
   - Combate por grupos: `node scripts/grupos-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Durabilidad y reparación: `node scripts/durabilidad-check.cjs <url>/play/ <carpeta> [dispositivo]`.
 - Pasa solo las pruebas relacionadas con lo que has tocado, pero no te saltes ninguna necesaria.
 
 ## Ahorro de tokens

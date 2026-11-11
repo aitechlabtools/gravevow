@@ -32,7 +32,7 @@ describe('Minería', () => {
       expect(validateDungeon(d).ok).toBe(true);
     }
   });
-  it('picar da mineral; el pico se gasta y se rompe al llegar a 0', () => {
+  it('picar da mineral; el pico se gasta y se rompe al llegar a 0 (sin desaparecer)', () => {
     const items = mineYield('copper', makeRng(4));
     expect(items[0].itemId).toBe('copper_ore');
     expect(items[0].qty).toBeGreaterThanOrEqual(2);
@@ -45,7 +45,8 @@ describe('Minería', () => {
     expect(usesLeft(r.grid[1]!)).toBe(1);
     r = wearPick(r.grid, 1);
     expect(r.broke).toBe(true);
-    expect(r.grid[1]).toBeNull();
+    expect(r.grid[1]!.uses).toBe(0); // roto, pero sigue en la mochila (Fase 3)
+    expect(bestPick(r.grid)!.stack.itemId).toBe('steel_pick');
     expect(usesLeft(g[2]!)).toBe(ITEMS.steel_pick.uses);
   });
   it('la misión de Brand cuenta vetas picadas', () => {

@@ -1,4 +1,6 @@
 import { basicAttackOf, isTwoHanded, itemSpecials } from '../../core/data/weapons';
+import { durability, isBroken, maxDurability, wearLevel } from '../../core/durability';
+import { WEAR_COLOR } from '../../config/durability';
 import { AFFIXES, stackName, stackRarity, stackStats } from '../../core/data/rarity';
 import { QUALITIES } from '../../core/data/forge';
 import { useState, type ReactNode } from 'react';
@@ -51,6 +53,7 @@ export function ItemTooltip({ stack, equipment, mode }: { stack: ItemStack; equi
       </div>
       {capacityOf(stack) > 0 && <div className="text-xs mb-1 text-gold" data-testid="tooltip-gold">Lleva {stack.gold ?? 0}/{capacityOf(stack)} monedas</div>}
       {def.uses !== undefined && <div className="text-xs mb-1 text-stone-300" data-testid="tool-uses">Usos: {stack.uses ?? def.uses}/{def.uses}{def.mineTime ? ` · pica en ${def.mineTime} s` : ''}</div>}
+      {def.uses === undefined && maxDurability(stack) > 0 && <div className="text-xs mb-1" style={{ color: WEAR_COLOR[wearLevel(stack)] }} data-testid="tooltip-dur">{isBroken(stack) ? 'Rota: no da estadísticas ni especiales. Repárala con Brand o un kit.' : `Durabilidad: ${durability(stack)}/${maxDurability(stack)}`}</div>}
       {stack.quality !== undefined && <div className="text-xs mb-1" style={{ color: ['#9a9a9a', '#5fbf4a', '#e8b33a'][stack.quality] }}>Calidad {QUALITIES[stack.quality].name.toLowerCase()}{QUALITIES[stack.quality].bonus ? ` (+${Math.round(QUALITIES[stack.quality].bonus * 100)}%)` : ''}{stack.forgedBy ? ` · Forjada por ${stack.forgedBy}` : ''}</div>}
       {stack.affixes?.length ? <div className="text-xs mb-1 text-gold">{stack.affixes.map((a) => AFFIXES[a]?.description).filter(Boolean).join(' ')}</div> : null}
       {def.stats && (() => {
@@ -201,6 +204,7 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
         ? <img src={iconUrl(stack.qty <= 3 ? 'coins1' : stack.qty <= 7 ? 'coins2' : 'coins3', 3)} width={36} height={36} alt="Monedas de oro" className="pixelated" draggable={false} />
         : <ItemIcon itemId={stack.itemId} size={cell && cell.w > 1 ? 84 : big ? 48 : 36} />) : placeholderIcon ? <img src={iconUrl(placeholderIcon, 3)} width={30} height={30} className="pixelated opacity-15" alt="" draggable={false} /> : null}
       {stack && stack.qty > 1 && <span className="qty">{stack.qty}</span>}
+      {stack && (() => { const w = wearLevel(stack); return w === 'ok' ? null : <span className="slot-wear" data-testid="slot-wear" data-wear={w} style={{ background: WEAR_COLOR[w], width: w === 'broken' ? '100%' : `${Math.max(8, Math.round((durability(stack) / maxDurability(stack)) * 100))}%` }} title={w === 'broken' ? 'Rota' : 'Desgastada'} />; })()}
       {marked && <span className="mark-coin" aria-label="Marcado para vender" data-testid="slot-marked" />}
       {stack && capacityOf(stack) > 0 && <span className="qty" data-testid="slot-gold" style={{ color: stack.gold ? '#f2c75a' : '#a8a29e', fontSize: cell && cell.w > 1 ? 13 : 10 }}>{stack.gold ?? 0}/{capacityOf(stack)}</span>}
       {stack && loc.kind === 'grid' && !tooHigh && !wrongClass && upgrade && <span className="slot-up" title="Mejor que lo que llevas puesto" data-testid="slot-upgrade">▲</span>}

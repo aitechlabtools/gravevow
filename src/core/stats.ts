@@ -3,6 +3,7 @@ import { STAT_KEYS } from './types';
 import { CLASSES } from './data/classes';
 import { getItem } from './data/items';
 import { stackStats } from './data/rarity';
+import { isBroken } from './durability';
 import { MAX_LEVEL, STAT_GROWTH_PER_LEVEL, XP_BASE, XP_EXPONENT } from '../config/progression';
 
 export { MAX_LEVEL };
@@ -21,7 +22,7 @@ export function baseStats(classId: ClassId, level: number): Stats {
 export function equipmentBonus(equipment: Equipment): Stats {
   const s = emptyStats();
   for (const stack of Object.values(equipment)) {
-    if (!stack) continue;
+    if (!stack || isBroken(stack)) continue; // roto: no da nada hasta repararlo
     const def = getItem(stack.itemId);
     const st = stackStats(stack, def);
     for (const k of STAT_KEYS) s[k] += st[k] ?? 0;

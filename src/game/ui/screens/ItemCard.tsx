@@ -1,4 +1,6 @@
 import { capacityOf } from '../../../core/gold';
+import { durability, isBroken, maxDurability, wearLevel } from '../../../core/durability';
+import { WEAR_COLOR } from '../../../config/durability';
 // Ficha del objeto elegido: qué es, qué da y qué puedes hacer con él. Si es un arma o una secundaria,
 // muestra las habilidades que te daría al equiparla (así se comparan armas sin ir y volver).
 import { AFFIXES, specialMods, stackName, stackRarity, stackStats } from '../../../core/data/rarity';
@@ -49,6 +51,7 @@ export function ItemCard({ loc, mode, onClear, compact = false }: { loc: Loc | n
           {def.levelReq && def.slot ? ` · Nv ${def.levelReq}` : ''}
           {st.quality !== undefined ? ` · calidad ${QUALITIES[st.quality].name.toLowerCase()}` : ''}
           {st.uses !== undefined || def.uses !== undefined ? ` · usos ${st.uses ?? def.uses}/${def.uses}` : ''}
+          {def.uses === undefined && maxDurability(st) > 0 ? <span style={{ color: WEAR_COLOR[wearLevel(st)] }} data-testid="item-card-dur"> · {isBroken(st) ? 'ROTA: sin estadísticas ni especiales' : `durabilidad ${durability(st)}/${maxDurability(st)}`}</span> : null}
         </div>
         <div className="text-[13px] mt-1 leading-snug">
           {statLine.length > 0 && <span className="text-heal">{statLine.join(' · ')}</span>}

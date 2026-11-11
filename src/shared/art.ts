@@ -1052,6 +1052,7 @@ const ICON_SHAPES: Record<string, string[]> = {
   gem: ['............', '............', '....aaaa....', '...ahhaaA...', '..ahaaaaAA..', '..aaaaaaAA..', '...aaaaAA...', '....aaAA....', '.....AA.....', '............', '............', '............'],
   mace: ['............', '.......aaa..', '......ahaaA.', '......aaaaA.', '.......aAA..', '......bB....', '.....bB.....', '.....bB.....', '....bB......', '....bB......', '...gg.......', '............'],
   ore: ['............', '............', '............', '....AAA.....', '...AahAA....', '..AaaahaA...', '..AaghaaaA..', '.AaaaagaaA..', '.AaaaaaaaA..', '..AAAAAAA...', '............', '............'],
+  kit: ['............', '....aaaa....', '....a..a....', '.bbbbbbbbbb.', '.bBBBBBBBBb.', '.bBgBBBBgBb.', '.bBBBBBBBBb.', '.bBBBBBBBBb.', '.bbbbbbbbbb.', '............', '............', '............'],
   pick: ['............', '..aaaa......', '.a....aa....', '......bAa...', '.....bB..a..', '....bB....a.', '...bB......', '..bB........', '.bB.........', 'bB..........', '............', '............'],
   // ── Formas nuevas (C4, provisionales hasta que estén los iconos definitivos) ──
   spear: ['...........h', '..........ha', '.........aaA', '........bA..', '.......bB...', '......bB....', '.....bB.....', '....bB......', '...bB.......', '..bB........', '.bB.........', '............'],
@@ -1170,6 +1171,7 @@ const ICONS: Record<string, IconVariant> = {
   amulet_sulfur: { shape: 'amulet', a: '#e8d24a', h: '#fff4a0', g: PAL.earth1 },
   pick: { shape: 'pick', a: PAL.steel2, A: PAL.steel1 },
   pick_steel: { shape: 'pick', a: PAL.steel3, A: PAL.ice },
+  repair_kit: { shape: 'kit', a: PAL.steel2 },
 };
 
 export function drawIcon(key: string): Canvas {

@@ -6,6 +6,7 @@
 //  · 1 habilidad de clase.
 // ════════════════════════════════════════════════════════════════════
 import type { AttackDef, ClassId, Equipment } from './types';
+import { isBroken } from './durability';
 import { CLASSES } from './data/classes';
 import { getItem } from './data/items';
 import { EMPTY_LEFT_SPECIALS, EMPTY_RIGHT_SPECIALS, FISTS, basicAttackOf, isTwoHanded, itemSpecials } from './data/weapons';
@@ -35,9 +36,11 @@ export function combatLoadout(classId: ClassId, equipment: Equipment, classSkill
   const cls = CLASSES[classId];
   const weapon = equipment.mainHand ? getItem(equipment.mainHand.itemId) : null;
   const off = equipment.offHand ? getItem(equipment.offHand.itemId) : null;
+  // Rota: el arma sigue dando su ataque básico, pero no sus especiales
+  const wBroken = isBroken(equipment.mainHand), oBroken = isBroken(equipment.offHand);
   const twoHanded = !!weapon && isTwoHanded(weapon);
-  const right = weapon ? { label: weapon.name, skills: itemSpecials(weapon) } : { label: 'Puños', skills: EMPTY_RIGHT_SPECIALS };
-  const left = twoHanded ? { label: weapon!.name, skills: [] } : off ? { label: off.name, skills: itemSpecials(off) } : { label: 'Mano libre', skills: EMPTY_LEFT_SPECIALS };
+  const right = weapon ? { label: wBroken ? `${weapon.name} (rota)` : weapon.name, skills: wBroken ? [] : itemSpecials(weapon) } : { label: 'Puños', skills: EMPTY_RIGHT_SPECIALS };
+  const left = twoHanded ? { label: weapon!.name, skills: [] } : off ? { label: oBroken ? `${off.name} (rota)` : off.name, skills: oBroken ? [] : itemSpecials(off) } : { label: 'Mano libre', skills: EMPTY_LEFT_SPECIALS };
   const cs = classSkill ?? cls.classSkill;
   const groups: SkillGroup[] = [{ source: 'class', label: cls.name, skills: [cs] }, { source: 'weapon', ...right }];
   if (left.skills.length) groups.push({ source: 'offhand', ...left });

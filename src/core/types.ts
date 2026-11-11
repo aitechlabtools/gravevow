@@ -24,7 +24,9 @@ export type ClassId = 'warrior' | 'mage' | 'rogue' | 'cleric';
 export type ItemEffect =
   | { kind: 'heal'; amount: number }
   | { kind: 'mana'; amount: number }
-  | { kind: 'cleanse' };
+  | { kind: 'cleanse' }
+  /** Kit de campo: repara parte del equipo (solo fuera de combate). */
+  | { kind: 'repair' };
 
 /** Familias de armas y objetos de mano izquierda (ver data/weapons.ts). */
 export type WeaponFamily =
@@ -82,6 +84,8 @@ export interface ItemStack {
   forgedBy?: string;
   /** Usos que le quedan a una herramienta (p. ej. un pico). Sin valor = nueva. */
   uses?: number;
+  /** Durabilidad de un arma o pieza de armadura (sin valor = entera). Ver core/durability.ts. */
+  dur?: number;
   /** Monedas que lleva un saquito o un saco de oro. */
   gold?: number;
   /** Rareza de este ejemplar (sin valor: la del objeto). */

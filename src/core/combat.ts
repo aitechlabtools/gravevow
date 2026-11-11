@@ -55,6 +55,8 @@ export interface Combatant {
   affixes?: string[];
   /** Especiales mejorados por la rareza del arma: turnos de recarga de menos y potencia extra. */
   skillMods?: Record<string, { cooldown: number; power: number }>;
+  /** Desgaste del equipo (solo el jugador): ataques hechos y golpes encajados. */
+  wear?: { swings: number; hits: number };
 }
 
 export type CombatAction =
@@ -234,6 +236,7 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
   target.hp = Math.max(Math.min(floor, target.hp), target.hp - amount);
   if (source === 'hit') {
     if (amount > 0) gainImpetus(target, IMPETUS_WHEN_HIT);
+    if (target.wear) target.wear.hits += 1;
     // Estados que se gastan al recibir un golpe (bloqueo con escudo)
     // El bloqueo frena de lleno el primer golpe y deja al defensor en guardia (mitad de daño) hasta su próximo turno:
     // así cubre también al segundo atacante de un 1 contra 2 sin ser invulnerable.
@@ -282,7 +285,7 @@ function applyItemEffect(s: CombatState, actor: Combatant, effect: ItemEffect) {
     actor.mp += real;
     s.events.push({ type: 'mana', targetId: actor.id, amount: real });
     s.log.push(`${actor.name} recupera ${real} de ${actor.resourceName.toLowerCase()}.`);
-  } else {
+  } else if (effect.kind === 'cleanse') {
     const before = actor.statuses.length;
     for (const st of actor.statuses.filter((x) => ['poison', 'burn', 'bleed'].includes(x.id))) {
       s.events.push({ type: 'status', targetId: actor.id, status: st.id, applied: false });
@@ -330,6 +333,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
       const atk = actor.basicAttack;
       const vs = opponents(s, actor).length > 1 ? ` contra ${target.name}` : '';
       s.events.push({ type: 'action', actorId: actor.id, label: atk.name, fx: atk.fx, targetId: target.id });
+      if (actor.wear) actor.wear.swings += 1;
       if (evaded(s, actor, target, atk.name)) return;
       const r = rollDamage(actor, target, atk.kind, atk.power, rng);
       if (r.miss) {
@@ -362,6 +366,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
       const landedOn = new Set<Combatant>();
       const many = opponents(s, actor).length > 1;
       if (sk.kind && sk.power && sk.target === 'enemy') {
+        if (actor.wear) actor.wear.swings += 1;
         for (const t of targets) {
           if (evaded(s, actor, t, sk.name)) continue;
           const r = rollDamage(actor, t, sk.kind, sk.power * (1 + (mod?.power ?? 0)), rng, { ignoresEvasion: sk.ignoresEvasion, undeadMult: sk.bonusVsUndead, armorPierce: sk.armorPierce });
@@ -419,7 +424,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
     }
     case 'item': {
       const def = getItem(action.itemId);
-      if (!def.use) throw new Error('Objeto no utilizable');
+      if (!def.use || def.use.kind === 'repair') throw new Error('Objeto no utilizable');
       s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item' });
       s.events.push({ type: 'itemUsed', actorId: actor.id, itemId: def.id });
       s.log.push(`${actor.name} usa ${def.name}.`);

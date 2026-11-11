@@ -246,7 +246,7 @@ export const expeditionActions = {
     const s = state;
     if (!s.expedition || s.mined[veinId]) return;
     const pick = bestPick(s.expedition.backpack);
-    if (!pick) return invError('Necesitas un pico en la mochila. Maese Brand los vende.');
+    if (!pick) return invError(s.expedition.backpack.some((x) => x && getItem(x.itemId).mineTime) ? 'Tu pico está roto. Un kit de reparación o Maese Brand lo arreglan.' : 'Necesitas un pico en la mochila. Maese Brand los vende.');
     const items = mineYield(vein, makeRng(randomSeed()));
     const worn = wearPick(s.expedition.backpack, pick.index);
     const r = addManyToGrid(worn.grid, items);
@@ -260,7 +260,7 @@ export const expeditionActions = {
     }
     sfx('chest');
     for (const it of items) toast(`+${it.qty} ${getItem(it.itemId).name}`, 'loot', getItem(it.itemId).icon);
-    if (worn.broke) toast(`Tu ${getItem(pick.stack.itemId).name.toLowerCase()} se ha roto.`, 'danger');
+    if (worn.broke) toast(`Tu ${getItem(pick.stack.itemId).name.toLowerCase()} se ha roto. Brand o un kit de reparación lo arreglan.`, 'danger');
   },
 
   // ── Cofres y bolsas ──

@@ -62,7 +62,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
     id: 'brand', name: 'Maese Brand', role: 'Herrero de la forja', sprite: 'vendor_brand', color: '#ff8a3a', buysItems: false,
     blurb: 'Tráeme metal del fondo y te haré algo que no se rompa. Cuanto más confíe en ti, mejores planos te enseño.',
     stock: [
-      { itemId: 'miner_pick', rank: 0 }, { itemId: 'bone_dust', rank: 0 }, { itemId: 'iron_shield', rank: 0 },
+      { itemId: 'miner_pick', rank: 0 }, { itemId: 'repair_kit', rank: 0 }, { itemId: 'bone_dust', rank: 0 }, { itemId: 'iron_shield', rank: 0 },
       { itemId: 'ancient_bone', rank: 1 }, { itemId: 'bastion_shield', rank: 1 }, { itemId: 'knight_helm', rank: 1 },
       { itemId: 'steel_pick', rank: 2 }, { itemId: 'blessed_silver', rank: 2 }, { itemId: 'headstone_shield', rank: 2 }, { itemId: 'silver_helm', rank: 2 },
       { itemId: 'obsidian_shard', rank: 3 }, { itemId: 'sulfur', rank: 3 }, { itemId: 'demonscale_shield', rank: 3 },

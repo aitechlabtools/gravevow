@@ -31,6 +31,7 @@ export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: num
     statuses: [], skills: kit.skills, basicAttack: kit.basicAttack,
     control: 'player', skillChance: 0, undead: false, defending: false, potions: 0,
     cooldowns: { ...cooldowns },
+    wear: { swings: 0, hits: 0 },
     // Atributos del equipo («del vampiro», «de sangrado»…) y especiales mejorados por la rareza de cada arma
     affixes: [equipment.mainHand, equipment.offHand].flatMap((x) => x?.affixes ?? []),
     skillMods: Object.assign({}, ...(['mainHand', 'offHand'] as const).map((sl) => {

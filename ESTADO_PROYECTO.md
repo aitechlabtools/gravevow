@@ -1,6 +1,6 @@
 # Gravevow · Estado del proyecto
 
-Última actualización: 11/11/2026. Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
+Última actualización: 11/11/2026 (Fase 3). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
 
 ## Cómo retomar el trabajo
 - En un ordenador nuevo o en otra sesión: haz pull en GitHub Desktop y escribe a Claude «Lee CLAUDE.md y ESTADO_PROYECTO.md» seguido de la tarea.
@@ -66,6 +66,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 11/11: Fase 3 de la expansión: durabilidad. Armas y armadura (no anillos ni amuletos) tienen durabilidad según rareza y calidad de forja (`config/durability.ts`, valores de prueba). El arma pierde 1 por ataque y cada golpe recibido desgasta una pieza de armadura por turnos; se aplica al acabar el combate (`Combatant.wear`, `wearEquipment`). Avisos al 25 % y al 10 % y al romperse. Roto no se destruye: no da estadísticas ni especiales, pero queda el ataque básico y la habilidad de clase. Los picos gastados quedan a 0 en la mochila. Reparación: pestaña «Reparar» de Maese Brand (equipo, mochila y almacén; cobra del almacén) y «Kit de reparación» (Brand, rango 0; en la mazmorra repara el 40 % de lo puesto y de los picos). Barrita de desgaste en las casillas y durabilidad en las fichas. Partidas antiguas: sin campo `dur` = entero (no hace falta migrar). Pruebas: `tests/durability.test.ts` y `scripts/durabilidad-check.cjs`.
 - 11/11: Fase 2 de la expansión: combate 1 contra 2 y 2 contra 2. Máximo dos por bando (`MAX_PER_SIDE`, `createCombat` lo exige); con mercenario, Kael no entra. Al tocar a un enemigo, entra también otro que ya te persiga a 4 casillas o menos (`DungeonScene.joiningEnemy`; nunca jefes ni terceros). Enemigos iguales se llaman «I» y «II»; el registro dice a quién golpeas. Objetivo: tocar su ficha o su figura, o Tab; con dos enemigos las fichas son compactas (`.frame-duo`) para no tapar al personaje. El Bloqueo frena el primer golpe y deja en guardia (mitad de daño) hasta tu turno. Si huyes tras abatir a uno, su botín cae al suelo y el muerto no revive. Pruebas: `tests/groups.test.ts` (1 contra 2: guerrero 93 % y mago 100 % de victorias, ambos pueden huir; combate que sobrevive a JSON) y `scripts/grupos-check.cjs`. `e2e.cjs` ya no falla cuando el enemigo no suelta nada; `e2e-social.cjs` paga la parte del errante en el portal antes de extraer (la prueba estaba desfasada).
 - 11/11: Fase 1 de la expansión. `store.ts` separado en `internals.ts` (estado y guardado), `expeditionActions.ts` y `combatActions.ts` (la interfaz sigue importando de `store.ts`). Guardado formato 4 con migración desde el 3 (`playMs` por personaje). Reloj de juego `core/clock.ts` (`state.clock`): pulsos de 1 s, en pausa con menú, resumen o pestaña oculta; suma al `playMs` al terminar la expedición. Siguiente: Fase 2 (combate 1 contra 2 y 2 contra 2).
 - 11/11: plan de la expansión analizado y decisiones del usuario guardadas en `docs/plan-expansion.md` (Fase 0). Siguiente: Fase 1 (base técnica).
@@ -78,7 +79,7 @@
 - 5–6/11: pulido del tutorial, botón «Agrupar oro» en la mazmorra y arrastre táctil más suave.
 
 ## Próximos pasos (por decidir con el usuario)
-- **Expansión por fases** (`docs/plan-expansion.md`): Fases 0, 1 y 2 hechas; siguiente, Fase 3 (durabilidad). Pendiente de la Fase 2 para más adelante: órdenes del mercenario (Apoyar, Concentrar, Proteger, Conservar) y aviso en el mapa de que un encuentro puede ser doble.
+- **Expansión por fases** (`docs/plan-expansion.md`): Fases 0 a 3 hechas; siguiente, Fase 4 (anatomía, sangrado y fracturas). Pendiente de la Fase 2 para más adelante: órdenes del mercenario (Apoyar, Concentrar, Proteger, Conservar) y aviso en el mapa de que un encuentro puede ser doble.
 - Arte definitivo de los atuendos y de las subzonas.
 - Clases nuevas: Pícaro y Clérigo.
 - Tráiler nuevo cuando haya contenido nuevo.

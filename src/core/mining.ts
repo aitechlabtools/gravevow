@@ -68,13 +68,13 @@ export function bestPick(grid: Grid): { index: number; stack: ItemStack } | null
   return best;
 }
 
-/** Gasta un uso del pico; si se queda sin usos, se rompe. */
+/** Gasta un uso del pico; si se queda sin usos, se rompe (queda en la mochila, a 0, hasta repararlo). */
 export function wearPick(grid: Grid, index: number): { grid: Grid; broke: boolean } {
   const g = grid.map((s) => (s ? { ...s } : null));
   const s = g[index];
   if (!s) return { grid: g, broke: false };
   const left = usesLeft(s) - 1;
-  if (left <= 0) { g[index] = null; return { grid: g, broke: true }; }
-  g[index] = { ...s, uses: left };
+  g[index] = { ...s, uses: Math.max(0, left) };
+  if (left <= 0) return { grid: g, broke: true };
   return { grid: g, broke: false };
 }
