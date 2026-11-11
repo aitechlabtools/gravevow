@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════════════════════
 // LA FORJA de Maese Brand: recetas, materiales y calidad. Todo es editable.
-// Las armas forjadas tienen estadísticas base fijas y una tirada de calidad que las mejora.
+// Las armas forjadas tienen estadísticas base fijas y una calidad que sale del trabajo en el yunque.
 // ════════════════════════════════════════════════════════════════════
 import type { ItemDef } from '../types';
 import { SLASH, CHOP, BOLT } from './attacks';
@@ -45,11 +45,10 @@ export const RECIPES: Recipe[] = [
   { id: 'r_demonblood_plate', result: 'demonblood_plate', materials: [{ itemId: 'demon_blood', qty: 6 }, { itemId: 'obsidian_shard', qty: 6 }], gold: 2400, rank: 4 },
 ];
 
-/** Calidades de forja: bonificación a todas las estadísticas y probabilidad (normal o asegurada). */
+/** Calidades de forja: bonificación a todas las estadísticas. Salen del yunque: todos los golpes bien, magistral;
+ *  uno mal, buena; más, tosca. La forja rápida (tras la primera vez) da siempre tosca. */
 export const QUALITIES = [
-  { name: 'Tosca', bonus: 0, weight: 50, ensuredWeight: 0 },
-  { name: 'Buena', bonus: 0.1, weight: 35, ensuredWeight: 70 },
-  { name: 'Magistral', bonus: 0.2, weight: 15, ensuredWeight: 30 },
+  { name: 'Tosca', bonus: 0 },
+  { name: 'Buena', bonus: 0.1 },
+  { name: 'Magistral', bonus: 0.2 },
 ];
-/** Asegurar al menos «Buena» cuesta este multiplicador de materiales (redondeando hacia arriba). */
-export const ENSURE_MATERIAL_MULT = 1.5;

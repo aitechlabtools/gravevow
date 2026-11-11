@@ -2,11 +2,11 @@ import { withGold } from './helpers';
 import { describe, expect, it } from 'vitest';
 import { RECIPES, QUALITIES } from '../src/core/data/forge';
 import { ITEMS } from '../src/core/data/items';
-import { forge, forgeBlock, qualityStats } from '../src/core/forge';
+import { forgeBlock, qualityStats } from '../src/core/forge';
+import { startForging, workshopStep, rightMove, jobBand } from '../src/core/workshop';
 import { computeStats } from '../src/core/stats';
 import { createProfile } from '../src/core/profile';
 import { addToGrid, emptyEquipment } from '../src/core/inventory';
-import { makeRng } from '../src/core/rng';
 
 const rich = () => {
   const p = createProfile('Brandiano', 'warrior', { cloak: 0, skin: 0 });
@@ -22,22 +22,19 @@ describe('Forja', () => {
       for (const m of r.materials) expect(ITEMS[m.itemId], `${r.id} → ${m.itemId}`).toBeTruthy();
     }
   });
-  it('sin el rango de Brand no se puede; con él, se forja y gasta materiales y oro', () => {
+  it('sin el rango de Brand no se puede; con él, se paga al empezar y la calidad sale del yunque', () => {
     const p = rich();
-    expect(forgeBlock(p, RECIPES.find((r) => r.id === 'r_silver_sword')!, false)).toMatch(/Brand/);
-    const r = forge(p, 'r_tempered_sword', false, makeRng(3));
+    expect(forgeBlock(p, RECIPES.find((r) => r.id === 'r_silver_sword')!)).toMatch(/Brand/);
+    const r = startForging(p, 'r_tempered_sword', 3);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.profile.gold).toBe(p.gold - 12); // 120 de antes ÷ 10
-    const made = r.profile.backpack.find((s) => s?.itemId === 'tempered_sword')!;
-    expect(made.quality).toBe(r.quality);
+    let q = r.profile;
+    const job = q.workshop!;
+    for (const t of job.readings) { const s = workshopStep(q, rightMove(t, jobBand(job))); if (!s.ok) throw new Error(s.error); q = s.profile; }
+    const made = q.backpack.find((s) => s?.itemId === 'tempered_sword')!;
+    expect(made.quality).toBe(2);
     expect(made.forgedBy).toBe('Brandiano');
-  });
-  it('asegurar la calidad nunca da una tosca', () => {
-    for (let seed = 1; seed < 40; seed++) {
-      const r = forge(rich(), 'r_tempered_sword', true, makeRng(seed));
-      expect(r.ok && r.quality >= 1).toBe(true);
-    }
   });
   it('la calidad mejora las estadísticas del arma equipada', () => {
     expect(qualityStats({ atk: 10 }, 2).atk).toBe(Math.round(10 * (1 + QUALITIES[2].bonus)));

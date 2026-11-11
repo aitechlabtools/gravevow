@@ -13,6 +13,7 @@ import { VENDORS } from '../../core/data/vendors';
 import { needsOf } from '../../core/needs';
 import { isCover } from '../../core/inventory';
 import { ItemIcon } from './inventory';
+import { ReceptionSection } from './WorkshopPanels';
 import { sfx } from '../audio';
 import type { ItemStack } from '../../core/types';
 
@@ -52,7 +53,8 @@ export function RefugePanel({ onBack }: { onBack: () => void }) {
         <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">El Refugio</h2>
         <button className="btn font-display tracking-[0.1em] uppercase" style={BTN} onClick={onBack} data-testid="refuge-back">◂ Bastión</button>
       </div>
-      <div className="w-full max-w-[1200px] mx-auto grid gap-2 md:grid-cols-3">
+      <ReceptionSection />
+      <div className="w-full max-w-[1200px] mx-auto grid gap-2 md:grid-cols-3 mt-2">
         {MODULE_ORDER.map((id) => {
           const m = MODULES[id];
           const lvl = ref[id];

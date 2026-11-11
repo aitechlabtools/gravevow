@@ -26,7 +26,7 @@ export const ROADMAP: RoadmapColumn[] = [
       'Armas y armaduras que se desgastan',
       'Más de cincuenta armas y piezas',
       'El Bastión: ocho mercaderes, misiones y forja',
-      'Tu Refugio: catre, cocina con recetas y desguace',
+      'Tu Refugio: catre, cocina, desguace, forja en el yunque y alquimia',
       'Aliados y mercenarios',
       'Oro físico: si caes, lo pierdes',
       'Mochila con tamaños y peso: elige qué te llevas',

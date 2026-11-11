@@ -242,13 +242,19 @@ export interface Profile {
   /** Saciedad, Hidratación y Descanso (Fase 5) al volver al Bastión. Sin valor: llenas. */
   needs?: { sat: number; hyd: number; rest: number } | null;
   /** Refugio (Fase 9): nivel de cada módulo. Sin valor: todo a 0. */
-  refuge?: { cot: number; kitchen: number; bench: number };
+  refuge?: { cot: number; kitchen: number; bench: number; infirmary?: number; alchemy?: number };
   /** Preparación para la siguiente incursión (catre mejorado, plato). Se gasta al bajar. */
   prep?: { cot?: boolean; dish?: string } | null;
   /** Receta en el fogón (ingredientes ya gastados): se retoma al volver a la cocina. */
   cooking?: { recipe: string; events: number[]; picks: ('low' | 'mid' | 'high')[] } | null;
   /** Recetas cocinadas al menos una vez (abren la producción normal por lotes). */
   cooked?: string[];
+  /** Trabajo en el yunque de Brand o en la mesa de Eldrin (materiales ya gastados, lecturas fijadas). */
+  workshop?: { station: 'forge' | 'alchemy'; recipe: string; readings: number[]; picks: ('up' | 'hold' | 'down')[] } | null;
+  /** Recetas de forja y alquimia hechas al menos una vez (abren la producción rápida). */
+  crafted?: string[];
+  /** Recepción de excedentes (Fase 9): lo que no cupo al recibirlo. Solo se retira, se vende, se desguaza o se descarta. */
+  reception?: ItemStack[];
   /** Tiempo de juego activo acumulado en expediciones (ms, reloj de juego). Formato de guardado 4. */
   playMs?: number;
   /** Tutorial guiado de la primera expedición completado (o saltado). Las partidas con expediciones lo tienen hecho. */

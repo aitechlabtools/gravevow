@@ -1,33 +1,35 @@
-import { forgeCost } from '../../core/forge';
-// La forja de Maese Brand: recetas, materiales que tienes y tirada de calidad.
-import { useState } from 'react';
+// La forja de Maese Brand: recetas, materiales y el yunque. La calidad sale del trabajo (leyendo la temperatura y
+// golpeando dentro de la franja); tras la primera vez, forja rápida de calidad tosca.
 import { actions, useGame } from '../state/store';
-import { RECIPES, QUALITIES, ENSURE_MATERIAL_MULT } from '../../core/data/forge';
-import { forgeBlock, materialsFor, owned } from '../../core/forge';
+import { RECIPES, QUALITIES } from '../../core/data/forge';
+import { FORGE_BANDS, FORGE_STEPS } from '../../core/data/workshop';
+import { forgeCost, materialsFor } from '../../core/forge';
+import { anvilBlock } from '../../core/workshop';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { REP_RANKS, rankOf } from '../../config/reputation';
 import { ItemIcon } from './inventory';
+import { BandStep, Needs } from './WorkshopPanels';
+
+const BTN = { minHeight: 44 } as const;
 
 export function ForgePanel() {
   const profile = useGame((s) => s.profile)!;
-  const [ensure, setEnsure] = useState(false);
   const rank = rankOf(profile.reputation.brand ?? 0);
+  const job = profile.workshop;
+  if (job?.station === 'forge') return <BandStep />;
+  if (job) return <p className="font-body text-stone-300" data-testid="workshop-busy">Tienes una mezcla a medias en la mesa de Eldrin. Termínala allí primero.</p>;
   return (
     <div className="space-y-3" data-testid="forge">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="font-body text-base text-stone-300 max-w-2xl">
-          Cada arma sale con una calidad al azar: {QUALITIES.map((q) => `${q.name.toLowerCase()} (${q.weight}%${q.bonus ? `, +${Math.round(q.bonus * 100)}%` : ''})`).join(' · ')}.
-        </p>
-        <label className="flex items-center gap-2 cursor-pointer select-none btn py-2 px-3" data-testid="forge-ensure">
-          <input type="checkbox" checked={ensure} onChange={(e) => setEnsure(e.target.checked)} className="w-5 h-5 accent-[#e8b33a]" />
-          <span className="text-sm">Asegurar calidad buena o mejor <span className="text-stone-400">(×{ENSURE_MATERIAL_MULT} materiales)</span></span>
-        </label>
-      </div>
+      <p className="font-body text-base text-stone-300 max-w-2xl">
+        «Mira el color, no el reloj.» En el yunque, cada golpe se da leyendo la temperatura: armas a {FORGE_BANDS.weapon[0]}–{FORGE_BANDS.weapon[1]}° ({FORGE_STEPS.weapon} golpes), protecciones a {FORGE_BANDS.armor[0]}–{FORGE_BANDS.armor[1]}° ({FORGE_STEPS.armor}).
+        Calidad: {QUALITIES.map((q) => `${q.name.toLowerCase()}${q.bonus ? ` +${Math.round(q.bonus * 100)} %` : ''}`).join(' · ')}.
+      </p>
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
         {RECIPES.map((r) => {
           const res = getItem(r.result);
           const locked = rank < r.rank;
-          const block = forgeBlock(profile, r, ensure);
+          const block = anvilBlock(profile, r.id);
+          const done = (profile.crafted ?? []).includes(r.id);
           return (
             <div key={r.id} className={`bg-black/30 border border-stone-800 p-3 flex flex-col gap-2 ${locked ? 'opacity-60' : ''}`} data-testid={`recipe-${r.id}`}>
               <div className="flex items-center gap-2">
@@ -41,21 +43,19 @@ export function ForgePanel() {
                 <div className="text-xs text-stone-400">🔒 Te la enseña con el rango «{REP_RANKS[r.rank].name}»</div>
               ) : (
                 <>
-                  <ul className="text-xs space-y-0.5">
-                    {materialsFor(r, ensure).map((m) => {
-                      const have = owned(profile, m.itemId);
-                      return <li key={m.itemId} className="flex items-center gap-1.5"><ItemIcon itemId={m.itemId} size={16} /><span className="flex-1">{getItem(m.itemId).name}</span><span className={have >= m.qty ? 'text-heal' : 'text-blood'}>{have}/{m.qty}</span></li>;
-                    })}
-                    <li className="flex justify-between"><span className="text-stone-400">Trabajo de Brand</span><span className={profile.gold >= forgeCost(r) ? 'text-gold' : 'text-blood'}>{forgeCost(r)} oro</span></li>
-                  </ul>
-                  <button className="btn btn-gold py-2 mt-auto" disabled={!!block} title={block ?? undefined} onClick={() => actions.forge(r.id, ensure)} data-testid={`forge-${r.id}`}>Forjar</button>
+                  <Needs items={materialsFor(r)} gold={forgeCost(r)} />
+                  <div className="mt-auto flex gap-2">
+                    <button className="btn btn-gold flex-1" style={BTN} disabled={!!block} onClick={() => actions.startForging(r.id)} data-testid={`forge-${r.id}`}>Al yunque</button>
+                    {done && <button className="btn flex-1" style={BTN} disabled={!!block} onClick={() => actions.quickForge(r.id)} data-testid={`forge-quick-${r.id}`}>Rápida · tosca</button>}
+                  </div>
+                  {block && <div className="text-xs text-[#d0905a]">{block}</div>}
                 </>
               )}
             </div>
           );
         })}
       </div>
-      <p className="font-body text-sm text-stone-400 italic">Los materiales se cogen de la mochila y del almacén. El arma forjada va a tu mochila.</p>
+      <p className="font-body text-sm text-stone-400 italic">Los materiales y el trabajo de Brand se pagan al empezar. La pieza va a tu mochila; si no cabe, al almacén o a la recepción del Refugio.</p>
     </div>
   );
 }

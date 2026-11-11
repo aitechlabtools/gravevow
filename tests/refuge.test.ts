@@ -34,7 +34,7 @@ const total = (p: Profile, id: string) => countItem(p.backpack, id) + countItem(
 describe('Refugio', () => {
   it('los módulos empiezan a 0 y la mejora gasta materiales y oro una vez', () => {
     let p = rich(give(base(), 'copper_ore', 3));
-    expect(refugeOf(p)).toEqual({ cot: 0, kitchen: 0, bench: 0 });
+    expect(refugeOf(p)).toEqual({ cot: 0, kitchen: 0, bench: 0, infirmary: 0, alchemy: 0 });
     const gold0 = p.gold;
     const r = upgradeModule(p, 'kitchen');
     expect(r.ok).toBe(true);
@@ -53,8 +53,8 @@ describe('Refugio', () => {
   });
 
   it('no se mejora por encima del máximo', () => {
-    const p = { ...base(), refuge: { cot: 1, kitchen: 2, bench: 1 } };
-    for (const id of ['cot', 'kitchen', 'bench'] as const) expect(upgradeBlock(p, id)).toMatch(/máximo/);
+    const p = { ...base(), refuge: { cot: 1, kitchen: 2, bench: 1, infirmary: 1, alchemy: 1 } };
+    for (const id of ['cot', 'kitchen', 'bench', 'infirmary', 'alchemy'] as const) expect(upgradeBlock(p, id)).toMatch(/máximo/);
   });
 });
 

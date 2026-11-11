@@ -5,7 +5,7 @@
 import type { VendorId } from './vendors';
 import type { Need } from '../../config/needs';
 
-export type ModuleId = 'cot' | 'kitchen' | 'bench';
+export type ModuleId = 'cot' | 'kitchen' | 'bench' | 'infirmary' | 'alchemy';
 
 export interface ModuleLevel {
   name: string;
@@ -40,8 +40,22 @@ export const MODULES: Record<ModuleId, ModuleDef> = {
       { name: 'Banco de trabajo', effect: 'Desguazar rinde un 25 % más de materiales.', cost: { items: [{ itemId: 'scrap_metal', qty: 8 }], gold: 50, by: 'orik' } },
     ],
   },
+  infirmary: {
+    id: 'infirmary', name: 'Rincón de cura', blurb: 'Hilo hervido, tablillas y un cubo que nadie quiere vaciar.',
+    levels: [
+      { name: 'Sin rincón', effect: 'Las vendas y férulas se compran a Vesper.' },
+      { name: 'Rincón de cura', effect: 'Vesper te enseña a preparar vendas, torniquetes y férulas con retales y chatarra.', cost: { items: [{ itemId: 'leather_scrap', qty: 6 }, { itemId: 'water', qty: 2 }], gold: 60, by: 'vesper' } },
+    ],
+  },
+  alchemy: {
+    id: 'alchemy', name: 'Mesa de alquimia', blurb: 'Redomas que no casan y un quemador que tose.',
+    levels: [
+      { name: 'Sin mesa', effect: 'Las pociones se compran a Eldrin.' },
+      { name: 'Mesa de alquimia', effect: 'Eldrin te enseña a destilar antídotos y tónicos con esquirlas arcanas.', cost: { items: [{ itemId: 'arcane_shard', qty: 4 }, { itemId: 'scrap_metal', qty: 4 }], gold: 120, by: 'eldrin' } },
+    ],
+  },
 };
-export const MODULE_ORDER: ModuleId[] = ['cot', 'kitchen', 'bench'];
+export const MODULE_ORDER: ModuleId[] = ['cot', 'kitchen', 'bench', 'infirmary', 'alchemy'];
 
 /** Fuego de cada paso de la cocina. */
 export type Heat = 'low' | 'mid' | 'high';

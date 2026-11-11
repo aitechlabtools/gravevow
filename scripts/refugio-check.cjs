@@ -29,7 +29,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=btn-refuge]');
   await small('[data-testid=btn-refuge]', 'botón del Refugio');
   await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=screen-refuge]');
-  if ((await p.$$('[data-testid^=module-]')).length !== 3) fail('el Refugio no enseña sus tres módulos');
+  if ((await p.$$('[data-testid^=module-]')).length !== 5) fail('el Refugio no enseña sus cinco módulos');
   await small('[data-testid=upgrade-kitchen]', 'Mejorar la cocina');
   await wide('Refugio');
   await p.screenshot({ path: out + '-refugio.png' });

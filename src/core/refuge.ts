@@ -16,7 +16,7 @@ import { addToGrid, anchorIndex, cloneGrid, countItem, isCover, LAYOUTS, removeA
 import { durability, hasDurability, maxDurability } from './durability';
 import { RARITY_RULES } from './data/rarity';
 import { buyPrice, sellPrice } from './economy';
-import { spendGold } from './wallet';
+import { earnGoldSafe, spendGold } from './wallet';
 import { vendorUnlocked } from './vendors';
 import { VENDORS } from './data/vendors';
 import { makeRng, makeUid } from './rng';
@@ -24,8 +24,8 @@ import { makeRng, makeUid } from './rng';
 export type Result = { ok: true; profile: Profile; note?: string } | { ok: false; error: string };
 
 // ── Estado del Refugio en el perfil ─────────────────────────────────
-export interface RefugeState { cot: number; kitchen: number; bench: number }
-export const EMPTY_REFUGE: RefugeState = { cot: 0, kitchen: 0, bench: 0 };
+export interface RefugeState { cot: number; kitchen: number; bench: number; infirmary: number; alchemy: number }
+export const EMPTY_REFUGE: RefugeState = { cot: 0, kitchen: 0, bench: 0, infirmary: 0, alchemy: 0 };
 export function refugeOf(p: Pick<Profile, 'refuge'>): RefugeState {
   return { ...EMPTY_REFUGE, ...(p.refuge ?? {}) };
 }
@@ -55,7 +55,7 @@ export function prepText(prep: Prep | null | undefined): string[] {
 export function ownedQty(p: Profile, itemId: string): number {
   return countItem(p.backpack, itemId) + countItem(p.stash, itemId);
 }
-function takeItems(p: Profile, items: { itemId: string; qty: number }[]): Profile | null {
+export function takeItems(p: Profile, items: { itemId: string; qty: number }[]): Profile | null {
   let { backpack, stash } = p;
   for (const m of items) {
     if (countItem(backpack, m.itemId) + countItem(stash, m.itemId) < m.qty) return null;
@@ -66,20 +66,69 @@ function takeItems(p: Profile, items: { itemId: string; qty: number }[]): Profil
   }
   return { ...p, backpack, stash };
 }
-/** Entrega objetos: a la mochila y, si no caben, al almacén. null si no caben en ningún sitio (no se pierde nada). */
-function giveItems(p: Profile, items: { itemId: string; qty: number }[]): Profile | null {
+/** Entrega objetos: a la mochila, si no caben al almacén y, si tampoco, a la recepción. Nunca se pierde nada. */
+export function deliver(p: Profile, items: { itemId: string; qty: number; quality?: number; forgedBy?: string }[]): { profile: Profile; toReception: boolean } {
   let { backpack, stash } = p;
+  const reception = [...(p.reception ?? [])];
   for (const m of items) {
     if (m.qty <= 0) continue;
-    const a = addToGrid(backpack, { uid: makeUid(), itemId: m.itemId, qty: m.qty }, LAYOUTS.backpack);
+    const st: ItemStack = { uid: makeUid(), itemId: m.itemId, qty: m.qty, ...(m.quality !== undefined ? { quality: m.quality } : {}), ...(m.forgedBy ? { forgedBy: m.forgedBy } : {}) };
+    const a = addToGrid(backpack, st, LAYOUTS.backpack);
     backpack = a.grid;
-    if (a.leftover) {
-      const b = addToGrid(stash, a.leftover, LAYOUTS.stash);
-      if (b.leftover) return null;
-      stash = b.grid;
-    }
+    if (!a.leftover) continue;
+    const b = addToGrid(stash, a.leftover, LAYOUTS.stash);
+    stash = b.grid;
+    if (b.leftover) reception.push(b.leftover);
   }
-  return { ...p, backpack, stash };
+  const toReception = reception.length > (p.reception ?? []).length;
+  return { profile: { ...p, backpack, stash, reception }, toReception };
+}
+export const RECEPTION_NOTE = ' No cabía: está en la recepción del Refugio.';
+function giveItems(p: Profile, items: { itemId: string; qty: number }[]): Profile {
+  return deliver(p, items).profile;
+}
+
+// ── Recepción de excedentes ─────────────────────────────────────────
+/** Mientras haya excedentes no se baja (nunca se bloquea la llegada ni se borra nada). */
+export function receptionBlock(p: Profile): string | null {
+  const n = (p.reception ?? []).length;
+  return n ? `Tienes ${n} ${n === 1 ? 'objeto' : 'objetos'} en la recepción del Refugio: retíralos, véndelos, desguázalos o descártalos antes de bajar.` : null;
+}
+function receptionAt(p: Profile, i: number): ItemStack | null {
+  return (p.reception ?? [])[i] ?? null;
+}
+function withoutReception(p: Profile, i: number): Profile {
+  return { ...p, reception: (p.reception ?? []).filter((_, k) => k !== i) };
+}
+/** Retirar a la mochila o al almacén (si cabe entero). */
+export function receptionWithdraw(p: Profile, i: number): Result {
+  const st = receptionAt(p, i);
+  if (!st) return { ok: false, error: 'Ya no está en la recepción.' };
+  const a = addToGrid(p.backpack, st, LAYOUTS.backpack);
+  if (!a.leftover) return { ok: true, profile: { ...withoutReception(p, i), backpack: a.grid }, note: 'a la mochila' };
+  const b = addToGrid(p.stash, st, LAYOUTS.stash);
+  if (!b.leftover) return { ok: true, profile: { ...withoutReception(p, i), stash: b.grid }, note: 'al almacén' };
+  return { ok: false, error: 'No cabe ni en la mochila ni en el almacén: haz hueco, véndelo o desguázalo.' };
+}
+/** Vender directamente desde la recepción (a Nira, a su precio de venta). */
+export function receptionSell(p: Profile, i: number): Result {
+  const st = receptionAt(p, i);
+  if (!st) return { ok: false, error: 'Ya no está en la recepción.' };
+  const gold = sellPrice(st.itemId, st) * st.qty;
+  return { ok: true, profile: earnGoldSafe(withoutReception(p, i), gold), note: `${gold} oro` };
+}
+/** Desguazar desde la recepción (Orik): los materiales se entregan como cualquier otra cosa. */
+export function receptionScrap(p: Profile, i: number): Result {
+  const st = receptionAt(p, i);
+  if (!st) return { ok: false, error: 'Ya no está en la recepción.' };
+  const y = scrapYield(st, refugeOf(p).bench);
+  if (!y) return { ok: false, error: `Orik no saca nada útil de ${getItem(st.itemId).name.toLowerCase()}.` };
+  return { ok: true, profile: giveItems(withoutReception(p, i), [y]), note: `${getItem(y.itemId).name} ×${y.qty}` };
+}
+/** Descartar (se pierde para siempre). */
+export function receptionDiscard(p: Profile, i: number): Result {
+  if (!receptionAt(p, i)) return { ok: false, error: 'Ya no está en la recepción.' };
+  return { ok: true, profile: withoutReception(p, i) };
 }
 
 // ── Módulos ─────────────────────────────────────────────────────────
@@ -151,9 +200,8 @@ export function scrap(p: Profile, container: 'backpack' | 'stash', index: number
   if (!y) return { ok: false, error: `Orik no saca nada útil de ${getItem(st.itemId).name.toLowerCase()}.` };
   const removed = cloneGrid(grid);
   removeAt(removed, a);
-  const given = giveItems({ ...p, [container]: removed }, [y]);
-  if (!given) return { ok: false, error: 'No tienes sitio para los materiales.' };
-  return { ok: true, profile: given, note: `${getItem(y.itemId).name} ×${y.qty}` };
+  const d = deliver({ ...p, [container]: removed }, [y]);
+  return { ok: true, profile: d.profile, note: `${getItem(y.itemId).name} ×${y.qty}${d.toReception ? '.' + RECEPTION_NOTE : ''}` };
 }
 
 // ── Cocina ──────────────────────────────────────────────────────────
@@ -196,12 +244,12 @@ export function cookStep(p: Profile, heat: Heat): Result & { done?: boolean; per
   const perfect = picks.every((h, i) => COOK_EVENTS[job.events[i]].heat === h);
   const out = [{ itemId: d.result, qty: 1 }];
   if (perfect && REFUGE_CFG.perfectRefund) out.push({ itemId: cheapestIngredient(d), qty: 1 });
-  const given = giveItems({ ...p, cooking: null }, out);
-  if (!given) return { ok: false, error: 'No tienes sitio para el plato: haz hueco en la mochila o el almacén.' };
+  const dl = deliver({ ...p, cooking: null }, out);
+  const given = dl.profile;
   const cooked = [...new Set([...(p.cooked ?? []), d.id])];
-  return { ok: true, done: true, perfect, profile: { ...given, cooked }, note: perfect ? `${getItem(d.result).name}, esmerado. Te queda de más: ${getItem(cheapestIngredient(d)).name.toLowerCase()}.` : `${getItem(d.result).name}.` };
+  return { ok: true, done: true, perfect, profile: { ...given, cooked }, note: (perfect ? `${getItem(d.result).name}, esmerado. Te queda de más: ${getItem(cheapestIngredient(d)).name.toLowerCase()}.` : `${getItem(d.result).name}.`) + (dl.toReception ? RECEPTION_NOTE : '') };
 }
-function cheapestIngredient(d: DishRecipe): string {
+export function cheapestIngredient(d: { ingredients: { itemId: string; qty: number }[] }): string {
   return [...d.ingredients].sort((a, b) => getItem(a.itemId).value - getItem(b.itemId).value)[0].itemId;
 }
 
@@ -214,7 +262,6 @@ export function cookBatch(p: Profile, recipeId: string, qty: number): Result {
   if (block) return { ok: false, error: block };
   const taken = takeItems(p, d.ingredients.map((m) => ({ itemId: m.itemId, qty: m.qty * n })));
   if (!taken) return { ok: false, error: 'Te faltan ingredientes.' };
-  const given = giveItems(taken, [{ itemId: d.result, qty: n }]);
-  if (!given) return { ok: false, error: 'No tienes sitio para los platos.' };
-  return { ok: true, profile: given, note: `${getItem(d.result).name} ×${n}.` };
+  const dl = deliver(taken, [{ itemId: d.result, qty: n }]);
+  return { ok: true, profile: dl.profile, note: `${getItem(d.result).name} ×${n}.${dl.toReception ? RECEPTION_NOTE : ''}` };
 }

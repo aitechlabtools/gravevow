@@ -35,6 +35,7 @@ import { actions } from './store';
 import { advanceClock, newClock } from '../../core/clock';
 import { bodyAtPct, resizeBody } from '../../core/anatomy';
 import { withBody } from './medicalActions';
+import { receptionBlock } from '../../core/refuge';
 
 export const expeditionActions = {
 
@@ -47,6 +48,8 @@ export const expeditionActions = {
     const zoneId = sub.zone;
     const lock = p.stats.expeditions === 0 ? null : subzoneLock(sub, p.character.level, p.bossesDefeated);
     if (lock) return invError(lock);
+    const full = receptionBlock(p);
+    if (full) return invError(full);
     // La primera expedición usa la cripta diseñada a mano (sirve de tutorial); después, mapas procedurales de la zona elegida.
     const seed = randomSeed();
     const captive = makeRng(seed ^ 0x51ed).chance(CAPTIVE_CHANCE) ? captiveCandidate(p, zoneId) : null;

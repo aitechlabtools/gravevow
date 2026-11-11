@@ -20,10 +20,8 @@ import { spendGold } from '../../core/wallet';
 import { earnGoldSafe, NO_ROOM_FOR_GOLD, putCoinsPartial, setGoldExactly } from '../../core/wallet';
 import { COIN_ID } from '../../config/gold';
 import { computeStats } from '../../core/stats';
-import { forge, recipe } from '../../core/forge';
 import { repair, type RepairRef } from '../../core/repair';
 import { fieldRepair } from '../../core/durability';
-import { QUALITIES } from '../../core/data/forge';
 import { VENDORS, type VendorId } from '../../core/data/vendors';
 import { REP_RANKS, rankOf } from '../../config/reputation';
 import { getItem } from '../../core/data/items';
@@ -33,9 +31,11 @@ import { getSkill } from '../../core/data/skills';
 import { questDef, isComplete, acceptQuest as acceptQuestCore, abandonQuest as abandonQuestCore, togglePin as togglePinCore, afterClaim } from '../../core/quests';
 import { applyXp } from '../../core/stats';
 import { potionAmount, resourcePotionAmount } from '../../config/progression';
-import { makeRng, makeUid, randomSeed } from '../../core/rng';
+import { makeUid, randomSeed } from '../../core/rng';
 import { vendorUnlocked } from '../../core/vendors';
-import { canSleepForPrep, cookBatch, cookStep, scrap, startCooking, upgradeModule } from '../../core/refuge';
+import { canSleepForPrep, cookBatch, cookStep, receptionDiscard, receptionScrap, receptionSell, receptionWithdraw, scrap, startCooking, upgradeModule } from '../../core/refuge';
+import { alchemyBatch, prepareCare, quickForge, startAlchemy, startForging, workshopStep } from '../../core/workshop';
+import type { Move } from '../../core/data/workshop';
 import type { Heat, ModuleId } from '../../core/data/refuge';
 import { bus } from './bus';
 import { buySkin, equipSkin } from '../../core/skins';
@@ -647,15 +647,83 @@ export const actions = {
     toast(`Cocinas: ${r.note}`, 'good');
   },
 
-  forge(recipeId: string, ensure: boolean) {
+  /** Taller: empezar en el yunque de Brand (paga materiales y trabajo; las temperaturas quedan fijadas). */
+  startForging(recipeId: string) {
     const p = state.profile;
-    if (!p) return;
-    const r = forge(p, recipeId, ensure, makeRng(randomSeed()));
+    if (!p || state.expedition) return;
+    const r = startForging(p, recipeId, randomSeed());
     if (!r.ok) return invError(r.error);
     sfx('equip');
     set({ profile: r.profile });
-    const res = getItem(recipe(recipeId).result);
-    toast(`Maese Brand forja: ${res.name} · calidad ${QUALITIES[r.quality].name.toLowerCase()}`, r.quality === 2 ? 'loot' : 'good', res.icon);
+  },
+
+  /** Taller: forja rápida (tosca), tras haberla hecho una vez en el yunque. */
+  quickForge(recipeId: string) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const r = quickForge(p, recipeId);
+    if (!r.ok) return invError(r.error);
+    sfx('equip');
+    set({ profile: r.profile });
+    toast(`Maese Brand forja: ${r.note}`, 'good');
+  },
+
+  /** Taller: empezar una mezcla en la mesa de alquimia (gasta los reactivos). */
+  startAlchemy(recipeId: string) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const r = startAlchemy(p, recipeId, randomSeed());
+    if (!r.ok) return invError(r.error);
+    sfx('click');
+    set({ profile: r.profile });
+  },
+
+  /** Taller: alquimia por lotes (calidad estándar). */
+  alchemyBatch(recipeId: string, qty: number) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const r = alchemyBatch(p, recipeId, qty);
+    if (!r.ok) return invError(r.error);
+    sfx('heal');
+    set({ profile: r.profile });
+    toast(`Destilas: ${r.note}`, 'good');
+  },
+
+  /** Taller: decisión del paso actual (yunque o mesa). */
+  workshopStep(move: Move) {
+    const p = state.profile;
+    if (!p) return;
+    const station = p.workshop?.station;
+    const r = workshopStep(p, move);
+    if (!r.ok) return invError(r.error);
+    set({ profile: r.profile });
+    if (!r.done) { sfx(station === 'forge' ? 'hit' : 'click'); return; }
+    sfx(station === 'forge' ? 'equip' : 'heal');
+    toast(station === 'forge' ? `Maese Brand templa la pieza: ${r.note}` : `Eldrin huele la redoma: ${r.note}`, r.quality === 2 || r.perfect ? 'loot' : 'good');
+  },
+
+  /** Rincón de cura: preparar suministros por lotes. */
+  prepareCare(id: string, qty: number) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const r = prepareCare(p, id, qty);
+    if (!r.ok) return invError(r.error);
+    sfx('heal');
+    set({ profile: r.profile });
+    toast(`Preparas: ${r.note}`, 'good');
+  },
+
+  /** Recepción de excedentes: retirar, vender, desguazar o descartar. */
+  reception(kind: 'withdraw' | 'sell' | 'scrap' | 'discard', index: number) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    if (kind === 'scrap' && !vendorUnlocked(p, 'orik')) return invError('Orik aún no ha llegado al Bastión.');
+    const fn = { withdraw: receptionWithdraw, sell: receptionSell, scrap: receptionScrap, discard: receptionDiscard }[kind];
+    const r = fn(p, index);
+    if (!r.ok) return invError(r.error);
+    sfx(kind === 'sell' ? 'coin' : kind === 'discard' ? 'click' : 'equip');
+    set({ profile: r.profile });
+    toast({ withdraw: `Recoges el objeto: ${r.note}.`, sell: `Nira te paga ${r.note}.`, scrap: `Orik desguaza: ${r.note}`, discard: 'Lo dejas para la pila de desechos.' }[kind], 'good');
   },
 
   /** Maese Brand repara un objeto o, sin `ref`, todo lo dañado (cobra del almacén). */
