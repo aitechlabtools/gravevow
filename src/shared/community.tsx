@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 // Siempre se abren en una pestaña nueva para no sacar al jugador de su partida.
 
 export const SUPPORT_URL = 'https://ko-fi.com/gravevow';
-export const DISCORD_URL = 'https://discord.gg/yw2R4nwJQa';
+export const DISCORD_URL = 'https://discord.com/invite/uhGGQ7uXw';
 
 export const SUPPORT_HINT = 'Apoya el desarrollo en Ko-fi';
 export const DISCORD_HINT = 'Únete a la comunidad en Discord';

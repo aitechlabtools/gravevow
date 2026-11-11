@@ -66,6 +66,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 11/11: enlace de Discord actualizado a la nueva invitación (`src/shared/community.tsx`).
 - 11/11: botones Apoyar (Ko-fi, sustituye a Stripe) y Discord en la landing y el juego; privacidad y cookies actualizadas; iconos provisionales en la lista de assets.
 - 11/11: `CLAUDE.md` reorganizado y este archivo creado para trabajar entre sesiones y ordenadores.
 - 6/11:
