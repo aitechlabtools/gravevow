@@ -539,3 +539,12 @@ Equipo si la mochila no se ve. CombatScreen.tsx: comida y bebida en la Mochila d
 mochila. tutorial.ts (paso eat: mochila → pan → Comer), tutorials.ts (exp.need-low, station.kitchen). Pruebas: necesidades-check,
 e2e-tutorial y curas-check adaptados; inventario-check arreglado (Esc abría Ajustes). Pasan también anatomia-check y grupos-check.
 
+## 12/11 · Intendencia › Equipo en dos columnas
+Alijo.tsx: el panel Equipo mide su ancho (ResizeObserver) y en escritorio pasa a dos columnas (equipo + Oro/En riesgo | mochila +
+bolsillo; `equip-two-cols`, `equip-bag-col`, `gold-box`), con casillas a 60/84 px (o 44/60 px y Aventurero a 280 px por debajo de
+1600 px de ancho). Sin barra de ayuda: la ficha (`item-card-wrap`) solo al elegir. Tableta: una columna con casillas a 46 px.
+`EquipmentGrid` admite `tight`. kit/Panel.tsx: `SubHead` puede partir en dos líneas. tutorials.ts: el paso de la mochila de la
+bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Capturas: mockups/intendencia (1920 × 1080, 1366 × 768,
+1180 × 820). Pruebas: objetos-check, inventario-check, e2e-bienvenida (3 tamaños), almacen-check, necesidades-check, menus-check.
+`arrastre-check` ya fallaba antes en escritorio (slot-backpack-7): pendiente.
+

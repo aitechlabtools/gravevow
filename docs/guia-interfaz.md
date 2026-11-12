@@ -176,3 +176,14 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 - Si una barra está baja y llevas con qué, la caja enseña «Tienes comida en la mochila» (`need-food-<need>`, 44 px en táctil): resalta esos objetos (`highlightItems`, clase `.slot-hint`); en la mazmorra abre antes la mochila y en Intendencia pasa a Equipo si la mochila no se ve. En combate es solo texto.
 - Prueba: `node scripts/necesidades-check.cjs <url>/play/ <carpeta> [dispositivo]`.
 
+## Intendencia › Equipo en dos columnas (12/11)
+- Escritorio (`Alijo.tsx`): el panel Equipo pasa a dos columnas cuando mide 600 px o más (470 px en escritorio estrecho, por debajo de 1600 px de ancho):
+  izquierda, las ranuras alrededor del personaje y debajo la caja Oro / En riesgo (`gold-box`); derecha (`equip-bag-col`), la Mochila
+  (título, contador, Agrupar oro, Ordenar, cuadrícula, carga, Vaciar y Guardar materiales) y el Bolsillo seguro (3 casillas, contador,
+  «no se pierde al morir» u «oro a salvo»). El panel no se desplaza; si la mochila crece (más de 24 casillas) o la ficha quita alto,
+  solo se desplaza esa columna.
+- Casillas del panel: a 60 px (armas 84) en escritorio ancho; en escritorio estrecho, 44 px (armas 60) y el Aventurero baja a 280 px.
+- Sin barra de ayuda («Elige un objeto…»): la ficha del objeto (`item-card-wrap`) solo sale al elegir uno. La ayuda va en la bienvenida (paso de la mochila) y en la Guía.
+- Tableta: una columna, como antes, con casillas a 46 px para que la mochila no se corte. Móvil: sin cambios (vistas separadas).
+- Maquetas y capturas: `mockups/intendencia/index.html` (`node mockups/intendencia/capturar.cjs <url>/play/`).
+

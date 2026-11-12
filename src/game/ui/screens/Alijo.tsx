@@ -2,7 +2,7 @@
 // Vista «Estado»: heridas y necesidades con la mochila al lado; curarte con tus objetos sin pagar a Vesper.
 // Mover objetos: arrastrar (ordenador), o tocar un objeto (se abre su ficha) y después tocar una casilla libre.
 // En móvil no caben las tres columnas: segmentos «Equipo», «Almacén» y «Estado».
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { actions, useGame } from '../../state/store';
 import { CLASSES } from '../../../core/data/classes';
 import { computeStats, baseStats } from '../../../core/stats';
@@ -46,6 +46,16 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
   const [view, setView] = useState<'gear' | 'storage' | 'status'>('gear');
   useEffect(() => { if (view === 'status') actions.tutorialEvent('stash:status'); }, [view]);
   const [picker, setPicker] = useState(false);
+  // Escritorio estrecho (p. ej. 1366 × 768): Aventurero más estrecho y casillas del panel Equipo a 44 px para que quepan las dos columnas
+  const compact = layout === 'desktop' && typeof window !== 'undefined' && window.innerWidth < 1600;
+  // Dos columnas en el panel Equipo cuando hay sitio (escritorio): equipo | mochila y bolsillo
+  const eqRef = useRef<HTMLDivElement | null>(null);
+  const [eqW, setEqW] = useState(0);
+  useEffect(() => {
+    const el = eqRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => setEqW(e.contentRect.width)); ro.observe(el); return () => ro.disconnect();
+  }, [view]);
+  const twoCols = layout === 'desktop' && eqW >= (compact ? 470 : 600);
   const clear = () => setSel(null);
   const same = (a: Loc | null, b: Loc) => !!a && JSON.stringify(a) === JSON.stringify(b);
 
@@ -87,7 +97,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
   );
 
   const equipment = (
-    <EquipmentGrid sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} />
+    <EquipmentGrid sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} tight={compact} />
   );
   const pickerModal = <>{picker && <SkinPicker onClose={() => setPicker(false)} onShop={onShop} />}{emptyModal}</>;
   const backpack = (
@@ -159,7 +169,13 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
     );
   }
 
-  const side = layout === 'tablet' ? 288 : 340;
+  const side = layout === 'tablet' ? 288 : compact ? 280 : 340;
+  const goldBox = (
+    <div className="panel p-3 mt-4 flex flex-col gap-1 text-sm" data-testid="gold-box">
+      <div className="flex justify-between items-center"><span className="text-stone-300">Oro</span><GoldAmount value={profile.gold} /></div>
+      <div className="flex justify-between"><span className="text-stone-300">En riesgo</span><span className="text-ember">{gridValue(profile.backpack) + equippedValue(profile.equipment)}</span></div>
+    </div>
+  );
   const deskSeg = <div className="flex justify-center shrink-0">{seg([{ id: 'gear', label: 'Equipo' }, { id: 'status', label: 'Estado' }])}</div>;
   const padX = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
   if (view !== 'gear') {
@@ -184,24 +200,26 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
         <HeroColumn onDetails={onDetails} />
       </Panel>
       <Panel title="Equipo" className="min-h-0" bodyClassName="min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 overflow-y-auto scroll-thin">
-          <div className="mb-3"><RecruitOffer /></div>
-          <div className="w-fit mx-auto">
-            <div className="flex justify-center mb-4">{equipment}</div>
-            {backpack}
-            {pocket}
-          </div>
-        </div>
-        {/* En tableta, la ficha solo aparece al elegir un objeto: así cabe la mochila y el bolsillo */}
-        {(sel || layout === 'desktop') && <div className="flex mt-3 shrink-0" style={{ gap: 'var(--gap)' }}>
-          <div className="panel p-3 flex-1 min-w-0">{card}</div>
-          {layout === 'desktop' && (
-            <div className="panel p-3 w-44 shrink-0 flex flex-col justify-center gap-1 text-sm">
-              <div className="flex justify-between items-center"><span className="text-stone-300">Oro</span><GoldAmount value={profile.gold} /></div>
-              <div className="flex justify-between"><span className="text-stone-300">En riesgo</span><span className="text-ember">{gridValue(profile.backpack) + equippedValue(profile.equipment)}</span></div>
+        <div ref={eqRef} style={twoCols ? (compact ? { ['--slot' as string]: '44px', ['--slot-big' as string]: '60px' } : { ['--slot' as string]: '60px', ['--slot-big' as string]: '84px' }) : layout === 'tablet' ? { ['--slot' as string]: '46px' } : undefined} className={`flex-1 min-h-0 ${twoCols ? 'flex flex-col overflow-hidden' : 'overflow-y-auto scroll-thin'}`} data-testid="equip-body" data-cols={twoCols ? 2 : 1}>
+          <div className="mb-3 shrink-0"><RecruitOffer /></div>
+          {twoCols ? (
+            // Escritorio ancho: equipo a la izquierda, mochila + bolsillo + oro a la derecha (sin desplazar)
+            <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: 'auto auto', gridTemplateRows: 'minmax(0,1fr)', justifyContent: 'space-evenly', gap: 'var(--gap)' }} data-testid="equip-two-cols">
+              <div className="flex flex-col items-stretch self-center max-h-full overflow-y-auto scroll-thin">{equipment}{goldBox}</div>
+              {/* Si la mochila crece (más de 24 casillas) o la ficha quita alto, solo esta columna se desplaza */}
+              <div className="min-h-0 max-h-full self-center overflow-y-auto scroll-thin pr-1" style={{ width: 'calc(var(--slot) * 6 + 30px)' }} data-testid="equip-bag-col">{backpack}{pocket}</div>
+            </div>
+          ) : (
+            <div className="w-fit mx-auto">
+              <div className="flex justify-center mb-4">{equipment}</div>
+              {backpack}
+              {pocket}
+              {layout === 'desktop' && goldBox}
             </div>
           )}
-        </div>}
+        </div>
+        {/* La ficha solo aparece al elegir un objeto (la ayuda de uso ya la enseñan el tutorial, la Intendencia y la Guía) */}
+        {sel && <div className="panel p-3 mt-3 shrink-0" data-testid="item-card-wrap">{card}</div>}
       </Panel>
       {storage}
       {pickerModal}
@@ -211,7 +229,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
 }
 
 /** Equipamiento en tres columnas: arma (grande) y manos · cabeza, torso y pies · secundaria (grande), amuleto y anillo. */
-function EquipmentGrid({ sel, onSelect, onEmpty, onDone, onSkin }: { sel: Loc | null; onSelect: (l: Loc) => void; onEmpty: (l: Loc) => void; onDone: () => void; onSkin: () => void }) {
+function EquipmentGrid({ sel, onSelect, onEmpty, onDone, onSkin, tight = false }: { sel: Loc | null; onSelect: (l: Loc) => void; onEmpty: (l: Loc) => void; onDone: () => void; onSkin: () => void; tight?: boolean }) {
   const eq = useGame((s) => s.profile!.equipment);
   const prof = useGame((s) => s.profile!);
   // Objeto elegido en la mochila o el almacén (para iluminar la ranura de equipo donde encaja)
@@ -225,7 +243,7 @@ function EquipmentGrid({ sel, onSelect, onEmpty, onDone, onSkin }: { sel: Loc | 
     </div>
   );
   return (
-    <div className="flex items-start gap-6" data-testid="equipment">
+    <div className={`flex items-start ${tight ? 'gap-2' : 'gap-6'}`} data-testid="equipment">
       <div className="flex flex-col items-center gap-2">{slot('mainHand', true)}{slot('gloves')}<SkinSlot onClick={onSkin} /></div>
       <div className="flex flex-col items-center gap-2">{slot('helmet')}{slot('armor')}{slot('boots')}<BagSlot sel={sel} onDone={onDone} /></div>
       <div className="flex flex-col items-center gap-2">{slot('offHand', true)}{slot('amulet')}{slot('ring')}</div>

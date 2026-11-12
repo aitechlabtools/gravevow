@@ -20,7 +20,7 @@ export function Panel({ title, right, children, className = '', bodyClassName = 
 /** Encabezado pequeño dentro de un panel («Mochila · 11/24», «Bolsillo seguro»…). */
 export function SubHead({ children, right }: { children: ReactNode; right?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-2 mb-1.5 min-h-[32px]">
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mb-1.5 min-h-[32px]">
       <h3 className="font-display text-[13px] tracking-[0.06em] uppercase text-parchment">{children}</h3>
       {right}
     </div>
