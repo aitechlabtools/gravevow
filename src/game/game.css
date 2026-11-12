@@ -461,10 +461,13 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .body-treat.touch{min-width:44px;min-height:44px;justify-content:center}
 .frame-body{display:flex;align-items:center;gap:6px;margin:2px 0}
 /* Mapa del cuerpo: silueta neutra y etiquetas sencillas, con el estilo de los demás paneles */
-.body-panel{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.body-map{position:relative;width:300px;height:330px;flex:none;background:#0000004d;border:1px solid #292524}
+.body-panel{display:grid;grid-template-columns:minmax(280px,38%) minmax(0,1fr);gap:10px;align-items:stretch}
+.body-box{background:#0000004d;border:1px solid #292524;padding:6px;display:flex;flex-direction:column;min-width:0}
+.body-box-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px}
+.body-legend{font-size:11px;color:#8c8693}
+.body-map{position:relative;width:100%;height:330px;flex:none}
 .body-ghost{position:absolute;left:50%;top:7%;height:78%;transform:translateX(-50%);opacity:.5;image-rendering:pixelated}
-.body-tag{position:absolute;width:32%;min-width:88px;text-align:left;background:#0d0c11e6;border:1px solid #44403c;padding:2px 5px 3px;cursor:pointer;font:inherit;color:#d6d3d1}
+.body-tag{position:absolute;width:31%;min-width:0;text-align:left;background:#0d0c11e6;border:1px solid #44403c;padding:2px 5px 3px;cursor:pointer;font:inherit;color:#d6d3d1}
 .body-tag:hover{border-color:#78716c}
 .body-tag-name{display:flex;align-items:center;gap:4px;font-size:12px;line-height:14px;white-space:nowrap}
 .body-tag-name b{margin-left:auto;font-weight:400;color:#a8a29e;font-size:10px}
@@ -483,12 +486,51 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .body-ico{font-style:normal;font-size:10px;line-height:1}
 .body-ico.bleed{color:#ff4050}.body-ico.bleed.heavy{color:#ff2030}
 .body-ico.frac{color:#f2ead8}.body-ico.off{color:#8c8693}
-.body-total{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:13px;color:#a8a29e}
+.body-total{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #292524;padding-top:4px;margin-top:4px;font-size:13px;color:#a8a29e}
 .body-total b{color:#e9e1cc;font-weight:400}
 .body-total.dead b{color:#d23a3a}
-.body-side{flex:1;min-width:180px}
+.body-side{min-width:0;display:flex;flex-direction:column}
 .body-detail{background:#0000004d;border:1px solid #292524;padding:6px 8px}
-@media (max-height:560px){.body-map{width:260px;height:270px}}
+.body-detail-title{font-family:var(--font-display,inherit);color:#e9e1cc;margin-bottom:4px}
+.body-tag.vital{border-color:#8a6a2a}
+.body-tag.vital.on{border-color:#e8b33a}
+.body-vital{color:#e8b33a;margin-right:3px}
+.wound-card{border:1px solid #3a3741;background:#1c1b22;padding:6px 8px;margin-top:6px}
+.wound-name{font-weight:600;color:#ff5a64;font-size:14px}
+.wound-card.fracture .wound-name{color:#e8752b}.wound-card.disabled .wound-name,.wound-card.operated .wound-name{color:#a8a29e}.wound-card.hurt .wound-name{color:#e8b33a}
+.wound-text{font-size:13px;color:#d6d3d1;line-height:1.25}
+.wound-opt{display:flex;align-items:center;gap:8px;border-top:1px dashed #3a3741;padding-top:5px;margin-top:5px}
+.wound-slot{position:relative;width:36px;height:36px;flex:none;display:grid;place-items:center;background:#2a2830;border:1px solid #3a3741}
+.wound-slot b{position:absolute;right:2px;bottom:0;font-size:11px;font-weight:400;color:#e9e1cc}
+.is-touch .wound-slot{width:44px;height:44px}
+.wound-info{flex:1;min-width:0;font-size:14px;color:#e9e1cc}
+.wound-info small{display:block;font-size:11px;color:#8c8693}
+.wound-opt .btn{min-width:64px;justify-content:center}
+.wound-opt .btn.go{border-color:#5fd19a;background:#173426;color:#c9f5df}
+.wound-miss{display:flex;align-items:center;gap:4px;font-size:12px;color:#8c8693;margin-top:4px}
+.wound-lock{font-size:12px;color:#e8b33a;margin-top:4px}
+.wound-turn{font-size:12px;color:#e8752b;margin-top:6px}
+.body-others{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:12px;margin-top:6px}
+.body-other{font:inherit;font-size:12px;color:#e9e1cc;background:#1c1b22;border:1px solid #3a3741;padding:2px 6px;min-height:28px;cursor:pointer}
+.is-touch .body-other{min-height:44px}
+.body-note{font-size:12px;color:#a8a29e;margin-bottom:6px}
+.body-hint{margin-top:auto;padding-top:6px;margin-bottom:0;color:#78716c}
+.body-needs{grid-column:1/-1}
+.body-needs .needs-panel{margin-top:0}
+@media (max-width:640px){.body-panel{grid-template-columns:1fr}}
+@media (max-height:560px){
+  .body-panel{grid-template-columns:46% minmax(0,1fr);gap:6px}
+  .body-map{height:230px}
+  .body-box{padding:4px}.body-legend,.body-total-r,.body-hint,.body-tag-name b{display:none}
+  .body-tag{padding:2px 3px}
+  .wound-card{padding:4px 6px;margin-top:4px}.wound-text{font-size:12px}
+  .wound-info small{display:none}
+  .body-needs .needs-panel{gap:4px}
+  .body-needs .needs-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:6px;padding:2px 6px}
+  .body-needs .needs-hint{display:none}
+  .body-needs .needs-row .needs-bar{grid-column:2;grid-row:1}
+  .body-needs .needs-row .btn{grid-column:3;grid-row:1;margin:0}
+}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 /* Necesidades (Fase 5) */
 .needs-strip{display:flex;gap:4px;margin-top:4px}
@@ -516,3 +558,8 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .body-side .needs-row .needs-row-top,.body-side .needs-row .needs-bar,.body-side .needs-row .needs-hint{grid-column:1}
 .body-side .needs-row .btn{grid-column:2;grid-row:1/4;margin:0;align-self:center}
 .body-side .needs-hint{min-height:0}
+
+/* Ficha de combate: en pantallas bajas, una línea compacta que puede ocupar dos renglones (bloque 1, fase 5) */
+.short-only{display:none}
+@media (max-height:560px){.tall-only{display:none!important}.short-only{display:block}.short-only.inline{display:inline}}
+.card-short{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}

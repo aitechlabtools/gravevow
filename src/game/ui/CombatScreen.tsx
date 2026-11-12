@@ -1,4 +1,4 @@
-import { enemyAttackLine, enemyThreats } from '../../core/armor';
+import { enemyAttackLine, enemyAttackShort, enemyThreats } from '../../core/armor';
 import { hitsVitals } from '../../core/damage';
 import { useEffect, useRef, useState } from 'react';
 import { actions, useGame } from '../state/store';
@@ -378,8 +378,12 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent 
         <div className="flex-1 min-w-0">
           <div className={`fname ${c.side === 'B' ? 'text-[#ffb3a8]' : ''}`}>{target?.on ? <span className="text-blood" data-testid={`target-${c.id}`} aria-label="Objetivo">▶ </span> : ''}{c.name}{kind === 'ally' ? <span className="text-heal text-xs"> · aliado</span> : ''}</div>
           {sub && !small && <div className="text-[11px] text-stone-400 truncate">{sub}</div>}
-          {c.side === 'B' && c.ref && c.ref !== 'rival' && !small && <div className="text-[11px] text-stone-300 truncate" data-testid={`zones-${c.id}`} title="A qué zonas de tu cuerpo apunta y de qué tipo son sus golpes. Cortes y mordiscos hacen sangrar; los contundentes rompen huesos.">{enemyAttackLine(c.ref)}{hitsVitals(c.ref, !!c.boss, depth) ? <span className="text-blood" data-testid={`vital-${c.id}`}> · ☠ zonas vitales</span> : ''}</div>}
-          {c.side === 'B' && c.ref && c.ref !== 'rival' && !small && (() => { const t = enemyThreats(c.ref); return t.length ? <div className="text-[11px] text-[#e8b33a] truncate" data-testid={`threats-${c.id}`} title="Lo que puede causarte. La armadura de la parte golpeada evita sangrados y fracturas.">Puede causar: {t.join(' · ')}</div> : null; })()}
+          {c.side === 'B' && c.ref && c.ref !== 'rival' && !small && <div className="tall-only text-[11px] text-stone-300 truncate" data-testid={`zones-${c.id}`} title="A qué zonas de tu cuerpo apunta y de qué tipo son sus golpes. Cortes y mordiscos hacen sangrar; los contundentes rompen huesos.">{enemyAttackLine(c.ref)}{hitsVitals(c.ref, !!c.boss, depth) ? <span className="text-blood" data-testid={`vital-${c.id}`}> · ☠ zonas vitales</span> : ''}</div>}
+          {c.side === 'B' && c.ref && c.ref !== 'rival' && !small && (() => { const t = enemyThreats(c.ref); return t.length ? <div className="tall-only text-[11px] text-[#e8b33a] truncate" data-testid={`threats-${c.id}`} title="Lo que puede causarte. La armadura de la parte golpeada evita sangrados y fracturas.">Puede causar: {t.join(' · ')}</div> : null; })()}
+          {c.side === 'B' && c.ref && c.ref !== 'rival' && !small && (() => { const t = enemyThreats(c.ref); return (
+            <div className="short-only card-short text-[10px] leading-[12px] text-stone-300" data-testid={`zones-short-${c.id}`}>
+              {enemyAttackShort(c.ref)}{hitsVitals(c.ref, !!c.boss, depth) ? <span className="text-blood"> · ☠</span> : ''}{t.length ? <span className="text-[#e8b33a]"> · {t.join(' · ')}</span> : ''}
+            </div>); })()}
         </div>
         {small && <span className="text-xs text-stone-400">{c.hp} / {c.stats.maxHp}</span>}
       </div>

@@ -77,6 +77,14 @@ export function zonesText(ref: string): string {
   return p.profile === 'large' ? 'Golpea cualquier zona, más el tórax y la cabeza' : `Ataca ${zones}`;
 }
 
+/** Versión corta para pantallas bajas: «Piernas», «Brazos y piernas», «Todo el cuerpo». */
+export function zonesShort(ref: string): string {
+  const p = profileOf(ref);
+  const l = PROFILE_LIMBS[p.profile];
+  if (p.profile === 'large') return 'Todo el cuerpo';
+  return l.arms === 0 ? 'Piernas' : l.legs === 0 ? 'Brazos' : 'Brazos y piernas';
+}
+
 /** ¿Alcanza zonas vitales en esta subzona? (icono de la ficha). */
 export function hitsVitals(ref: string, boss: boolean, depth: number): boolean {
   return vitalChance({ ref, boss }, depth) > 0;

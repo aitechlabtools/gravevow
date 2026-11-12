@@ -1,7 +1,7 @@
 // Armadura contra lesiones (Fase 10): qué pieza cubre cada región y cuánto protege según su desgaste.
 import { ARMOR_COVER, ARMOR_GUARD, INJURY_BY_FX } from '../config/armor';
 import { DAMAGE_NAME, GUARD_CAP, MATERIAL_OVERRIDE, MATERIAL_RESIST, type ArmorMaterial, type DamageType } from '../config/damage';
-import { damageTypeOf, injuryModsFor, zonesText } from './damage';
+import { damageTypeOf, injuryModsFor, zonesShort, zonesText } from './damage';
 import { REGIONS, type Region } from '../config/anatomy';
 import { getItem } from './data/items';
 import { getEnemy } from './data/enemies';
@@ -81,6 +81,12 @@ export function enemyDamageTypes(enemyId: string): DamageType[] {
 export function enemyAttackLine(enemyId: string): string {
   const t = enemyDamageTypes(enemyId).map((x) => DAMAGE_NAME[x]);
   return `${zonesText(enemyId)}${t.length ? ` · ${t.join(', ')}` : ''}`;
+}
+
+/** Línea compacta de la ficha en pantallas bajas: «Piernas · Mordisco». */
+export function enemyAttackShort(enemyId: string): string {
+  const t = enemyDamageTypes(enemyId).map((x) => DAMAGE_NAME[x]);
+  return `${zonesShort(enemyId)}${t.length ? ` · ${t.join(', ')}` : ''}`;
 }
 
 /** Lo que puede causar una criatura (ficha de combate): lesiones de cuerpo y estados de sus habilidades. */

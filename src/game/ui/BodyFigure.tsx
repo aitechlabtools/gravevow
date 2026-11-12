@@ -1,6 +1,6 @@
 // Anatomía en pantalla (Fase 4): silueta de siete regiones y panel de heridas con sus tratamientos.
 // El color siempre va con símbolo o texto: un brazo rojo, uno roto y uno inutilizado se distinguen.
-import { ANATOMY, BODY_COLOR, REGION_NAME, type Region } from '../../config/anatomy';
+import { ANATOMY, BODY_COLOR, REGION_NAME, REGION_SHORT, VITAL_REGIONS, WOUND_FIXES, WOUND_TEXT, type Region, type WoundKind } from '../../config/anatomy';
 import { useEffect, useState, type ReactNode } from 'react';
 import { getItem } from '../../core/data/items';
 import { useDrag } from './pointerDrag';
@@ -117,11 +117,11 @@ function RegionTag({ body, r, on, onPick, drop }: { body: Body; r: Region; on: b
   const [x, y] = TAG_POS[r];
   const word = regionWord(body, r);
   return (
-    <button type="button" className={`body-tag ${on ? 'on' : ''} ${off ? 'off' : ''} ${drop === 'yes' ? 'drop-yes' : drop === 'no' ? 'drop-no' : ''}`} style={{ left: `${x}%`, top: `${y}%` }}
+    <button type="button" className={`body-tag ${VITAL_REGIONS.includes(r) ? 'vital' : ''} ${on ? 'on' : ''} ${off ? 'off' : ''} ${drop === 'yes' ? 'drop-yes' : drop === 'no' ? 'drop-no' : ''}`} style={{ left: `${x}%`, top: `${y}%` }}
       data-drop={JSON.stringify({ type: 'body', region: r })}
       onClick={onPick} aria-pressed={on} aria-label={`${REGION_NAME[r]}: ${p.hp} de ${cap}. ${regionStatus(body, r).join(', ')}`} data-testid={`body-row-${r}`}>
       <span className="body-tag-name">
-        <span className="truncate">{TAG_NAME[r]}</span>
+        <span className="truncate">{VITAL_REGIONS.includes(r) && <span className="body-vital" aria-hidden="true">◆</span>}<span className="tall-only inline">{TAG_NAME[r]}</span><span className="short-only inline">{REGION_SHORT[r]}</span></span>
         <b>{p.hp}/{cap}</b>
       </span>
       <span className="body-tag-row">
@@ -135,19 +135,46 @@ function RegionTag({ body, r, on, onPick, drop }: { body: Body; r: Region; on: b
   );
 }
 
+/** Lesiones de una región, de la más urgente a la menos. */
+function woundsOf(b: Body, r: Region): WoundKind[] {
+  const p = b.parts[r];
+  const out: WoundKind[] = [];
+  if (p.bleed === 2) out.push('bleed2');
+  if (p.bleed === 1) out.push('bleed1');
+  if (p.fracture) out.push('fracture');
+  if (isDisabled(b, r) && !p.operated) out.push('disabled');
+  if (p.operated) out.push('operated');
+  if (!out.length && !isDisabled(b, r) && p.hp < regionMaxes(b.total)[r]) out.push('hurt');
+  return out;
+}
+
+/** Pista de una cura que sirve pero no es la más adecuada. */
+function fixHint(k: WoundKind, t: Treatment): string {
+  if (k === 'bleed1' && t === 'tourniquet') return 'También sirve; guárdalo para uno grave';
+  if (k === 'bleed1' && t === 'hemostatic') return 'También sirve; mejor para uno grave';
+  if (t === 'surgery') return 'Tarda dos pulsos; si algo te hiere, se pierde';
+  if (t === 'splint') return 'Entablilla el hueso roto';
+  return k === 'bleed2' ? 'Corta el sangrado grave' : 'Corta el sangrado leve';
+}
+
 /**
- * Panel de heridas: mapa del cuerpo (silueta tenue con una etiqueta por región) y, al lado, la región
- * elegida con sus lesiones y los tratamientos que llevas y sirven ahí. Lo que no sirve no aparece.
+ * Panel de heridas y necesidades (bloque 1, fase 5): el cuerpo con sus siete partes (◆ las vitales), el detalle de la
+ * parte elegida con cada lesión y lo que la cura (lo que llevas, con «Usar»; lo que no, dice quién lo vende) y,
+ * debajo, las necesidades (`children`).
  */
-export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, children }: {
+export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, combat, children }: {
   body: Body; backpack?: Grid; onTreat?: (itemId: string, region: Region) => void;
   /** Pociones de vida (Estado, en el Bastión): curan el cuerpo entero. */
   onHeal?: (itemId: string) => void;
-  surgery?: { region: Region; left: number } | null; note?: string; children?: ReactNode;
+  surgery?: { region: Region; left: number } | null; note?: string;
+  /** En combate, curar gasta el turno. */
+  combat?: boolean;
+  children?: ReactNode;
 }) {
   const touch = useIsTouch();
   const have = (t: Treatment) => !!backpack && countItem(backpack, TREATMENT_ITEM[t]) > 0;
-  const first = urgencies(body)[0]?.region ?? 'thorax';
+  const count = (t: Treatment) => (backpack ? countItem(backpack, TREATMENT_ITEM[t]) : 0);
+  const first = urgencies(body)[0]?.region ?? REGIONS.find((r) => woundsOf(body, r).length) ?? 'thorax';
   const [sel, setSel] = useState<Region>(first);
   const quick = (() => {
     if (!onTreat) return null;
@@ -160,8 +187,6 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, chil
   })();
   const options = (r: Region): Treatment[] => (['bandage', 'hemostatic', 'tourniquet', 'splint', 'surgery'] as Treatment[]).filter((t) => have(t) && !treatError(body, t, r));
   const total = bodyHp(body), dead = summaryHp(body) === 0;
-  const st = regionStatus(body, sel);
-  const opts = onTreat && !surgery ? options(sel) : [];
   // Arrastrar un objeto de cura a una parte del cuerpo (resalta dónde sirve)
   const drag = useDrag();
   const dragUse = drag && onTreat ? getItem(drag.itemId).use : null;
@@ -178,18 +203,27 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, chil
     window.addEventListener('cr-drop-body', f);
     return () => window.removeEventListener('cr-drop-body', f);
   }, [onTreat, onHeal]);
-  // Todo lo que curaría esta región, lo lleves o no (lo que no llevas dice quién lo vende)
-  const fixes = onTreat && !surgery ? (['bandage', 'tourniquet', 'hemostatic', 'splint', 'surgery'] as Treatment[]).filter((t) => !treatError(body, t, sel) && !have(t)) : [];
+  const wounds = woundsOf(body, sel);
+  const canTreat = !!onTreat && !surgery;
   const potion = onHeal && backpack && !isDisabled(body, sel) && body.parts[sel].hp < regionMaxes(body.total)[sel] ? (backpack.find((x) => x && x.itemId !== 'cover' && getItem(x.itemId).use?.kind === 'heal')?.itemId ?? null) : null;
+  const others = REGIONS.filter((r) => r !== sel && woundsOf(body, r).some((k) => k !== 'hurt'));
+  const hurtCount = REGIONS.filter((r) => woundsOf(body, r).some((k) => k !== 'hurt')).length;
+  const btnCls = `btn body-treat ${touch ? 'touch' : ''}`;
   return (
     <div className="body-panel" data-testid="body-panel">
-      <div className="body-map" data-testid="body-map">
-        <Ghost body={body} />
-        {REGIONS.map((r) => <RegionTag key={r} body={body} r={r} on={sel === r} onPick={() => setSel(r)} drop={dragging ? (usefulOn(body, dragging, r) ? 'yes' : 'no') : null} />)}
-        <div className={`body-total ${dead ? 'dead' : ''}`} data-testid="body-total">Vida <b>{dead ? 0 : total}</b> / {body.total}</div>
+      <div className="body-box">
+        <div className="body-box-head"><span className="font-display text-parchment">Cuerpo</span><span className="body-legend">◆ zona vital</span></div>
+        <div className="body-map" data-testid="body-map">
+          <Ghost body={body} />
+          {REGIONS.map((r) => <RegionTag key={r} body={body} r={r} on={sel === r} onPick={() => setSel(r)} drop={dragging ? (usefulOn(body, dragging, r) ? 'yes' : 'no') : null} />)}
+        </div>
+        <div className={`body-total ${dead ? 'dead' : ''}`} data-testid="body-total">
+          <span>Vida <b>{dead ? 0 : total}</b> / {body.total}</span>
+          <span className="body-total-r">{hurtCount ? `${hurtCount} ${hurtCount === 1 ? 'parte con lesiones' : 'partes con lesiones'}` : 'Sin lesiones'}</span>
+        </div>
       </div>
       <div className="body-side">
-        {note && <p className="text-xs text-stone-400 mb-2">{note}</p>}
+        {note && <p className="body-note">{note}</p>}
         {surgery && <p className="text-sm text-gold mb-2" data-testid="body-surgery">Operando {REGION_NAME[surgery.region].toLowerCase()}: faltan {surgery.left} pulsos. Si algo te hiere, se pierde el equipo.</p>}
         {body.painFree ? <p className="text-xs text-[#b48ad8] mb-2" data-testid="body-painfree">Analgésico: sin dolor durante {body.painFree} pulsos más.</p>
           : onTreat && painfulRegions(body).length > 0 && have('painkiller') && (
@@ -203,32 +237,56 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, chil
           </button>
         )}
         <div className="body-detail" data-testid="body-detail">
-          <div className="font-display text-parchment">{REGION_NAME[sel]} <span className="text-stone-400 text-sm">{body.parts[sel].hp}/{regionCap(body, sel)}</span></div>
-          <div className="text-xs" style={{ color: st.length ? '#e8b33a' : '#8c8693' }}>{st.length ? st.join(' · ') : 'Sin lesiones'}</div>
-          {opts.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {opts.map((t) => (
-                <button key={t} className={`btn body-treat ${touch ? 'touch' : ''}`} onClick={() => onTreat!(TREATMENT_ITEM[t], sel)} data-testid={`treat-${t}-${sel}`}>
-                  <ItemIcon itemId={TREATMENT_ITEM[t]} size={18} />{TREATMENT_NAME[t]}
-                </button>
-              ))}
-            </div>
-          )}
-          {potion && (
-            <button className={`btn body-treat ${touch ? 'touch' : ''} mt-1`} onClick={() => onHeal!(potion)} data-testid={`heal-${sel}`}>
+          <div className="body-detail-title">{VITAL_REGIONS.includes(sel) && <span className="text-gold">◆ </span>}{REGION_NAME[sel]} <span className="text-stone-400 text-sm">{body.parts[sel].hp}/{regionCap(body, sel)}</span></div>
+          {!wounds.length && <div className="text-xs text-stone-400" data-testid="body-sound">{isDisabled(body, sel) ? regionStatus(body, sel).join(' · ') : 'Sana. Sin lesiones.'}</div>}
+          {wounds.map((k) => {
+            const w = WOUND_TEXT[k];
+            const fixes = canTreat ? WOUND_FIXES[k].filter((t) => !treatError(body, t, sel)) : [];
+            return (
+              <div key={k} className={`wound-card ${k}`} data-testid={`wound-${k}-${sel}`}>
+                <div className="wound-name">{w.ico} {w.name}{k === 'fracture' && !body.painFree ? ' · duele' : ''}</div>
+                <div className="wound-text">{w.text}</div>
+                {fixes.map((t) => have(t) ? (
+                  <div key={t} className="wound-opt">
+                    <span className="wound-slot"><ItemIcon itemId={TREATMENT_ITEM[t]} size={22} /><b>{count(t)}</b></span>
+                    <span className="wound-info">{TREATMENT_NAME[t]}<small>{fixHint(k, t)}</small></span>
+                    <button className={`${btnCls} ${t === WOUND_FIXES[k].find((x) => have(x) && !treatError(body, x, sel)) ? 'go' : ''}`} onClick={() => onTreat!(TREATMENT_ITEM[t], sel)} data-testid={`treat-${t}-${sel}`}>Usar</button>
+                  </div>
+                ) : (
+                  <p key={t} className="wound-miss" data-testid={`fix-missing-${t}`}>
+                    <ItemIcon itemId={TREATMENT_ITEM[t]} size={16} /> {TREATMENT_NAME[t]}: no llevas · lo vende Hermana Vesper
+                  </p>
+                ))}
+                {k === 'operated' && <p className="wound-lock" data-testid={`wound-lock-${sel}`}>🔒 Solo en el Bastión: Hermana Vesper</p>}
+                {k === 'disabled' && canTreat && !fixes.length && <p className="wound-lock" data-testid={`wound-lock-${sel}`}>🔒 Solo en el Bastión: Hermana Vesper</p>}
+                {k === 'hurt' && potion && (
+                  <div className="wound-opt">
+                    <span className="wound-slot"><ItemIcon itemId={potion} size={22} /></span>
+                    <span className="wound-info">{getItem(potion).name}<small>Devuelve vida, no cierra heridas</small></span>
+                    <button className={`${btnCls} go`} onClick={() => onHeal!(potion)} data-testid={`heal-${sel}`}>Usar</button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {wounds.some((k) => k !== 'hurt') && potion && (
+            <button className={`${btnCls} mt-1`} onClick={() => onHeal!(potion)} data-testid={`heal-${sel}`}>
               <ItemIcon itemId={potion} size={18} />{getItem(potion).name} · devuelve vida, no cierra heridas
             </button>
           )}
-          {fixes.map((t) => (
-            <p key={t} className="text-xs text-stone-400 mt-1 flex items-center gap-1" data-testid={`fix-missing-${t}`}>
-              <ItemIcon itemId={TREATMENT_ITEM[t]} size={16} /> {TREATMENT_NAME[t]}: no llevas · lo vende Hermana Vesper
-            </p>
-          ))}
+          {combat && canTreat && wounds.length > 0 && <p className="wound-turn">Curar gasta tu turno.</p>}
         </div>
-        {onTreat && !REGIONS.some((r) => options(r).length) && urgencies(body).length > 0 && <p className="text-xs text-stone-400 mt-2">No llevas nada que sirva para estas heridas. Hermana Vesper vende vendas, torniquetes, férulas y hemostáticos.</p>}
-        {!urgencies(body).length && <p className="text-xs text-stone-400 mt-2">Sin sangrados ni fracturas.{REGIONS.some((r) => isLimb(r) && body.parts[r].hp < regionCap(body, r)) ? ' La vida perdida se recupera con pociones.' : ''}</p>}
-        {children}
+        {others.length > 0 && (
+          <div className="body-others" data-testid="body-others">
+            <span className="text-stone-400">Otras heridas:</span>
+            {others.map((r) => <button key={r} type="button" className="body-other" onClick={() => setSel(r)}>{TAG_NAME[r]}: {woundsOf(body, r).filter((k) => k !== 'hurt').map((k) => WOUND_TEXT[k].name.toLowerCase()).join(', ')}</button>)}
+          </div>
+        )}
+        {onTreat && !REGIONS.some((r) => options(r).length) && urgencies(body).length > 0 && <p className="body-note mt-2">No llevas nada que sirva para estas heridas. Hermana Vesper vende vendas, torniquetes, férulas y hemostáticos.</p>}
+        {!urgencies(body).length && <p className="body-note mt-2">Sin sangrados ni fracturas.{REGIONS.some((r) => isLimb(r) && body.parts[r].hp < regionCap(body, r)) ? ' La vida perdida se recupera con pociones.' : ''}</p>}
+        <p className="body-note body-hint">{touch ? 'Toca' : 'Haz clic en'} otra parte del cuerpo para ver sus heridas.</p>
       </div>
+      {children && <div className="body-needs">{children}</div>}
     </div>
   );
 }

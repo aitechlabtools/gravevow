@@ -65,3 +65,20 @@ export const ANATOMY = {
 
 /** Colores de la silueta (siempre acompañados de símbolo o texto). */
 export const BODY_COLOR = { ok: '#6fae5a', hurt: '#e8b33a', bad: '#e8752b', critical: '#d23a3a', disabled: '#3a3236', outline: '#0d0b0c' } as const;
+
+/** Panel de heridas (bloque 1, fase 5): nombre y explicación de cada lesión. */
+export type WoundKind = 'bleed2' | 'bleed1' | 'fracture' | 'disabled' | 'operated' | 'hurt';
+export const WOUND_TEXT: Record<WoundKind, { name: string; ico: string; text: string }> = {
+  bleed2: { name: 'Sangrado grave', ico: '🩸', text: 'Pierdes vida deprisa. No se cierra solo: córtalo cuanto antes.' },
+  bleed1: { name: 'Sangrado leve', ico: '🩸', text: 'Pierdes vida poco a poco hasta cortarlo. No se cierra solo.' },
+  fracture: { name: 'Fractura', ico: '🦴', text: 'El hueso roto duele y resta fuerza o movilidad hasta entablillarlo.' },
+  disabled: { name: 'Inutilizada', ico: '⊘', text: 'Esta parte ya no responde. La cirugía de campo la levanta a medias.' },
+  operated: { name: 'Operada', ico: '✚', text: 'Funciona, pero con menos vida de la normal hasta volver.' },
+  hurt: { name: 'Herida', ico: '!', text: 'Ha perdido vida. Las pociones la devuelven; no hay lesión que tratar.' },
+};
+/** Qué tratamientos sirven para cada lesión, del más adecuado al menos. */
+export const WOUND_FIXES: Record<WoundKind, ('bandage' | 'hemostatic' | 'tourniquet' | 'splint' | 'surgery')[]> = {
+  bleed2: ['tourniquet', 'hemostatic'], bleed1: ['bandage', 'tourniquet', 'hemostatic'], fracture: ['splint'], disabled: ['surgery'], operated: [], hurt: [],
+};
+/** Zonas vitales del panel (la marca ◆): las que pueden matar o pesan más al recibir golpes. */
+export const VITAL_REGIONS: Region[] = ['head', 'thorax', 'abdomen'];
