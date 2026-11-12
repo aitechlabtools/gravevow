@@ -8,7 +8,7 @@ import { getItem } from './data/items';
 import { STATUSES } from './statuses';
 import { ANATOMY } from '../config/anatomy';
 import { ENEMY_STATUS_CHANCE, PIECE_NAME, PLAYER_DOT, SKILL_BLEED_TO_PLAYER, STATUS_MAX_TURNS } from '../config/armor';
-import { HEAD_STUN_BLUNT, VITAL_DAMAGE } from '../config/damage';
+import { DAMAGE_NAME, HEAD_STUN_BLUNT, VITAL_DAMAGE } from '../config/damage';
 import { damageTypeOf, injuryModsFor, rollHitRegion } from './damage';
 import { guardVs, type RegionGuard } from './armor';
 import type { EquipSlot } from './types';
@@ -327,7 +327,7 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
       const vital = VITAL_DAMAGE[region as keyof typeof VITAL_DAMAGE];
       if (vital && amount > 0) { const extra = Math.round(amount * (vital - 1)); if (extra > 0) amount += extra; }
       target.body = damageRegion(target.body, region, amount, { lethal }).body;
-      if (amount > 0) s.log.push(`El golpe alcanza a ${target.name} en ${regionWith(region)}${vital ? ' (zona vital)' : ''}.`);
+      if (amount > 0) s.log.push(`El golpe ${DAMAGE_NAME[type].toLowerCase()} alcanza a ${target.name} en ${regionWith(region)}${vital ? ' (zona vital)' : ''}.`);
       // La pieza que cubre la región encaja el golpe (y se desgasta)
       const piece = target.armor?.[region];
       if (piece && amount > 0 && target.wear) { const sl = (target.wear.slots ??= {}); sl[piece.slot] = (sl[piece.slot] ?? 0) + 1; }

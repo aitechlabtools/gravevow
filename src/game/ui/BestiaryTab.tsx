@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGame } from '../state/store';
 import { ENEMIES, getEnemy } from '../../core/data/enemies';
+import { enemyAttackLine } from '../../core/armor';
 import { getSkill } from '../../core/data/skills';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { STATUSES } from '../../core/statuses';
@@ -93,6 +94,7 @@ function BeastCard({ id, k, kills, onClose }: { id: string; k: Knowledge; kills:
             <>
               <p className="font-body text-lg text-stone-200 leading-snug">{BESTIARY_LORE[id] ?? ''}</p>
               <div className="text-sm"><span className="text-stone-400">Ataque básico:</span> {e.basicAttack.name} ({e.basicAttack.kind === 'magical' ? 'mágico' : 'físico'})</div>
+              <div className="text-sm" data-testid="bestiary-zones"><span className="text-stone-400">Cómo hiere:</span> {enemyAttackLine(id)}</div>
             </>
           ) : locked(`Derrótala ${BESTIARY_BASIC_KILLS === 1 ? 'una vez' : `${BESTIARY_BASIC_KILLS} veces`} para saber cómo pelea.`)}
           {k >= 3 ? (

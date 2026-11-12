@@ -64,3 +64,15 @@ describe('Bloque 1: armadura por material', () => {
     expect(guardVs({ ...g, guard: 0.9 }, 'cut')).toBeLessThanOrEqual(0.95);
   });
 });
+
+import { enemyAttackLine, enemyDamageTypes, enemyThreats } from '../src/core/armor';
+describe('ficha de zonas y tipo (fase 4)', () => {
+  it('el lobo muerde las piernas y hace sangrar', () => {
+    expect(enemyDamageTypes('starving_wolf')).toContain('bite');
+    expect(enemyAttackLine('starving_wolf')).toMatch(/piernas.*Mordisco/);
+    expect(enemyThreats('starving_wolf')).toContain('Sangrado');
+  });
+  it('la rata ataca solo las piernas', () => {
+    expect(enemyAttackLine('ossuary_rat')).toMatch(/^Ataca las piernas/);
+  });
+});

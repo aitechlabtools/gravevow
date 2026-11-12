@@ -1,6 +1,7 @@
 // Armadura contra lesiones (Fase 10): qué pieza cubre cada región y cuánto protege según su desgaste.
 import { ARMOR_COVER, ARMOR_GUARD, INJURY_BY_FX } from '../config/armor';
-import { GUARD_CAP, MATERIAL_OVERRIDE, MATERIAL_RESIST, type ArmorMaterial, type DamageType } from '../config/damage';
+import { DAMAGE_NAME, GUARD_CAP, MATERIAL_OVERRIDE, MATERIAL_RESIST, type ArmorMaterial, type DamageType } from '../config/damage';
+import { damageTypeOf, injuryModsFor, zonesText } from './damage';
 import { REGIONS, type Region } from '../config/anatomy';
 import { getItem } from './data/items';
 import { getEnemy } from './data/enemies';
@@ -65,14 +66,33 @@ export function bodyThreats(fxs: (string | undefined)[], appliesBleed: boolean):
   return out;
 }
 
+/** Tipos de daño físico de una criatura (golpe básico primero, sin repetir). */
+export function enemyDamageTypes(enemyId: string): DamageType[] {
+  let e: ReturnType<typeof getEnemy>;
+  try { e = getEnemy(enemyId); } catch { return []; }
+  const by = { ref: enemyId };
+  const out: DamageType[] = [];
+  if (e.basicAttack.kind === 'physical') out.push(damageTypeOf('physical', e.basicAttack.fx, by));
+  for (const k of e.skills.map(getSkill)) if (k.kind === 'physical') out.push(damageTypeOf('physical', k.fx, by, k.id));
+  return [...new Set(out)];
+}
+
+/** Línea de la ficha y el bestiario: «Ataca las piernas · Mordisco, Cortante». */
+export function enemyAttackLine(enemyId: string): string {
+  const t = enemyDamageTypes(enemyId).map((x) => DAMAGE_NAME[x]);
+  return `${zonesText(enemyId)}${t.length ? ` · ${t.join(', ')}` : ''}`;
+}
+
 /** Lo que puede causar una criatura (ficha de combate): lesiones de cuerpo y estados de sus habilidades. */
 export function enemyThreats(enemyId: string): string[] {
   let e: ReturnType<typeof getEnemy>;
   try { e = getEnemy(enemyId); } catch { return []; }
   const skills = e.skills.map(getSkill);
-  const physical = [e.basicAttack.kind === 'physical' ? e.basicAttack.fx : undefined, ...skills.filter((k) => k.kind === 'physical').map((k) => k.fx)].filter(Boolean) as string[];
   const applied = new Set(skills.flatMap((k) => (k.applies ?? []).filter((a) => !a.self).map((a) => a.status)));
-  const out: string[] = bodyThreats(physical, applied.has('bleed')).map((t) => (t === 'bleed' ? 'Sangrado' : 'Fractura'));
+  const mods = enemyDamageTypes(enemyId).map((t) => injuryModsFor(t, { ref: enemyId }));
+  const out: string[] = [];
+  if (applied.has('bleed') || mods.some((m) => m.bleed >= 0.5)) out.push('Sangrado');
+  if (mods.some((m) => m.fracture >= 1)) out.push('Fractura');
   for (const id of applied) if (id !== 'bleed' && STATUSES[id]?.harmful) out.push(STATUSES[id].name);
   return out;
 }
