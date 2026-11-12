@@ -192,6 +192,28 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     ],
   },
   {
+    id: 'unlock.stash-page', topic: 'objetos', trigger: 'unlock:stash-page',
+    steps: [
+      { text: 'Página nueva en el almacén. Las tienes todas aquí arriba.', target: 'stash-pages' },
+      { text: '**Arrastra** un objeto a la pestaña de una página para mandarlo allí.', touch: '**Toca** un objeto y luego la pestaña de una página para mandarlo allí.', target: 'stash-pages' },
+    ],
+  },
+  {
+    id: 'unlock.shared-page', topic: 'cuenta', trigger: 'unlock:shared-page',
+    steps: [
+      { text: 'La página **Compartido** es de todos tus personajes.', target: 'stash-page-shared' },
+      { text: 'Deja aquí lo que quieras pasarle a otro: lo encontrará al entrar con él. Es la única forma de pasar objetos.', target: 'stash-page-shared' },
+    ],
+  },
+  {
+    id: 'unlock.class-skill', topic: 'progresion', trigger: 'unlock:class-skill',
+    steps: [
+      { text: 'Habilidad de clase nueva. La tienes en **Personaje**, junto a las demás.', target: 'tab-character' },
+      { text: '**Equípala** allí para llevarla abajo. Solo llevas una, y se cambia fuera de combate.' },
+      { text: 'En combate aparece como un ataque más.' },
+    ],
+  },
+  {
     id: 'screen.settings', topic: 'cuenta', trigger: 'screen:settings', overModal: true,
     steps: [
       { text: 'Sonido, pantalla, controles y tu partida. Cada sección, a la izquierda.', target: 'settings-nav' },

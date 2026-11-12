@@ -3,6 +3,7 @@
 // `composeProfile` lo monta y `applyProfile` lo vuelve a repartir antes de guardar.
 // Preparado para un futuro guardado en la nube: la cuenta tiene un identificador propio y fechas de cambio.
 import { emptyTutorials, sanitizeTutorials, type TutorialsSave } from './tutorials';
+import { seenFromHistory } from './tutorialsMigration';
 import type { Grid, Profile, Settings } from './types';
 import { sanitizeProfile } from './profile';
 import { makeUid } from './rng';
@@ -178,6 +179,8 @@ export function migrateProfileToSave(raw: unknown, now = Date.now()): SaveData |
       migratedFrom: fromVersion,
     },
   };
+  // Sin mini tutoriales guardados: sanitizeSave los migra desde lo que ya ha usado
+  delete (save.account as Partial<AccountData>).tutorials;
   const id = makeUid('pj');
   const ch = { ...toCharacter(p, id, 0), lastPlayedAt: now };
   // Pasa por la misma reparación que una partida cargada (almacén antiguo → páginas, con el oro devuelto)
@@ -255,6 +258,16 @@ export function sanitizeSave(raw: unknown, now = Date.now()): SaveData | null {
     save = { ...save, characters: [...save.characters, repaired] };
   }
   save.characters = sortBySlot(save.characters);
+  // Partida de antes de los mini tutoriales: se dan por vistos los de lo que ya ha usado (plan-tutoriales.md, fase 8)
+  if (a.tutorials === undefined) {
+    save.account.tutorials = {
+      ...save.account.tutorials,
+      seen: seenFromHistory(save.characters, {
+        tutorialDone: account.tutorialDone, skinsOwned: account.skinsOwned, backupAt: account.backup.lastAt,
+        settingsOpened: typeof account.settings.settingsTab === 'string', sharedOwned: account.shared.owned,
+      }),
+    };
+  }
   if (save.account.lastCharacterId && !save.characters.some((c) => c.id === save.account.lastCharacterId)) save.account.lastCharacterId = currentCharacterId(save);
   return save;
 }

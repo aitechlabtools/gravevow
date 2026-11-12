@@ -51,9 +51,11 @@
 
 ## En curso / por verificar
 - **12/11, tutoriales fase 5:** mini tutoriales de la expedición: reloj, necesidades, sangrado, fractura, zona vital, pieza rota, mochila llena, triángulo del errante y Kael (encima de su ventana), élite, jefe y habilidad de clase (en combate) y uno por subzona desde la segunda. Los lanza `ExpeditionMinis.tsx`. Prueba: `scripts/e2e-exp-minis.cjs`.
+- **12/11, tutoriales, cierre:** mini tutoriales de los desbloqueos `unlock.stash-page` y `unlock.shared-page` (al comprar la página) y `unlock.class-skill` (al elegir la habilidad en el aviso de hito); la migración también los da por vistos si ya había página comprada, Compartido o habilidad elegida. Script nuevo `scripts/migracion-minis-check.cjs` (partida antigua con historia: sin «!» en lo usado, con «!» en lo nuevo), pasa en 3 tamaños. Arreglados `menus-check` (entra por «Mercaderes» del Bastión) y `e2e.cjs` (kit de recluta nuevo: vendas, pan, agua y espada de recluta); los dos pasan.
+- **12/11, tutoriales fase 8 (bloque 3 terminado):** migración de jugadores con partida (opción a). `core/tutorialsMigration.ts` (`seenFromHistory`) da por vistos, al cargar una partida sin `account.tutorials` (también el perfil antiguo y las copias de antes), los mini tutoriales de lo ya usado: pestañas y reloj si hay expediciones, mercaderes con reputación, estaciones construidas y sus niveles, primera muerte, venta y rango, jefe, élite, Kael, atuendo, copia, Ajustes y subzonas hasta la más honda. Lo demás queda pendiente; sin expediciones no se marca nada. Test `tests/tutorials-migracion.test.ts` (6); suite 484.
 - **12/11, tutoriales fase 7:** regla permanente en `CLAUDE.md` y `guia-interfaz.md` (apartado «Tutoriales»), nuevo `docs/tutoriales.md` con el mapa de los 66 mini tutoriales (disparador, quién lo cuenta, «!», qué resalta) y test nuevo: cada disparador se lanza en `src/`. Siguiente: fase 8 (migración, opción a).
 - **12/11, tutoriales fase 6:** Guía en Ajustes › Partida (por temas; releer lo visto, «Aún por descubrir» lo demás), repetir el tutorial inicial, desactivar y reiniciar (con confirmación) los mini tutoriales, icono «?» de 44 px junto al engranaje y mini de Ajustes. Prueba: `scripts/e2e-guia.cjs`. Se ajustaron `minis-check`, `e2e-bastion-minis` (el mini de Ajustes sale primero) y `ajustes-check` (esperaba poco antes de forzar el aviso de copia).
-- **Bloque 3 (tutoriales):** fases 1 a 6 hechas. Siguiente: fase 7 (regla y `docs/tutoriales.md`) y 8 (migración). Plan en `docs/plan-tutoriales.md`. Quedan de la fase 4 para más adelante: los desbloqueos `unlock.stash-page`, `unlock.shared-page` y `unlock.class-skill`,.
+- **Bloque 3 (tutoriales):** fases 1 a 8 y desbloqueos hechos (bloque terminado). Plan en `docs/plan-tutoriales.md`. 
 - Comprobar en un móvil real que el arrastre de objetos se nota suave. Se optimizó el 5/11 y las pruebas automáticas pasan.
 - Configuración externa, que hace el usuario:
   - **Enforce HTTPS** en GitHub Pages y que `www.gravevow.com` funcione;
@@ -62,7 +64,6 @@
 - Falta subir `public/sitemap.xml` (ya generado) y referenciarlo en `public/robots.txt`.
 
 ## Errores conocidos
-- `menus-check` falla en los mercaderes en los 3 tamaños: el guion entra directo en `vendor-nira` sin pasar antes por «Mercaderes» del Bastión. La prueba está desfasada; el juego funciona.
 - `almacen-check` falla en escritorio («la página debe verse entera sin desplazar», 117 casillas visibles). Ya fallaba antes de la Fase 1; tableta y móvil pasan. Pendiente de revisar.
 - Las pruebas e2e fallan de vez en cuando por tiempo de espera en el modal de botín. Al repetirlas, pasan.
 

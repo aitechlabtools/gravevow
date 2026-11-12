@@ -27,13 +27,13 @@ const VIEWS = [
   { name: 'alijo', tab: 'stash' },
   { name: 'alijo-almacen', tab: 'stash', steps: ['seg-storage'], optional: true },
   { name: 'mercaderes', tab: 'merchants' },
-  { name: 'mercader-nira', tab: 'merchants', steps: ['vendor-nira'] },
-  { name: 'mercader-vender', tab: 'merchants', steps: ['vendor-nira', 'vendor-view-sell'] },
-  { name: 'mercader-forja', tab: 'merchants', steps: ['vendor-brand', 'vendor-view-forge'] },
-  { name: 'mercader-grizk', tab: 'merchants', steps: ['vendor-grizk'] },
-  { name: 'grizk-vender', tab: 'merchants', steps: ['vendor-grizk', 'vendor-view-sell'] },
+  { name: 'mercader-nira', tab: 'merchants', steps: ['btn-merchants', 'vendor-nira'] },
+  { name: 'mercader-vender', tab: 'merchants', steps: ['btn-merchants', 'vendor-nira', 'vendor-view-sell'] },
+  { name: 'mercader-forja', tab: 'merchants', steps: ['btn-merchants', 'vendor-brand', 'vendor-view-forge'] },
+  { name: 'mercader-grizk', tab: 'merchants', steps: ['btn-merchants', 'vendor-grizk'] },
+  { name: 'grizk-vender', tab: 'merchants', steps: ['btn-merchants', 'vendor-grizk', 'vendor-view-sell'] },
   { name: 'intendencia-estado', tab: 'stash', steps: ['seg-status'] },
-  { name: 'mercader-contratos', tab: 'merchants', steps: ['vendor-grizk', 'vendor-view-contracts'] },
+  { name: 'mercader-contratos', tab: 'merchants', steps: ['btn-merchants', 'vendor-grizk', 'vendor-view-contracts'] },
   { name: 'misiones', tab: 'quests' },
   { name: 'bestiario', tab: 'bestiary' },
   { name: 'alijo-atuendo', tab: 'stash', steps: ['slot-skin'], close: true },
@@ -67,6 +67,8 @@ async function run(s) {
       await act(`tab-${v.tab}`);
       for (const st of v.steps ?? []) {
         if (v.optional && !(await p.$(`[data-testid=${st}]`))) throw new Error('skip');
+        // Entrada del Bastión: si ya está en las tarjetas de mercaderes, no hace falta
+        if (st === 'btn-merchants' && !(await p.$('[data-testid=btn-merchants]')) && (await p.$('[data-testid^=vendor-]'))) continue;
         await act(st);
       }
       await p.waitForTimeout(300);

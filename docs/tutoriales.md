@@ -39,6 +39,9 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 | `bastion.first-sale` | Objetos y oro | `bastion:sale` | intendant | — | — | 2 | — |
 | `bastion.first-rep` | Mercaderes | `bastion:rank-up` | intendant | — | — | 2 | — |
 | `bastion.first-skin` | Cuenta y copia | `bastion:skin` | intendant | — | — | 2 | — |
+| `unlock.stash-page` | Objetos y oro | `unlock:stash-page` | intendant | — | `stash-pages` | 2 | Al comprar una página del almacén. |
+| `unlock.shared-page` | Cuenta y copia | `unlock:shared-page` | intendant | — | `stash-page-shared` | 2 | Al comprar «Compartido». |
+| `unlock.class-skill` | Progresión | `unlock:class-skill` | intendant | — | `tab-character` | 3 | Al elegir una habilidad en el aviso de hito (sale al cerrar ese aviso). |
 | `screen.settings` | Cuenta y copia | `screen:settings` | intendant | — | `settings-nav`, `settings-tab-game` | 2 | sobre ventana |
 | `exp.clock` | Combate | `exp:clock` | intendant | — | `hud-timer` | 2 | — |
 | `exp.vital-wound` | Heridas y necesidades | `exp:vital-wound` | intendant | — | `hud-body` | 2 | — |

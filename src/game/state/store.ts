@@ -745,6 +745,7 @@ export const actions = {
     const page = pageCount(r.profile.stash) - 1;
     set({ profile: r.profile, stashPage: page });
     toast(`Página ${page + 1} del almacén comprada.`, 'good');
+    actions.tutorialEvent('unlock:stash-page');
   },
 
   /** Compra la página «Compartido» (una vez, para todos los personajes). */
@@ -757,6 +758,7 @@ export const actions = {
     set({ profile: r.profile, stashPage: 'shared' });
     void saveNow();
     toast('Página «Compartido» comprada: todos tus personajes pueden usarla.', 'good');
+    actions.tutorialEvent('unlock:shared-page');
   },
 
   // ── Atuendos (Tienda) ──
@@ -790,6 +792,7 @@ export const actions = {
     set({ profile: next });
     sfx('magic');
     toast(`Nueva habilidad de clase: ${getSkill(id).name}`, 'good');
+    actions.tutorialEvent('unlock:class-skill');
     return true;
   },
   /** Llevar equipada otra habilidad de clase (fuera de combate). */
