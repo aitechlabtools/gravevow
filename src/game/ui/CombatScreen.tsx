@@ -413,7 +413,7 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent,
         {small && <span className="text-xs text-stone-400">{c.hp} / {c.stats.maxHp}</span>}
         {onBody && (
           <button type="button" className={`combat-body-btn ${hurt ? 'hurt' : ''}`} onClick={(e) => { e.stopPropagation(); onBody(); }}
-            aria-label={hurt ? 'Heridas y necesidades: tienes heridas' : 'Heridas y necesidades'} title="Heridas y necesidades (curar, comer o beber gasta el turno)" data-testid="combat-body">🩸</button>
+            aria-label={hurt ? 'Heridas y necesidades: tienes heridas' : 'Heridas y necesidades'} title="Heridas y necesidades (curar, comer o beber gasta el turno)" data-testid="combat-body">{hurt ? '🩸' : <span className="combat-body-ok" aria-hidden>✚</span>}</button>
         )}
       </div>
       {c.body && !small && (

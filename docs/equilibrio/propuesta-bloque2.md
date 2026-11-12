@@ -211,7 +211,7 @@ Usar una bomba gasta el turno y se lanza desde la mochila en combate. El fuego a
 
 | Objeto | Desde | Objetivo | Efecto |
 |---|---|---|---|
-| Bomba de clavos ✱ | S1 (alquimia nv 1) | Un enemigo | Daño contundente medio; 25 % de aturdir 1 turno |
+| Bomba de clavos ✱ | S1 (alquimia nv 1) | Un enemigo | Daño contundente medio; 35 % de aturdir 1 turno |
 | Frasco de brea ✱ | S1 (alquimia nv 1) | Los dos enemigos | Daño de fuego bajo + quemadura 3 turnos |
 | Metralla de plata ✱ | S4 (alquimia nv 2) | Un enemigo | Daño cortante alto; doble contra no muertos |
 | Frasco incendiario de azufre ✱ | S7 (alquimia nv 3) | Los dos enemigos | Daño de fuego alto + quemadura fuerte |
@@ -244,7 +244,7 @@ Respuestas del usuario (12/11):
 4. **Fuentes de materias y planos.** Botín, vetas y mercaderes para las materias nuevas; planos en cofres, élites, jefes y tiendas. *Hecha: cifras en `config/craftDrops.ts`; la hierba sale de cofres S1–S3 y de Vesper en lugar de brotes.*
 5. **Desguace nuevo.** Seguro y posible, azar por rareza, confirmación, recluta bloqueado y selección múltiple. `desguace-check` en 3 tamaños. *Hecha: cifras en `config/salvage.ts`, lógica en `core/salvage.ts`. No hay marca de favorito en el juego, así que la confirmación es solo para raro o mejor; seis objetos baratos (amuleto de hueso, antorcha de brea, tomo arcano, varita de abedul, daga de hueso y báculo de ascuas) no llegan a una unidad segura y solo tienen la parte posible.*
 6. **Bombas en combate.** Acción, ficha, estados y simulador. *Hecha: cifras en `config/bombs.ts`; el daño usa el mejor de Ataque y Magia y no se esquiva; `simulador-bombas.md`.*
-7. **Equilibrio y cierre.** Simulador de economía y de combate con bombas, arreglo de `almacen-check` en ordenador, migración (las calidades de lo ya forjado se conservan), comprobación del ciclo en 3 tamaños y estado del proyecto.
+7. **Equilibrio y cierre.** Simulador de economía y de combate con bombas, arreglo de `almacen-check` en ordenador, migración (las calidades de lo ya forjado se conservan), comprobación del ciclo en 3 tamaños y estado del proyecto. *Hecha: `simulador-economia.md` (ningún ciclo gana), bombas reajustadas (clavos 1,3 y 35 %, metralla 1,6), almacén encogido en ordenador para caber entero y prueba de migración de calidades.*
 
 ## 11. Parte 2.1: estaciones, encargados, 3 niveles y Atril rúnico
 

@@ -18,9 +18,9 @@ export interface BombDef {
 }
 
 export const BOMBS: Record<string, BombDef> = {
-  nail_bomb: { target: 'one', power: 1.1, dmg: 'blunt', status: { id: 'stun', turns: 1, chance: 0.25 } },
+  nail_bomb: { target: 'one', power: 1.3, dmg: 'blunt', status: { id: 'stun', turns: 1, chance: 0.35 } },
   pitch_flask: { target: 'all', power: 0.45, dmg: 'fire', status: { id: 'burn', turns: 3, chance: 1 } },
-  silver_shrapnel: { target: 'one', power: 1.9, dmg: 'cut', undeadMult: 2 },
+  silver_shrapnel: { target: 'one', power: 1.6, dmg: 'cut', undeadMult: 2 },
   sulfur_flask: { target: 'all', power: 1.4, dmg: 'fire', status: { id: 'burn', turns: 5, chance: 1 } },
 };
 

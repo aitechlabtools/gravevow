@@ -49,14 +49,14 @@ describe('bombas y frascos', () => {
     expect(n.events.filter((e) => e.type === 'damage' && e.targetId === 'player' && e.source === 'hit').length).toBe(0);
   });
 
-  it('la bomba de clavos aturde a veces (25 %)', () => {
+  it('la bomba de clavos aturde a veces (35 %)', () => {
     let stun = 0;
     for (let seed = 1; seed <= 200; seed++) {
       const n = performAction(duo('warrior', 'bandit', 'bandit', seed), { type: 'item', itemId: 'nail_bomb', targetId: 'e1' });
       if (n.events.some((e) => e.type === 'status' && e.status === 'stun' && e.applied)) stun++;
     }
-    expect(stun).toBeGreaterThan(25);
-    expect(stun).toBeLessThan(80);
+    expect(stun).toBeGreaterThan(45);
+    expect(stun).toBeLessThan(95);
   });
 
   it('la metralla de plata hace el doble a los no muertos', () => {

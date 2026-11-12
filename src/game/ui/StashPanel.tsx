@@ -1,6 +1,6 @@
 // Almacén por páginas: pestañas 1–5 (las no compradas, con candado y precio) y «Compartido».
 // Mover un objeto a otra página: arrastrarlo hasta la pestaña, o tocarlo (queda elegido) y tocar la pestaña.
-import { useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { actions, useGame } from '../state/store';
 import { pageCount, pageSlice, pageStart, nextPageCost, type StashPage } from '../../core/stashPages';
 import { SHARED_PAGE_COST, STASH_MAX_PAGES, STASH_PAGE_SIZE } from '../../config/stash';
@@ -31,6 +31,24 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
   const grid = shownPage === 'shared' ? profile.shared! : pageSlice(profile.stash, shownPage);
   const used = grid.filter(Boolean).length;
   const label = shownPage === 'shared' ? 'Compartido' : `pág. ${shownPage + 1}`;
+  // En ordenador la página entera (15 filas) se ve sin desplazar: las casillas se encogen lo justo para caber en alto.
+  const box = useRef<HTMLDivElement>(null);
+  const [slot, setSlot] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (touchy || !el) { setSlot(null); return; }
+    const rows = Math.ceil(STASH_PAGE_SIZE / cols);
+    const fit = () => {
+      const h = el.clientHeight;
+      const base = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--slot')) || 52;
+      const s = Math.floor((h - (rows - 1) * 4 - 16) / rows);
+      setSlot(h > 0 && s < base ? Math.max(34, s) : null);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [touchy, cols]);
   return (
     <section className="panel ui-panel min-h-0" data-testid={testId} style={shownPage === 'shared' ? { borderColor: '#3f8f8a' } : undefined}>
       <div className="flex items-center justify-between gap-2" style={{ padding: compactHeader || touchy ? '6px 8px 0' : '10px 12px 0' }}>
@@ -47,7 +65,7 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
       </div>
       {shownPage === 'shared' && <p className="text-[11px] px-3 pt-2" style={{ color: SHARED_COLOR }}>Lo que dejes aquí lo verán y podrán coger todos tus personajes.</p>}
       <div className="ui-pbody min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 overflow-y-auto scroll-thin">
+        <div ref={box} className="flex-1 min-h-0 overflow-y-auto scroll-thin" style={slot ? ({ '--slot': `${slot}px` } as CSSProperties) : undefined}>
           <GridView key={String(shownPage)} marked={marked} grid={grid} container={shownPage === 'shared' ? 'shared' : 'stash'} offset={shownPage === 'shared' ? 0 : pageStart(shownPage)}
             cols={cols} equipment={profile.equipment} mode={mode} selected={sel} onSelect={onSelect} onEmpty={onEmpty} onQuick={onQuick} onAlt={onAlt} />
         </div>
