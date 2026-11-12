@@ -116,6 +116,7 @@ function BastionEntry({ onPick }: { onPick: (a: 'merchants' | 'refuge') => void 
 
 function VendorCards({ onTalk, onBack }: { onTalk: (v: VendorId) => void; onBack: () => void }) {
   const profile = useGame((s) => s.profile)!;
+  useEffect(() => { actions.tutorialEvent('bastion:merchants'); }, []);
   const scale = usePixelScale('vendor');
   const cols = 4;
   return (
@@ -175,6 +176,7 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
   const scale = usePixelScale('vendor');
   const [view, setView] = useState<VendorView>(initial);
   const [sel, setSel] = useState<Loc | null>(null);
+  useEffect(() => { actions.tutorialEvent(`vendor:${vendor}`); }, [vendor]);
   useClearOnDrop(useCallback(() => setSel(null), []));
   const [marks, setMarks] = useState<string[]>([]);
   const v = VENDORS[vendor];

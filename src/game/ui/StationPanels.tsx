@@ -1,6 +1,6 @@
 // Bloque 2: estaciones del Refugio (tarjeta con encargado, coste y beneficio), el menú de crafteo común de todas las
 // estaciones con recetas (fase 3: sin minijuegos) y la vista de runas. Todo se decide tocando; objetivos de 44 px.
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { MODULES, MODULE_ORDER, type ModuleId } from '../../core/data/refuge';
 import { needsOf } from '../../core/needs';
@@ -153,7 +153,7 @@ export function StationTile({ id, onUse, onDetails, hideDetails = false }: { id:
   const by = VENDORS[m.by];
   const main = useStationMain(id, onUse, onDetails);
   return (
-    <Card title={m.name} testId={`module-${id}`} art={<StationArt id={id} scale={scale} />}>
+    <Card title={m.name} testId={`module-${id}`} tutDot={lvl >= 1} art={<StationArt id={id} scale={scale} />}>
       <div className={`text-center text-[11px] uppercase tracking-[0.12em] ${lvl < 1 ? 'text-stone-500' : 'text-gold'}`} data-testid={`module-level-${id}`}>
         {lvl < 1 ? 'Bloqueada' : lvl >= 3 ? 'Nivel 3/3 · máximo' : `Nivel ${lvl}/3`}
       </div>
@@ -253,6 +253,8 @@ export function CraftPanel({ station, onBack }: { station: CraftStation; onBack?
   const block = r ? (lock ?? craftBlock(profile, r.id, n, fine)) : 'Nada que hacer.';
   const def = r ? getItem(r.result) : null;
   const pick = (id: string) => { setSel(id); setQty(1); setFine(false); sfx('click'); };
+  // Primera vez en la estación: su encargado la explica (data/tutorials.ts, «station.<id>»)
+  useEffect(() => { if (lvl >= 1) actions.tutorialEvent(`station:${station}`); }, [station, lvl >= 1]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="flex flex-col gap-2" data-testid={`craft-${station}`}>
       <div className="flex flex-wrap items-center gap-2">
@@ -356,6 +358,7 @@ export function RunePanel({ onBack }: { onBack: () => void }) {
   const t = targets.find((x) => x.st.uid === uid) ?? null;
   const runeIds = Object.keys(RUNES);
   const where = (l: RuneLoc) => (l.kind === 'equip' ? 'Equipado' : l.container === 'backpack' ? 'Mochila' : 'Almacén');
+  useEffect(() => { actions.tutorialEvent('station:runes'); }, []);
   return (
     <div className="flex flex-col gap-2" data-testid="runes">
       <div className="flex flex-wrap items-center gap-2">

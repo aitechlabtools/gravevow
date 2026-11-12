@@ -19,12 +19,12 @@ export function sanitizeTutorials(raw: unknown): TutorialsSave {
 }
 
 export function isPending(t: TutorialsSave, id: string): boolean {
-  return !t.disabled && !t.seen.includes(id);
+  // Los avisos `always` (subidas de nivel) salen aunque estén desactivados
+  return (!t.disabled || !!getMini(id)?.always) && !t.seen.includes(id);
 }
 
 /** Añade a la cola los mini tutoriales de un disparador que no se han visto ni están ya en la cola. */
 export function enqueueTrigger(queue: string[], t: TutorialsSave, trigger: string): string[] {
-  if (t.disabled) return queue;
   const add = MINI_TUTORIALS.filter((m) => m.trigger === trigger && isPending(t, m.id) && !queue.includes(m.id)).map((m) => m.id);
   return add.length ? [...queue, ...add] : queue;
 }

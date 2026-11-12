@@ -136,6 +136,6 @@ export function useTutBadge(testId: string): boolean {
 }
 
 /** «!» discreto de «hay algo nuevo que ver». Va dentro de un elemento con `position: relative`. */
-export function TutDot({ testId }: { testId: string }) {
-  return useTutBadge(testId) ? <span className="tut-dot" aria-label="Novedad por ver" data-testid={`tut-dot-${testId}`}>!</span> : null;
+export function TutDot({ testId, inset = false }: { testId: string; inset?: boolean }) {
+  return useTutBadge(testId) ? <span className="tut-dot" style={inset ? { top: 8, left: 8, right: 'auto' } : undefined} aria-label="Novedad por ver" data-testid={`tut-dot-${testId}`}>!</span> : null;
 }

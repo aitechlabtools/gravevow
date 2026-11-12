@@ -2,7 +2,7 @@
 // Vista «Estado»: heridas y necesidades con la mochila al lado; curarte con tus objetos sin pagar a Vesper.
 // Mover objetos: arrastrar (ordenador), o tocar un objeto (se abre su ficha) y después tocar una casilla libre.
 // En móvil no caben las tres columnas: segmentos «Equipo», «Almacén» y «Estado».
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { actions, useGame } from '../../state/store';
 import { CLASSES } from '../../../core/data/classes';
 import { computeStats, baseStats } from '../../../core/stats';
@@ -44,6 +44,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
   const [sel, setSel] = useState<Loc | null>(null);
   useClearOnDrop(useCallback(() => setSel(null), []));
   const [view, setView] = useState<'gear' | 'storage' | 'status'>('gear');
+  useEffect(() => { if (view === 'status') actions.tutorialEvent('stash:status'); }, [view]);
   const [picker, setPicker] = useState(false);
   const clear = () => setSel(null);
   const same = (a: Loc | null, b: Loc) => !!a && JSON.stringify(a) === JSON.stringify(b);

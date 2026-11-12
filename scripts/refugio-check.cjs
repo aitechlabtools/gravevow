@@ -90,7 +90,8 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   await p.screenshot({ path: out + '-cocina.png' });
   await tap('[data-testid=craft-go]'); await p.waitForTimeout(150);
   if ((await count('hearty_stew')) !== 2) fail('la cocina no hizo los dos guisos');
-  if ((await count('salted_meat')) !== 1) fail('no se gastó la carne');
+  // 3 de partida + 1 que regala Garth al construir la cocina − 2 guisos
+  if ((await count('salted_meat')) !== 2) fail('no se gastó la carne');
   await tap('[data-testid=vendor-back]');
 
   // 3 · Desguace de Orik (sus estaciones ya no están dentro del mercader)

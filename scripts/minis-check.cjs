@@ -28,14 +28,17 @@ const [,, url = 'http://localhost:5173/play/', out = 'minis', dev] = process.arg
   };
   await p.goto(url + '?debug&minis'); await tap('[data-testid=btn-play]');
   await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]');
-  // La bienvenida del lobby (ventana) está abierta: aún no sale ningún mini tutorial
+  // La bienvenida del intendente (otro mini tutorial) se salta: aquí se prueba la cola y la espera
+  await p.waitForSelector('[data-testid=mini-tutorial][data-mini=bienvenida]', { timeout: 4000 }).then(() => tap('[data-testid=mini-skip]')).catch(() => {});
   await p.waitForSelector('[data-testid=tut-dot-tab-quests]').catch(() => fail('Misiones no tiene el «!» de pendiente'));
   if (!(await p.$('[data-testid=tut-dot-tab-shop]'))) fail('Tienda no tiene el «!»');
   if (await p.$('[data-testid=tut-dot-tab-play]')) fail('Jugar tiene «!» sin mini tutorial');
+  // Con Ajustes abierto (otra ventana) no sale; al cerrarlo, sí
+  await tap('[data-testid=btn-lobby-settings]');
   await G(() => window.__GRAVEVOW__.actions.tutorialEvent('tab:quests'));
   await p.waitForTimeout(400);
   if (await p.$('[data-testid=mini-tutorial]')) fail('sale encima de otra ventana');
-  
+  await tap('[data-testid=settings-close]');
   await p.waitForSelector('[data-testid=mini-tutorial]', { timeout: 2000 }).catch(() => fail('no sale al cerrar la ventana'));
   await tap('[data-testid=mini-skip]');
   // Abrir Misiones de verdad (ya visto por el atajo de arriba → no sale): reiniciar y probar el flujo completo

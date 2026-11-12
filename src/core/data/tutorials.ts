@@ -6,6 +6,8 @@
 // cuando exista).
 // ════════════════════════════════════════════════════════════════════
 import type { VendorId } from './vendors';
+import { STATIONS } from '../../config/stations';
+import type { CraftStation } from './crafting';
 
 /** Temas de la Guía (Ajustes › Partida). */
 export type TutTopic = 'combate' | 'cuerpo' | 'objetos' | 'bastion' | 'mercaderes' | 'progresion' | 'cuenta';
@@ -45,7 +47,17 @@ export interface MiniTutorial {
   steps: TutStep[];
   /** Recorrido largo por varias pestañas (solo la bienvenida al Bastión). */
   long?: boolean;
+  /** Aviso que sale aunque se desactiven los mini tutoriales (subidas de nivel de las estaciones). */
+  always?: boolean;
 }
+
+/**
+ * Receta de la primera vez en cada estación: al construirla (nivel 1), su encargado regala los materiales justos para
+ * hacerla una vez. Va por personaje, porque cada uno tiene su Refugio.
+ */
+export const STATION_FIRST_RECIPE: Record<CraftStation, string> = {
+  kitchen: 'c_jerky', bench: 'c_strap', infirmary: 'c_bandage', forge: 'c_scrap_bar', alchemy: 'c_antidote', runic: 'c_cut_crystal',
+};
 
 /** Bienvenida al Bastión: la cuenta el intendente al volver de la primera bajada (o al crear un personaje sin tutorial). */
 export const WELCOME_ID = 'bienvenida';
@@ -88,7 +100,179 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
       { text: 'Lo que compras es de la **cuenta**: cualquiera de tus personajes lo puede llevar.' },
     ],
   },
+  // ── Pestañas y pantallas ──
+  {
+    id: 'tab.intendencia', topic: 'cuerpo', trigger: 'stash:status',
+    steps: [
+      { text: 'Aquí ves tu **cuerpo** parte por parte y tus **necesidades**: saciedad, hidratación y descanso.', target: 'intendencia-status' },
+      { text: 'Si algo está herido y llevas con qué curarlo, sale un botón. **Pruébalo**.', target: 'body-quick', action: 'click' },
+    ],
+  },
+  {
+    id: 'tab.personaje', topic: 'progresion', trigger: 'tab:character', badge: 'tab-character',
+    steps: [
+      { text: 'Tu nivel, tus atributos y lo que te da el equipo.', target: 'character-stats' },
+      { text: 'Las **habilidades de clase** se ganan por hitos. Equipa las que quieras llevar abajo.', target: 'class-path' },
+    ],
+  },
+  {
+    id: 'screen.bastion-entry', topic: 'mercaderes', trigger: 'bastion:merchants', badge: 'bastion-merchants',
+    steps: [
+      { text: 'Cada mercader tiene su sitio y su **reputación** contigo: cuanto más tratas con él, más te ofrece.', target: 'vendor-card-nira' },
+      { text: 'Empieza por **Nira**. Haz clic en **Hablar**.', touch: 'Empieza por **Nira**. Toca **Hablar**.', target: 'vendor-nira', action: 'click' },
+    ],
+  },
+  {
+    id: 'tab.refugio', topic: 'bastion', trigger: 'bastion:refuge', narrator: 'orik', badge: 'bastion-refuge',
+    steps: [
+      { text: 'Esto es tuyo. Cada **estación** la construye su encargado: tú pones el oro y los materiales.', target: 'station-grid' },
+      { text: 'El **catre** ya está. Dormir llena el Descanso y, mejorado, te deja **preparado** para bajar.', target: 'module-cot' },
+      { text: 'Mira qué pide cada estación en **Detalles**. Empieza por la cocina.', target: 'details-kitchen', action: 'click' },
+    ],
+  },
+  {
+    id: 'screen.backup', topic: 'cuenta', trigger: 'screen:backup',
+    steps: [
+      { text: 'Descarga tu partida en un archivo y guárdalo a buen recaudo.', target: 'screen-backup' },
+      { text: 'Si cambias de aparato o borras el navegador, **Importar** la recupera. Sin copia, lo perdido no vuelve.' },
+    ],
+  },
+  {
+    id: 'screen.select', topic: 'cuenta', trigger: 'screen:select',
+    steps: [
+      { text: 'Hasta **4 personajes**. Cada uno tiene su equipo, su almacén, su Refugio y su bestiario.', target: 'screen-select' },
+      { text: 'Los **trajes**, los ajustes y la página **Compartido** del almacén son de todos.' },
+    ],
+  },
+  {
+    id: 'station.runes', topic: 'bastion', trigger: 'station:runes', narrator: 'eldrin',
+    steps: [
+      { text: 'El atril ya graba **runas**. Elige un arma o una pieza con huecos.', target: 'runes' },
+      { text: 'Elige el hueco y la runa. **Una por hueco**, y lo grabado no se borra. Elige bien.' },
+    ],
+  },
+  // ── Bastión, por hechos ──
+  {
+    id: 'bastion.first-death', topic: 'cuerpo', trigger: 'bastion:fallen', narrator: 'vesper',
+    steps: [
+      { text: 'Te han traído a rastras. Lo que llevabas en la mochila se ha quedado abajo.' },
+      { text: 'Te dejo entera la carne por **una moneda**, o gratis si no tienes ni eso.', target: 'cure-btn', action: 'click' },
+      { text: 'Y si te has quedado sin nada que ponerte, en **Intendencia** el Bastión te da **equipo de recluta**.' },
+    ],
+  },
+  {
+    id: 'bastion.can-craft', topic: 'bastion', trigger: 'bastion:can-craft',
+    steps: [
+      { text: 'Con lo que traes puedes **fabricar** algo en tus estaciones del Refugio.' },
+      { text: 'Entra en el **Bastión** y luego en el **Refugio**. Cada estación tiene un punto verde en lo que puedes hacer.', target: 'tab-merchants' },
+    ],
+  },
+  {
+    id: 'bastion.first-sale', topic: 'objetos', trigger: 'bastion:sale',
+    steps: [
+      { text: 'Bien vendido. El oro va a tu **Intendencia**, en saquitos.' },
+      { text: 'Si te equivocas, lo último que vendes se puede **recomprar** al mismo precio.' },
+    ],
+  },
+  {
+    id: 'bastion.first-rep', topic: 'mercaderes', trigger: 'bastion:rank-up',
+    steps: [
+      { text: 'Un mercader ya se fía más de ti: **descuento**, más género y mejores encargos.' },
+      { text: 'La reputación sube cumpliendo sus encargos. Mira la barra en su tarjeta.' },
+    ],
+  },
+  {
+    id: 'bastion.first-skin', topic: 'cuenta', trigger: 'bastion:skin',
+    steps: [
+      { text: 'Traje nuevo. Es de la cuenta: cualquiera de tus personajes lo puede llevar.' },
+      { text: 'Póntelo o quítatelo cuando quieras aquí mismo. Solo cambia el aspecto.' },
+    ],
+  },
+  ...VENDOR_MINIS(),
+  ...STATION_MINIS(),
+  ...STATION_LEVEL_NOTICES(),
 ];
+
+// ── Uno por mercader: lo cuenta él, con su voz. Se pone en cola la primera vez que se entra a hablar con él. ──
+function VENDOR_MINIS(): MiniTutorial[] {
+  const v = (id: VendorId, steps: TutStep[]): MiniTutorial => ({ id: `vendor.${id}`, topic: 'mercaderes', trigger: `vendor:${id}`, narrator: id, badge: `vendor-card-${id}`, steps });
+  return [
+    v('nira', [
+      { text: 'Cuero, comida, saquitos para tu oro. Lo que necesites para no morir de tonto.', target: 'vendor-view-shop' },
+      { text: 'Y si traes chatarra, la compro: **márcala y pulsa Vender**.', touch: 'Y si traes chatarra, la compro: **márcala y toca Vender**.', target: 'vendor-view-sell' },
+      { text: 'Te iré pidiendo cosas. Cúmplelas y subirá tu **reputación** conmigo.', target: 'vendor-view-quests' },
+    ]),
+    v('vesper', [
+      { text: 'Vendas, pociones y remedios. Lo justo para volver de una pieza.', target: 'vendor-view-shop' },
+      { text: 'Si vuelves roto, en la **Enfermería** te recompongo. Cobro, claro. La fe no da de comer.', target: 'vendor-view-infirmary' },
+    ]),
+    v('garth', [
+      { text: 'Comida y agua. Ahí abajo el hambre mata tan bien como un esqueleto.', target: 'vendor-view-shop' },
+      { text: 'En mi **Cocina** te enseño a guisar. Un buen plato te deja **preparado** para bajar.', target: 'vendor-view-cook' },
+    ]),
+    v('orik', [
+      { text: 'Herramientas y cachivaches. Y te arreglo lo que traigas abollado.', target: 'vendor-view-repair' },
+      { text: 'Lo que no uses, al **Desguace**: lo despiezo y te llevas el material.', target: 'vendor-view-scrap' },
+    ]),
+    v('grizk', [
+      { text: 'Presto oro y compro lo que otros no quieren. Con intereses, claro.', target: 'vendor-view-shop' },
+      { text: 'Y en **Contratos** te alquilo espadas. Algunas son leales. Otras, no tanto.', target: 'vendor-view-contracts' },
+    ]),
+    v('brand', [
+      { text: 'Armas. Buenas, si las pagas. En la **Forja** te hago las tuyas con tu metal.', target: 'vendor-view-forge' },
+      { text: 'Y lo que traigas mellado, lo **reparo**. Un filo roto no corta nada.', target: 'vendor-view-repair' },
+    ]),
+    v('valerius', [
+      { text: 'Placas y cotas. Lo que se interpone entre tus tripas y una hoja.', target: 'vendor-view-shop' },
+      { text: 'Cumple mis **encargos** y te enseñaré piezas que no ofrezco a cualquiera.', target: 'vendor-view-quests' },
+    ]),
+    v('eldrin', [
+      { text: 'Pociones, polvos y frascos. No los agites cerca de una antorcha.', target: 'vendor-view-shop' },
+      { text: 'En la **Alquimia** te enseño a destilarlos tú. Con cuidado.', target: 'vendor-view-alchemy' },
+    ]),
+  ];
+}
+
+// ── Uno por estación de crafteo: lo cuenta su encargado la primera vez que se usa. Al construirla regala los materiales
+// de la receta de STATION_FIRST_RECIPE, así que el paso de craftear se hace de verdad. ──
+function STATION_MINIS(): MiniTutorial[] {
+  const what: Record<CraftStation, string> = {
+    kitchen: 'Aquí se cocina lo que da **más saciedad** que el pan duro de ahí abajo.',
+    bench: 'Correas, mangos, cuero curtido y ropa. Lo pequeño que sostiene lo grande.',
+    infirmary: '**Vendas**, torniquetes y férulas, sin pagarme a mí.',
+    forge: 'Lingotes y piezas de metal para forjar tus propias armas y armaduras.',
+    alchemy: '**Antídotos**, pociones y frascos que arden.',
+    runic: '**Cristales**, tinta y pergamino para el equipo mágico. Y, más adelante, runas.',
+  };
+  const after: Record<CraftStation, string> = {
+    kitchen: 'Va a tu almacén. Llévalo en la mochila y **cómelo** abajo cuando apriete el hambre.',
+    bench: 'Va a tu almacén. Lo usarán otras recetas: la correa sirve para torniquetes y férulas.',
+    infirmary: 'Van a tu almacén. Abajo, **arrástralas** sobre la parte herida.',
+    forge: 'Va a tu almacén. Con lingotes se forjan armas y placas.',
+    alchemy: 'Va a tu almacén. Bébelo abajo si algo te envenena.',
+    runic: 'Va a tu almacén. Los cristales piden huecos de runa en el equipo mágico.',
+  };
+  return (Object.keys(STATION_FIRST_RECIPE) as CraftStation[]).map((st) => ({
+    id: `station.${st}`, topic: 'bastion' as const, trigger: `station:${st}`, narrator: STATIONS[st].by, badge: `module-${st}`,
+    steps: [
+      { text: what[st], target: `craft-${st}` },
+      { text: 'Te he dejado los materiales justos para la primera. **Elige la receta** señalada: en verde lo que tienes.', touch: 'Te he dejado los materiales justos para la primera. **Toca la receta** señalada: en verde lo que tienes.', target: `recipe-${STATION_FIRST_RECIPE[st]}`, action: 'click' },
+      { text: 'Ahora haz clic en **Craftear al almacén**.', touch: 'Ahora toca **Craftear al almacén**.', target: 'craft-go', action: 'click' },
+      { text: `${after[st]} El siguiente nivel de la estación me lo pides a mí.` },
+    ],
+  }));
+}
+
+// ── Avisos de subida de nivel: salen aunque se desactiven los mini tutoriales. ──
+function STATION_LEVEL_NOTICES(): MiniTutorial[] {
+  return (Object.keys(STATIONS) as (keyof typeof STATIONS)[]).flatMap((st) => ([2, 3] as const).map((lv) => ({
+    id: `station.${st}.lv${lv}`, topic: 'bastion' as const, trigger: `station-up:${st}:${lv}`, narrator: STATIONS[st].by, always: true,
+    steps: [
+      { text: `${STATIONS[st].lines[lv - 1]} Tu ${STATIONS[st].name.toLowerCase()} ya es **${STATIONS[st].levels[lv].name.toLowerCase()}**.` },
+      { text: STATIONS[st].levels[lv].effect },
+    ],
+  })));
+}
 
 export function getMini(id: string): MiniTutorial | undefined {
   return MINI_TUTORIALS.find((m) => m.id === id);

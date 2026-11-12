@@ -85,6 +85,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Ajustes: `node scripts/ajustes-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Tutorial inicial (8 pasos, bloqueos, traición, saltar y repetir): `node scripts/e2e-tutorial.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Bienvenida del intendente en el Bastión: `node scripts/e2e-bienvenida.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Mini tutoriales del Bastión y de las estaciones (regalo, crafteo, aviso de nivel, venta): `node scripts/e2e-bastion-minis.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Personajes y guardado: `node scripts/personajes-check.cjs`.
   - Almacén: `node scripts/almacen-check.cjs`.
   - Copias de seguridad: `node scripts/copia-check.cjs`.

@@ -3,6 +3,7 @@ import { BestiaryTab } from './BestiaryTab';
 import { useEffect, useState, type ReactNode } from 'react';
 import { actions, dev, useGame } from '../state/store';
 import { pendingBadges } from '../../core/tutorials';
+import { canCraftSomething } from '../../core/crafting';
 import { CLASSES } from '../../core/data/classes';
 import { readyQuestCount } from '../../core/quests';
 import { readyStations } from '../../core/refuge';
@@ -58,6 +59,10 @@ export function Lobby() {
   // Bienvenida del intendente (data/tutorials.ts, «bienvenida»): una vez por personaje, al volver de la primera bajada
   const welcome = profile.tutorialDone && !profile.tutorialSeen.lobby;
   useEffect(() => { if (welcome) actions.tutorialEvent('lobby:welcome'); }, [welcome]);
+  // Mini tutoriales por hechos, cuando ya se ha visto la bienvenida: volver tras caer y volver con algo que fabricar
+  const settled = profile.tutorialSeen.lobby;
+  useEffect(() => { if (settled && profile.fallen) actions.tutorialEvent('bastion:fallen'); }, [settled, profile.fallen]);
+  useEffect(() => { if (settled && canCraftSomething(profile)) actions.tutorialEvent('bastion:can-craft'); }, [settled]); // eslint-disable-line react-hooks/exhaustive-deps
   const xpPct = Math.round((ch.xp / xpForNextLevel(ch.level)) * 100);
 
   return (

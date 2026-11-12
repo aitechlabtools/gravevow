@@ -1,6 +1,6 @@
 // Elige quién baja: los 4 huecos de personaje. Tocar uno entra al refugio con él; los vacíos crean uno nuevo.
 // Borrar pide escribir el nombre (doble confirmación) y avisa de que se pierde todo lo suyo, salvo la página «Compartido».
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { actions, useGame, type RosterEntry } from '../../state/store';
 import { CLASSES } from '../../../core/data/classes';
 import { MAX_CHARACTERS } from '../../../core/save';
@@ -22,6 +22,7 @@ export function lastPlayedLabel(t: number, now = Date.now()): string {
 
 export function ElegirPersonaje() {
   const roster = useGame((s) => s.roster);
+  useEffect(() => { actions.tutorialEvent('screen:select'); }, []);
   const activeId = useGame((s) => s.activeId);
   const layout = useLayout();
   const phone = layout === 'phone';

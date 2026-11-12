@@ -76,6 +76,11 @@ export function maxCraftable(p: Profile, r: CraftRecipe, fine = false): number {
   return Math.max(0, n);
 }
 
+/** ¿Hay alguna receta que se pueda hacer ya en una estación construida? (mini tutorial «bastion.can-craft»). */
+export function canCraftSomething(p: Profile): boolean {
+  return CRAFT_RECIPES.some((r) => maxCraftable(p, r) > 0);
+}
+
 /** null si se puede fabricar n veces; si no, el motivo. */
 export function craftBlock(p: Profile, recipeId: string, n = 1, fine = false): string | null {
   const r = getRecipe(recipeId);

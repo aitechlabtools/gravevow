@@ -136,3 +136,44 @@ describe('tutorial inicial de expedición: datos', () => {
     }
   });
 });
+
+describe('fase 4: Bastión y estaciones', () => {
+  it('la receta regalada de cada estación es suya y de nivel 1', async () => {
+    const { STATION_FIRST_RECIPE } = await import('../src/core/data/tutorials');
+    const { getRecipe } = await import('../src/core/crafting');
+    for (const [st, id] of Object.entries(STATION_FIRST_RECIPE)) {
+      const r = getRecipe(id);
+      expect(r.station, id).toBe(st);
+      expect(r.level, id).toBe(1);
+      expect(r.blueprint, id).toBeUndefined();
+      // El mini tutorial de la estación pide tocar justo esa receta
+      expect(getMini(`station.${st}`)!.steps.some((s) => s.target === `recipe-${id}` && s.action === 'click'), st).toBe(true);
+    }
+  });
+  it('con los materiales regalados se puede fabricar la primera receta', async () => {
+    const { STATION_FIRST_RECIPE } = await import('../src/core/data/tutorials');
+    const { getRecipe, craftBlock, canCraftSomething } = await import('../src/core/crafting');
+    const { giveItems } = await import('../src/core/refuge');
+    const { createProfile } = await import('../src/core/profile');
+    for (const [st, id] of Object.entries(STATION_FIRST_RECIPE)) {
+      const base = createProfile('Prueba', 'warrior', { skin: 0, hair: 0, hairColor: 0 } as never);
+      const p0 = { ...base, stash: base.stash.map(() => null), backpack: base.backpack.map(() => null), refuge: { ...base.refuge!, [st]: 1 } };
+      expect(canCraftSomething(p0 as never), st).toBe(false);
+      const p = giveItems(p0 as never, getRecipe(id).ingredients);
+      expect(craftBlock(p, id), st).toBeNull();
+      expect(canCraftSomething(p), st).toBe(true);
+    }
+  });
+  it('los avisos de subida de nivel salen aunque los mini tutoriales estén desactivados', () => {
+    const off = { ...emptyTutorials(), disabled: true };
+    expect(enqueueTrigger([], off, 'station-up:kitchen:2')).toEqual(['station.kitchen.lv2']);
+    expect(enqueueTrigger([], off, 'vendor:nira')).toEqual([]);
+    expect(enqueueTrigger([], markSeen(off, 'station.kitchen.lv2'), 'station-up:kitchen:2')).toEqual([]);
+    expect(getMini('station.cot.lv3')!.narrator).toBe('orik');
+  });
+  it('hay uno por mercader, contado por él, y uno por estación de crafteo', async () => {
+    const { VENDOR_ORDER } = await import('../src/core/data/vendors');
+    for (const v of VENDOR_ORDER) expect(getMini(`vendor.${v}`)?.narrator, v).toBe(v);
+    for (const st of ['kitchen', 'bench', 'infirmary', 'forge', 'alchemy', 'runic']) expect(getMini(`station.${st}`)?.trigger, st).toBe(`station:${st}`);
+  });
+});

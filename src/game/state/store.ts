@@ -36,12 +36,13 @@ import { vendorUnlocked } from '../../core/vendors';
 import { STATION_FX } from '../../config/stations';
 import { craft as craftItems, getRecipe, learnBlueprints, settlePendingJobs, storeCrafted } from '../../core/crafting';
 import { applyRune, type RuneLoc } from '../../core/runes';
-import { canSleepForPrep, cotPrepCut, refugeOf, receptionDiscard, receptionSell, receptionWithdraw, RECEPTION_NOTE, upgradeModule } from '../../core/refuge';
+import { canSleepForPrep, cotPrepCut, giveItems, refugeOf, receptionDiscard, receptionSell, receptionWithdraw, RECEPTION_NOTE, upgradeModule } from '../../core/refuge';
 import { receptionSalvage, salvage, type SalvageRef } from '../../core/salvage';
 import type { ModuleId } from '../../core/data/refuge';
+import type { CraftStation } from '../../core/data/crafting';
 import { TUTORIAL_BLOCK } from '../../core/data/tutorial';
 import { currentMini, enqueueTrigger, markSeen, type TutorialsSave } from '../../core/tutorials';
-import { WELCOME_ID } from '../../core/data/tutorials';
+import { getMini, STATION_FIRST_RECIPE, WELCOME_ID } from '../../core/data/tutorials';
 import { bus } from './bus';
 import { buySkin, equipSkin } from '../../core/skins';
 import { getSkin } from '../../core/data/skins';
@@ -268,7 +269,8 @@ export const actions = {
   /** Ajustes: desactivar (o volver a activar) los mini tutoriales. */
   setMinisDisabled(disabled: boolean) {
     const tutorials = { ...state.tutorials, disabled };
-    set({ tutorials, miniQueue: disabled ? [] : state.miniQueue, miniStep: disabled ? 0 : state.miniStep });
+    const queue = disabled ? state.miniQueue.filter((id) => getMini(id)?.always) : state.miniQueue;
+    set({ tutorials, miniQueue: queue, miniStep: queue[0] === state.miniQueue[0] ? state.miniStep : 0 });
     saveTutorials(tutorials);
   },
 
@@ -664,8 +666,14 @@ export const actions = {
     const r = upgradeModule(p, id);
     if (!r.ok) return invError(r.error);
     sfx('equip');
-    set({ profile: r.profile });
-    toast(r.note ?? 'Hecho.', 'good');
+    const lvl = refugeOf(r.profile)[id];
+    // Al construir una estación de crafteo, su encargado regala los materiales de la primera receta (data/tutorials.ts)
+    const first = lvl === 1 ? STATION_FIRST_RECIPE[id as CraftStation] : undefined;
+    const gift = first ? giveItems(r.profile, getRecipe(first).ingredients) : r.profile;
+    set({ profile: gift });
+    toast(`${r.note ?? 'Hecho.'}${first ? ' Te deja el material justo para estrenarla.' : ''}`, 'good');
+    // Subida a nivel 2 o 3: aviso de lo que da (sale aunque se desactiven los mini tutoriales)
+    if (lvl >= 2) actions.tutorialEvent(`station-up:${id}:${lvl}`);
   },
 
   /** Desguace en el taller de Orik: uno o varios objetos a la vez. */
@@ -761,6 +769,7 @@ export const actions = {
     sfx('coin');
     set({ profile: r.profile });
     toast(`Atuendo comprado: ${getSkin(id).name}. Es tuyo para siempre.`, 'loot');
+    actions.tutorialEvent('bastion:skin');
     return true;
   },
   /** Ponerse un atuendo o quitárselo (null). Solo cambia el aspecto. */
@@ -856,6 +865,7 @@ export const actions = {
     sfx('coin');
     set({ profile: r.profile });
     if (item) toast(`Vendes ${getItem(item.itemId).name} por ${r.profile.gold - p.gold} de oro.`, 'good', getItem(item.itemId).icon);
+    actions.tutorialEvent('bastion:sale');
   },
 
   /** Vender de una vez todo lo marcado (casillas de la mochila y del almacén). Devuelve cuánto se ha ganado. */
@@ -881,6 +891,7 @@ export const actions = {
       sfx('coin');
       set({ profile: p, buyback: [...bought.reverse(), ...state.buyback].slice(0, 5) });
       toast(`Vendes ${sold === 1 ? '1 objeto' : `${sold} objetos`} por ${gain} de oro.`, 'good', 'coin');
+      actions.tutorialEvent('bastion:sale');
     }
     if (fail) invError(sold ? `No se pudo vender todo: ${fail}` : fail);
     return gain;
@@ -990,7 +1001,10 @@ export const actions = {
     });
     sfx('victory');
     toast(`Misión completada: +${def.reward.gold} oro, +${def.reward.xp} XP, +${def.reward.rep} de reputación${xp.levelsGained ? ' · ¡Subes de nivel!' : ''}`, 'good');
-    if (rankOf(after) > rankOf(before)) toast(`${VENDORS[def.vendor].name} te considera ahora «${REP_RANKS[rankOf(after)].name}»: ${Math.round(REP_RANKS[rankOf(after)].discount * 100)}% de descuento y mercancía nueva.`, 'good');
+    if (rankOf(after) > rankOf(before)) {
+      toast(`${VENDORS[def.vendor].name} te considera ahora «${REP_RANKS[rankOf(after)].name}»: ${Math.round(REP_RANKS[rankOf(after)].discount * 100)}% de descuento y mercancía nueva.`, 'good');
+      actions.tutorialEvent('bastion:rank-up');
+    }
   },
   backToLobby() {
     set({ screen: 'lobby', summary: null });

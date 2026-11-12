@@ -437,7 +437,7 @@ La Guía:
    - Heridas solo en el paso 3.
    - Se actualiza `e2e-tutorial.cjs`.
 3. **Bienvenida al Bastión.** ✅ Hecho (12/11). Sustituye a `LobbyTutorial` y a `DungeonTutorial`. Cambios sobre el guion: 11 pasos (se separan las pestañas que hay que tocar); el oro se enseña con «Agrupar oro» en vez de arrastrar monedas al saquito, y el bolsillo seguro es informativo (el arrastre no se puede detectar de forma fiable); sale al volver de la primera bajada, no antes.
-4. **Mini tutoriales del Bastión y de las estaciones.** Incluye el regalo de materiales y los avisos de subida de nivel.
+4. **Mini tutoriales del Bastión y de las estaciones.** ✅ Hecho (12/11). Incluye el regalo de materiales y los avisos de subida de nivel. Cambios sobre el guion: el catre va dentro del mini del Refugio; las recetas regaladas son las de nivel 1 que existen hoy (cecina, correa, vendas, lingote de chatarra, antídoto y cristal tallado), porque el guiso es de nivel 2; los de primera venta, rango y traje los cuenta el intendente; Ajustes y los desbloqueos (página del almacén, Compartido y habilidad de clase) quedan pendientes (Ajustes, en la fase 6).
 5. **Mini tutoriales de la expedición.**
 6. **Guía y opciones en Ajustes › Partida.**
    - Repetir el tutorial inicial.

@@ -1,6 +1,6 @@
 // El Refugio (estaciones, catre y platos) y el desguace de Orik. Lo que se fabrica va por el menú de crafteo común.
 // Todo se decide tocando: nada depende del hover ni de reflejos.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { prepText, refugeOf } from '../../core/refuge';
 import { needsConfirm, salvageInfo, sumItems } from '../../core/salvage';
@@ -33,6 +33,9 @@ export function RefugePanel({ onBack, onGo }: { onBack: () => void; onGo?: GoTo 
   const back = () => { setInside(null); sfx('click'); };
   const use = (id: ModuleId) => setInside(id === 'runic' && ref.runic >= 3 ? 'runic-menu' : id);
   const recN = (profile.reception ?? []).length;
+  // Primera vez en el Refugio (vista de tarjetas): lo explica Orik
+  const cards = !inside && !detail;
+  useEffect(() => { if (cards) actions.tutorialEvent('bastion:refuge'); }, [cards]);
   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' } as const;
   const bastion = <button className="btn font-display tracking-[0.1em] uppercase" style={BTN} onClick={onBack} data-testid="refuge-back">◂ Bastión</button>;
   const wrap = (node: React.ReactNode) => <div className="h-full overflow-y-auto scroll-thin" style={pad} data-testid="screen-refuge"><div className="w-full max-w-[1200px] mx-auto">{node}</div></div>;

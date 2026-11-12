@@ -1,7 +1,7 @@
 // Copia de seguridad: guardar la partida fuera del navegador (archivo o código) y cargarla en otro dispositivo.
 // Avisos muy claros y sencillos. Antes de cargar se enseña qué contiene la copia y se pide confirmación;
 // la partida actual se guarda sola para poder deshacerlo.
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { actions, useGame } from '../../state/store';
 import { backupAgoLabel, parseBackup, summarize, type BackupSummaryEntry } from '../../../core/backup';
 import type { SaveData } from '../../../core/save';
@@ -14,6 +14,7 @@ import { isIosSafari, isStandalone, useIsTouch } from '../../../shared/device';
 
 export function CopiaSeguridad() {
   const layout = useLayout();
+  useEffect(() => { actions.tutorialEvent('screen:backup'); }, []);
   const phone = layout === 'phone';
   const status = useGame((s) => s.backup);
   const roster = useGame((s) => s.roster);
