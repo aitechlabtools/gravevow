@@ -1,6 +1,6 @@
 import { FLYER_SPECS, TALL_DECOR } from '../../shared/art';
 import { getWanderer } from '../../core/data/wanderers';
-import { TUTORIAL_STEPS } from '../../core/data/tutorial';
+import { TUTORIAL_BLOCK, TUTORIAL_STEPS } from '../../core/data/tutorial';
 import { getMerc } from '../../core/data/mercenaries';
 import { wornSkin } from '../../core/skins';
 import { bestPick, VEINS, type VeinId } from '../../core/mining';
@@ -911,7 +911,12 @@ export class DungeonScene extends Phaser.Scene {
       if (!pact) continue;
       out.push({ dist: d(a.x, a.y), label: `Altar: ${pact.name}`, run: () => this.offerPact(a) });
     }
-    if (this.channel < 0 && d(this.portal.x, this.portal.y) < 1.3) out.push({ dist: d(this.portal.x, this.portal.y), label: 'Activar el portal y extraer', run: () => this.startChannel() });
+    if (this.channel < 0 && d(this.portal.x, this.portal.y) < 1.3) out.push({ dist: d(this.portal.x, this.portal.y), label: 'Activar el portal y extraer', run: () => {
+      // Tutorial: el portal no responde hasta el último paso
+      const tut = getState().tutorial;
+      if (tut && TUTORIAL_STEPS[tut.step]?.id !== 'extract') { toast(TUTORIAL_BLOCK.portal, 'info'); sfx('error'); return; }
+      this.startChannel();
+    } });
     return out.sort((a, b) => a.dist - b.dist).map(({ label, run }) => ({ label, run }));
   }
 

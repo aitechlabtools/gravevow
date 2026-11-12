@@ -39,6 +39,7 @@ import { applyRune, type RuneLoc } from '../../core/runes';
 import { canSleepForPrep, cotPrepCut, refugeOf, receptionDiscard, receptionSell, receptionWithdraw, RECEPTION_NOTE, upgradeModule } from '../../core/refuge';
 import { receptionSalvage, salvage, type SalvageRef } from '../../core/salvage';
 import type { ModuleId } from '../../core/data/refuge';
+import { TUTORIAL_BLOCK } from '../../core/data/tutorial';
 import { currentMini, enqueueTrigger, markSeen, type TutorialsSave } from '../../core/tutorials';
 import { bus } from './bus';
 import { buySkin, equipSkin } from '../../core/skins';
@@ -626,6 +627,7 @@ export const actions = {
     const s = state;
     const c = containersFor(s);
     if (!c || !s.expedition) return;
+    if (s.tutorial) return invError(TUTORIAL_BLOCK.item);
     const st = stackAt(c, loc);
     if (!st) return;
     const [x, y] = s.hud.playerTile;

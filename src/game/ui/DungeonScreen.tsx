@@ -3,7 +3,7 @@ import { CarryBar, OverloadChip, PactChip } from './CarryBar';
 import { effectiveMaxMp, needsOf } from '../../core/needs';
 import { getPact } from '../../core/data/altars';
 import { useClearOnDrop } from './pointerDrag';
-import { gridGold, isCoins } from '../../core/gold';
+import { gridGold } from '../../core/gold';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { DungeonScene, activeScene } from '../engine/DungeonScene';
@@ -28,7 +28,7 @@ import { TOUCH_CFG, safe, useTouchSize } from '../../config/touch';
 import { getMerc } from '../../core/data/mercenaries';
 import { mercBaseStats, STANCE_DESC, STANCE_NAME } from '../../core/mercenaries';
 import { getWanderer } from '../../core/data/wanderers';
-import { TUTORIAL_STEPS } from '../../core/data/tutorial';
+import { TutorialGuide } from './TutorialGuide';
 import { RISK, GOLD_SHARE, SHARE_FAIR_RATIO, type RiskLevel } from '../../config/wanderers';
 import { shareVerdict } from '../../core/social';
 import { pinnedQuests, questDef, questProgress } from '../../core/quests';
@@ -151,7 +151,7 @@ function Hud() {
             <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label="Vida" testId="hud-hp" />
             <div className="h-1" />
             <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs, getPact(exp.pact)?.mpLoss ?? 0)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={CLASSES[ch.classId].resourceName} />
-            {!tutorial && <NeedsStrip needs={needs} />}
+            <NeedsStrip needs={needs} />
             {!tutorial && <OverloadChip />}{!tutorial && <PactChip />}
             <button className="btn w-full mt-2 text-sm flex items-center justify-center gap-2" onClick={() => actions.drinkPotion()} disabled={!potions} data-testid="btn-potion">
               <ItemIcon itemId="health_potion" size={20} /> Poción ({potions}) <kbd className="text-xs opacity-60">Q</kbd>
@@ -274,7 +274,7 @@ function TouchTopHud() {
         <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label={phone ? undefined : 'Vida'} testId="hud-hp" />
         <div className="h-1" />
         <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs, getPact(exp.pact)?.mpLoss ?? 0)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={phone ? undefined : CLASSES[ch.classId].resourceName} />
-        {!tutorial && <NeedsStrip needs={needs} />}
+        <NeedsStrip needs={needs} />
             {!tutorial && <OverloadChip />}{!tutorial && <PactChip />}
         <div className="text-[11px] mt-1.5 flex items-center gap-1 flex-wrap">Botín: <span className="text-gold" data-testid="hud-loot-value">{gridValue(exp.backpack)}</span> · Oro encima: <GoldAmount value={gridGold(exp.backpack)} /></div>
       </div>
@@ -427,7 +427,6 @@ function CaptiveModal({ mercId }: { mercId: string }) {
 
 function BodyModal() {
   const exp = useGame((s) => s.expedition);
-  const tutorial = useGame((s) => !!s.tutorial);
   const profile = useGame((s) => s.profile);
   if (!exp || !profile) return null;
   return (
@@ -435,7 +434,7 @@ function BodyModal() {
       <h2 className="font-display text-2xl mb-2">Heridas y necesidades</h2>
       <BodyPanel body={expBody(exp, profile)} backpack={exp.backpack} surgery={exp.surgery} onTreat={(id, r) => actions.treat(id, r)}
         note="Se muere si la cabeza o el tórax llegan a cero. Tratar fuera de combate no gasta turno; la cirugía tarda dos pulsos.">
-        {!tutorial && <NeedsPanel needs={needsOf(exp.needs)} body={exp.body} backpack={exp.backpack} onUse={(id) => actions.eatItem(id)} />}
+        <NeedsPanel needs={needsOf(exp.needs)} body={exp.body} backpack={exp.backpack} onUse={(id) => actions.eatItem(id)} />
       </BodyPanel>
       <button className="btn mt-3 text-sm" onClick={() => actions.closeModal()} data-testid="body-close">Cerrar</button>
     </Modal>
@@ -476,8 +475,9 @@ function RivalModal() {
   const rival = useGame((s) => s.rival);
   const line = useGame((s) => s.rivalLine);
   const allied = rival.disposition === 'allied';
-  // En el tutorial, con Osric solo cabe aliarse
-  const onlyAlly = useGame((s) => !!s.tutorial) && !allied;
+  // En el tutorial, con Osric solo cabe aliarse; ya aliados, no se le puede dejar ni traicionar
+  const tut = useGame((s) => !!s.tutorial);
+  const onlyAlly = tut && !allied;
   const w = getWanderer(rival.who);
   const r = RISK[rival.risk];
   const first = w.name.split(' ')[0];
@@ -503,9 +503,9 @@ function RivalModal() {
         {!onlyAlly && <button className="btn" onClick={() => actions.rivalTalk()} data-testid="rival-talk">Hablar</button>}
         {!allied && <button className="btn btn-gold" onClick={() => actions.rivalPropose()} data-testid="rival-ally">Aliarse</button>}
         {!allied && !onlyAlly && <button className="btn" onClick={() => actions.rivalIgnore()} data-testid="rival-ignore">Seguir tu camino</button>}
-        {allied && <button className="btn" onClick={() => actions.rivalLeave()} data-testid="rival-leave">Separar vuestros caminos</button>}
+        {allied && !tut && <button className="btn" onClick={() => actions.rivalLeave()} data-testid="rival-leave">Separar vuestros caminos</button>}
         {!allied && !onlyAlly && <button className="btn btn-danger" onClick={() => actions.rivalAttack()} data-testid="rival-attack">Atacar</button>}
-        {allied && <button className="btn btn-danger" onClick={() => actions.askBetray()} data-testid="rival-betray">Traicionar…</button>}
+        {allied && !tut && <button className="btn btn-danger" onClick={() => actions.askBetray()} data-testid="rival-betray">Traicionar…</button>}
       </div>
       <p className="text-stone-400 mt-3 font-body text-sm" data-testid="rival-terms">
         {allied ? `Lucha a tu lado. Quiere su parte de cada cofre y de cada saco de combate, y al llegar al portal te pedirá el ${Math.round(GOLD_SHARE * 100)} % del oro (menos si repartes bien, más si no).` : `Si os aliáis, lucha a tu lado a cambio de su parte del botín y, en el portal, del ${Math.round(GOLD_SHARE * 100)} % del oro. El triángulo indica cuánto puedes fiarte.`}
@@ -656,40 +656,3 @@ function InteractMenu({ options }: { options: string[] }) {
   );
 }
 
-/**
- * Indicaciones del tutorial: un cartel arriba con el paso actual (texto de ratón o de toque según el dispositivo)
- * y el botón que hay que pulsar resaltado. La flecha sobre el mapa la pone la escena.
- */
-function TutorialGuide() {
-  const t = useGame((s) => s.tutorial)!;
-  const combat = useGame((s) => s.combat);
-  const touch = useIsTouch();
-  const channel = useGame((s) => s.hud.channel);
-  const raw = TUTORIAL_STEPS[t.step];
-  // Paso de la poción: no se muestra nada hasta que los pinchos te hieren
-  const step = raw?.id === 'potion' && t.potionsAt === undefined ? undefined : raw;
-  const invOpen = useGame((s) => s.modal?.type === 'inventory');
-  const looseCoins = useGame((s) => !!s.expedition?.backpack.some((x) => x && isCoins(x)));
-  const base = step?.target && 'ui' in step.target ? (touch && step.target.ui === 'btn-potion' ? 'touch-potion' : step.target.ui) : null;
-  // Bolsillo seguro: con el inventario abierto, se resalta «Agrupar oro» mientras queden monedas sueltas
-  const target = step?.id === 'pocket' && invOpen ? (looseCoins ? 'group-gold-dungeon' : null) : base;
-  useEffect(() => {
-    if (!target) return;
-    let el: Element | null = null;
-    const find = () => {
-      const now = document.querySelector(`[data-testid="${target}"]`);
-      if (now !== el) { el?.classList.remove('tut-pulse'); el = now; el?.classList.add('tut-pulse'); }
-    };
-    find();
-    const iv = setInterval(find, 300);
-    return () => { clearInterval(iv); el?.classList.remove('tut-pulse'); };
-  }, [target]);
-  // Al canalizar el portal se aparta, para que se vea la barra de extracción
-  if (!step || combat || channel > 0) return null;
-  return (
-    <div className="tut-guide panel panel-gold" role="status" aria-live="polite" data-testid="tutorial-guide" data-step={step.id}>
-      <div className="font-display text-gold text-[11px] tracking-[0.2em] uppercase">Tutorial · {t.step + 1}/{TUTORIAL_STEPS.length}</div>
-      <div className="font-body text-parchment leading-snug mt-0.5" data-testid="tutorial-text">{touch ? step.touch : step.desktop}</div>
-    </div>
-  );
-}

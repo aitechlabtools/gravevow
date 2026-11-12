@@ -22,6 +22,10 @@ export type GearLook =
 export const GEAR_LOOKS: Record<string, GearLook> = {
   // Armas
   rusty_sword: { slot: 'mainHand', shape: 'sword', color: '#9a8a78' },
+  short_sword: { slot: 'mainHand', shape: 'sword', color: '#b8b2a6' },
+  ash_staff: { slot: 'mainHand', shape: 'staff', color: PAL.earth2, orb: PAL.gold2 },
+  keen_dagger: { slot: 'mainHand', shape: 'dagger', color: '#c9c4ba' },
+  iron_mace: { slot: 'mainHand', shape: 'mace', color: '#8f8a84' },
   recruit_sword: { slot: 'mainHand', shape: 'sword', color: '#8a8278' },
   recruit_staff: { slot: 'mainHand', shape: 'staff', color: PAL.earth3, orb: PAL.bone1 },
   plank_shield: { slot: 'offHand', shape: 'shield', color: PAL.earth3, rim: PAL.earth1, emblem: PAL.earth2 },

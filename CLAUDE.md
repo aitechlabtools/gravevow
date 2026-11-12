@@ -83,7 +83,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Interfaz o mecánica: `node scripts/e2e.cjs <url>/play/ <carpeta>`, `node scripts/touch-check.cjs <url>/play/` y `node scripts/mobile-check.cjs <url>/play/ <carpeta>`, esta última también con `"iPad (gen 7) landscape"` como tercer argumento.
   - Menús: `node scripts/menus-check.cjs`.
   - Ajustes: `node scripts/ajustes-check.cjs <url>/play/ <carpeta> [dispositivo]`.
-  - Tutorial: `node scripts/e2e-tutorial.cjs`.
+  - Tutorial inicial (8 pasos, bloqueos, traición, saltar y repetir): `node scripts/e2e-tutorial.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Personajes y guardado: `node scripts/personajes-check.cjs`.
   - Almacén: `node scripts/almacen-check.cjs`.
   - Copias de seguridad: `node scripts/copia-check.cjs`.

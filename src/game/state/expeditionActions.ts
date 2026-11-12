@@ -18,7 +18,7 @@ import { makeRng, makeUid, randomSeed } from '../../core/rng';
 import { noRival, initialRival, talk, greetLine, proposeAlliance, rejectRival, leaveAlliance, shareLoot, evaluateBetrayal, playerBetrays, playerAttacksNeutral, rollEncounter, goldShare, sharePct, demandLine, refusedLine, refuseShare } from '../../core/social';
 import { lootValue, planPayment } from '../../core/share';
 import { getWanderer } from '../../core/data/wanderers';
-import { TUTORIAL_MAP, TUTORIAL_REWARD, TUTORIAL_STEPS, tutorialRoomCenter, tutorialRoomOf } from '../../core/data/tutorial';
+import { TUTORIAL_BETRAYAL_DELAY_MS, TUTORIAL_MAP, TUTORIAL_REWARD, TUTORIAL_START_SAT, TUTORIAL_STEPS, TUTORIAL_SUPPLIES, TUTORIAL_WEAPON, TUTORIAL_WEAPON_TILE, TUTORIAL_WOUND, tutorialRoomCenter, tutorialRoomOf } from '../../core/data/tutorial';
 import { ROB_ITEMS, SHARE_SINGLE_MIN_RARITY } from '../../config/wanderers';
 const rarityRank = (r: string) => RARITY_ORDER.indexOf(r as (typeof RARITY_ORDER)[number]);
 import { bus } from './bus';
@@ -35,7 +35,7 @@ import { dev, invError, markTutorialDoneOnDevice, saveNow, set, state, subzoneDe
 import type { Bag, DungeonHud, Modal } from './internals';
 import { actions } from './store';
 import { advanceClock, newClock } from '../../core/clock';
-import { bodyAtPct, resizeBody } from '../../core/anatomy';
+import { addBleed, regionCap } from '../../core/anatomy';
 import { withBody } from './medicalActions';
 import { receptionBlock } from '../../core/refuge';
 
@@ -82,13 +82,20 @@ export const expeditionActions = {
     // Al repetirlo, bajas con el equipo inicial de tu clase; tu inventario de verdad se guarda aparte
     const p = replay ? { ...createProfile(p0.character.name, p0.character.classId, p0.character.appearance), character: p0.character } : p0;
     const started = startExpedition(p, Date.now());
-    const expedition = { ...started.expedition, durationMs: 24 * 3600_000, zone: 'mazmorra', subzone: 'afueras', chestsOpened: {}, veinsMined: 0 };
+    // Pan (paso 5) y venda (paso 2) en la mochila; la Saciedad, baja, para verla subir al comer
+    let backpack = started.expedition.backpack;
+    for (const it of TUTORIAL_SUPPLIES) backpack = addToGrid(backpack, { uid: makeUid(), itemId: it.itemId, qty: it.qty }, LAYOUTS.backpack).grid;
+    const expedition = { ...started.expedition, backpack, needs: { ...needsOf(started.expedition.needs), sat: TUTORIAL_START_SAT }, durationMs: 24 * 3600_000, zone: 'mazmorra', subzone: 'afueras', chestsOpened: {}, veinsMined: 0 };
     const rival = { ...initialRival('osric', 'low'), traitor: true };
+    // El arma de la hoguera (paso 4), en el suelo como un saco
+    const [wx, wy] = TUTORIAL_WEAPON_TILE;
+    const weapon: Bag = { id: 'tut_weapon', x: wx, y: wy, grid: addManyToGrid(emptyGrid(4), [{ uid: makeUid(), itemId: TUTORIAL_WEAPON[p.character.classId], qty: 1 }]).grid, label: 'Junto a la hoguera' };
     set({
       profile: replay ? { ...p0 } : started.profile, expedition, dungeon: TUTORIAL_MAP, screen: 'dungeon', summary: null, combat: null, modal: null,
-      rival, rivalLine: null, merc: null, chests: {}, mined: {}, bags: {}, tutorial: { step: 0, replay },
+      rival, rivalLine: null, merc: null, chests: {}, mined: {}, bags: { [weapon.id]: weapon }, tutorial: { step: 0, replay },
       hud: { room: '', prompt: null, channel: 0, playerTile: [0, 0] }, clock: newClock(),
     });
+    bus.emit('bags-changed');
     if (!replay) await saveNow();
   },
 
@@ -117,10 +124,21 @@ export const expeditionActions = {
     let stash = profile.backpack;
     for (const it of TUTORIAL_REWARD.items) stash = addToGrid(stash, { uid: makeUid(), itemId: it.itemId, qty: it.qty }, LAYOUTS.stash).grid;
     profile = { ...earnGoldSafe({ ...profile, backpack: stash }, TUTORIAL_REWARD.gold), wounds: null, tutorialDone: true, tutorialSeen: { lobby: true, dungeon: true } };
-    summary = { ...summary, tutorialNote: `Has sobrevivido a tu primera bajada. El intendente te da ${TUTORIAL_REWARD.gold} monedas de oro (están en tu almacén), 3 pociones y unos guantes de cuero.` };
+    summary = { ...summary, tutorialNote: `Has sobrevivido a tu primera bajada. El intendente te espera en el Bastión: te ha dejado ${TUTORIAL_REWARD.gold} monedas de oro, 3 pociones y unos guantes de cuero en tu almacén.` };
     markTutorialDoneOnDevice();
     set({ profile, summary, tutorial: null, expedition: null, screen: 'summary', combat: null, modal: null, merc: null });
     await saveNow();
+  },
+
+  /** «Saltar el tutorial» (con confirmación en la interfaz): vuelves al Bastión sin bajar. Repetido: tu personaje queda como estaba. */
+  async skipTutorialRun() {
+    const s = state;
+    const t = s.tutorial;
+    if (!t || !s.profile) return;
+    const profile = t.replay ?? { ...s.profile, tutorialDone: true, tutorialSeen: { lobby: true, dungeon: true } };
+    if (!t.replay) markTutorialDoneOnDevice();
+    set({ profile, tutorial: null, expedition: null, dungeon: null, screen: 'lobby', summary: null, combat: null, modal: null, merc: null, bags: {}, chests: {} });
+    if (!t.replay) await saveNow();
   },
 
   /** Repetir el tutorial desde Ajustes (sin recompensas y sin tocar tu inventario). */
@@ -134,59 +152,71 @@ export const expeditionActions = {
   tutorialCheck() {
     const s = state;
     const t = s.tutorial;
-    if (!t || !s.expedition || s.screen !== 'dungeon') return;
+    if (!t || !s.expedition || !s.profile || s.screen !== 'dungeon') return;
     const step = TUTORIAL_STEPS[t.step];
     if (!step) return;
     const e = s.expedition;
     const room = tutorialRoomOf(s.hud.playerTile[0]);
-    const potions = countItem(e.backpack, 'health_potion');
+    const weapon = TUTORIAL_WEAPON[s.profile.character.classId];
     let done = false;
     switch (step.id) {
       case 'move': done = room >= 1; break;
-      case 'fight': done = (e.kills.ossuary_rat ?? 0) >= 1 && !s.combat; break;
-      case 'gold': done = gridGold(e.backpack) > 0 && !s.modal; break;
-      case 'pocket': done = e.pocket.some((x) => x?.itemId === 'gold_pouch' && (x.gold ?? 0) > 0) && !s.modal; break;
-      case 'box': done = !!s.chests.t_box && !s.modal && (countItem(e.backpack, 'iron_key') > 0 || !!s.chests.t_rich); break;
-      case 'rich': done = !!s.chests.t_rich && !s.modal; break;
-      case 'equip': done = e.equipment.helmet?.itemId === 'leather_hood' && !s.modal; break;
-      case 'potion': {
-        // Al llegar a la hoguera, la trampa (o el camino) te deja herido para practicar con la poción
-        if (t.potionsAt === undefined) {
-          // El paso empieza cuando los pinchos te hieren (fila de pared a pared: no se pueden esquivar)
-          if (!t.trapHit) return;
-          const max = computeStats(s.profile!.character.classId, s.profile!.character.level, e.equipment).maxHp;
-          if (e.hp > max * 0.7) set({ expedition: withBody(e, bodyAtPct(resizeBody(e.body, max), 0.55)) });
-          set({ tutorial: { ...t, potionsAt: countItem(state.expedition!.backpack, 'health_potion') } });
+      case 'attack': done = !!t.attacked || !!t.special; break;
+      case 'special': done = !!t.special; break;
+      case 'wound': {
+        // Tras el combate, la mordedura de la rata: la pierna sangra (sin fractura) y se cura con la venda
+        if (!t.wounded) {
+          if (s.combat || s.modal) return;
+          const { region, pct } = TUTORIAL_WOUND;
+          const b = addBleed(e.body, region, 1);
+          // Siempre a la mitad (sube si el combate la dejó más baja): se cura con la venda, nunca queda inutilizada
+          const hp = Math.max(1, Math.round(regionCap(b, region) * pct));
+          set({ expedition: withBody(e, { ...b, parts: { ...b.parts, [region]: { ...b.parts[region], hp } } }), tutorial: { ...t, wounded: true } });
+          toast('La rata te ha mordido la pierna antes de caer: sangra.', 'danger');
+          sfx('hit');
           return;
         }
-        done = potions < t.potionsAt;
+        done = !e.body.parts[TUTORIAL_WOUND.region].bleed && !s.modal;
         break;
       }
-      case 'talk': done = s.rival.greeted; break;
+      case 'box': done = !!s.chests.t_box && !s.modal && (countItem(e.backpack, 'iron_key') > 0 || !!s.chests.t_rich); break;
+      case 'rich': done = !!s.chests.t_rich && !s.modal; break;
+      case 'weapon': done = (countItem(e.backpack, weapon) > 0 || e.equipment.mainHand?.itemId === weapon) && !s.modal; break;
+      case 'equip': done = e.equipment.mainHand?.itemId === weapon && !s.modal; break;
+      case 'eat': {
+        const bread = countItem(e.backpack, 'stale_bread');
+        if (t.breadAt === undefined) { set({ tutorial: { ...t, breadAt: bread } }); return; }
+        done = bread < t.breadAt || bread === 0;
+        break;
+      }
       case 'ally': done = s.rival.disposition === 'allied' && !s.modal; break;
       case 'together': done = (e.kills.bandit ?? 0) >= 2 && !s.combat; break;
       case 'betrayal': {
-        // Guion: al llegar a la brecha, Osric avisa y traiciona
-        if (!t.betrayalStarted && room >= 6 && s.rival.disposition === 'allied' && !s.combat && !s.modal) {
-          set({ tutorial: { ...t, betrayalStarted: true }, rival: { ...s.rival, warned: true } });
-          toast(getWanderer('osric').lines.warn, 'danger');
-          bus.emit('rival-warn');
-          setTimeout(() => {
-            const st = state;
-            if (!st.tutorial || st.combat) return;
-            set({ rival: { ...st.rival, disposition: 'hostile', betrayed: true, betrayedBy: 'rival' } });
-            sfx('betray');
-            toast(`${getWanderer('osric').lines.betray} ¡Osric te traiciona!`, 'danger');
-            bus.emit('rival-changed');
-            actions.startCombat('betrayal-by-rival', null);
-          }, 1600);
+        // Guion sin temporizador: al entrar en la brecha (sin menú ni combate) Osric avisa; pasado un momento de juego,
+        // traiciona. Si algo lo interrumpe (un menú, un combate), espera y lo vuelve a intentar.
+        const calm = !s.combat && !s.modal && s.rival.disposition === 'allied';
+        if (t.betrayalWarnAt === undefined) {
+          if (calm && room >= 6) {
+            set({ tutorial: { ...t, betrayalWarnAt: s.clock.ms }, rival: { ...s.rival, warned: true } });
+            toast(getWanderer('osric').lines.warn, 'danger');
+            bus.emit('rival-warn');
+          }
+          return;
+        }
+        if (calm && s.clock.ms - t.betrayalWarnAt >= TUTORIAL_BETRAYAL_DELAY_MS) {
+          set({ rival: { ...s.rival, disposition: 'hostile', betrayed: true, betrayedBy: 'rival' } });
+          sfx('betray');
+          toast(`${getWanderer('osric').lines.betray} ¡Osric te traiciona!`, 'danger');
+          bus.emit('rival-changed');
+          actions.startCombat('betrayal-by-rival', null);
+          return;
         }
         done = s.rival.disposition === 'dead' && !s.combat;
         break;
       }
       default: break;
     }
-    if (done && t.step < TUTORIAL_STEPS.length - 1) { set({ tutorial: { ...state.tutorial!, step: t.step + 1, potionsAt: undefined } }); sfx('click'); }
+    if (done && t.step < TUTORIAL_STEPS.length - 1) { set({ tutorial: { ...state.tutorial!, step: t.step + 1 } }); sfx('click'); }
   },
 
   tick() {
@@ -253,7 +283,6 @@ export const expeditionActions = {
     sfx('trap');
     toast(`¡Una trampa de pinchos! -${damage} de vida en las piernas.`, 'danger');
     const dead = actions.hurtByTrap(damage);
-    if (s.tutorial && !s.tutorial.trapHit) set({ tutorial: { ...s.tutorial, trapHit: true } });
     if (dead) void actions.finishExpedition('died');
   },
 

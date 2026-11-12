@@ -75,3 +75,48 @@ describe('mini tutoriales: cola y guardado', () => {
     expect(sanitizeTutorials(null)).toEqual({ seen: [], disabled: false });
   });
 });
+
+describe('tutorial inicial de expedición: datos', () => {
+  it('8 pasos visibles, en orden, con ids únicos y textos de ratón y de toque', async () => {
+    const { TUTORIAL_STEPS, TUTORIAL_PARTS } = await import('../src/core/data/tutorial');
+    const ids = TUTORIAL_STEPS.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(TUTORIAL_PARTS).toBe(8);
+    expect(TUTORIAL_STEPS[0].part).toBe(1);
+    expect(TUTORIAL_STEPS[TUTORIAL_STEPS.length - 1].part).toBe(8);
+    for (let i = 1; i < TUTORIAL_STEPS.length; i++) expect(TUTORIAL_STEPS[i].part - TUTORIAL_STEPS[i - 1].part).toBeGreaterThanOrEqual(0);
+    for (let i = 1; i < TUTORIAL_STEPS.length; i++) expect(TUTORIAL_STEPS[i].part - TUTORIAL_STEPS[i - 1].part).toBeLessThanOrEqual(1);
+    for (const s of TUTORIAL_STEPS) { expect(s.desktop.length, s.id).toBeGreaterThan(0); expect(s.touch.length, s.id).toBeGreaterThan(0); }
+    expect(ids).toEqual(['move', 'attack', 'special', 'wound', 'box', 'rich', 'weapon', 'equip', 'eat', 'ally', 'together', 'betrayal', 'extract']);
+  });
+  it('no hay pinchos: la herida la deja la rata', async () => {
+    const { TUTORIAL_MAP } = await import('../src/core/data/tutorial');
+    expect(TUTORIAL_MAP.entities.some((e) => e.kind === 'trap')).toBe(false);
+  });
+  it('el arma de la hoguera es de la clase, de nivel 1 y mejor que la inicial', async () => {
+    const { TUTORIAL_WEAPON } = await import('../src/core/data/tutorial');
+    const { CLASSES } = await import('../src/core/data/classes');
+    const { getItem } = await import('../src/core/data/items');
+    for (const [cls, id] of Object.entries(TUTORIAL_WEAPON)) {
+      const w = getItem(id);
+      expect(w.slot, id).toBe('mainHand');
+      expect(w.levelReq, id).toBe(1);
+      expect(w.classes, id).toContain(cls);
+      const start = CLASSES[cls as keyof typeof CLASSES].starterKit.map((k) => getItem(k.itemId)).find((i) => i.slot === 'mainHand')!;
+      const sum = (i: typeof w) => Object.values(i.stats ?? {}).reduce((a, b) => a + (b ?? 0), 0);
+      expect(sum(w), id).toBeGreaterThan(sum(start));
+    }
+  });
+  it('cada elemento que resalta existe en src/', async () => {
+    const { TUTORIAL_STEPS } = await import('../src/core/data/tutorial');
+    const files: string[] = [];
+    const walk = (d: string) => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else if (/\.tsx?$/.test(f) && !p.includes('data/tutorial')) files.push(p); } };
+    walk('src');
+    const src = files.map((f) => readFileSync(f, 'utf8')).join('\n');
+    const ids = new Set(TUTORIAL_STEPS.flatMap((s) => (s.highlight ?? []).flatMap((q) => [...q.matchAll(/data-testid\^?="([^"]+)"/g)].map((m) => m[1]))));
+    for (const id of ids) {
+      const found = src.includes(`"${id}"`) || src.includes(`'${id}'`) || [...src.matchAll(/`([a-z][a-z-]*-)\$\{/g)].some((mm) => mm[1] && id.startsWith(mm[1]));
+      expect(found, `no existe data-testid «${id}»`).toBe(true);
+    }
+  });
+});

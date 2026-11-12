@@ -191,7 +191,8 @@ export function CombatScreen() {
   const shownBag = bagEntries.slice(page * 4, page * 4 + 4);
   const list: Slot[] = menu === 'special' ? specials : shownBag;
   const focused = list[focus] ?? list[0];
-  const fleeTxt = cs.canFlee ? `${Math.round(fleeChance(player, foes) * 100)} %` : combat.kind.startsWith('betrayal') ? 'A muerte' : 'Imposible';
+  const tutorialRun = useGame((x) => !!x.tutorial);
+  const fleeTxt = tutorialRun ? 'Aquí no hay a dónde huir' : cs.canFlee ? `${Math.round(fleeChance(player, foes) * 100)} %` : combat.kind.startsWith('betrayal') ? 'A muerte' : 'Imposible';
   const openSpecial = () => { setMenu('special'); setFocus(0); };
   const openBag = () => { setMenu('bag'); setPage(0); setFocus(0); };
   // Ataque anunciado contra ti: la Guardia se marca y dice cuánto ahorra

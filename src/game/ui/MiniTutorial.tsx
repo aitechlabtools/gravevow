@@ -28,7 +28,7 @@ function rectOf(testId: string | undefined): Box | null {
 }
 
 /** «**negrita**» → dorado. */
-function rich(text: string): ReactNode[] {
+export function rich(text: string): ReactNode[] {
   return text.split(/\*\*(.+?)\*\*/g).map((part, i) => (i % 2 ? <b key={i} className="text-gold font-semibold">{part}</b> : part));
 }
 

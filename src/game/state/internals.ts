@@ -95,11 +95,15 @@ export interface TutorialRun {
   step: number;
   /** Repetido desde Ajustes: sin recompensas, y al acabar se devuelve el perfil tal como estaba. */
   replay: Profile | null;
-  /** Pociones que llevabas al empezar el paso de la poción. */
-  potionsAt?: number;
-  /** Ya pisó los pinchos (el paso de la poción empieza entonces). */
-  trapHit?: boolean;
-  betrayalStarted?: boolean;
+  /** Combate con la rata: ya usó Atacar y el ataque especial. */
+  attacked?: boolean;
+  special?: boolean;
+  /** La rata ya le ha dejado la pierna sangrando (paso de la venda). */
+  wounded?: boolean;
+  /** Panes que llevaba al empezar el paso de comer. */
+  breadAt?: number;
+  /** Minuto de juego (ms del reloj) en que Osric avisó; la traición llega después, sin temporizador aparte. */
+  betrayalWarnAt?: number;
 }
 
 export interface GameState {
@@ -369,13 +373,18 @@ export function combatLevel(): number {
   return zoneEnemyLevel(areaDef(s.dungeon?.subzone, s.dungeon?.zone), s.profile?.character.level ?? 1);
 }
 
-/** Tutorial: el personaje no puede moverse hasta cumplir el paso (inventario, y curarse tras los pinchos). */
+/** Tutorial: el personaje no puede moverse hasta cumplir el paso (curar la pierna, equiparse, comer). */
 export function tutorialFrozen(s: GameState = state): boolean {
   const t = s.tutorial;
   const step = t ? TUTORIAL_STEPS[t.step] : null;
   if (!t || !step?.freeze) return false;
-  if (step.id === 'potion') return t.potionsAt !== undefined;
+  if (step.id === 'wound') return !!t.wounded;
   return true;
+}
+
+/** Id del paso del tutorial en curso (o null fuera del tutorial). */
+export function tutorialStepId(s: GameState = state): string | null {
+  return s.tutorial ? TUTORIAL_STEPS[s.tutorial.step]?.id ?? null : null;
 }
 
 /** Profundidad de la subzona actual (0 Afueras … 9 Trono) para la tirada de rareza. */

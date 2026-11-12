@@ -285,6 +285,11 @@ export const CRAFT_RECIPES: CraftRecipe[] = [
   { id: 'c_rusty_sword', result: 'rusty_sword', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'scrap_metal', qty: 2 }] },
   { id: 'c_apprentice_staff', result: 'apprentice_staff', qty: 1, station: 'runic', level: 1, ingredients: [{ itemId: 'old_wood', qty: 3 }] },
   { id: 'c_blessed_mace', result: 'blessed_mace', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'scrap_metal', qty: 3 }] },
+  // Armas del tutorial (la hoguera): un paso por encima de las iniciales
+  { id: 'c_short_sword', result: 'short_sword', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'scrap_metal', qty: 3 }] },
+  { id: 'c_ash_staff', result: 'ash_staff', qty: 1, station: 'runic', level: 1, ingredients: [{ itemId: 'old_wood', qty: 3 }] },
+  { id: 'c_keen_dagger', result: 'keen_dagger', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'scrap_bar', qty: 2 }, { itemId: 'grip', qty: 1 }] },
+  { id: 'c_iron_mace', result: 'iron_mace', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'scrap_metal', qty: 3 }] },
   { id: 'c_birch_wand', result: 'birch_wand', qty: 1, station: 'runic', level: 1, ingredients: [{ itemId: 'old_wood', qty: 2 }, { itemId: 'cut_crystal', qty: 1 }, { itemId: 'bone_dust', qty: 1 }] },
   { id: 'c_bone_dagger', result: 'bone_dagger', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'scrap_bar', qty: 2 }, { itemId: 'grip', qty: 1 }, { itemId: 'bone_dust', qty: 1 }] },
   { id: 'c_guard_spear', result: 'guard_spear', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'haft', qty: 2 }, { itemId: 'scrap_bar', qty: 2 }, { itemId: 'strap', qty: 1 }] },

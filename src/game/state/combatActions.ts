@@ -24,6 +24,7 @@ import { mercBaseStats, mercCombatant, mercHpBack, STANCE_NAME } from '../../cor
 import { getMerc } from '../../core/data/mercenaries';
 import { sfx } from '../audio';
 import { noticeText, wearEquipment } from '../../core/durability';
+import { TUTORIAL_BLOCK } from '../../core/data/tutorial';
 import { combatLevel, enemyLevel, invError, loadNow, set, state, subzoneDepth, toast } from './internals';
 import type { Bag, CombatKind } from './internals';
 import { actions } from './store';
@@ -77,6 +78,8 @@ export const combatActions = {
       // Traiciones: no hay huida posible. Solo el combate hostil (atacar a un neutral o un errante hostil) permite escapar.
       canFlee = kind === 'hostile';
     }
+    // Tutorial: nunca se huye
+    if (s.tutorial) canFlee = false;
     const combat = createCombat(distinctNames(list), randomSeed(), { canFlee });
     const foesB = list.filter((c) => c.side === 'B');
     combat.log.unshift(kind === 'pve' ? (foesB.length > 1 ? `¡${getEnemy(foesB[0].ref!).name} te cierra el paso y ${getEnemy(foesB[1].ref!).name.toLowerCase()} se suma a la pelea!` : `¡${title.replace(/[¡!]/g, '')} te cierra el paso!`) : s.rival.disposition === 'hostile' && !s.rival.betrayed && getWanderer(s.rival.who).lines.hostile ? getWanderer(s.rival.who).lines.hostile! : 'Las armas salen de sus vainas.');
@@ -95,11 +98,22 @@ export const combatActions = {
     const actor = currentActor(s.combat.state);
     if (!actor || actor.control !== 'player') return;
     if (action.type === 'item' && countItem(s.expedition.backpack, action.itemId) <= 0) return invError('No tienes ese objeto.');
+    let cs = s.combat.state;
+    const t = s.tutorial;
+    if (t) {
+      if (action.type === 'flee') return invError(TUTORIAL_BLOCK.flee);
+      // La rata del tutorial no cae hasta que uses el ataque especial (así se practican los dos)
+      const hold = !t.special && action.type !== 'skill';
+      cs = { ...cs, combatants: cs.combatants.map((c) => (c.ref === 'ossuary_rat' ? { ...c, unbreakable: hold } : c)) };
+    }
     let next: CombatState;
     try {
-      next = performAction(s.combat.state, action);
+      next = performAction(cs, action);
     } catch (e) {
       return invError((e as Error).message);
+    }
+    if (t && state.tutorial && (action.type === 'attack' || action.type === 'skill')) {
+      set({ tutorial: { ...state.tutorial, attacked: true, special: state.tutorial.special || action.type === 'skill' } });
     }
     actions.afterCombatStep(next);
   },
@@ -194,8 +208,8 @@ export const combatActions = {
           const pen = overlevelPenalty(getSubzone(s.dungeon.subzone).levels[1], s.profile.character.level);
           if (pen) { xp = Math.round(xp * pen.xp); gold = Math.round(gold * pen.gold); }
         }
-        // En el tutorial, la rata siempre suelta algo de oro (para practicar con el saco del botín)
-        if (s.tutorial && gold < 4 && !rivalBag) gold = 4;
+        // En el tutorial, la rata no suelta nada: tras su combate toca curarse la pierna (ver tutorialCheck)
+        if (s.tutorial && kills.ossuary_rat && !exp.kills.ossuary_rat) { gold = 0; items.length = 0; }
         // Oro físico: el botín (objetos y monedas) cae en un saco en el suelo; tú decides qué te llevas
         const dropped = [...items, ...(gold > 0 ? [coinsStack(gold)] : [])];
         exp.goldFound += gold;

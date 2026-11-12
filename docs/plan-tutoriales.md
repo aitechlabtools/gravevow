@@ -431,7 +431,7 @@ La Guía:
    - Capa común con atenuado, hueco y cartel con retrato.
    - Indicador «!» en las pestañas, mercaderes y estaciones con algo pendiente.
    - Tests de la cola y del guardado.
-2. **Tutorial inicial de expedición.**
+2. **Tutorial inicial de expedición.** ✅ Hecho (12/11). Cambios sobre el guion: la herida la deja la rata (pierna a la mitad y con sangrado leve, para que la venda tenga sentido); la llave sigue en un baúl; el arma depende de la clase.
    - Mapa y pasos nuevos, y bloqueos con aviso.
    - Traición sin temporizador.
    - Heridas solo en el paso 3.

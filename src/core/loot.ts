@@ -73,9 +73,9 @@ export const CHEST_TABLES: Record<string, LootTable> = {
 };
 
 Object.assign(CHEST_TABLES, CRIPTA_CHESTS, INFIERNO_CHESTS);
-// Tutorial: contenido fijo (la llave en el baúl; una capucha y unas botas en el cofre de hierro)
-CHEST_TABLES['tut:box'] = { rolls: 0, gold: [5, 5], entries: [{ itemId: 'nothing', weight: 1 }], always: [{ itemId: 'iron_key' }] };
-CHEST_TABLES['tut:rich'] = { rolls: 0, gold: [25, 25], entries: [{ itemId: 'nothing', weight: 1 }], always: [{ itemId: 'leather_hood' }, { itemId: 'worn_boots' }, { itemId: 'gold_pouch' }] };
+// Tutorial: contenido fijo (la llave en el baúl; monedas sueltas y un saquito vacío en el cofre de hierro)
+CHEST_TABLES['tut:box'] = { rolls: 0, gold: [0, 0], entries: [{ itemId: 'nothing', weight: 1 }], always: [{ itemId: 'iron_key' }] };
+CHEST_TABLES['tut:rich'] = { rolls: 0, gold: [12, 12], entries: [{ itemId: 'nothing', weight: 1 }], always: [{ itemId: 'gold_pouch' }] };
 
 /**
  * Tabla de un cofre ajustada a la subzona: más oro y tiradas en las subzonas hondas de cada zona, y el equipo de su nivel

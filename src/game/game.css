@@ -390,6 +390,11 @@ html{-webkit-tap-highlight-color:transparent}
 .tut-guide { position: absolute; left: 50%; transform: translateX(-50%); top: 84px; z-index: 25; max-width: min(560px, calc(100vw - 2 * var(--pad, 12px))); padding: 10px 16px; pointer-events: none; text-align: center; font-size: 17px; }
 html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-bottom)); font-size: 15px; max-width: min(460px, calc(100vw - 420px)); }
 @media (max-height: 560px) { .tut-guide { font-size: 14px; padding: 6px 12px; } }
+.tut-guide button { pointer-events: auto; }
+.tut-skip { min-width: 44px; min-height: 44px; margin: -10px -8px -10px 0; padding: 0 10px; font-size: 13px; color: #b9b2a3; text-decoration: underline; text-underline-offset: 3px; }
+.tut-skip:hover { color: #e9e1cc; }
+/* En combate: arriba, bajo el título, y por encima de la escena del combate */
+.tut-guide.in-combat, html.is-touch .tut-guide.in-combat { top: 20%; bottom: auto; z-index: 45; max-width: min(520px, calc(100vw - 2 * var(--pad, 12px))); }
 .tut-pulse { outline: 3px solid var(--color-gold, #e8b33a) !important; outline-offset: 2px; animation: tut-pulse 1s ease-in-out infinite; }
 @keyframes tut-pulse { 50% { outline-color: #fff1a8; box-shadow: 0 0 18px rgba(232, 179, 58, 0.8); } }
 
@@ -662,3 +667,5 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .mini-hole{outline:2px solid var(--color-gold);box-shadow:0 0 0 4px #e8b33a33;animation:mini-pulse 1.4s ease-in-out infinite}
 @keyframes mini-pulse{50%{box-shadow:0 0 0 8px #e8b33a22}}
 @media (prefers-reduced-motion:reduce){ .mini-hole{animation:none} }
+/* Móvil en horizontal: en combate, el cartel del tutorial sube arriba del todo para no tapar la ficha del ataque */
+@media (max-height: 560px) { .tut-guide.in-combat, html.is-touch .tut-guide.in-combat { top: 4px; padding: 4px 12px; font-size: 13px; } }
