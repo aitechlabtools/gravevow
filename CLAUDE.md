@@ -28,6 +28,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Combate: `combat.ts` y `combatants.ts`. Máximo dos combatientes por bando (`MAX_PER_SIDE`).
   - Ataques anunciados (Fase 8): patrones y movimientos en `data/intents.ts`, cifras en `config/intents.ts`. La IA anuncia al final de una acción normal y descarga en su siguiente turno; la Guardia lo mitiga; después queda expuesto. Una sola amenaza anunciada por bando. Jefes regionales (S3, S6, S10) con fases por umbral; al huir, `Expedition.bosses` guarda vida y fase.
   - Durabilidad: `durability.ts` (desgaste, avisos al 25 % y 10 %, roto sin destruir, kit de campo) y `repair.ts` (yunque de Brand); cifras en `config/durability.ts`.
+  - Armadura y lesiones (Fase 10): `armor.ts` (pieza que cubre cada región, protección por tramos de durabilidad, lesión según el tipo de golpe, «Puede causar» de la ficha); cifras en `config/armor.ts`. Curación completa: `cureCost` en `anatomy.ts` (tras caer, `Profile.fallen`, 1 moneda o gratis).
   - Anatomía: `anatomy.ts` (7 regiones, muerte solo por cabeza o tórax, exceso de daño, sangrado por pulso con techo, fracturas, tratamientos, estabilización y heridas guardadas en `Profile.wounds`); cifras en `config/anatomy.ts`. Solo el jugador tiene cuerpo (`Combatant.body`); la vida `hp` es su resumen.
   - Necesidades: `needs.ts` (Saciedad, Hidratación y Descanso de 0 a 100; se gastan por pulso de 6 s o por ronda; recortan el máximo de Ímpetu o Maná; a cero, sed y hambre hieren el tórax; guardadas en `Profile.needs`); cifras en `config/needs.ts`.
   - Refugio (Fase 9): `refuge.ts` (módulos, desguace, cocina por pasos, preparación `Profile.prep` → `Expedition.prep`); datos en `data/refuge.ts`, cifras en `config/refuge.ts`. Taller: `workshop.ts` (yunque, mesa de alquimia y rincón de cura; datos en `data/workshop.ts`); recepción de excedentes en `refuge.ts` (`deliver`).
@@ -94,6 +95,8 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Refugio, desguace y cocina: `node scripts/refugio-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Forja, alquimia, rincón de cura y recepción: `node scripts/taller-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Ataques anunciados y jefes: `node scripts/intenciones-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Ciclo completo en S1 (sección 33; curación tras caer y curar partes en Estado): `node scripts/ciclo-check.cjs <url>/play/ <carpeta> <warrior|mage> <nueva|migrada> [dispositivo]`.
+- Equilibrio: `node scripts/simular.mjs 300 actual` (escribe `docs/equilibrio/simulador-actual.md`); cualquier cambio de daño, estados o curación se comprueba con él.
 - Pasa solo las pruebas relacionadas con lo que has tocado, pero no te saltes ninguna necesaria.
 
 ## Ahorro de tokens

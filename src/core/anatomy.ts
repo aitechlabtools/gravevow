@@ -216,14 +216,14 @@ export function addBleed(b: Body, r: Region, level: BleedLevel): Body {
 export interface Injury { region: Region; bleed?: BleedLevel; fracture?: boolean }
 
 /** Tras un golpe físico que ha entrado: puede abrir un sangrado y, en brazos y piernas, romper un hueso. */
-export function rollInjury(b: Body, region: Region, crit: boolean, rng: Rng): { body: Body; injury: Injury | null } {
+export function rollInjury(b: Body, region: Region, crit: boolean, rng: Rng, mods: { bleed: number; fracture: number } = { bleed: 1, fracture: 1 }): { body: Body; injury: Injury | null } {
   let out = b;
   const injury: Injury = { region };
-  if (rng.chance(crit ? ANATOMY.bleedChanceCrit : ANATOMY.bleedChance)) {
+  if (rng.chance((crit ? ANATOMY.bleedChanceCrit : ANATOMY.bleedChance) * mods.bleed)) {
     const level: BleedLevel = crit || b.parts[region].bleed === 1 ? 2 : 1;
     if (level > b.parts[region].bleed) { out = addBleed(out, region, level); injury.bleed = level; }
   }
-  if (isLimb(region) && !b.parts[region].fracture && rng.chance(crit ? ANATOMY.fractureChanceCrit : ANATOMY.fractureChance)) {
+  if (isLimb(region) && !b.parts[region].fracture && rng.chance((crit ? ANATOMY.fractureChanceCrit : ANATOMY.fractureChance) * mods.fracture)) {
     out = cloneBody(out);
     out.parts[region].fracture = true;
     injury.fracture = true;
@@ -422,10 +422,21 @@ export function fromWounds(w: Wounds | null | undefined, total: number): Body {
   return b;
 }
 
-/** Precio del tratamiento completo de Hermana Vesper (0 si no hay nada que tratar). */
-export function vesperPrice(b: Body): number {
+/** Precio de la curación completa (0 si no hay nada que tratar). Fase 10: barato y claro; tras caer, 1 moneda. */
+export function vesperPrice(b: Body, fallen = false): number {
   const missing = REGIONS.reduce((n, r) => n + Math.max(0, regionMaxes(b.total)[r] - b.parts[r].hp), 0);
   const fr = REGIONS.filter((r) => b.parts[r].fracture).length;
-  if (!missing && !fr) return 0;
-  return Math.ceil(ANATOMY.vesperBase + missing * ANATOMY.vesperPerHp + fr * ANATOMY.vesperPerFracture);
+  const bleeding = REGIONS.some((r) => b.parts[r].bleed);
+  if (!missing && !fr && !bleeding) return 0;
+  const c = ANATOMY.cure;
+  if (fallen) return c.afterDeath;
+  return Math.min(c.max, Math.max(1, Math.ceil((missing / b.total) * 10) * c.per10 + fr * c.perFracture));
+}
+
+/** Curación completa: lo que cuesta de verdad con el oro que tienes (tras caer y sin monedas, gratis). */
+export function cureCost(b: Body, fallen: boolean, gold: number): { price: number; free: boolean } {
+  const price = vesperPrice(b, fallen);
+  if (!price) return { price: 0, free: false };
+  if (fallen && gold < price) return { price: 0, free: true };
+  return { price, free: false };
 }

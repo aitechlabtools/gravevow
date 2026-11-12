@@ -1,3 +1,4 @@
+import { enemyThreats } from '../../core/armor';
 import { useEffect, useRef, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { cooldownLeft, currentActor, fleeChance, intentDamage, opponents, readIntents, type Combatant, type CombatEvent } from '../../core/combat';
@@ -375,6 +376,7 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent 
         <div className="flex-1 min-w-0">
           <div className={`fname ${c.side === 'B' ? 'text-[#ffb3a8]' : ''}`}>{target?.on ? <span className="text-blood" data-testid={`target-${c.id}`} aria-label="Objetivo">▶ </span> : ''}{c.name}{kind === 'ally' ? <span className="text-heal text-xs"> · aliado</span> : ''}</div>
           {sub && !small && <div className="text-[11px] text-stone-400 truncate">{sub}</div>}
+          {c.side === 'B' && c.ref && c.ref !== 'rival' && !small && (() => { const t = enemyThreats(c.ref); return t.length ? <div className="text-[11px] text-[#e8b33a] truncate" data-testid={`threats-${c.id}`} title="Lo que puede causarte. La armadura de la parte golpeada evita sangrados y fracturas.">Puede causar: {t.join(' · ')}</div> : null; })()}
         </div>
         {small && <span className="text-xs text-stone-400">{c.hp} / {c.stats.maxHp}</span>}
       </div>

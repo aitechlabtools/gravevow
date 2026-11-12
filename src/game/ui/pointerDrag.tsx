@@ -20,7 +20,9 @@ export type DropTarget =
   | { type: 'page'; page: number | 'shared'; owned: boolean }
   | { type: 'bag' }
   /** Zona de venta del mercader: el objeto queda marcado para vender (Mercaderes escucha «cr-drop-sell»). */
-  | { type: 'sell' };
+  | { type: 'sell' }
+  /** Una parte del cuerpo (Intendencia → Estado): curar con el objeto que se suelta (BodyPanel escucha «cr-drop-body»). */
+  | { type: 'body'; region: string };
 
 export interface DragState {
   from: Loc;
@@ -79,6 +81,7 @@ function drop(d: DragState, raw: string | null): boolean {
     return true;
   }
   if (t.type === 'bag') { actions.equipBag(d.from); return true; }
+  if (t.type === 'body') { if (d.lootId) return false; window.dispatchEvent(new CustomEvent('cr-drop-body', { detail: { itemId: d.itemId, region: t.region } })); return true; }
   if (t.type === 'sell') { if (d.lootId) return false; window.dispatchEvent(new CustomEvent('cr-drop-sell', { detail: d.from })); return true; }
   return false;
 }

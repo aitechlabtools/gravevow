@@ -21,7 +21,7 @@ describe('Perfil y estadísticas', () => {
     const p = warriorProfile();
     expect(p.equipment.mainHand?.itemId).toBe('rusty_sword');
     expect(p.equipment.offHand?.itemId).toBe('wooden_shield');
-    expect(countItem(p.backpack, 'health_potion')).toBe(2);
+    expect(countItem(p.backpack, 'health_potion')).toBe(3);
   });
   it('no permite crear clases no jugables todavía', () => {
     expect(() => createProfile('X', 'rogue', { cloak: 0, skin: 0 })).toThrow();
@@ -81,7 +81,7 @@ describe('Inventario', () => {
     const r = quickMove(c, { kind: 'grid', container: 'backpack', index: 0 }, 'stash');
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(countItem(r.containers.stash, 'health_potion')).toBe(2);
+    expect(countItem(r.containers.stash, 'health_potion')).toBe(3);
     expect(countItem(r.containers.backpack, 'health_potion')).toBe(0);
     let g = emptyGrid(6);
     for (const id of ['bone_dust', 'iron_sword', 'bone_dust', 'golden_chalice']) g = [...g.slice(0, g.indexOf(null)), { uid: id + Math.random(), itemId: id, qty: 1 }, ...g.slice(g.indexOf(null) + 1)];
@@ -106,7 +106,7 @@ describe('Economía', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.profile.gold).toBe(p.gold - Math.round(ITEMS.health_potion.value / 10)); // economía ÷10
-    expect(countItem(r.profile.backpack, 'health_potion')).toBe(3);
+    expect(countItem(r.profile.backpack, 'health_potion')).toBe(4);
   });
   it('no permite comprar sin oro', () => {
     const p = { ...warriorProfile(), gold: 0 };

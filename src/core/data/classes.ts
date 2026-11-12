@@ -35,7 +35,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
     classSkill: 'war_cry', classSkills: ['war_cry', 'bloodthirst', 'hold_line', 'steel_whirl', 'last_bastion'], weapons: 'Espadas, hachas y escudos',
     pros: ['Mucha vida y defensa', 'Sus tajos hacen sangrar', 'Grito de guerra: +30 % de daño durante 3 turnos'],
     cons: ['Lento', 'Casi sin poder mágico', 'Poco ímpetu para encadenar ataques especiales'],
-    starterKit: [{ itemId: 'rusty_sword', qty: 1 }, { itemId: 'wooden_shield', qty: 1 }, { itemId: 'padded_tunic', qty: 1 }, { itemId: 'health_potion', qty: 2 }, { itemId: 'focus_tonic', qty: 1 }, { itemId: 'ration', qty: 1 }, { itemId: 'water', qty: 1 }],
+    starterKit: [{ itemId: 'rusty_sword', qty: 1 }, { itemId: 'wooden_shield', qty: 1 }, { itemId: 'padded_tunic', qty: 1 }, { itemId: 'health_potion', qty: 3 }, { itemId: 'focus_tonic', qty: 1 }, { itemId: 'ration', qty: 1 }, { itemId: 'water', qty: 1 }],
     color: '#c0563b',
   },
   mage: {
@@ -47,7 +47,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
     classSkill: 'mana_shield', classSkills: ['mana_shield', 'blink', 'curse_weakness', 'blood_pact', 'abyss_comet'], weapons: 'Báculos y tomos',
     pros: ['Fuego, hielo y sombra según el báculo', 'Escudo de maná: absorbe golpes', 'Quema y congela a sus enemigos'],
     cons: ['Poca vida', 'Poco daño físico', 'Sin maná, está perdido'],
-    starterKit: [{ itemId: 'apprentice_staff', qty: 1 }, { itemId: 'linen_robe', qty: 1 }, { itemId: 'health_potion', qty: 2 }, { itemId: 'mana_potion', qty: 1 }, { itemId: 'ration', qty: 1 }, { itemId: 'water', qty: 1 }],
+    starterKit: [{ itemId: 'apprentice_staff', qty: 1 }, { itemId: 'linen_robe', qty: 1 }, { itemId: 'health_potion', qty: 3 }, { itemId: 'mana_potion', qty: 1 }, { itemId: 'ration', qty: 1 }, { itemId: 'water', qty: 1 }],
     color: '#7b5ae0',
   },
   rogue: {

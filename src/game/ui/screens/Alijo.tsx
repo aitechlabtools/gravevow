@@ -26,7 +26,7 @@ import { Panel, SubHead, Segmented, usePixelScale } from '../kit';
 import { BodyPanel } from '../BodyFigure';
 import { NeedsPanel } from '../NeedsBars';
 import { needsOf } from '../../../core/needs';
-import { vesperPrice } from '../../../core/anatomy';
+import { CureOffer, useCure } from '../CureOffer';
 import { baseBody } from '../../state/medicalActions';
 import { useLayout } from '../../../config/ui';
 import { ItemCard } from './ItemCard';
@@ -277,11 +277,12 @@ function BagSlot({ sel, onDone }: { sel: Loc | null; onDone: () => void }) {
 function StatusView() {
   const profile = useGame((s) => s.profile)!;
   const body = baseBody(profile);
-  const price = vesperPrice(body);
+  const cure = useCure();
   return (
     <div data-testid="intendencia-status">
-      <BodyPanel body={body} backpack={profile.backpack} onTreat={(id, r) => actions.baseTreat(id, r)}
-        note={price ? `Puedes curarte con lo que llevas en la mochila, o pagar ${price} de oro a Hermana Vesper en la enfermería del Bastión.` : 'Estás entero.'}>
+      {cure && <div className="mb-3"><CureOffer /></div>}
+      <BodyPanel body={body} backpack={profile.backpack} onTreat={(id, r) => actions.baseTreat(id, r)} onHeal={(id) => actions.baseHeal(id)}
+        note={cure ? 'Toca una parte para ver qué le pasa y curarla con lo que llevas, o arrastra una venda, una férula o una poción hasta ella.' : 'Estás entero.'}>
         <NeedsPanel needs={needsOf(profile.needs)} body={body} backpack={profile.backpack} onUse={(id) => actions.eatItem(id)} atBase
           note="El catre está en el Bastión, en los barracones." />
       </BodyPanel>

@@ -206,6 +206,8 @@ export interface Contract {
 }
 
 export interface Profile {
+  /** Fase 10: cayó en la última incursión (la curación completa cuesta 1 moneda, o nada si no tiene). */
+  fallen?: boolean;
   /** 2 = escala de niveles 1–100. Los perfiles de la versión 1 se migran al cargarlos. */
   version: 2;
   character: CharacterData;

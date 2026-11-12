@@ -1,7 +1,9 @@
 // Anatomía en pantalla (Fase 4): silueta de siete regiones y panel de heridas con sus tratamientos.
 // El color siempre va con símbolo o texto: un brazo rojo, uno roto y uno inutilizado se distinguen.
 import { ANATOMY, BODY_COLOR, REGION_NAME, type Region } from '../../config/anatomy';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { getItem } from '../../core/data/items';
+import { useDrag } from './pointerDrag';
 import { bodyHp, isDisabled, isLimb, painfulRegions, summaryHp, regionCap, regionMaxes, REGIONS, treatError, TREATMENT_NAME, urgencies, bestTreatment, type Body, type Treatment } from '../../core/anatomy';
 import { countItem } from '../../core/inventory';
 import type { Grid } from '../../core/types';
@@ -89,14 +91,34 @@ function Ghost({ body }: { body: Body }) {
 }
 
 /** Etiqueta de una región: nombre, vida y una barra fina; las lesiones con símbolo (nunca solo color). */
-function RegionTag({ body, r, on, onPick }: { body: Body; r: Region; on: boolean; onPick?: () => void }) {
+/** Estado de una región en una palabra (va con su símbolo: nunca solo color). */
+export function regionWord(b: Body, r: Region): { word: string; ico: string; cls: string } {
+  const p = b.parts[r];
+  if (isDisabled(b, r)) return { word: 'Inutilizada', ico: '⊘', cls: 'off' };
+  if (p.bleed) return { word: p.bleed === 2 ? 'Sangra mucho' : 'Sangra', ico: p.bleed === 2 ? '◆◆' : '◆', cls: 'bleed' };
+  if (p.fracture) return { word: 'Rota', ico: '✕', cls: 'frac' };
+  if (p.hp < regionMaxes(b.total)[r]) return { word: 'Herida', ico: '!', cls: 'hurt' };
+  return { word: 'Sana', ico: '✓', cls: 'ok' };
+}
+
+/** ¿Sirve este objeto en esta región? (para resaltarla mientras se arrastra) */
+function usefulOn(body: Body, itemId: string, r: Region): boolean {
+  const use = getItem(itemId).use;
+  if (use?.kind === 'treat') return use.treat !== 'painkiller' && !treatError(body, use.treat as Treatment, r);
+  if (use?.kind === 'heal') return !isDisabled(body, r) && body.parts[r].hp < regionMaxes(body.total)[r];
+  return false;
+}
+
+function RegionTag({ body, r, on, onPick, drop }: { body: Body; r: Region; on: boolean; onPick?: () => void; drop?: 'yes' | 'no' | null }) {
   const p = body.parts[r];
   const cap = regionCap(body, r);
   const pct = Math.max(0, Math.min(100, (p.hp / Math.max(1, regionMaxes(body.total)[r])) * 100));
   const off = isDisabled(body, r);
   const [x, y] = TAG_POS[r];
+  const word = regionWord(body, r);
   return (
-    <button type="button" className={`body-tag ${on ? 'on' : ''} ${off ? 'off' : ''}`} style={{ left: `${x}%`, top: `${y}%` }}
+    <button type="button" className={`body-tag ${on ? 'on' : ''} ${off ? 'off' : ''} ${drop === 'yes' ? 'drop-yes' : drop === 'no' ? 'drop-no' : ''}`} style={{ left: `${x}%`, top: `${y}%` }}
+      data-drop={JSON.stringify({ type: 'body', region: r })}
       onClick={onPick} aria-pressed={on} aria-label={`${REGION_NAME[r]}: ${p.hp} de ${cap}. ${regionStatus(body, r).join(', ')}`} data-testid={`body-row-${r}`}>
       <span className="body-tag-name">
         <span className="truncate">{TAG_NAME[r]}</span>
@@ -108,6 +130,7 @@ function RegionTag({ body, r, on, onPick }: { body: Body; r: Region; on: boolean
         {p.fracture && <i className="body-ico frac" title="Fractura">✕</i>}
         {off && <i className="body-ico off" title="Inutilizada">⊘</i>}
       </span>
+      <span className={`body-tag-state ${word.cls}`} data-testid={`body-state-${r}`}>{word.ico} {word.word}</span>
     </button>
   );
 }
@@ -116,8 +139,10 @@ function RegionTag({ body, r, on, onPick }: { body: Body; r: Region; on: boolean
  * Panel de heridas: mapa del cuerpo (silueta tenue con una etiqueta por región) y, al lado, la región
  * elegida con sus lesiones y los tratamientos que llevas y sirven ahí. Lo que no sirve no aparece.
  */
-export function BodyPanel({ body, backpack, onTreat, surgery, note, children }: {
+export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, children }: {
   body: Body; backpack?: Grid; onTreat?: (itemId: string, region: Region) => void;
+  /** Pociones de vida (Estado, en el Bastión): curan el cuerpo entero. */
+  onHeal?: (itemId: string) => void;
   surgery?: { region: Region; left: number } | null; note?: string; children?: ReactNode;
 }) {
   const touch = useIsTouch();
@@ -137,11 +162,30 @@ export function BodyPanel({ body, backpack, onTreat, surgery, note, children }: 
   const total = bodyHp(body), dead = summaryHp(body) === 0;
   const st = regionStatus(body, sel);
   const opts = onTreat && !surgery ? options(sel) : [];
+  // Arrastrar un objeto de cura a una parte del cuerpo (resalta dónde sirve)
+  const drag = useDrag();
+  const dragUse = drag && onTreat ? getItem(drag.itemId).use : null;
+  const dragging = dragUse && (dragUse.kind === 'treat' || (dragUse.kind === 'heal' && onHeal)) ? drag!.itemId : null;
+  useEffect(() => {
+    if (!onTreat) return;
+    const f = (e: Event) => {
+      const { itemId, region } = (e as CustomEvent<{ itemId: string; region: Region }>).detail;
+      const use = getItem(itemId).use;
+      setSel(region);
+      if (use?.kind === 'treat') onTreat(itemId, region);
+      else if (use?.kind === 'heal' && onHeal) onHeal(itemId);
+    };
+    window.addEventListener('cr-drop-body', f);
+    return () => window.removeEventListener('cr-drop-body', f);
+  }, [onTreat, onHeal]);
+  // Todo lo que curaría esta región, lo lleves o no (lo que no llevas dice quién lo vende)
+  const fixes = onTreat && !surgery ? (['bandage', 'tourniquet', 'hemostatic', 'splint', 'surgery'] as Treatment[]).filter((t) => !treatError(body, t, sel) && !have(t)) : [];
+  const potion = onHeal && backpack && !isDisabled(body, sel) && body.parts[sel].hp < regionMaxes(body.total)[sel] ? (backpack.find((x) => x && x.itemId !== 'cover' && getItem(x.itemId).use?.kind === 'heal')?.itemId ?? null) : null;
   return (
     <div className="body-panel" data-testid="body-panel">
       <div className="body-map" data-testid="body-map">
         <Ghost body={body} />
-        {REGIONS.map((r) => <RegionTag key={r} body={body} r={r} on={sel === r} onPick={() => setSel(r)} />)}
+        {REGIONS.map((r) => <RegionTag key={r} body={body} r={r} on={sel === r} onPick={() => setSel(r)} drop={dragging ? (usefulOn(body, dragging, r) ? 'yes' : 'no') : null} />)}
         <div className={`body-total ${dead ? 'dead' : ''}`} data-testid="body-total">Vida <b>{dead ? 0 : total}</b> / {body.total}</div>
       </div>
       <div className="body-side">
@@ -170,6 +214,16 @@ export function BodyPanel({ body, backpack, onTreat, surgery, note, children }: 
               ))}
             </div>
           )}
+          {potion && (
+            <button className={`btn body-treat ${touch ? 'touch' : ''} mt-1`} onClick={() => onHeal!(potion)} data-testid={`heal-${sel}`}>
+              <ItemIcon itemId={potion} size={18} />{getItem(potion).name} · devuelve vida, no cierra heridas
+            </button>
+          )}
+          {fixes.map((t) => (
+            <p key={t} className="text-xs text-stone-400 mt-1 flex items-center gap-1" data-testid={`fix-missing-${t}`}>
+              <ItemIcon itemId={TREATMENT_ITEM[t]} size={16} /> {TREATMENT_NAME[t]}: no llevas · lo vende Hermana Vesper
+            </p>
+          ))}
         </div>
         {onTreat && !REGIONS.some((r) => options(r).length) && urgencies(body).length > 0 && <p className="text-xs text-stone-400 mt-2">No llevas nada que sirva para estas heridas. Hermana Vesper vende vendas, torniquetes, férulas y hemostáticos.</p>}
         {!urgencies(body).length && <p className="text-xs text-stone-400 mt-2">Sin sangrados ni fracturas.{REGIONS.some((r) => isLimb(r) && body.parts[r].hp < regionCap(body, r)) ? ' La vida perdida se recupera con pociones.' : ''}</p>}

@@ -70,7 +70,7 @@ export interface WearNotice { slot: EquipSlot; name: string; level: WearLevel }
  * cada golpe recibido desgasta una pieza de armadura, por turnos y siempre en el mismo orden.
  * Devuelve el equipo nuevo y los avisos de las piezas que han cruzado un umbral.
  */
-export function wearEquipment(eq: Equipment, swings: number, hits: number): { equipment: Equipment; notices: WearNotice[] } {
+export function wearEquipment(eq: Equipment, swings: number, hits: number, bySlot?: Partial<Record<EquipSlot, number>>): { equipment: Equipment; notices: WearNotice[] } {
   const out: Equipment = { ...eq };
   const loss: Partial<Record<EquipSlot, number>> = {};
   const add = (sl: EquipSlot, n: number) => { loss[sl] = (loss[sl] ?? 0) + n; };
@@ -83,7 +83,9 @@ export function wearEquipment(eq: Equipment, swings: number, hits: number): { eq
     const st = out[sl];
     return !!st && hasDurability(getItem(st.itemId)) && !(sl === 'offHand' && getItem(st.itemId).category === 'weapon');
   });
-  if (armor.length) for (let i = 0; i < hits; i++) add(armor[i % armor.length], 1);
+  // Fase 10: si se sabe qué pieza encajó cada golpe, se desgasta esa; si no (combates antiguos), por turnos
+  if (bySlot) { for (const [sl, n] of Object.entries(bySlot) as [EquipSlot, number][]) if (armor.includes(sl)) add(sl, n); }
+  else if (armor.length) for (let i = 0; i < hits; i++) add(armor[i % armor.length], 1);
   const notices: WearNotice[] = [];
   for (const sl of Object.keys(loss) as EquipSlot[]) {
     const st = out[sl];

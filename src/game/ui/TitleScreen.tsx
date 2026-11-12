@@ -123,7 +123,7 @@ export function TitleScreen() {
         <Modal onClose={() => actions.dismissNotice()}>
           <h2 className="panel-title text-lg mb-2">{noticeTitle ?? 'Expedición interrumpida'}</h2>
           <p className="font-body text-lg">{notice}</p>
-          <button className="btn btn-gold mt-4" onClick={() => actions.dismissNotice()}>Entendido</button>
+          <button className="btn btn-gold mt-4" onClick={() => actions.dismissNotice()} data-testid="btn-notice-ok">Entendido</button>
         </Modal>
       )}
       {settings && <SettingsModal onClose={() => setSettings(false)} />}

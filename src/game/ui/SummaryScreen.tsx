@@ -1,3 +1,4 @@
+import { CureOffer } from './CureOffer';
 import { actions, useGame } from '../state/store';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { getEnemy } from '../../core/data/enemies';
@@ -79,6 +80,7 @@ export function SummaryScreen() {
             </div>
           )}
         </div>
+        {!summary.tutorialNote && <div className="mt-4"><CureOffer /></div>}
         <div className="text-center mt-6">
           <button className="btn btn-gold text-lg px-8 py-3" onClick={() => { if (profile.settings.music) startMusic('lobby'); actions.backToLobby(); }} data-testid="btn-back-lobby" autoFocus>Volver al Bastión</button>
         </div>

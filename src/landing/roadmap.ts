@@ -21,7 +21,7 @@ export const ROADMAP: RoadmapColumn[] = [
       'Tres zonas y diez escenarios',
       'Combate por turnos con habilidades',
       'Enemigos que anuncian sus golpes y jefes con fases',
-      'Heridas por zonas: sangrado y fracturas',
+      'Heridas por zonas: sangrado y fracturas, y armadura que las detiene',
       'Hambre, sed y cansancio en cada incursión',
       'Armas y armaduras que se desgastan',
       'Más de cincuenta armas y piezas',

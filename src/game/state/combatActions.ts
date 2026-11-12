@@ -1,3 +1,5 @@
+import { healBody, summaryHp } from '../../core/anatomy';
+import { RECOVER_AFTER_WIN } from '../../config/subzones';
 // Acciones del combate: empezar, actuar, turno de la IA, resultado y cierre.
 import { needsOf } from '../../core/needs';
 import { prepMods } from '../../core/refuge';
@@ -34,7 +36,7 @@ export const combatActions = {
     if (!s.profile || !s.expedition || s.combat) return;
     const ch = s.profile.character;
     if (s.expedition.surgery) actions.interruptSurgery('Te atacan');
-    const player = playerCombatant(ch, s.expedition.equipment, s.expedition.hp, s.expedition.mp, s.expedition.cooldowns, s.profile.classSkills.equipped, { body: state.expedition!.body, headHits: headHitsHere(), noInjuries: !!s.tutorial, needs: s.tutorial ? undefined : needsOf(s.expedition.needs), restExtra: loadNow()?.restExtra ?? 0, prepMods: prepMods(s.expedition.prep), pact: s.expedition.pact ?? null });
+    const player = playerCombatant(ch, s.expedition.equipment, s.expedition.hp, s.expedition.mp, s.expedition.cooldowns, s.profile.classSkills.equipped, { body: state.expedition!.body, headHits: headHitsHere(), noInjuries: !!s.tutorial, unbreakable: !!s.tutorial, needs: s.tutorial ? undefined : needsOf(s.expedition.needs), restExtra: loadNow()?.restExtra ?? 0, prepMods: prepMods(s.expedition.prep), pact: s.expedition.pact ?? null });
     const list = [player];
     let title = '';
     let canFlee = true;
@@ -139,11 +141,16 @@ export const combatActions = {
       }
       // Desgaste del equipo: el arma por cada ataque y la armadura por cada golpe encajado (al morir da igual: se pierde)
       if (next.outcome !== 'defeat' && pl.wear) {
-        const w = wearEquipment(exp.equipment, pl.wear.swings, pl.wear.hits);
+        const w = wearEquipment(exp.equipment, pl.wear.swings, pl.wear.hits, pl.wear.slots);
         exp.equipment = w.equipment;
         for (const n of w.notices) toast(noticeText(n), n.level === 'worn' ? 'info' : 'danger');
       }
       if (pl.surgery) toast('El combate termina con la cirugía a medias: el equipo se ha perdido.', 'danger');
+      // Fase 10: al ganar se recobra el aliento (un poco de vida; no cierra heridas ni sangrados)
+      if (next.outcome === 'victory' && exp.body && exp.hp > 0) {
+        const h = healBody(exp.body, Math.round(exp.body.total * RECOVER_AFTER_WIN));
+        if (h.healed > 0) { exp.body = h.body; exp.hp = summaryHp(h.body); toast(`Recobras el aliento: +${h.healed} de vida.`, 'info'); }
+      }
       // Si huyes después de abatir a uno de los dos, su botín también cae al suelo
       const killedFoe = next.outcome === 'fled' && next.combatants.some((c) => c.side === 'B' && c.hp <= 0 && c.ref && c.ref !== 'rival');
       if (next.outcome === 'victory' || killedFoe) {

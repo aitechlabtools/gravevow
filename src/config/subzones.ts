@@ -48,3 +48,12 @@ export const CHEST_BY_POSITION: { gold: number; extraRolls: number }[] = [
 ];
 /** Peso del equipo según su nivel requerido respecto a la subzona: el de su nivel sale más; el de muy arriba, casi nunca. */
 export const GEAR_LEVEL_WEIGHT = { near: 1.6, below: 0.7, above: 0.25, nearBelow: 10, nearAbove: 5 };
+
+/**
+ * Fase 10: daño (ataque y magia) de las criaturas COMUNES de cada subzona. Élites y jefes no cambian.
+ * Comprobado con el simulador (docs/equilibrio/simulador-actual.md): en S1, superar 3 o 4 enemigos seguidos es lo normal.
+ */
+export const ENEMY_DAMAGE: Record<string, number> = { afueras: 0.8, castillo: 0.9, calabozos: 0.92, panteon: 0.92, rios: 0.95, trono: 0.92 };
+
+/** Al ganar un combate se recobra el aliento: esta parte de la vida máxima (no cierra heridas ni sangrados). */
+export const RECOVER_AFTER_WIN = 0.15;

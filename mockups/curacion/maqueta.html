@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maqueta · curación</title>
+<style>
+@font-face { font-family: Cinzel; src: url(../../node_modules/@fontsource/cinzel/files/cinzel-latin-700-normal.woff2) format('woff2'); font-weight: 700; }
+@font-face { font-family: Crimson; src: url(../../node_modules/@fontsource/crimson-pro/files/crimson-pro-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family: Crimson; src: url(../../node_modules/@fontsource/crimson-pro/files/crimson-pro-latin-600-normal.woff2) format('woff2'); font-weight: 600; }
+:root { --void:#07060a; --crypt:#0f0d14; --s9:#15131a; --s8:#1c1b22; --s7:#2a2830; --s6:#3a3741; --s4:#625d69; --s3:#8c8693; --bone:#d9d3c1; --parch:#e9e1cc; --gold:#e8b33a; --golddim:#9a6b1a; --ember:#e8752b; --blood:#c4283b; --heal:#5fd19a; --ok:#6fae5a; --hurt:#e8b33a; --bad:#e8752b; --crit:#d23a3a; }
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; background: var(--void); color: var(--bone); font: 17px/1.35 Crimson, Georgia, serif; overflow: hidden; }
+body.m { font-size: 14px; }
+.h { font-family: Cinzel, serif; font-weight: 700; color: var(--parch); letter-spacing: .04em; }
+.panel { background: var(--s9); border: 2px solid var(--s7); box-shadow: inset 0 0 0 2px #000; }
+.gold { border-color: var(--golddim); }
+.btn { min-height: 44px; min-width: 44px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--s8); border: 2px solid var(--s6); color: var(--parch); font: 600 1em Crimson, serif; }
+.btn.g { background: linear-gradient(#5b3f12, #3b2909); border-color: var(--gold); color: #fff3d0; }
+.muted { color: var(--s3); }
+.top { height: 64px; display: flex; align-items: center; gap: 28px; padding: 0 28px; border-bottom: 2px solid var(--s7); background: var(--crypt); }
+.top .tab { color: var(--s3); font-family: Cinzel; font-weight: 700; font-size: 15px; }
+.top .tab.on { color: var(--gold); }
+body.m .top { height: 46px; gap: 14px; padding: 0 12px; } body.m .top .tab { font-size: 12px; }
+.coin { display: inline-block; width: 12px; height: 12px; background: var(--gold); box-shadow: inset -2px -2px 0 var(--golddim); image-rendering: pixelated; vertical-align: -1px; }
+.ico { width: 18px; height: 18px; image-rendering: pixelated; flex: none; }
+/* Silueta */
+.body { position: relative; }
+.part { position: absolute; display: flex; flex-direction: column; gap: 2px; padding: 4px 6px; background: var(--s8); border: 2px solid var(--s6); min-height: 44px; }
+.part .n { font-weight: 600; font-size: .86em; color: var(--parch); display: flex; justify-content: space-between; gap: 6px; }
+.part .st { display: flex; align-items: center; gap: 4px; font-size: .8em; }
+.bar { height: 4px; background: #000; } .bar i { display: block; height: 100%; }
+.part.ok .st { color: var(--ok); } .part.hurt .st { color: var(--hurt); } .part.bleed .st { color: var(--crit); } .part.frac .st { color: var(--bad); } .part.dis .st { color: var(--s3); }
+.part.sel { border-color: var(--gold); box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--gold); }
+.part.drop { border-color: var(--heal); border-style: dashed; box-shadow: 0 0 0 2px #000, 0 0 14px var(--heal); }
+.part.nodrop { opacity: .45; }
+.fig { position: absolute; background: #241f28; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82em; }
+.legend span { display: inline-flex; align-items: center; gap: 4px; }
+.grid { display: grid; gap: 4px; justify-content: start; }
+.slot { width: 52px; height: 52px; background: #0c0b0f; border: 2px solid var(--s7); display: flex; align-items: center; justify-content: center; position: relative; }
+body.m .slot { width: 44px; height: 44px; }
+.slot .q { position: absolute; right: 2px; bottom: 0; font-size: 12px; color: var(--parch); text-shadow: 1px 1px 0 #000; }
+.slot.heal { border-color: var(--heal); }
+.slot.drag { opacity: .35; }
+.ghost { position: absolute; width: 52px; height: 52px; border: 2px solid var(--heal); background: #0c0b0fcc; display: flex; align-items: center; justify-content: center; transform: rotate(-6deg); box-shadow: 4px 6px 0 #000; }
+.tip { font-size: .85em; }
+.row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 2px solid var(--s7); background: var(--s8); min-height: 52px; }
+.row .grow { flex: 1; }
+.tag { font-size: .78em; padding: 1px 6px; border: 1px solid; }
+.modal-back { position: absolute; inset: 0; background: #000b; display: flex; align-items: center; justify-content: center; }
+.log { font-size: .85em; color: var(--s3); }
+.log b { color: var(--heal); font-weight: 600; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-ok" viewBox="0 0 9 9"><path fill="#6fae5a" d="M1 4h1v1h1v1h1V5h1V4h1V3h1V2h1v2H7v1H6v1H5v1H4v1H3V7H2V6H1z"/></symbol>
+    <symbol id="i-hurt" viewBox="0 0 9 9"><path fill="#e8b33a" d="M4 1h1v5H4zM4 7h1v1H4z"/></symbol>
+    <symbol id="i-bleed" viewBox="0 0 9 9"><path fill="#d23a3a" d="M4 0h1v1h1v2h1v3H6v1H3V6H2V3h1V1h1z"/><path fill="#ff8a8a" d="M3 4h1v1H3z"/></symbol>
+    <symbol id="i-frac" viewBox="0 0 9 9"><path fill="#e9e1cc" d="M1 1h2v1h1v1h1v1H4v1H3v1H2v1H1V6h1V5h1V4H2V3H1z"/><path fill="#e8752b" d="M5 4h1v1h1v1h1v2H6V7H5V6H4V5h1z"/></symbol>
+    <symbol id="i-dis" viewBox="0 0 9 9"><path fill="#8c8693" d="M1 1h2v1h1v1h1V2h1V1h2v2H7v1H6v1h1v1h1v2H6V7H5V6H4v1H3v1H1V6h1V5h1V4H2V3H1z"/></symbol>
+    <symbol id="i-armor" viewBox="0 0 9 9"><path fill="#8c8693" d="M1 1h7v4H7v1H6v1H5v1H4V7H3V6H2V5H1z"/><path fill="#d9d3c1" d="M2 2h2v2H2z"/></symbol>
+    <symbol id="i-bandage" viewBox="0 0 9 9"><path fill="#e9e1cc" d="M1 3h7v3H1z"/><path fill="#c4283b" d="M4 3h1v3H4zM3 4h3v1H3z"/></symbol>
+    <symbol id="i-splint" viewBox="0 0 9 9"><path fill="#9a6b1a" d="M2 0h1v9H2zM6 0h1v9H6z"/><path fill="#e9e1cc" d="M1 2h7v1H1zM1 6h7v1H1z"/></symbol>
+    <symbol id="i-potion" viewBox="0 0 9 9"><path fill="#8c8693" d="M3 0h3v2H3z"/><path fill="#c4283b" d="M2 3h5v1h1v4H1V4h1z"/><path fill="#ff8a8a" d="M2 4h1v2H2z"/></symbol>
+    <symbol id="i-food" viewBox="0 0 9 9"><path fill="#9a6b1a" d="M1 4h7v3H1z"/><path fill="#e8b33a" d="M2 3h5v1H2z"/></symbol>
+    <symbol id="i-skull" viewBox="0 0 9 9"><path fill="#d9d3c1" d="M2 1h5v1h1v3H7v2H2V5H1V2h1z"/><path fill="#07060a" d="M3 3h1v1H3zM5 3h1v1H5zM4 5h1v1H4z"/></symbol>
+  </defs>
+</svg>
+<div id="app"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const v = q.get('v') || 'muerte';
+const M = q.get('m') === '1';
+document.body.classList.toggle('m', M);
+const ic = (id, s = M ? 14 : 18) => `<svg class="ico" style="width:${s}px;height:${s}px"><use href="#i-${id}"/></svg>`;
+const topBar = (on) => `<div class="top"><span class="h" style="font-size:${M ? 14 : 18}px;color:var(--gold)">GRAVEVOW</span>${['Jugar', 'Intendencia', 'Personaje', 'Bastión', 'Misiones'].map((t) => `<span class="tab ${t === on ? 'on' : ''}">${t}</span>`).join('')}<span style="flex:1"></span><span class="muted">${ic('skull', 12)} Aldric · Guerrero nv 4</span><span><i class="coin"></i> 37</span></div>`;
+
+// Silueta: posiciones relativas (escritorio / móvil)
+const PARTS = [
+  ['head', 'Cabeza', 'ok', 9, 9, 'Sano'],
+  ['thorax', 'Tórax', 'hurt', 14, 23, 'Herido'],
+  ['abdomen', 'Abdomen', 'ok', 13, 14, 'Sano'],
+  ['armR', 'Brazo der.', 'frac', 5, 9, 'Roto'],
+  ['armL', 'Brazo izq.', 'bleed', 6, 9, 'Sangra'],
+  ['legR', 'Pierna der.', 'ok', 14, 14, 'Sano'],
+  ['legL', 'Pierna izq.', 'dis', 0, 14, 'Inutilizada'],
+];
+const ICON = { ok: 'ok', hurt: 'hurt', bleed: 'bleed', frac: 'frac', dis: 'dis' };
+const BAR = { ok: 'var(--ok)', hurt: 'var(--hurt)', bleed: 'var(--crit)', frac: 'var(--bad)', dis: 'var(--s6)' };
+function silhouette(w, h, opts = {}) {
+  const k = w / 360;
+  const pos = { head: [130, 4], thorax: [118, 70], abdomen: [118, 140], armR: [8, 104], armL: [246, 104], legR: [62, 214], legL: [192, 214] };
+  const pw = 110 * k;
+  let html = `<div class="body" style="width:${w}px;height:${h}px">`;
+  html += `<div class="fig" style="left:${150 * k}px;top:${10 * k}px;width:${60 * k}px;height:${56 * k}px"></div><div class="fig" style="left:${125 * k}px;top:${66 * k}px;width:${110 * k}px;height:${150 * k}px"></div><div class="fig" style="left:${88 * k}px;top:${76 * k}px;width:${30 * k}px;height:${120 * k}px"></div><div class="fig" style="left:${242 * k}px;top:${76 * k}px;width:${30 * k}px;height:${120 * k}px"></div><div class="fig" style="left:${130 * k}px;top:${216 * k}px;width:${42 * k}px;height:${100 * k}px"></div><div class="fig" style="left:${188 * k}px;top:${216 * k}px;width:${42 * k}px;height:${100 * k}px"></div>`;
+  for (const [id, name, st, hp, max, lab] of PARTS) {
+    const [x, y] = pos[id];
+    const cls = [st, opts.sel === id ? 'sel' : '', opts.drop ? (opts.drop.includes(id) ? 'drop' : 'nodrop') : ''].join(' ');
+    html += `<div class="part ${cls}" style="left:${x * k}px;top:${y * k}px;width:${pw}px"><div class="n"><span>${name}</span><span class="muted">${hp}/${max}</span></div><div class="bar"><i style="width:${(hp / max) * 100}%;background:${BAR[st]}"></i></div><div class="st">${ic(ICON[st], M ? 11 : 13)} ${lab}</div></div>`;
+  }
+  return html + '</div>';
+}
+const legend = () => `<div class="legend muted">${[['ok', 'Sano'], ['hurt', 'Herido'], ['bleed', 'Sangra'], ['frac', 'Roto'], ['dis', 'Inutilizado']].map(([i, t]) => `<span>${ic(i, 12)} ${t}</span>`).join('')}</div>`;
+const bag = (drag) => {
+  const items = [['bandage', 2, true], ['splint', 1, true], ['potion', 2, true], ['food', 1, false], null, null, null, null, null, null, null, null];
+  return `<div class="grid" style="grid-template-columns:repeat(${M ? 6 : 4},auto)">${items.map((x, i) => x ? `<div class="slot ${x[2] ? 'heal' : ''} ${drag && i === 0 ? 'drag' : ''}">${ic(x[0], M ? 26 : 30)}<span class="q">${x[1]}</span></div>` : '<div class="slot"></div>').join('')}</div>`;
+};
+
+function muerte() {
+  const W = innerWidth, H = innerHeight;
+  const card = `<div class="panel gold" style="width:${M ? 560 : 640}px;padding:${M ? '12px 16px' : '26px 30px'};text-align:left">
+    <div class="h" style="font-size:${M ? 17 : 24}px;margin-bottom:${M ? 4 : 10}px">${ic('skull', M ? 16 : 22)} Vuelves al Bastión a rastras</div>
+    <p style="margin-bottom:${M ? 6 : 12}px">Los portadores te dejan junto a la hoguera. Lo que llevabas encima se quedó abajo. Tu cuerpo aún arrastra la incursión:</p>
+    <div style="display:flex;gap:${M ? 10 : 18}px;align-items:center;margin-bottom:${M ? 8 : 14}px">
+      <div class="panel" style="padding:${M ? 6 : 10}px 12px;flex:1">
+        <div style="display:flex;justify-content:space-between"><span>Vida</span><span class="muted">31 / 92</span></div><div class="bar" style="height:6px;margin:4px 0 6px"><i style="width:34%;background:var(--crit)"></i></div>
+        <div class="legend">${ic('frac', 12)}<span>1 fractura</span>${ic('dis', 12)}<span>1 inutilizado</span></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn g" style="flex:1">Curarse por 1 de oro <i class="coin"></i></button>
+      <button class="btn">Más tarde</button>
+    </div>
+    <p class="muted" style="font-size:.82em;margin-top:${M ? 6 : 10}px">Hermana Vesper lo deja todo como nuevo: vida, heridas y huesos. Se paga del almacén. Si no te queda ni una moneda, esta primera cura tras caer es gratis.</p>
+  </div>`;
+  return topBar('Jugar') + `<div style="position:relative;height:${H - (M ? 46 : 64)}px;background:radial-gradient(ellipse at 50% 80%, #2a1608 0, var(--void) 60%)"><div class="modal-back">${card}</div></div>`;
+}
+
+function estado(list) {
+  const H = innerHeight - (M ? 46 : 64);
+  const sw = M ? 300 : 430, sh = M ? 270 : 420;
+  const drag = !list;
+  const sel = list ? 'armL' : null;
+  const drop = drag ? ['armL'] : null;
+  const ghost = drag ? `<div class="ghost" style="left:${M ? 250 : 470}px;top:${M ? 110 : 170}px">${ic('bandage', 30)}</div>` : '';
+  const side = list ? `<div class="panel" style="padding:${M ? 8 : 14}px;display:flex;flex-direction:column;gap:${M ? 5 : 8}px;flex:1;min-width:0">
+      <div class="h" style="font-size:${M ? 14 : 18}px">Brazo izquierdo <span class="muted" style="font-family:Crimson">6 / 9</span></div>
+      <div class="st" style="color:var(--crit);display:flex;gap:6px;align-items:center">${ic('bleed', 14)} Sangrado leve: pierde un poco de vida mientras exploras.</div>
+      <div class="muted" style="font-size:.85em">Lo cura:</div>
+      <div class="row">${ic('bandage', 26)}<div class="grow"><b>Venda</b> <span class="muted">· corta el sangrado</span><div class="muted" style="font-size:.8em">Tienes 2</div></div><button class="btn g">Usar</button></div>
+      <div class="row">${ic('potion', 26)}<div class="grow"><b>Poción de vida</b> <span class="muted">· devuelve vida, no corta el sangrado</span><div class="muted" style="font-size:.8em">Tienes 2</div></div><button class="btn">Usar</button></div>
+      <div class="row" style="opacity:.6">${ic('bandage', 26)}<div class="grow"><b>Torniquete</b> <span class="muted">· corta el sangrado grave</span><div style="font-size:.8em;color:var(--ember)">No tienes · lo vende Hermana Vesper</div></div></div>
+    </div>`
+    : `<div class="panel" style="padding:${M ? 8 : 14}px;flex:1;min-width:0;display:flex;flex-direction:column;gap:${M ? 6 : 10}px">
+      <div class="h" style="font-size:${M ? 14 : 18}px">Mochila</div>
+      ${bag(true)}
+      <div class="tip"><span style="color:var(--heal)">Venda</span>: suéltala en una parte que sangre. Las partes donde sirve brillan.</div>
+      <div class="log">Al soltar: <b>Venda en el brazo izquierdo: deja de sangrar.</b></div>
+    </div>`;
+  return topBar('Intendencia') + `<div style="display:flex;gap:${M ? 8 : 18}px;padding:${M ? 8 : 22}px;height:${H}px;position:relative">
+    <div class="panel" style="padding:${M ? 6 : 14}px;display:flex;flex-direction:column;gap:${M ? 4 : 10}px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="h" style="font-size:${M ? 13 : 18}px">Estado</span>${M ? '' : '<span class="muted" style="font-size:.85em">Toca una parte o arrastra un objeto de cura</span>'}</div>
+      ${silhouette(sw, sh, { sel, drop })}
+      ${legend()}
+    </div>
+    ${side}${ghost}
+  </div>`;
+}
+
+function regreso() {
+  const H = innerHeight - (M ? 46 : 64);
+  return topBar('Jugar') + `<div style="position:relative;height:${H}px;background:radial-gradient(ellipse at 50% 80%, #1e1810 0, var(--void) 60%)"><div class="modal-back">
+    <div class="panel gold" style="width:${M ? 560 : 620}px;padding:${M ? '12px 16px' : '24px 28px'}">
+      <div class="h" style="font-size:${M ? 17 : 22}px;margin-bottom:${M ? 4 : 8}px">Has vuelto, pero herido</div>
+      <p style="margin-bottom:8px">Extracción con éxito. El Bastión te ha estabilizado: ya no sangras, pero el brazo sigue roto y te falta vida.</p>
+      <div class="legend" style="margin-bottom:${M ? 8 : 12}px">${ic('hurt', 12)}<span>Vida 58 / 92</span>${ic('frac', 12)}<span>Brazo derecho roto</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn g" style="flex:1">Curarse por 6 de oro <i class="coin"></i></button><button class="btn">Ir a Estado</button><button class="btn">Más tarde</button></div>
+      <p class="muted" style="font-size:.82em;margin-top:8px">Precio: 1 moneda por cada 10 % de vida que falta y 2 por fractura (máximo 12). Puedes curarte tú con lo de tu mochila desde Estado.</p>
+    </div></div></div>`;
+}
+
+document.getElementById('app').innerHTML = v === 'muerte' ? muerte() : v === 'regreso' ? regreso() : estado(v === 'lista');
+</script>
+</body>
+</html>

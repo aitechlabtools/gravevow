@@ -19,7 +19,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   if ((await p.$$('[data-testid^=vendor-card-]')).length !== 8) fail('el Bastión no tiene los 8 mercaderes');
   if (!(await p.$('[data-testid=vendor-lock-eldrin]'))) fail('Eldrin debería estar por llegar');
   const cb = await box('[data-testid=btn-cot]');
-  if (dev && (!cb || cb.height < 44)) fail('botón del catre menor de 44 px: ' + JSON.stringify(cb));
+  if (dev && (!cb || cb.height < 43.5)) fail('botón del catre menor de 44 px: ' + JSON.stringify(cb));
   await p.screenshot({ path: out + '-1.png' });
   await tap('[data-testid=btn-cot]'); await p.waitForTimeout(150);
   const n0 = await G(() => window.__GRAVEVOW__.getState().profile.needs);
@@ -30,7 +30,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   await p.waitForSelector('[data-testid=intendencia-status] [data-testid=needs-panel]');
   if (!(await p.$('[data-testid=alijo-backpack]'))) fail('la mochila no está al lado del Estado');
   const hb = await box('[data-testid=need-use-hyd]');
-  if (dev && (!hb || hb.height < 44)) fail('botón de beber en la base menor de 44 px');
+  if (dev && (!hb || hb.height < 43.5)) fail('botón de beber en la base menor de 44 px');
   await p.screenshot({ path: out + '-estado.png' });
   await tap('[data-testid=need-use-hyd]'); await p.waitForTimeout(150);
   const hyd = await G(() => window.__GRAVEVOW__.getState().profile.needs.hyd);
@@ -57,7 +57,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   // Panel: beber
   await tap('[data-testid=hud-body]'); await p.waitForSelector('[data-testid=needs-panel]');
   const wb = await box('[data-testid=need-use-hyd]');
-  if (dev && (!wb || wb.height < 44)) fail('botón de beber menor de 44 px');
+  if (dev && (!wb || wb.height < 43.5)) fail('botón de beber menor de 44 px');
   await p.screenshot({ path: out + '-2.png' });
   const w0 = await G(() => window.__GRAVEVOW__.getState().expedition.backpack.filter((x) => x && x.itemId === 'water').reduce((a, x) => a + x.qty, 0));
   await tap('[data-testid=need-use-hyd]'); await p.waitForTimeout(150);

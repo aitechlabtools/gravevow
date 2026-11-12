@@ -7,6 +7,9 @@ import { getSkill } from './data/skills';
 import { getItem } from './data/items';
 import { STATUSES } from './statuses';
 import { ANATOMY } from '../config/anatomy';
+import { PIECE_NAME, SKILL_BLEED_TO_PLAYER } from '../config/armor';
+import { injuryMods, type RegionGuard } from './armor';
+import type { EquipSlot } from './types';
 import { DEFEND_TELEGRAPHED, EXPOSED_MULT, DRAIN_PCT } from '../config/intents';
 import { getMove, type BossPhaseDef, type PatternDef } from './data/intents';
 import { tickPain, addBleed, bleedTick, applyTreatment, damageRegion, damageSpread, healBody, initiativeMult, offenseMult, rollInjury, rollRegion, summaryHp, treatError, REGION_NAME, type Body, type Region } from './anatomy';
@@ -62,7 +65,11 @@ export interface Combatant {
   /** Especiales mejorados por la rareza del arma: turnos de recarga de menos y potencia extra. */
   skillMods?: Record<string, { cooldown: number; power: number }>;
   /** Desgaste del equipo (solo el jugador): ataques hechos y golpes encajados. */
-  wear?: { swings: number; hits: number };
+  wear?: { swings: number; hits: number; /** Golpes que ha encajado cada pieza (Fase 10: se desgasta la que cubre la región). */ slots?: Partial<Record<EquipSlot, number>> };
+  /** Qué pieza cubre cada región y cuánto protege de sangrados y fracturas (solo el jugador). */
+  armor?: Partial<Record<Region, RegionGuard>>;
+  /** Tutorial: no puede caer; al llegar a 1 se levanta con algo de vida. */
+  unbreakable?: boolean;
   /** Anatomía de siete regiones (solo el jugador): la vida `hp` es su resumen y la muerte la decide la cabeza o el tórax. */
   body?: Body;
   /** Los golpes normales pueden ir a la cabeza (no en S1 ni S2). */
@@ -285,7 +292,7 @@ function gainImpetus(c: Combatant, n: number) {
   c.mp = Math.min(c.stats.maxMp, c.mp + n);
 }
 
-interface HitInfo { status?: StatusId; rng?: Rng; kind?: DamageKind; /** Golpe anunciado a una región. */ region?: Region; noInjury?: boolean; by?: Combatant }
+interface HitInfo { status?: StatusId; rng?: Rng; kind?: DamageKind; /** Tipo de golpe (decide sangrado o fractura). */ fx?: string; /** Golpe anunciado a una región. */ region?: Region; noInjury?: boolean; by?: Combatant }
 
 function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boolean, source: 'hit' | 'dot' | 'doom', info: HitInfo = {}) {
   const status = info.status;
@@ -296,7 +303,7 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
     s.log.push(`El escudo de ${target.name} absorbe ${absorbed} de daño${target.shield <= 0 ? ' y se rompe' : ''}.`);
     if (target.shield <= 0) { target.shield = 0; target.statuses = target.statuses.filter((x) => x.id !== 'ward'); }
   }
-  const floor = hasStatus(target, 'endure') && source !== 'doom' ? 1 : 0;
+  const floor = (hasStatus(target, 'endure') && source !== 'doom') || target.unbreakable ? 1 : 0;
   let region: Region | undefined;
   if (target.surgery && source === 'hit' && amount > 0) {
     target.surgery = undefined;
@@ -310,16 +317,29 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
       target.lastRegion = region;
       target.body = damageRegion(target.body, region, amount, { lethal }).body;
       if (amount > 0) s.log.push(`El golpe alcanza a ${target.name} en ${regionWith(region)}.`);
+      // La pieza que cubre la región encaja el golpe (y se desgasta)
+      const piece = target.armor?.[region];
+      if (piece && amount > 0 && target.wear) { const sl = (target.wear.slots ??= {}); sl[piece.slot] = (sl[piece.slot] ?? 0) + 1; }
       if (info.kind === 'physical' && amount > 0 && !target.noInjuries && !info.noInjury && summaryHp(target.body) > 0) {
-        const inj = rollInjury(target.body, region, crit, info.rng);
-        target.body = inj.body;
-        if (inj.injury?.bleed) s.log.push(`${REGION_NAME[region]}: sangrado ${inj.injury.bleed === 2 ? 'grave' : 'leve'}.`);
-        if (inj.injury?.fracture) s.log.push(`${REGION_NAME[region]}: ¡fractura!`);
+        const inj = rollInjury(target.body, region, crit, info.rng, injuryMods(info.fx));
+        if (inj.injury && piece && piece.guard > 0 && info.rng.chance(piece.guard)) {
+          s.log.push(`${PIECE_NAME[piece.slot] ?? 'Tu armadura'} detiene el golpe: ${inj.injury.bleed ? 'no sangras' : 'el hueso aguanta'}.`);
+        } else {
+          target.body = inj.body;
+          if (inj.injury?.bleed) s.log.push(`${REGION_NAME[region]}: sangrado ${inj.injury.bleed === 2 ? 'grave' : 'leve'}.`);
+          if (inj.injury?.fracture) s.log.push(`${REGION_NAME[region]}: ¡fractura!`);
+        }
       }
     } else {
       target.body = damageSpread(target.body, amount, { lethal }).body;
     }
     target.hp = summaryHp(target.body);
+    // Tutorial: nunca se cae; al quedar al borde, se levanta con algo de vida
+    if (target.unbreakable && (target.body.parts.head.hp <= 1 || target.body.parts.thorax.hp <= 1)) {
+      target.body = healBody(target.body, Math.round(target.body.total * 0.35)).body;
+      target.hp = summaryHp(target.body);
+      s.log.push(`${target.name} cae de rodillas… y se levanta. Aquí abajo aún no es su hora.`);
+    }
   } else {
     target.hp = Math.max(Math.min(floor, target.hp), target.hp - amount);
   }
@@ -452,7 +472,7 @@ function unleash(s: CombatState, actor: Combatant, rng: Rng) {
         if (r.miss) { s.events.push({ type: 'miss', targetId: t.id }); s.log.push(`${actor.name} usa ${mv.name}, pero ${t.name} lo esquiva.`); continue; }
         const amount = guarded ? Math.max(1, Math.round(r.amount * DEFEND_TELEGRAPHED)) : r.amount;
         s.log.push(`${actor.name} usa ${mv.name}${targets.length > 1 || (mv.hits ?? 1) > 1 ? ` contra ${t.name}` : ''}: ${amount} de daño${guarded ? ' (en guardia)' : ''}${r.crit ? ' ¡CRÍTICO!' : ''}.`);
-        dealDamage(s, t, amount, r.crit, 'hit', { rng, kind: mv.damage, region: it.region && t.id === chosen.id ? it.region : undefined, noInjury: guarded });
+        dealDamage(s, t, amount, r.crit, 'hit', { rng, kind: mv.damage, fx: 'smash', region: it.region && t.id === chosen.id ? it.region : undefined, noInjury: guarded });
       }
     }
   }
@@ -484,10 +504,14 @@ function heal(s: CombatState, target: Combatant, amount: number) {
   return real;
 }
 
-function applyStatus(s: CombatState, target: Combatant, id: StatusId, turns: number) {
+function applyStatus(s: CombatState, target: Combatant, id: StatusId, turns: number, rng?: Rng) {
   // Con anatomía, el sangrado no es un estado de unos turnos: es una herida en la última región golpeada
   if (id === 'bleed' && target.body && !target.noInjuries) {
     const r = target.lastRegion ?? 'thorax';
+    // Fase 10: las habilidades que hacen sangrar aciertan la mitad contra el jugador, y la pieza que cubre la región lo puede evitar
+    if (rng && !rng.chance(SKILL_BLEED_TO_PLAYER)) return;
+    const piece = target.armor?.[r];
+    if (rng && piece && piece.guard > 0 && rng.chance(piece.guard)) { s.log.push(`${PIECE_NAME[piece.slot] ?? 'Tu armadura'} detiene el golpe: no sangras.`); return; }
     const level = target.body.parts[r].bleed >= 1 ? 2 : 1;
     target.body = addBleed(target.body, r, level);
     s.events.push({ type: 'status', targetId: target.id, status: id, applied: true });
@@ -524,7 +548,7 @@ function applyItemEffect(s: CombatState, actor: Combatant, effect: ItemEffect) {
 function onHitAffixes(s: CombatState, actor: Combatant, target: Combatant, amount: number, rng: Rng, basic: boolean) {
   const a = actor.affixes;
   if (!a?.length) return;
-  if (basic && a.includes('bleeding') && alive(target) && rng.chance(0.2)) applyStatus(s, target, 'bleed', 3);
+  if (basic && a.includes('bleeding') && alive(target) && rng.chance(0.2)) applyStatus(s, target, 'bleed', 3, rng);
   if (a.includes('frost') && alive(target) && rng.chance(0.15)) applyStatus(s, target, 'freeze', 1);
   if (a.includes('vampire') && alive(actor)) {
     const h = heal(s, actor, amount * 0.08);
@@ -583,7 +607,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
         s.log.push(`${actor.name} usa ${atk.name}, pero ${target.name} lo esquiva.`);
       } else {
         s.log.push(`${actor.name} usa ${atk.name}${vs}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
-        dealDamage(s, target, r.amount, r.crit, 'hit', { rng, kind: atk.kind });
+        dealDamage(s, target, r.amount, r.crit, 'hit', { rng, kind: atk.kind, fx: atk.fx });
         gainImpetus(actor, IMPETUS_ON_HIT);
         onHitAffixes(s, actor, target, r.amount, rng, true);
       }
@@ -618,7 +642,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
           } else {
             landedOn.add(t);
             s.log.push(`${actor.name} usa ${sk.name}${targets.length > 1 || many ? ` contra ${t.name}` : ''}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
-            dealDamage(s, t, r.amount, r.crit, 'hit', { rng, kind: sk.kind });
+            dealDamage(s, t, r.amount, r.crit, 'hit', { rng, kind: sk.kind, fx: sk.fx });
             onHitAffixes(s, actor, t, r.amount, rng, false);
             if (sk.lifesteal && alive(actor)) {
               const h = heal(s, actor, r.amount * sk.lifesteal);
@@ -653,7 +677,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
         for (const who of ap.self ? [actor] : targets) {
           if (!alive(who)) continue;
           if (!ap.self && !landedOn.has(who)) continue;
-          if (rng.chance(ap.chance)) applyStatus(s, who, ap.status, ap.turns);
+          if (rng.chance(ap.chance)) applyStatus(s, who, ap.status, ap.turns, rng);
         }
       }
       return;

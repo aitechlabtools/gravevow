@@ -137,6 +137,7 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
     pocket: cloneGrid(e.pocket ?? p.pocket),
     quests,
     activeExpedition: null,
+    fallen: !extracted,
     // Estabilización gratuita del Bastión: sin sangrados y cada región al menos al 50 % (las fracturas siguen)
     wounds: e.body ? toWounds(stabilize(e.body)) : p.wounds ?? null,
     // Suministro comunitario: Saciedad e Hidratación vuelven al menos a 60 (el Descanso se recupera en el catre)

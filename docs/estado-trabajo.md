@@ -474,3 +474,17 @@ anillo de nivel en la pestaña Jugar, en el menú principal (bajo «Volver a la 
 (target _blank, rel noopener noreferrer) con ayuda al pasar el ratón. Si el navegador sale de pantalla completa al abrirlos,
 la partida sigue intacta y se vuelve con el botón de pantalla completa. Privacidad y cookies actualizadas (Ko-fi y Discord,
 fecha 11/11). Iconos provisionales apuntados en docs/plan-subzonas.md, sección 9.
+
+
+## 12/11/2026 · Fase 10: reequilibrio, curación y prueba completa
+Encargo del usuario: el juego era demasiado difícil. Diagnóstico con simulador (tools/simulador, scripts/simular.mjs), objetivos y
+resultados en docs/equilibrio (README.md, simulador-antes.md y simulador-actual.md). Cambios de datos: config/anatomy.ts (lesiones),
+config/armor.ts (cobertura, protección por tramos de durabilidad, lesión por tipo de golpe, sangrado de habilidades al 50 %),
+config/subzones.ts (ENEMY_DAMAGE y RECOVER_AFTER_WIN), kit inicial con 3 pociones. Lógica: core/armor.ts, combat.ts (armadura,
+fx del golpe, unbreakable para el tutorial, también contra el tributo), durability.ts (desgaste de la pieza golpeada),
+expedition.ts (Profile.fallen), anatomy.ts (vesperPrice nuevo y cureCost). Interfaz: CureOffer.tsx (resumen, Estado, Vesper),
+BodyFigure.tsx (estado en palabra, lista de curas con quién las vende, destino de arrastre `body` en pointerDrag.tsx),
+ficha del enemigo con «Puede causar», textos del tutorial. Pruebas: tests/armor.test.ts, tests/cycle.test.ts,
+scripts/ciclo-check.cjs (clase, partida nueva o migrada, dispositivo). Maquetas: mockups/curacion/index.html.
+Cómo probar: npx vitest run; node scripts/ciclo-check.cjs <url>/play/ <carpeta> warrior nueva (y mage migrada, con
+"iPhone 13 Pro Max landscape" e "iPad (gen 7) landscape"); node scripts/simular.mjs 300 actual.

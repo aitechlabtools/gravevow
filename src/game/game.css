@@ -468,6 +468,11 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .body-tag.on .body-tag-name{color:#e8b33a}
 .body-tag.off{opacity:.75}
 .is-touch .body-tag{min-height:44px}
+/* Fase 10: estado en una palabra y destinos al arrastrar un objeto de cura */
+.body-tag-state{display:block;font-size:10px;line-height:12px;margin-top:2px;color:#8c8693}
+.body-tag-state.ok{color:#6fae5a}.body-tag-state.hurt{color:#e8b33a}.body-tag-state.bleed{color:#ff5a64}.body-tag-state.frac{color:#e8752b}.body-tag-state.off{color:#8c8693}
+.body-tag.drop-yes{border:2px dashed #5fd19a;box-shadow:0 0 10px #5fd19a88}
+.body-tag.drop-no{opacity:.4}
 .body-ico{font-style:normal;font-size:10px;line-height:1}
 .body-ico.bleed{color:#ff4050}.body-ico.bleed.heavy{color:#ff2030}
 .body-ico.frac{color:#f2ead8}.body-ico.off{color:#8c8693}

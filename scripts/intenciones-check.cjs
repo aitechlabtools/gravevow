@@ -65,7 +65,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'intenciones', dev] = proce
   await G(() => window.__GRAVEVOW__.actions.startCombat('pve', 'boss_x', 'ossuary_lord'));
   await myTurn();
   if (!(await p.$('[data-testid=act-flee]:not([disabled])'))) fail('no se puede huir del jefe');
-  const wounded = await G(() => { const e = window.__GRAVEVOW__.getState().combat.state.combatants.find((c) => c.id === 'boss_x'); e.hp = Math.round(e.stats.maxHp * 0.8); return e.hp; });
+  const wounded = await G(() => { const cs = window.__GRAVEVOW__.getState().combat.state.combatants; cs.find((c) => c.id === 'player').unbreakable = true; const e = cs.find((c) => c.id === 'boss_x'); e.hp = Math.round(e.stats.maxHp * 0.8); return e.hp; });
   for (let i = 0; i < 30; i++) {
     if (await G(() => window.__GRAVEVOW__.getState().combat?.state.outcome ?? null)) break;
     await heal();

@@ -28,11 +28,12 @@ export const ANATOMY = {
   /** Un pulso de exploración son 6 s de juego activo (el reloj cuenta segundos). */
   pulseSeconds: 6,
   /** Lesiones por golpe físico (los mágicos no hacen sangrar ni rompen huesos). */
-  bleedChance: 0.15,
+  /** Fase 10: bajadas para que una lesión sea un riesgo y no lo normal (antes 15 %, 35 %, 6 % y 16 %). El tipo de golpe y la armadura las ajustan (config/armor.ts). */
+  bleedChance: 0.07,
   /** Con crítico, el sangrado es grave. */
-  bleedChanceCrit: 0.35,
-  fractureChance: 0.06,
-  fractureChanceCrit: 0.16,
+  bleedChanceCrit: 0.2,
+  fractureChance: 0.03,
+  fractureChanceCrit: 0.08,
   /** Penalizaciones por miembro: fractura e inutilizado (a cero). */
   armFracture: 0.1,
   armDisabled: 0.2,
@@ -56,6 +57,9 @@ export const ANATOMY = {
   vesperBase: 5,
   vesperPerHp: 0.3,
   vesperPerFracture: 15,
+  /** Fase 10: curación completa (vida, heridas y huesos). Al volver de una extracción: monedas por cada 10 % de vida que
+   *  falta y por fractura, con tope. Tras caer: siempre `afterDeath` moneda, y gratis si no te queda ninguna. */
+  cure: { per10: 1, perFracture: 2, max: 12, afterDeath: 1 },
 };
 
 /** Colores de la silueta (siempre acompañados de símbolo o texto). */

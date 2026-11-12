@@ -1,3 +1,6 @@
+import { ENEMY_DAMAGE } from '../config/subzones';
+import { SUBZONES, SUBZONE_ORDER } from './data/subzones';
+import { armorGuards } from './armor';
 import { ENEMY_SCALE_PER_LEVEL, ENEMY_XP_PER_LEVEL } from '../config/progression';
 import type { CharacterData, Equipment } from './types';
 import type { Combatant, Side } from './combat';
@@ -19,13 +22,16 @@ import { resizeBody, summaryHp, type Body } from './anatomy';
 /** Zona de origen de una criatura (la de su archivo de datos). Las nuevas, diseñadas a escala de la Mazmorra, no se tocan. */
 const ORIGIN: Record<string, string> = {};
 for (const z of ZONE_ORDER) for (const e of ZONES[z].enemies) ORIGIN[e.id] ??= z;
+/** Primera subzona en la que aparece cada criatura común (para su ajuste de daño). */
+const HOME_SUBZONE: Record<string, string> = {};
+for (const id of SUBZONE_ORDER) for (const e of SUBZONES[id].enemies) HOME_SUBZONE[e.id] ??= id;
 function homeZone(id: string): string {
   return ORIGIN[id] ?? 'mazmorra';
 }
 
 /** `cooldowns`: las recargas que quedaron pendientes del combate anterior de la expedición. */
 /** `opts.body`: anatomía de la expedición (la vida pasa a ser su resumen). `opts.headHits`: los golpes pueden ir a la cabeza. */
-export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: number, mp: number, cooldowns: Record<string, number> = {}, classSkill?: string, opts: { body?: Body; headHits?: boolean; noInjuries?: boolean; needs?: Needs; restExtra?: number; pact?: string | null; prepMods?: Partial<Record<'sat' | 'hyd' | 'rest', number>> } = {}): Combatant {
+export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: number, mp: number, cooldowns: Record<string, number> = {}, classSkill?: string, opts: { body?: Body; headHits?: boolean; noInjuries?: boolean; unbreakable?: boolean; needs?: Needs; restExtra?: number; pact?: string | null; prepMods?: Partial<Record<'sat' | 'hyd' | 'rest', number>> } = {}): Combatant {
   const cls = CLASSES[ch.classId];
   const stats = computeStats(ch.classId, ch.level, equipment);
   const kit = combatLoadout(ch.classId, equipment, classSkill);
@@ -47,7 +53,9 @@ export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: num
     statuses: [], skills: kit.skills, basicAttack: kit.basicAttack,
     control: 'player', skillChance: 0, undead: false, defending: false, potions: 0,
     cooldowns: { ...cooldowns },
-    wear: { swings: 0, hits: 0 },
+    wear: { swings: 0, hits: 0, slots: {} },
+    ...(body ? { armor: armorGuards(equipment) } : {}),
+    ...(opts.unbreakable ? { unbreakable: true } : {}),
     // Atributos del equipo («del vampiro», «de sangrado»…) y especiales mejorados por la rareza de cada arma
     affixes: [equipment.mainHand, equipment.offHand].flatMap((x) => x?.affixes ?? []),
     skillMods: Object.assign({}, ...(['mainHand', 'offHand'] as const).map((sl) => {
@@ -79,6 +87,8 @@ export function enemyCombatant(enemyId: string, instanceId: string, side: Side =
   const norm = common ? ZONE_NORMALIZE[homeZone(enemyId)] : undefined;
   if (norm) { stats.maxHp *= norm.maxHp; stats.def *= norm.def; }
   for (const key of ['maxHp', 'atk', 'def', 'mag', 'res'] as const) stats[key] = Math.round(stats[key] * k);
+  const dmg = common ? ENEMY_DAMAGE[HOME_SUBZONE[enemyId] ?? ''] : undefined;
+  if (dmg) { stats.atk = Math.max(1, Math.round(stats.atk * dmg)); stats.mag = Math.round(stats.mag * dmg); }
   return {
     id: instanceId, name: e.name, side, sprite: e.sprite,
     stats, hp: stats.maxHp, mp: 0,

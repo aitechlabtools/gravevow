@@ -1,7 +1,7 @@
 // Acciones de la anatomía (Fase 4): tratar heridas fuera de combate, cirugía de campo en dos pulsos,
 // sangrado por pulso al explorar y el tratamiento completo de Hermana Vesper en el Bastión.
 import { ANATOMY, REGION_NAME } from '../../config/anatomy';
-import { healBody, toWounds, tickPain, applyTreatment, bleedTick, bestTreatment, damageRegion, fromWounds, isDead, resizeBody, rollInjury, summaryHp, treatError, urgencies, vesperPrice, type Body, type Region, type Treatment } from '../../core/anatomy';
+import { healBody, toWounds, tickPain, applyTreatment, bleedTick, bestTreatment, damageRegion, fromWounds, isDead, resizeBody, rollInjury, summaryHp, treatError, urgencies, cureCost, type Body, type Region, type Treatment } from '../../core/anatomy';
 import { needLog, regionWith } from '../../core/combat';
 import { prepMods } from '../../core/refuge';
 import { needsOf, tickNeeds } from '../../core/needs';
@@ -192,13 +192,13 @@ export const medicalActions = {
   vesperTreat() {
     const p = state.profile;
     if (!p) return;
-    const price = vesperPrice(baseBody(p));
-    if (!price) return invError('No tienes heridas que tratar.');
-    const paid = spendGold(p, price);
-    if (!paid.ok) return invError(paid.error);
-    set({ profile: { ...paid.profile, wounds: null } });
+    const { price, free } = cureCost(baseBody(p), !!p.fallen, p.gold);
+    if (!price && !free) return invError('No tienes heridas que tratar.');
+    let next = p;
+    if (price) { const paid = spendGold(p, price); if (!paid.ok) return invError(paid.error); next = paid.profile; }
+    set({ profile: { ...next, wounds: null, fallen: false } });
     sfx('heal');
-    toast(`Hermana Vesper cose y entablilla. Quedas entero por ${price} de oro.`, 'good');
+    toast(free ? 'Hermana Vesper no te cobra: «Ya pagarás cuando vuelvas con algo.» Quedas entero.' : `Hermana Vesper cose y entablilla. Quedas entero por ${price} de oro.`, 'good');
   },
 };
 
