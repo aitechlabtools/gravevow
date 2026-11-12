@@ -242,7 +242,7 @@ Respuestas del usuario (12/11):
 2. **Espacios y desbloqueo.** Seis espacios con niveles y encargos, pantalla del Bastión con candados y «Tu siguiente objetivo». Prueba en 3 tamaños.
 3. **Menú de crafteo común.** Sustituye la cocina, el yunque, la alquimia y el rincón: filtros, «Dónde conseguirlo», «Ir a su receta», destino y lotes. `crafteo-check` en 3 tamaños; se retiran `refugio-check` y `taller-check`.
 4. **Fuentes de materias y planos.** Botín, vetas y mercaderes para las materias nuevas; planos en cofres, élites, jefes y tiendas. *Hecha: cifras en `config/craftDrops.ts`; la hierba sale de cofres S1–S3 y de Vesper en lugar de brotes.*
-5. **Desguace nuevo.** Seguro y posible, azar por rareza, confirmación, recluta bloqueado y selección múltiple. `desguace-check` en 3 tamaños.
+5. **Desguace nuevo.** Seguro y posible, azar por rareza, confirmación, recluta bloqueado y selección múltiple. `desguace-check` en 3 tamaños. *Hecha: cifras en `config/salvage.ts`, lógica en `core/salvage.ts`. No hay marca de favorito en el juego, así que la confirmación es solo para raro o mejor; seis objetos baratos (amuleto de hueso, antorcha de brea, tomo arcano, varita de abedul, daga de hueso y báculo de ascuas) no llegan a una unidad segura y solo tienen la parte posible.*
 6. **Bombas en combate.** Acción, ficha, estados y simulador.
 7. **Equilibrio y cierre.** Simulador de economía y de combate con bombas, arreglo de `almacen-check` en ordenador, migración (las calidades de lo ya forjado se conservan), comprobación del ciclo en 3 tamaños y estado del proyecto.
 

@@ -150,13 +150,13 @@ describe('Kit de recluta', () => {
 
   it('no se vende, no se desguaza y no se pierde al morir', async () => {
     const { sell } = await import('../src/core/economy');
-    const { scrapYield } = await import('../src/core/refuge');
+    const { salvageInfo } = await import('../src/core/salvage');
     const p = grantRecruitKit({ ...createProfile('K', 'mage', { cloak: 0, skin: 0 }), backpack: emptyGrid(24), equipment: emptyEquipment() });
     expect(p.equipment.mainHand?.itemId).toBe('recruit_staff');
     const bp = [...p.backpack]; bp[10] = { uid: 'g', itemId: 'worn_grimoire', qty: 1 };
     const r = sell({ ...p, backpack: bp }, 'backpack', 10);
     expect(r.ok).toBe(false);
-    expect(scrapYield(bp[10]!)).toBeNull();
+    expect(salvageInfo(bp[10]!)).toBeNull();
     const { startExpedition, endExpedition } = await import('../src/core/expedition');
     const { profile: p2, expedition: e } = startExpedition({ ...p, backpack: bp }, 1);
     const out = endExpedition(p2, e, 'died', 2);

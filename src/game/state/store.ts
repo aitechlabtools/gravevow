@@ -36,7 +36,8 @@ import { vendorUnlocked } from '../../core/vendors';
 import { STATION_FX } from '../../config/stations';
 import { craft as craftItems, getRecipe, learnBlueprints, settlePendingJobs, storeCrafted } from '../../core/crafting';
 import { applyRune, type RuneLoc } from '../../core/runes';
-import { canSleepForPrep, cotPrepCut, refugeOf, receptionDiscard, receptionScrap, receptionSell, receptionWithdraw, RECEPTION_NOTE, scrap, upgradeModule } from '../../core/refuge';
+import { canSleepForPrep, cotPrepCut, refugeOf, receptionDiscard, receptionSell, receptionWithdraw, RECEPTION_NOTE, upgradeModule } from '../../core/refuge';
+import { receptionSalvage, salvage, type SalvageRef } from '../../core/salvage';
 import type { ModuleId } from '../../core/data/refuge';
 import { bus } from './bus';
 import { buySkin, equipSkin } from '../../core/skins';
@@ -620,16 +621,16 @@ export const actions = {
     toast(r.note ?? 'Hecho.', 'good');
   },
 
-  /** Desguace en el taller de Orik. */
-  scrap(container: 'backpack' | 'stash', index: number) {
+  /** Desguace en el taller de Orik: uno o varios objetos a la vez. */
+  scrap(refs: SalvageRef[]) {
     const p = state.profile;
     if (!p || state.expedition) return;
     if (!vendorUnlocked(p, 'orik')) return invError('Orik aún no ha llegado al Bastión.');
-    const r = scrap(p, container, index);
+    const r = salvage(p, refs, randomSeed());
     if (!r.ok) return invError(r.error);
     sfx('equip');
     set({ profile: r.profile });
-    toast(`Orik desguaza: ${r.note}`, 'good');
+    toast(`Orik desguaza ${refs.length > 1 ? `${refs.length} objetos` : 'el objeto'}: ${r.note}.`, 'good');
   },
 
   /** Crafteo común (todas las estaciones): fabrica n y lo coloca en la mochila o el almacén. */
@@ -661,8 +662,7 @@ export const actions = {
     const p = state.profile;
     if (!p || state.expedition) return;
     if (kind === 'scrap' && !vendorUnlocked(p, 'orik')) return invError('Orik aún no ha llegado al Bastión.');
-    const fn = { withdraw: receptionWithdraw, sell: receptionSell, scrap: receptionScrap, discard: receptionDiscard }[kind];
-    const r = fn(p, index);
+    const r = kind === 'scrap' ? receptionSalvage(p, index, randomSeed()) : { withdraw: receptionWithdraw, sell: receptionSell, discard: receptionDiscard }[kind](p, index);
     if (!r.ok) return invError(r.error);
     sfx(kind === 'sell' ? 'coin' : kind === 'discard' ? 'click' : 'equip');
     set({ profile: r.profile });

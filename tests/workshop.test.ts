@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createProfile } from '../src/core/profile';
 import { countItem } from '../src/core/inventory';
-import { deliver, receptionBlock, receptionDiscard, receptionScrap, receptionSell, receptionWithdraw } from '../src/core/refuge';
+import { receptionSalvage } from '../src/core/salvage';
+import { deliver, receptionBlock, receptionDiscard, receptionSell, receptionWithdraw } from '../src/core/refuge';
 import { settlePendingJobs } from '../src/core/crafting';
 import type { Profile } from '../src/core/types';
 
@@ -51,7 +52,7 @@ describe('recepción', () => {
     expect(s.ok && s.profile.reception).toHaveLength(2);
     const x = receptionDiscard(d, 2);
     expect(x.ok && x.profile.reception).toHaveLength(2);
-    const sc = receptionScrap(d, 1);
+    const sc = receptionSalvage(d, 1, 3);
     expect(sc.ok).toBe(true);
     if (sc.ok) expect(sc.profile.reception!.some((st) => st.itemId === 'iron_helm')).toBe(false);
   });

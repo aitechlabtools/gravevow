@@ -91,16 +91,14 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   await p.screenshot({ path: out + '-encargos.png' });
   await tap('[data-testid=vendor-view-scrap]'); await p.waitForSelector('[data-testid=scrap]');
   const scrap0 = await count('scrap_metal');
-  const sword = await p.$('[data-testid^=scrap-btn-]');
-  if (!sword) fail('no hay nada que desguazar');
-  await small('[data-testid^=scrap-btn-]', 'Desguazar');
+  if (!(await p.$('[data-testid^=scrap-stash-]'))) fail('no hay nada que desguazar');
   await wide('Desguace');
   await p.screenshot({ path: out + '-desguace.png' });
-  // El escudo del Bastión (raro) pide confirmación
+  // El escudo del Bastión (raro) pide confirmación (el detalle está en desguace-check)
   const shieldRow = await G(() => { const pr = window.__GRAVEVOW__.getState().profile; const i = pr.stash.findIndex((x) => x && x.itemId === 'bastion_shield'); return 'stash-' + i; });
-  await tap(`[data-testid=scrap-btn-${shieldRow}]`); await p.waitForTimeout(100);
+  await tap(`[data-testid=scrap-${shieldRow}]`); await tap('[data-testid=scrap-go]'); await p.waitForTimeout(100);
   if ((await count('bastion_shield')) !== 1) fail('lo valioso se desguazó sin confirmar');
-  await tap(`[data-testid=scrap-btn-${shieldRow}]`); await p.waitForTimeout(150);
+  await tap('[data-testid=scrap-go]'); await p.waitForTimeout(150);
   if ((await count('bastion_shield')) !== 0) fail('la confirmación no desguazó');
   if (!((await count('scrap_metal')) > scrap0)) fail('el desguace no dio chatarra');
   await tap('[data-testid=vendor-back]');

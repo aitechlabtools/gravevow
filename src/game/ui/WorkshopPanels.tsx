@@ -2,7 +2,8 @@
 // todo se fabrica con el menú de crafteo común (StationPanels). Todo se decide tocando: sin hover ni reflejos.
 import { useState } from 'react';
 import { actions, useGame } from '../state/store';
-import { ownedQty, refugeOf, scrapYield } from '../../core/refuge';
+import { ownedQty } from '../../core/refuge';
+import { salvageBlock } from '../../core/salvage';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { stackRarity } from '../../core/data/rarity';
 import { sellPrice } from '../../core/economy';
@@ -42,7 +43,7 @@ export function ReceptionSection() {
         {list.map((st, i) => {
           const def = getItem(st.itemId);
           const rar = stackRarity(st, def);
-          const y = orik ? scrapYield(st, refugeOf(profile).bench) : null;
+          const y = orik && !salvageBlock(st);
           return (
             <div key={st.uid} className="bg-black/30 border border-stone-800 p-2 flex flex-wrap items-center gap-2" data-testid={`reception-${i}`}>
               <div className="slot shrink-0" style={{ borderColor: RARITY_INFO[rar].color + 'aa' }}><ItemIcon itemId={def.id} /></div>

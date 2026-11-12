@@ -6,9 +6,8 @@ import { makeUid } from '../src/core/rng';
 import { ITEMS, getItem } from '../src/core/data/items';
 import { VENDORS } from '../src/core/data/vendors';
 import { buyPrice, sellPrice } from '../src/core/economy';
-import { withDurability, maxDurability } from '../src/core/durability';
 import { DISHES, MODULES, MODULE_ORDER } from '../src/core/data/refuge';
-import { prepMods, refugeOf, scrap, scrapMaterial, scrapYield, upgradeBlock, upgradeModule } from '../src/core/refuge';
+import { prepMods, refugeOf, upgradeBlock, upgradeModule } from '../src/core/refuge';
 import { craft, craftBlock } from '../src/core/crafting';
 import { consumptionMult, tickNeeds, FULL_NEEDS } from '../src/core/needs';
 import { startExpedition } from '../src/core/expedition';
@@ -29,7 +28,6 @@ function rich(p: Profile, gold = 500): Profile {
   if (!r.ok) throw new Error(r.error);
   return r.profile;
 }
-const withOrik = (p: Profile): Profile => ({ ...p, character: { ...p.character, level: 12 } });
 const total = (p: Profile, id: string) => countItem(p.backpack, id) + countItem(p.stash, id);
 
 describe('Refugio', () => {
@@ -101,53 +99,6 @@ describe('preparación', () => {
     const b = tickNeeds({ ...FULL_NEEDS }, body, body.total, 0, {});
     expect(100 - a.needs.rest).toBeLessThan(100 - b.needs.rest);
     expect(a.needs.sat).toBeCloseTo(b.needs.sat);
-  });
-});
-
-describe('desguace', () => {
-  it('el material depende del tipo y los consumibles no se desguazan', () => {
-    expect(scrapMaterial('iron_sword')).toBe('scrap_metal');
-    expect(scrapMaterial('apprentice_staff')).toBe('arcane_shard');
-    expect(scrapMaterial('copper_ring')).toBe('arcane_shard');
-    expect(scrapMaterial('padded_tunic')).toBe('leather_scrap');
-    expect(scrapMaterial('health_potion')).toBeNull();
-    expect(scrapMaterial('copper_ore')).toBeNull();
-  });
-
-  it('un objeto roto rinde menos, pero algo', () => {
-    const st = { uid: 'x', itemId: 'chainmail', qty: 1 };
-    const whole = scrapYield(st)!;
-    const broken = scrapYield(withDurability(st, 0))!;
-    expect(broken.qty).toBeGreaterThanOrEqual(1);
-    expect(broken.qty).toBeLessThanOrEqual(whole.qty);
-    expect(maxDurability(st)).toBeGreaterThan(0);
-  });
-
-  it('sin arbitraje: lo desguazado (con banco) nunca vale más que comprar el objeto', () => {
-    for (const v of Object.values(VENDORS)) for (const { itemId } of v.stock) {
-      const y = scrapYield({ uid: 'x', itemId, qty: 1 }, 1);
-      if (!y) continue;
-      const got = y.qty * sellPrice(y.itemId);
-      expect(got, itemId).toBeLessThanOrEqual(buyPrice(itemId));
-      if (buyPrice(itemId) > 1) expect(got, itemId).toBeLessThan(buyPrice(itemId));
-    }
-  });
-
-  it('destruye el objeto una sola vez y entrega los materiales', () => {
-    let p = give(withOrik(base()), 'iron_sword', 1);
-    const idx = p.stash.findIndex((x) => x?.itemId === 'iron_sword');
-    const r = scrap(p, 'stash', idx);
-    expect(r.ok).toBe(true);
-    if (!r.ok) return;
-    p = r.profile;
-    expect(total(p, 'iron_sword')).toBe(0);
-    expect(total(p, 'scrap_metal')).toBeGreaterThan(0);
-    expect(scrap(p, 'stash', idx).ok).toBe(false);
-  });
-
-  it('el banco de trabajo rinde más', () => {
-    const st = { uid: 'x', itemId: 'bastion_shield', qty: 1 };
-    expect(scrapYield(st, 1)!.qty).toBeGreaterThanOrEqual(scrapYield(st, 0)!.qty);
   });
 });
 

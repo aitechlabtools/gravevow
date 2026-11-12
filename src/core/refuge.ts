@@ -1,20 +1,17 @@
 // ════════════════════════════════════════════════════════════════════
 // Refugio, desguace y cocina (Fase 9). Lógica pura: sin React ni Phaser.
 //  · Estaciones: 3 niveles; las construye y mejora su encargado al momento, con materiales y oro (config/stations.ts).
-//  · Desguace (taller de Orik): un objeto de equipo se convierte en materiales según tipo, rareza y estado, una sola vez.
-//    Nunca rinde (a precio de venta) más de lo que cuesta comprarlo: no hay bucle de comprar, desguazar y vender.
+//  · El desguace (taller de Orik) está en core/salvage.ts.
 //  · Cocina: los platos se cocinan con el menú de crafteo común (core/crafting.ts); aquí solo se comen y preparan.
 //  · Preparación: el catre mejorado y los platos recortan el consumo de necesidades en la siguiente incursión.
 // ════════════════════════════════════════════════════════════════════
-import type { Grid, ItemStack, Profile } from './types';
+import type { ItemStack, Profile } from './types';
 import type { Need } from '../config/needs';
 import { REFUGE_CFG } from '../config/refuge';
 import { MODULES, MODULE_ORDER, DISHES, dishOfItem, type ModuleId } from './data/refuge';
 import { getItem } from './data/items';
-import { addToGrid, anchorIndex, cloneGrid, countItem, isCover, LAYOUTS, removeAt, removeItem } from './inventory';
-import { durability, hasDurability, maxDurability } from './durability';
-import { RARITY_RULES } from './data/rarity';
-import { buyPrice, sellPrice } from './economy';
+import { addToGrid, countItem, LAYOUTS, removeItem } from './inventory';
+import { sellPrice } from './economy';
 import { earnGoldSafe, spendGold } from './wallet';
 import { VENDORS, type VendorId } from './data/vendors';
 import { STATION_FX } from '../config/stations';
@@ -96,7 +93,7 @@ export function deliver(p: Profile, items: { itemId: string; qty: number; qualit
   return { profile: { ...p, backpack, stash, reception }, toReception };
 }
 export const RECEPTION_NOTE = ' No cabía: está en la recepción del Refugio.';
-function giveItems(p: Profile, items: { itemId: string; qty: number }[]): Profile {
+export function giveItems(p: Profile, items: { itemId: string; qty: number }[]): Profile {
   return deliver(p, items).profile;
 }
 
@@ -106,10 +103,10 @@ export function receptionBlock(p: Profile): string | null {
   const n = (p.reception ?? []).length;
   return n ? `Tienes ${n} ${n === 1 ? 'objeto' : 'objetos'} en la recepción del Refugio: retíralos, véndelos, desguázalos o descártalos antes de bajar.` : null;
 }
-function receptionAt(p: Profile, i: number): ItemStack | null {
+export function receptionAt(p: Profile, i: number): ItemStack | null {
   return (p.reception ?? [])[i] ?? null;
 }
-function withoutReception(p: Profile, i: number): Profile {
+export function withoutReception(p: Profile, i: number): Profile {
   return { ...p, reception: (p.reception ?? []).filter((_, k) => k !== i) };
 }
 /** Retirar a la mochila o al almacén (si cabe entero). */
@@ -128,15 +125,6 @@ export function receptionSell(p: Profile, i: number): Result {
   if (!st) return { ok: false, error: 'Ya no está en la recepción.' };
   const gold = sellPrice(st.itemId, st) * st.qty;
   return { ok: true, profile: earnGoldSafe(withoutReception(p, i), gold), note: `${gold} oro` };
-}
-/** Desguazar desde la recepción (Orik): los materiales se entregan como cualquier otra cosa. */
-export function receptionScrap(p: Profile, i: number): Result {
-  const st = receptionAt(p, i);
-  if (!st) return { ok: false, error: 'Ya no está en la recepción.' };
-  const y = scrapYield(st, refugeOf(p).bench);
-  if (!y && getItem(st.itemId).recruit) return { ok: false, error: 'Es equipo de recluta: el Bastión te lo presta, no se desguaza.' };
-  if (!y) return { ok: false, error: `Orik no saca nada útil de ${getItem(st.itemId).name.toLowerCase()}.` };
-  return { ok: true, profile: giveItems(withoutReception(p, i), [y]), note: `${getItem(y.itemId).name} ×${y.qty}` };
 }
 /** Descartar (se pierde para siempre). */
 export function receptionDiscard(p: Profile, i: number): Result {
@@ -194,47 +182,4 @@ export function cotPrepCut(p: Profile): number {
 }
 export function canSleepForPrep(p: Profile): boolean {
   return cotPrepCut(p) > 0 && cotCut(p.prep ?? {}) < cotPrepCut(p);
-}
-
-// ── Desguace ────────────────────────────────────────────────────────
-const ARCANE_FAMILIES = ['staff', 'tome', 'wand', 'orb'];
-const JEWEL_SLOTS = ['ring', 'amulet'];
-
-/** Material que sale de un objeto según su tipo. null: no se desguaza. */
-export function scrapMaterial(itemId: string): string | null {
-  const def = getItem(itemId);
-  if (!def.slot) return null;
-  if (ARCANE_FAMILIES.includes(def.family ?? '') || JEWEL_SLOTS.includes(def.slot)) return 'arcane_shard';
-  const armorPiece = ['helmet', 'armor', 'gloves', 'boots'].includes(def.slot);
-  if (armorPiece && !(def.classes ?? []).includes('warrior')) return 'leather_scrap';
-  return 'scrap_metal';
-}
-
-/** Lo que rinde desguazar este ejemplar (con o sin banco). null si no se puede. */
-export function scrapYield(stack: ItemStack, bench = 0): { itemId: string; qty: number } | null {
-  if (isCover(stack) || (stack.gold ?? 0) > 0 || getItem(stack.itemId).recruit) return null;
-  const mat = scrapMaterial(stack.itemId);
-  if (!mat) return null;
-  const def = getItem(stack.itemId);
-  const cond = hasDurability(def) ? REFUGE_CFG.scrapBrokenFloor + (1 - REFUGE_CFG.scrapBrokenFloor) * (durability(stack) / Math.max(1, maxDurability(stack))) : 1;
-  const rk = stack.rarity ? RARITY_RULES[stack.rarity].statMult / RARITY_RULES[def.rarity].statMult : 1;
-  const raw = def.value * REFUGE_CFG.scrapPerValue * rk * cond * (1 + (STATION_FX.benchBonus[Math.min(3, bench)] ?? 0));
-  // Tope: lo desguazado, a precio de venta, nunca supera el 80 % de lo que cuesta comprar el objeto
-  const cap = Math.floor((buyPrice(stack.itemId) * REFUGE_CFG.scrapMaxOfBuy) / sellPrice(mat));
-  const qty = Math.max(1, Math.min(cap, Math.floor(raw)));
-  return { itemId: mat, qty: qty * stack.qty };
-}
-
-/** Desguaza el objeto de esa casilla de la mochila o del almacén: se destruye una vez y entrega sus materiales. */
-export function scrap(p: Profile, container: 'backpack' | 'stash', index: number): Result {
-  const grid: Grid = p[container];
-  const a = anchorIndex(grid, index);
-  const st = a >= 0 ? grid[a] : null;
-  if (!st || isCover(st)) return { ok: false, error: 'No hay nada que desguazar ahí.' };
-  const y = scrapYield(st, refugeOf(p).bench);
-  if (!y) return { ok: false, error: `Orik no saca nada útil de ${getItem(st.itemId).name.toLowerCase()}.` };
-  const removed = cloneGrid(grid);
-  removeAt(removed, a);
-  const d = deliver({ ...p, [container]: removed }, [y]);
-  return { ok: true, profile: d.profile, note: `${getItem(y.itemId).name} ×${y.qty}${d.toReception ? '.' + RECEPTION_NOTE : ''}` };
 }
