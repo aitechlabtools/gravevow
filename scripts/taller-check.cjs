@@ -19,7 +19,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.ar
   const count = async (id) => (await all(id)).reduce((t, x) => t + x.qty, 0);
 
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile;
     pr.tutorialSeen.dungeon = true; pr.tutorialDone = true;
     const st = pr.stash.slice(); let k = 0; const put = (itemId, qty) => { while (st[k]) k++; st[k] = { uid: 't' + k, itemId, qty }; };

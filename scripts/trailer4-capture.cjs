@@ -91,7 +91,7 @@ async function session(b, vp, touch) {
     await page.keyboard.type('Aldric', { delay: 110 }); await wait(700);
   });
   if (!want('n-crear')) await page.fill('[data-testid=name-input]', 'Aldric');
-  await act('btn-create'); await act('btn-tutorial-ok');
+  await act('btn-create'); 
   await s.advanced(); await wait(300);
   await page.mouse.move(5, 5);
 
@@ -141,7 +141,7 @@ async function session(b, vp, touch) {
   if (want('n-atuendo')) {
     await ev(async () => { await window.__GRAVEVOW__.actions.enterDungeon('infierno'); });
     await wait(1500);
-    if (await page.$('[data-testid=btn-dungeon-tutorial-ok]')) await act('btn-dungeon-tutorial-ok');
+    
     await ev(() => {
       const sc = window.__GRAVEVOW__.scene();
       for (const e of sc.enemies) { e.dead = true; e.sprite.destroy(); e.shadow?.destroy(); e.marker?.destroy(); }
@@ -162,11 +162,11 @@ async function session(b, vp, touch) {
   if (want('n-movil')) {
     const m = await session(b, { width: 844, height: 390 }, true);
     await m.start();
-    await m.page.fill('[data-testid=name-input]', 'Aldric'); await m.act('btn-create'); await m.act('btn-tutorial-ok');
+    await m.page.fill('[data-testid=name-input]', 'Aldric'); await m.act('btn-create'); 
     await m.advanced();
     await m.ev(async () => { await window.__GRAVEVOW__.actions.enterDungeon('cripta'); });
     await m.wait(1500);
-    if (await m.page.$('[data-testid=btn-dungeon-tutorial-ok]')) await m.act('btn-dungeon-tutorial-ok');
+    
     await m.ev(() => { const sc = window.__GRAVEVOW__.scene(); sc.enemies.forEach((e) => { e.aggro = 0; }); });
     const touch = (type, pts) => m.cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], i) => ({ x, y, id: i })) });
     const zone = await (await m.page.$('[data-testid=touch-stick-zone]')).boundingBox();

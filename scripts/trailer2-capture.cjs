@@ -112,7 +112,7 @@ const ONLY = process.argv[4] ? process.argv[4].split(',') : null;
   });
   else await page.click('[data-testid=class-mage]');
   await page.click('[data-testid=btn-create]');
-  await page.click('[data-testid=btn-tutorial-ok]');
+  
   await ev(() => {
     const s = window.__GRAVEVOW__.getState();
     s.profile.character.level = 8; s.profile.tutorialSeen.dungeon = true;
@@ -140,7 +140,7 @@ const ONLY = process.argv[4] ? process.argv[4].split(',') : null;
   await page.click('[data-testid=btn-play]');
   await page.fill('[data-testid=name-input]', 'Aldric');
   await page.click('[data-testid=btn-create]');
-  await page.click('[data-testid=btn-tutorial-ok]');
+  
   await ev(() => {
     const s = window.__GRAVEVOW__.getState();
     s.profile.character.level = 8; s.profile.tutorialSeen.dungeon = true;
@@ -233,7 +233,7 @@ const ONLY = process.argv[4] ? process.argv[4].split(',') : null;
     if (await page.$('[data-testid=tab-play]')) await page.click('[data-testid=tab-play]');
     await wait(300);
     await page.click('[data-testid=btn-enter-dungeon]'); await wait(1500);
-    if (await page.$('[data-testid=btn-dungeon-tutorial-ok]')) await page.click('[data-testid=btn-dungeon-tutorial-ok]');
+    
     await cinematic(true);
     await freeze();
     // Plano general: el mapa entero iluminado tenuemente (las salas se revelan), cámara que se aleja

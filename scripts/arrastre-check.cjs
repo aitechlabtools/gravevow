@@ -11,7 +11,7 @@ async function setup(b, vp, touch) {
   const act = async (id) => { const s = `[data-testid=${id}]`; await p.waitForSelector(s, { timeout: 6000 }); touch ? await p.tap(s) : await p.click(s); await p.waitForTimeout(250); };
   await p.goto('' + URL + '?debug&noclass'); await p.evaluate(() => indexedDB.deleteDatabase('gravevow')); await p.reload(); await p.waitForTimeout(700);
   await act('btn-play'); await p.evaluate(() => document.fullscreenElement && document.exitFullscreen());
-  await p.fill('[data-testid=name-input]', 'Beohtord'); await act('btn-create'); await act('btn-tutorial-ok');
+  await p.fill('[data-testid=name-input]', 'Beohtord'); await act('btn-create'); 
   await p.evaluate((LOOT) => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; const bp = [...pr.backpack];
     LOOT.forEach(([id, rarity, qty], i) => { bp[i] = { uid: 'bp' + i, itemId: id, qty: qty ?? 1, ...(rarity ? { rarity } : {}) }; });
     G.setState({ profile: { ...pr, backpack: bp, character: { ...pr.character, level: 14 }, tutorialSeen: { ...pr.tutorialSeen, lobby: true, stash: true } } }); }, LOOT);

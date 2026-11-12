@@ -12,7 +12,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'intenciones', dev] = proce
   const fail = (m) => { console.log('FALLO:', m); process.exitCode = 1; };
   const G = (fn, arg) => p.evaluate(fn, arg);
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   await G(() => { const s = window.__GRAVEVOW__.getState(); s.profile.character.level = 8; s.profile.tutorialSeen.dungeon = true; s.profile.tutorialDone = true; });
   await tap('[data-testid=tab-character]'); await tap('[data-testid=tab-play]'); await tap('[data-testid=btn-enter-dungeon]'); await p.waitForTimeout(1200);
   const myTurn = async () => { for (let k = 0; k < 60 && !(await p.$('[data-testid=act-attack]:not([disabled])')); k++) { if (await G(() => window.__GRAVEVOW__.getState().combat?.state.outcome ?? null)) return false; await p.waitForTimeout(150); } return true; };

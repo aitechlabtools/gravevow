@@ -35,7 +35,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'minis', dev] = process.arg
   await G(() => window.__GRAVEVOW__.actions.tutorialEvent('tab:quests'));
   await p.waitForTimeout(400);
   if (await p.$('[data-testid=mini-tutorial]')) fail('sale encima de otra ventana');
-  await tap('[data-testid=btn-tutorial-ok]');
+  
   await p.waitForSelector('[data-testid=mini-tutorial]', { timeout: 2000 }).catch(() => fail('no sale al cerrar la ventana'));
   await tap('[data-testid=mini-skip]');
   // Abrir Misiones de verdad (ya visto por el atajo de arriba → no sale): reiniciar y probar el flujo completo

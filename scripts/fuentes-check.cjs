@@ -14,7 +14,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'fuentes', dev] = process.a
   const wide = async (where) => { const w = await G(() => document.documentElement.scrollWidth - window.innerWidth); if (w > 1) fail(where + ': se sale de la pantalla por ' + w + ' px'); };
 
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile;
     pr.tutorialSeen.dungeon = true; pr.tutorialDone = true;
     g.setState({ profile: { ...pr, character: { ...pr.character, level: 12 }, gold: 5000, reputation: { ...pr.reputation, brand: 400 } } }); });

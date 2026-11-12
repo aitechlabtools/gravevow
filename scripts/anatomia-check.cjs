@@ -12,7 +12,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'anatomia', dev] = process.
   const G = (fn, arg) => p.evaluate(fn, arg);
   const box = async (sel) => (await p.$(sel))?.boundingBox();
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   // Heridas que traes de antes (brazo roto, pierna a medias) y tratamientos en la mochila
   await G(() => {
     const g = window.__GRAVEVOW__, pr = g.getState().profile;

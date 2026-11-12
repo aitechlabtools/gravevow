@@ -5,7 +5,7 @@ const [,, url, out, dev] = process.argv;
   const errs = []; p.on('pageerror', (e) => errs.push(e.message));
   const tap = (sel) => dev ? p.tap(sel) : p.click(sel);
   await p.goto(url + '?debug'); await p.evaluate(() => indexedDB.deleteDatabase('gravevow')); await p.reload();
-  await tap('[data-testid=btn-play]'); await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await tap('[data-testid=btn-play]'); await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   await p.evaluate(() => { const s = window.__GRAVEVOW__.getState(); s.profile.character.level = 45; s.profile.stats.expeditions = 3; s.profile.bossesDefeated = ['ossuary_lord']; s.profile.tutorialSeen.dungeon = true;
     const set = (sl, id) => (s.profile.equipment[sl] = { uid: 'x' + id, itemId: id, qty: 1 }); set('mainHand', 'gravewarden_blade'); set('offHand', 'headstone_shield'); set('helmet', 'silver_helm'); set('armor', 'silver_plate'); });
   await tap('[data-testid=tab-character]'); await tap('[data-testid=tab-play]'); await p.waitForTimeout(300);

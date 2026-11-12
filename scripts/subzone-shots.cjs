@@ -16,7 +16,7 @@ const ALL = ['afueras', 'castillo', 'calabozos', 'osario', 'catacumbas', 'panteo
     await p.goto(BASE + '?debug');
     await p.evaluate(() => indexedDB.deleteDatabase('gravevow')); await p.reload();
     await p.click('[data-testid=btn-play]'); await p.evaluate(() => document.fullscreenElement && document.exitFullscreen());
-    await p.fill('[data-testid=name-input]', 'Saqueador'); await p.click('[data-testid=btn-create]'); await p.click('[data-testid=btn-tutorial-ok]');
+    await p.fill('[data-testid=name-input]', 'Saqueador'); await p.click('[data-testid=btn-create]'); 
     const lv = { afueras: 6, castillo: 15, calabozos: 25, osario: 35, catacumbas: 45, panteon: 55, carmesi: 65, puertas: 75, rios: 85, trono: 95 }[id];
     await p.evaluate(async ([id, lv]) => {
       const d = window.__GRAVEVOW__; const pr = d.getState().profile;

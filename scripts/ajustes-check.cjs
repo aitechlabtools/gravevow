@@ -26,7 +26,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'ajustes', dev] = process.a
     if (dev && r.small.length) fail(what + ': menos de 44 px: ' + r.small.join(', '));
   };
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   // Copia recomendada → punto en el engranaje
   await G(() => { const g = window.__GRAVEVOW__; g.setState({ backup: { lastAt: null, days: null, expeditionsSince: 3, remind: true } }); });
   if (!(await p.$('[data-testid=gear-dot]'))) fail('sin punto de aviso en el engranaje');

@@ -5,7 +5,7 @@ const [,, url, out, dev] = process.argv;
   const errs = []; p.on('pageerror', (e) => errs.push(e.message));
   const tap = (sel) => dev ? p.tap(sel) : p.click(sel);
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   await p.evaluate(() => { const s = window.__GRAVEVOW__.getState(); s.profile.character.level = 5; s.profile.tutorialSeen.dungeon = true;
     const set = (sl, id) => (s.profile.equipment[sl] = { uid: 'x' + id, itemId: id, qty: 1 }); set('mainHand', 'knight_sword'); set('offHand', 'bastion_shield'); set('helmet', 'knight_helm'); set('armor', 'chainmail');
     s.profile.backpack[0] = { uid: 'pp', itemId: 'health_potion', qty: 2 }; });

@@ -57,13 +57,18 @@ export function MiniTutorialLayer() {
   // Hueco y ventanas abiertas: se miran a menudo porque la pantalla cambia sin avisar al store
   const [box, setBox] = useState<Box | null>(null);
   const [domModal, setDomModal] = useState(false);
+  // Un botón desactivado (p. ej. «Vaciar mochila» sin nada dentro) no recibe el clic: el paso pasa a «Entendido»
+  const [targetOff, setTargetOff] = useState(false);
   useEffect(() => {
     if (!m) return;
     const tick = () => {
       setDomModal(!!document.querySelector('[data-modal]'));
+      setTargetOff(!!st?.target && !!document.querySelector(`[data-testid="${st.target}"]:disabled`));
       const b = rectOf(st?.target);
       setBox((o) => (o && b && o.x === b.x && o.y === b.y && o.w === b.w && o.h === b.h ? o : b));
     };
+    // Si lo señalado está dentro de un panel con desplazamiento y no se ve entero, se lleva a la vista
+    if (st?.target) document.querySelector(`[data-testid="${st.target}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     tick();
     const t = setInterval(tick, 250);
     window.addEventListener('resize', tick);
@@ -72,24 +77,25 @@ export function MiniTutorialLayer() {
   // Acción real: el paso termina cuando se toca el elemento resaltado
   const visible = !!m && !!st && canShowNow(m, { combat, modal: modalOpen || domModal, tutorialRun });
   useEffect(() => {
-    if (!visible || st?.action !== 'click' || !st.target) return;
+    if (!visible || st?.action !== 'click' || !st.target || targetOff) return;
     const h = (e: Event) => {
       const el = document.querySelector(`[data-testid="${st.target}"]`);
       if (el && e.target instanceof Node && el.contains(e.target)) setTimeout(() => actions.miniNext(), 0);
     };
     document.addEventListener('click', h, true);
     return () => document.removeEventListener('click', h, true);
-  }, [visible, st]);
+  }, [visible, st, targetOff]);
   if (!visible || !m || !st) return null;
 
   const who = m.narrator ?? 'intendant';
-  const waitsClick = st.action === 'click' && !!box;
+  const waitsClick = st.action === 'click' && !!box && !targetOff;
   const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
   // El cartel va en la mitad contraria a la del elemento resaltado; si este ocupa media pantalla o más, abajo (sin tapar la barra)
   const cardTop = box ? box.h < vh * 0.5 && box.y + box.h / 2 > vh / 2 : false;
-  const dim = 'absolute bg-black/65';
+  // La capa no recoge clics; sí lo hacen el atenuado, el cartel y (si no hay acción real) el hueco
+  const dim = 'absolute bg-black/65 pointer-events-auto';
   return (
-    <div className="absolute inset-0 z-[60] fade-in" data-testid="mini-tutorial" data-mini={m.id} data-step={step} role="dialog" aria-modal="true" aria-label={`Guía: ${narratorName(who)}`}>
+    <div className="absolute inset-0 z-[60] fade-in pointer-events-none" data-testid="mini-tutorial" data-mini={m.id} data-step={step} role="dialog" aria-modal="true" aria-label={`Guía: ${narratorName(who)}`}>
       {box ? (
         <>
           <div className={dim} style={{ left: 0, top: 0, right: 0, height: box.y }} />
@@ -100,7 +106,7 @@ export function MiniTutorialLayer() {
           <div className="absolute mini-hole" data-testid="mini-hole" style={{ left: box.x, top: box.y, width: box.w, height: box.h, pointerEvents: waitsClick ? 'none' : 'auto' }} />
         </>
       ) : <div className={`${dim} inset-0`} />}
-      <div className={`absolute left-1/2 -translate-x-1/2 panel panel-gold flex gap-3 items-end ${phone ? 'p-2 w-[min(92%,560px)]' : 'p-3 w-[min(90%,600px)]'}`}
+      <div className={`absolute left-1/2 -translate-x-1/2 panel panel-gold pointer-events-auto flex gap-3 items-end ${phone ? 'p-2 w-[min(92%,560px)]' : 'p-3 w-[min(90%,600px)]'}`}
         style={cardTop ? { top: 'max(12px, env(safe-area-inset-top))' } : { bottom: 'max(12px, env(safe-area-inset-bottom))' }} data-testid="mini-card">
         <div className="shrink-0 flex items-end justify-center bg-[#0d0c11] border border-stone-700 px-1 pt-1"><Portrait who={who} scale={phone ? 2 : 3} /></div>
         <div className="flex-1 min-w-0">

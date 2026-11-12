@@ -57,7 +57,7 @@ async function run(s) {
   await p.screenshot({ path: `${OUT}/${s.n}-00-crear.png` });
   await p.fill('[data-testid=name-input]', 'Aldric');
   await act('btn-create');
-  await act('btn-tutorial-ok');
+  
   // Un poco de todo para que las pantallas no salgan vacías
   await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; pr.gold = 4860; pr.stats.expeditions = 3; pr.character.level = 45; pr.bossesDefeated = [...new Set([...(pr.bossesDefeated || []), 'ossuary_lord'])]; G.setState({ profile: { ...pr } }); });
   // Nivel 45 (para ver a todos los mercaderes del Bastión): cerrar el aviso de habilidad nueva

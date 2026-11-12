@@ -38,6 +38,11 @@
   - cartel «Paso N de 8» con «Saltar» y confirmación; resalta lo que hay que tocar, también dentro del combate y de los menús;
   - bloqueos con aviso: soltar objetos, huir, el portal antes del paso 8, y atacar, dejar o traicionar a Osric;
   - la traición no usa temporizador: espera a que no haya menú ni combate.
+- **Bienvenida al Bastión (bloque 3, fase 3):**
+  - la cuenta el intendente (retrato provisional) al volver de la primera bajada, o al crear un personaje que salta el tutorial; una vez por personaje;
+  - 11 pasos: pestañas; Intendencia; mochila (se pierde al morir) y oro que ocupa sitio; «Agrupar oro»; bolsillo seguro; «Vaciar mochila»; Bastión (Mercaderes y Refugio); copia de seguridad; Jugar y Descender;
+  - solo se puede tocar lo resaltado; si el botón está desactivado (mochila vacía), el paso pasa a «Entendido»;
+  - es el mini tutorial «bienvenida» de `core/data/tutorials.ts` (largo: hasta 12 pasos); ya no existen los carteles viejos `LobbyTutorial` y `DungeonTutorial`.
 - **Landing:**
   - logo común (`GravevowLogo`), VarkHollow, mecánicas, galería y hoja de ruta;
   - tráiler v5 (`public/trailer/gravevow-trailer.*`);
@@ -45,7 +50,7 @@
 - **Legal:** aviso legal, privacidad y cookies. Los datos del titular solo van en imagen y el correo de contacto también.
 
 ## En curso / por verificar
-- **Bloque 3 (tutoriales):** fases 1 y 2 hechas. Siguiente: fase 3, bienvenida al Bastión (sustituye a `LobbyTutorial` y `DungeonTutorial`). Plan en `docs/plan-tutoriales.md`.
+- **Bloque 3 (tutoriales):** fases 1 a 3 hechas. Siguiente: fase 4, mini tutoriales del Bastión y de las estaciones (con el regalo de materiales y los avisos de subida de nivel). Plan en `docs/plan-tutoriales.md`.
 - Comprobar en un móvil real que el arrastre de objetos se nota suave. Se optimizó el 5/11 y las pruebas automáticas pasan.
 - Configuración externa, que hace el usuario:
   - **Enforce HTTPS** en GitHub Pages y que `www.gravevow.com` funcione;
@@ -54,6 +59,7 @@
 - Falta subir `public/sitemap.xml` (ya generado) y referenciarlo en `public/robots.txt`.
 
 ## Errores conocidos
+- `menus-check` falla en los mercaderes en los 3 tamaños: el guion entra directo en `vendor-nira` sin pasar antes por «Mercaderes» del Bastión. La prueba está desfasada; el juego funciona.
 - `almacen-check` falla en escritorio («la página debe verse entera sin desplazar», 117 casillas visibles). Ya fallaba antes de la Fase 1; tableta y móvil pasan. Pendiente de revisar.
 - Las pruebas e2e fallan de vez en cuando por tiempo de espera en el modal de botín. Al repetirlas, pasan.
 
@@ -66,6 +72,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 12/11: **Bloque 3, fase 3: bienvenida al Bastión.** Mini tutorial largo «bienvenida» (11 pasos, intendente) en `core/data/tutorials.ts`; `Lobby` lo dispara (`lobby:welcome`) si el personaje ya hizo o saltó el tutorial y no la ha visto (`tutorialSeen.lobby`). Terminarla o saltarla la marca en la cuenta y en el personaje. Acabar o saltar el tutorial de expedición deja `tutorialSeen.lobby` en falso para que salga; `tutorialSeen.dungeon` queda siempre en verdadero. Fuera `LobbyTutorial`, `DungeonTutorial` y la pausa de la escena que dependía de él. Arreglos en la capa de mini tutoriales: la capa ya no se tragaba los clics (las acciones reales con «Toca lo señalado» no funcionaban), lo señalado se desplaza a la vista si está dentro de un panel con scroll, y un botón desactivado pasa a «Entendido». Quitado `btn-tutorial-ok`/`btn-dungeon-tutorial-ok` de 46 guiones de `scripts/`. Pruebas: `tests/tutorials.test.ts` (bienvenida y perfil nuevo) y `scripts/e2e-bienvenida.cjs` (escritorio, iPad e iPhone apaisados); suite 469; `e2e-tutorial` sigue pasando.
 - 12/11: **Bloque 3, fase 2: tutorial inicial de expedición.** Guion nuevo en `src/core/data/tutorial.ts` (13 pasos internos en 8 visibles, textos de ratón y de toque, selectores que se resaltan). Sin pinchos: tras el combate, la rata deja la pierna izquierda a la mitad y sangrando, y se cura con la venda (heridas solo ahí; nunca queda inutilizada). La rata no cae hasta que usas un ataque especial. Cofre: 12 monedas y un saquito vacío. Arma de la hoguera por clase (nuevas: Espada corta, Báculo de fresno, Daga afilada, Maza de hierro, con receta). Pan y venda en la mochila; Saciedad a 45 y necesidades visibles pero quietas. Cartel nuevo `ui/TutorialGuide.tsx` («Paso N de 8», «Saltar» con confirmación, `skipTutorialRun`). Bloqueos: soltar objetos, huir, portal y opciones de Osric. Traición sin `setTimeout`: avisa al entrar en la brecha y traiciona tras 1,6 s de juego sin menú ni combate. El resumen dice que el intendente te espera. Pruebas: `tests/tutorials.test.ts` (datos del tutorial y que cada elemento resaltado existe), `scripts/e2e-tutorial.cjs` reescrito; pasa en escritorio, iPad e iPhone apaisados; suite 467.
 - 12/11: **Bloque 3, fase 1: sistema de mini tutoriales.** Datos en `src/core/data/tutorials.ts` (id, tema, disparador, quién lo cuenta, «!», pasos con texto de escritorio y táctil, elemento resaltado y acción real o «Entendido»); lógica pura en `src/core/tutorials.ts`; guardado en la cuenta (`account.tutorials = { seen, disabled }`, reparado al cargar). Cola en el store (`tutorialEvent`, `miniNext`, `miniDone`, `resetMinis`, `setMinisDisabled`): uno a la vez y espera si hay combate, otra ventana o el tutorial inicial. Capa común `MiniTutorial.tsx`: atenuado con hueco dorado, cartel con retrato (intendente provisional en `stationArt.ts`), «Saltar» y «Siguiente/Entendido» de 44 px. «!» dorado en las pestañas con mini tutorial pendiente. Tres primeros: Misiones, Bestiario y Tienda. Con `?debug` no salen (las pruebas no tropiezan); con `?debug&minis`, sí. Tests en `tests/tutorials.test.ts` (también comprueba que cada `data-testid` existe) y prueba `scripts/minis-check.cjs` en 3 tamaños.
 - 12/11: **Bastión: entrada con Mercaderes y Refugio.** La pestaña abre dos tarjetas grandes (Garth y marcador del refugio) con lo pendiente. Mercaderes sin catre ni «Tu Refugio», con «◂ Bastión»; fuera «Encargos del Refugio» de los mercaderes. Refugio con tarjetas como los mercaderes (arte 20 × 26 provisional, nivel, encargado, marcas, «Pedir a X» / «Usar» / «Usar · Dormir», «Detalles», «▲ Mejora» y «!»), detalle con niveles, coste e «Ir», platos en el detalle de la Cocina, recepción en panel. Se ven las 7 estaciones desde el principio, bloqueadas hasta que las pidas (corregido el mismo día: al principio se ocultaban hasta que llegaba su encargado). Prueba nueva `scripts/bastion-check.cjs` (3 tamaños); `refugio`, `taller`, `necesidades` y los scripts que entran en mercaderes, adaptados. Assets en `docs/ASSETS.md`.

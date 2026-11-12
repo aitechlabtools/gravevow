@@ -22,7 +22,7 @@ require('fs').mkdirSync(OUT, { recursive: true });
   await tap('[data-testid=btn-play]');
   await p.fill('[data-testid=name-input]', 'Aldric');
   await tap('[data-testid=btn-create]');
-  await tap('[data-testid=btn-tutorial-ok]');
+  
   await G(() => { const s = window.__GRAVEVOW__.getState(); s.profile.tutorialSeen.dungeon = true; });
 
   // Entra, alía a Kael a la fuerza y lo deja a tu lado

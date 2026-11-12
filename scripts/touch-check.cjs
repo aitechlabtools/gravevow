@@ -44,11 +44,11 @@ async function run(c) {
   check(await D(() => document.documentElement.classList.contains('is-touch')), 'no pasa a modo táctil tras el primer toque');
   await page.fill('[data-testid=name-input]', 'Toque');
   await tapSel('[data-testid=btn-create]');
-  await tapSel('[data-testid=btn-tutorial-ok]');
+  
   await tapSel('[data-testid=tab-play]');
   await tapSel('[data-testid=btn-enter-dungeon]');
   await page.waitForTimeout(1200);
-  if (await page.$('[data-testid=btn-dungeon-tutorial-ok]')) await tapSel('[data-testid=btn-dungeon-tutorial-ok]');
+  
   await page.waitForTimeout(400);
 
   // Joystick visible desde el principio y mueve al personaje

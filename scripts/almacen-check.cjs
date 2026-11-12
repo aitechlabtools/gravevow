@@ -32,7 +32,7 @@ async function run(s) {
   await p.evaluate(() => indexedDB.deleteDatabase('gravevow'));
   await p.reload(); await p.waitForTimeout(600);
   await act('btn-play'); await p.evaluate(() => document.fullscreenElement && document.exitFullscreen());
-  await p.fill('[data-testid=name-input]', 'Aldric'); await act('btn-create'); await act('btn-tutorial-ok');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await act('btn-create'); 
   await p.waitForTimeout(300);
   await p.evaluate(async () => {
     const pr = { ...window.__GRAVEVOW__.getState().profile, gold: 1000 };
@@ -129,7 +129,7 @@ async function run(s) {
   await p.evaluate(() => window.__GRAVEVOW__.actions.openSelect()); await p.waitForTimeout(300);
   await act('btn-new-char-1');
   await p.fill('[data-testid=name-input]', 'Mireva'); await act('btn-create');
-  if (await p.$('[data-testid=btn-tutorial-ok]')) await act('btn-tutorial-ok');
+  
   await openStash();
   x = await prof();
   if (x.name !== 'Mireva' || x.shared !== 1) fail('el otro personaje no ve la página Compartido: ' + JSON.stringify({ n: x.name, sh: x.shared }));

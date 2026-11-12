@@ -85,7 +85,7 @@ async function session(b, vp, touch) {
     await wait(300);
     await ev(async (z) => { await window.__GRAVEVOW__.actions.enterDungeon(z); }, sub);
     await wait(1500);
-    if (await page.$('[data-testid=btn-dungeon-tutorial-ok]')) await act('btn-dungeon-tutorial-ok');
+    
     await ev(() => window.__GRAVEVOW__.scene().enemies.forEach((e) => { e.aggro = 0; }));
   };
   // Paseo a cámara: camino largo desde donde estás (BFS), enemigos quietos
@@ -113,7 +113,7 @@ async function session(b, vp, touch) {
     await page.keyboard.type('Aldric', { delay: 110 }); await wait(600);
   });
   if (!want('n-crear')) await page.fill('[data-testid=name-input]', 'Aldric');
-  await act('btn-create'); await act('btn-tutorial-ok');
+  await act('btn-create'); 
   await s.advanced(); await wait(300);
   await page.mouse.move(5, 5);
 
@@ -273,7 +273,7 @@ async function session(b, vp, touch) {
   if (want('n-movil')) {
     const m = await session(b, { width: 844, height: 390 }, true);
     await m.start();
-    await m.page.fill('[data-testid=name-input]', 'Aldric'); await m.act('btn-create'); await m.act('btn-tutorial-ok');
+    await m.page.fill('[data-testid=name-input]', 'Aldric'); await m.act('btn-create'); 
     await m.advanced();
     await m.enter('catacumbas');
     const touch = (type, pts) => m.cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], i) => ({ x, y, id: i })) });

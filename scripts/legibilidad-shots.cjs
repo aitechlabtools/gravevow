@@ -28,7 +28,7 @@ const FORMATS = [
     await tap('[data-testid=btn-play]');
     await p.fill('[data-testid=name-input]', 'Aldric');
     await tap('[data-testid=btn-create]');
-    await tap('[data-testid=btn-tutorial-ok]');
+    
     await p.evaluate(() => { const s = window.__GRAVEVOW__.getState(); s.profile.tutorialSeen.dungeon = true; s.profile.reputation.vesper = 50; s.profile.reputation.orvel = 70; });
     await shot('01-jugar');
     for (const [tab, n] of [['character', '02-personaje'], ['stash', '03-alijo'], ['merchants', '04-mercaderes'], ['quests', '05-misiones'], ['bestiary', '06-bestiario'], ['shop', '07-atuendos']]) {

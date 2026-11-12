@@ -7,7 +7,7 @@ import { CLASSES } from '../../core/data/classes';
 import { readyQuestCount } from '../../core/quests';
 import { readyStations } from '../../core/refuge';
 import { xpForNextLevel } from '../../core/stats';
-import { PlayerSprite, HeroSprite, GoldAmount, Modal } from './common';
+import { PlayerSprite, HeroSprite, GoldAmount } from './common';
 import { SettingsModal } from './TitleScreen';
 import { sfx } from '../audio';
 import { FullscreenButton } from './FullscreenButton';
@@ -55,6 +55,9 @@ export function Lobby() {
   ] as PillTab<LobbyTab>[]).map((t) => ({ ...t, dot: !dev.skipMinis && tutBadges.has(`tab-${t.id}`) }));
   // Cada pestaña lanza su disparador de mini tutorial («tab:<id>»): solo sale la primera vez
   const go = (t: LobbyTab) => { setTab(t); sfx('click'); actions.tutorialEvent(`tab:${t}`); };
+  // Bienvenida del intendente (data/tutorials.ts, «bienvenida»): una vez por personaje, al volver de la primera bajada
+  const welcome = profile.tutorialDone && !profile.tutorialSeen.lobby;
+  useEffect(() => { if (welcome) actions.tutorialEvent('lobby:welcome'); }, [welcome]);
   const xpPct = Math.round((ch.xp / xpForNextLevel(ch.level)) * 100);
 
   return (
@@ -97,7 +100,7 @@ export function Lobby() {
       </main>
       {switcher && <CharacterSwitcher onClose={() => setSwitcher(false)} />}
       {settings && <SettingsModal onClose={() => setSettings(false)} onExit={() => actions.goto('title')} />}
-      {!profile.tutorialSeen.lobby ? <LobbyTutorial /> : <ClassUnlockNotice />}
+      {profile.tutorialSeen.lobby && <ClassUnlockNotice />}
     </div>
   );
 }
@@ -143,21 +146,5 @@ function GearIcon() {
       <path fill="#131118" d="M6 6h4v4H6z" />
       <path fill="#e8b33a" d="M7 7h2v2H7z" />
     </svg>
-  );
-}
-
-function LobbyTutorial() {
-  return (
-    <Modal onClose={() => actions.markTutorial('lobby')} testId="tutorial">
-      <h2 className="panel-title text-xl mb-3">Bienvenido al Bastión de Ceniza</h2>
-      <ol className="font-body text-lg space-y-2 list-decimal pl-5">
-        <li><b>Intendencia:</b> tu equipo, tu mochila y el almacén; en «Estado», tus heridas, el hambre, la sed y el cansancio. Arrastra los objetos, o tócalos y luego toca la casilla donde los quieres.</li>
-        <li><b>Almacén:</b> lo que guardes ahí está a salvo. Lo que lleves a la mazmorra, no.</li>
-        <li><b>Bastión:</b> entra en <b>Mercaderes</b> para comprar, vender y cumplir encargos, o en tu <b>Refugio</b> para dormir en el catre y pedir estaciones a sus encargados. Llegan más a medida que bajas.</li>
-        <li><b>Jugar:</b> elige zona y pulsa <b>Descender</b>. Saquea, sobrevive y encuentra el portal antes de que acabe el tiempo.</li>
-      </ol>
-      <p className="font-body italic text-stone-300 mt-3">Y no te fíes de nadie que encuentres ahí abajo. O sí. Tú decides.</p>
-      <button className="btn btn-gold mt-4" onClick={() => actions.markTutorial('lobby')} data-testid="btn-tutorial-ok">Entendido</button>
-    </Modal>
   );
 }

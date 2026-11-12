@@ -30,7 +30,7 @@ async function run(s) {
   // Primer personaje (con el tutorial ya marcado por ?debug no se juega)
   await act('btn-play');
   await p.evaluate(() => document.fullscreenElement && document.exitFullscreen());
-  await p.fill('[data-testid=name-input]', 'Aldric'); await act('btn-create'); await act('btn-tutorial-ok');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await act('btn-create'); 
   await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; G.setState({ profile: { ...pr, gold: 4321, tutorialDone: true } }); });
   await p.waitForTimeout(400);
   // Al menú y a «Elegir personaje»
@@ -40,7 +40,7 @@ async function run(s) {
   const skip = await p.$eval('[data-testid=skip-tutorial]', (e) => e.checked).catch(() => null);
   if (skip !== true) fail('el segundo personaje debería poder saltar el tutorial (marcado por defecto)');
   await p.fill('[data-testid=name-input]', 'Mireva'); await act('btn-create');
-  if (await p.$('[data-testid=btn-tutorial-ok]')) await act('btn-tutorial-ok');
+  
   let x = await st();
   if (x.name !== 'Mireva' || x.roster.join() !== '0:Aldric,2:Mireva') fail('crear en el hueco 3: ' + JSON.stringify(x));
   if (x.gold === 4321) fail('el oro del segundo personaje no debe ser el del primero');

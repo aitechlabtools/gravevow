@@ -18,7 +18,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   const count = (id) => G((id) => { const pr = window.__GRAVEVOW__.getState().profile; return [...pr.backpack, ...pr.stash].filter((x) => x && x.itemId === id).reduce((t, x) => t + x.qty, 0); }, id);
 
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   // Nivel 12 (Orik ya está), materiales, ingredientes, una espada para desguazar y oro
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile;
     pr.tutorialSeen.dungeon = true; pr.tutorialDone = true;

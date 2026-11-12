@@ -32,7 +32,7 @@ fs.mkdirSync(OUT, { recursive: true });
     await page.click('[data-testid=class-warrior]');
     await shot('02-create');
     await page.click('[data-testid=btn-create]');
-    await page.click('[data-testid=btn-tutorial-ok]');
+    
   });
   let goldBefore;
   await step('Comprar una poción', async () => {
@@ -67,8 +67,8 @@ fs.mkdirSync(OUT, { recursive: true });
     await page.click('[data-testid=tab-play]');
     await shot('05-expedition');
     await page.click('[data-testid=btn-enter-dungeon]');
-    await page.waitForSelector('[data-testid=btn-dungeon-tutorial-ok]');
-    await page.click('[data-testid=btn-dungeon-tutorial-ok]');
+    
+    
     await page.waitForTimeout(800);
     await shot('06-dungeon-start');
   });

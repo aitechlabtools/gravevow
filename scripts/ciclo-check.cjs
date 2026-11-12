@@ -27,7 +27,7 @@ fs.mkdirSync(out, { recursive: true });
   await tap('[data-testid=btn-play]');
   await p.fill('[data-testid=name-input]', cls === 'mage' ? 'Ysolde' : 'Aldric');
   await tap(`[data-testid=class-${cls}]`);
-  await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await tap('[data-testid=btn-create]'); 
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, tutorialDone: true, tutorialSeen: { lobby: true, dungeon: true } } }); });
   await p.waitForTimeout(500);
 

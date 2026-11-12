@@ -121,7 +121,7 @@ const ONLY = process.argv[4] ? process.argv[4].split(',') : null;
   await page.click('[data-testid=btn-play]');
   await page.fill('[data-testid=name-input]', 'Aldric');
   await page.click('[data-testid=btn-create]');
-  await page.click('[data-testid=btn-tutorial-ok]');
+  
   await patch(`
     const bp = [...p.backpack];
     ['knight_helm','bastion_plate','gauntlets','swift_boots','bastion_shield','dread_blade','heart_of_umbravel','steel_pick','blood_gem'].forEach((id,i)=> bp[i] = { uid: 'tb-'+id, itemId: id, qty: 1 });

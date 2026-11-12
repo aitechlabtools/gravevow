@@ -41,6 +41,7 @@ import { receptionSalvage, salvage, type SalvageRef } from '../../core/salvage';
 import type { ModuleId } from '../../core/data/refuge';
 import { TUTORIAL_BLOCK } from '../../core/data/tutorial';
 import { currentMini, enqueueTrigger, markSeen, type TutorialsSave } from '../../core/tutorials';
+import { WELCOME_ID } from '../../core/data/tutorials';
 import { bus } from './bus';
 import { buySkin, equipSkin } from '../../core/skins';
 import { getSkin } from '../../core/data/skins';
@@ -169,8 +170,8 @@ export const actions = {
     const p0 = createProfile(name, classId, appearance);
     // Los atuendos comprados y los ajustes son de la cuenta: el personaje nuevo también los tiene
     const p1 = { ...p0, skins: { owned: [...base.account.skinsOwned], equipped: null }, settings: { ...base.account.settings }, shared: base.account.shared.owned ? [...base.account.shared.grid] : null };
-    // Saltar el tutorial (otro personaje ya lo jugó): también se saltan los avisos de bienvenida
-    const p = skipTutorial ? { ...p1, tutorialDone: true, tutorialSeen: { lobby: true, dungeon: true } } : p1;
+    // Saltar el tutorial de expedición: la bienvenida del intendente en el Bastión sí sale (tiene su propio «Saltar»)
+    const p = skipTutorial ? { ...p1, tutorialDone: true, tutorialSeen: { lobby: false, dungeon: true } } : p1;
     const r = addCharacter(base, p, slot ?? state.createSlot ?? undefined);
     if (!r) { toast('Ya tienes 4 personajes: borra uno para crear otro.', 'danger'); return; }
     ss.save = r.save; ss.activeId = r.id;
@@ -254,6 +255,8 @@ export const actions = {
   miniDone(id: string) {
     const tutorials = markSeen(state.tutorials, id);
     set({ tutorials, miniQueue: state.miniQueue.filter((x) => x !== id), miniStep: 0 });
+    // La bienvenida es del personaje: terminada o saltada, no vuelve a salir con él
+    if (id === WELCOME_ID) actions.markTutorial('lobby');
     saveTutorials(tutorials);
   },
   /** Ajustes: vuelve a enseñar todos los mini tutoriales. */

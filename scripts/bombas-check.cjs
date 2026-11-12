@@ -16,7 +16,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'bombas', dev] = process.ar
   const count = (id) => G((id) => window.__GRAVEVOW__.getState().expedition.backpack.filter((x) => x && x.itemId === id).reduce((t, x) => t + x.qty, 0), id);
 
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   await G(() => { const s = window.__GRAVEVOW__.getState(); s.profile.character.level = 5; s.profile.tutorialSeen.dungeon = true; });
   await tap('[data-testid=tab-character]'); await tap('[data-testid=tab-play]'); await tap('[data-testid=btn-enter-dungeon]'); await p.waitForTimeout(1200);
   await G(() => { const g = window.__GRAVEVOW__, s = g.getState(); const bp = s.expedition.backpack.slice(); let k = 0;

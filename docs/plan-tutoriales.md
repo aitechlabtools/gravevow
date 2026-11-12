@@ -436,7 +436,7 @@ La Guía:
    - Traición sin temporizador.
    - Heridas solo en el paso 3.
    - Se actualiza `e2e-tutorial.cjs`.
-3. **Bienvenida al Bastión.** Sustituye a `LobbyTutorial` y a `DungeonTutorial`.
+3. **Bienvenida al Bastión.** ✅ Hecho (12/11). Sustituye a `LobbyTutorial` y a `DungeonTutorial`. Cambios sobre el guion: 11 pasos (se separan las pestañas que hay que tocar); el oro se enseña con «Agrupar oro» en vez de arrastrar monedas al saquito, y el bolsillo seguro es informativo (el arrastre no se puede detectar de forma fiable); sale al volver de la primera bajada, no antes.
 4. **Mini tutoriales del Bastión y de las estaciones.** Incluye el regalo de materiales y los avisos de subida de nivel.
 5. **Mini tutoriales de la expedición.**
 6. **Guía y opciones en Ajustes › Partida.**

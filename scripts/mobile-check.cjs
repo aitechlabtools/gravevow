@@ -24,7 +24,7 @@ require('fs').mkdirSync(OUT, { recursive: true });
   await p.fill('[data-testid=name-input]', 'Aldric');
   await shot('2-crear');
   await p.tap('[data-testid=btn-create]');
-  await p.tap('[data-testid=btn-tutorial-ok]');
+  
   await shot('3-lobby');
   await p.evaluate(() => { const s = window.__GRAVEVOW__.getState(); s.profile.tutorialSeen.dungeon = true; });
   await p.tap('[data-testid=tab-play]');

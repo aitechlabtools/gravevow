@@ -10,7 +10,7 @@ const OUT = process.argv[3] || 'public/screenshots';
   await page.click('[data-testid=btn-play]');
   await page.fill('[data-testid=name-input]', 'Aldric');
   await page.click('[data-testid=btn-create]');
-  await page.click('[data-testid=btn-tutorial-ok]');
+  
   // Algo de equipo para que el inventario luzca
   await page.evaluate(() => {
     const s = window.__GRAVEVOW__.getState();
@@ -30,7 +30,7 @@ const OUT = process.argv[3] || 'public/screenshots';
   await page.screenshot({ path: `${OUT}/inventory.png` });
   await page.click('[data-testid=tab-play]');
   await page.click('[data-testid=btn-enter-dungeon]');
-  await page.click('[data-testid=btn-dungeon-tutorial-ok]');
+  
   const r = await page.evaluate(() => { const r = window.__GRAVEVOW__.scene().rival; return [r.x, r.y]; });
   await tp(Math.floor(r[0]) + 1, Math.floor(r[1]));
   await page.waitForTimeout(500);

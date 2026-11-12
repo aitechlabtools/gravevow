@@ -531,7 +531,7 @@ export class DungeonScene extends Phaser.Scene {
 
   paused() {
     const s = getState();
-    return !!s.combat || !!s.modal || s.suspended || s.screen !== 'dungeon' || (!s.profile?.tutorialSeen.dungeon && !s.tutorial);
+    return !!s.combat || !!s.modal || s.suspended || s.screen !== 'dungeon';
   }
 
   update(time: number, deltaMs: number) {

@@ -21,7 +21,7 @@ const FORMATS = [
     await p.evaluate(() => indexedDB.deleteDatabase('gravevow')); await p.reload();
     await act('btn-play');
     await p.evaluate(() => document.fullscreenElement && document.exitFullscreen());
-    await p.fill('[data-testid=name-input]', 'Saqueador'); await act('btn-create'); await act('btn-tutorial-ok');
+    await p.fill('[data-testid=name-input]', 'Saqueador'); await act('btn-create'); 
     await p.evaluate(() => { const d = window.__GRAVEVOW__; const pr = d.getState().profile; d.setState({ profile: { ...pr, character: { ...pr.character, level: 45 }, bossesDefeated: ['ossuary_lord'], stats: { ...pr.stats, expeditions: 4 } } }); });
     // Con nivel 45 sale el aviso de desbloqueo de clase: se deja para más tarde
     await p.waitForTimeout(200); { const later = await p.$('[data-testid=btn-class-unlock-later]'); if (later) await later.click(); }

@@ -29,7 +29,7 @@ const DEVICE = process.argv[4];
   await page.fill('[data-testid=name-input]', 'Brena');
   await tap('[data-testid=class-warrior]');
   await tap('[data-testid=btn-create]');
-  await tap('[data-testid=btn-tutorial-ok]');
+  
   // Saltamos la cripta tutorial y damos oro para el contrato
   await page.evaluate(() => { const d = window.__GRAVEVOW__; const p = d.getState().profile; d.setState({ profile: { ...p, gold: 3000, character: { ...p.character, level: 25 }, stats: { ...p.stats, expeditions: 1 } } }); });
   // Grizk llega con Las mazmorras del Bastión (nivel 20): subir de nivel abre el aviso de habilidad
@@ -52,7 +52,7 @@ const DEVICE = process.argv[4];
   await tap('[data-testid=tab-play]');
   console.log('preparación:', await page.$eval('[data-testid=expedition-summary]', (e) => e.textContent));
   await tap('[data-testid=btn-enter-dungeon]');
-  await tap('[data-testid=btn-dungeon-tutorial-ok]');
+  
   await page.waitForSelector('[data-testid=hud-merc]');
   await page.waitForTimeout(600);
   s = await S();

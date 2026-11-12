@@ -49,7 +49,7 @@ const W = 1280, H = 720;
   await page.click('[data-testid=btn-play]');
   await page.fill('[data-testid=name-input]', 'Aldric');
   await page.click('[data-testid=btn-create]');
-  await page.click('[data-testid=btn-tutorial-ok]');
+  
   // Guerrero de nivel 5 con equipo épico, para que luzca
   await page.evaluate(() => {
     const s = window.__GRAVEVOW__.getState();

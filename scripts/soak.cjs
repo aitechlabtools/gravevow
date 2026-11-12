@@ -17,7 +17,7 @@ const RUNS = Number(process.argv[3] || 6);
   await page.fill('[data-testid=name-input]', 'Soak');
   await tap('[data-testid=class-mage]');
   await tap('[data-testid=btn-create]');
-  await tap('[data-testid=btn-tutorial-ok]');
+  
   const zones = ['mazmorra', 'cripta', 'infierno'];
   for (let run = 0; run < RUNS; run++) {
     const zone = zones[run % 3];

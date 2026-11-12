@@ -23,7 +23,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'bastion', dev] = process.a
     if (r.art.length) fail(where + ': pixel art sin escala entera: ' + r.art.join(', '));
   };
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile;
     const st = pr.stash.slice(); let k = 0; const put = (itemId, qty) => { while (st[k]) k++; st[k] = { uid: 'b' + k, itemId, qty }; };
     put('scrap_metal', 4); put('cave_mushroom', 4); put('leather_scrap', 6); put('water', 2);

@@ -27,7 +27,7 @@ async function session(vp, touch) {
   await ev(() => document.fullscreenElement && document.exitFullscreen());
   await p.fill('[data-testid=name-input]', 'Aldric');
   await act('btn-create');
-  await act('btn-tutorial-ok');
+  
   // Partida avanzada: nivel 85, equipo del Infierno, botín en la mochila, materiales, jefes vencidos y reputación.
   await ev(([GEAR, LOOT]) => {
     const G = window.__GRAVEVOW__; const pr = G.getState().profile;
@@ -51,7 +51,7 @@ async function session(vp, touch) {
 async function dungeon(s, zone, zoom = 1.45) {
   await s.ev(async (z) => { const G = window.__GRAVEVOW__; await G.actions.enterDungeon(z); }, zone);
   await s.wait(1500);
-  if (await s.p.$('[data-testid=btn-dungeon-tutorial-ok]')) await s.act('btn-dungeon-tutorial-ok');
+  
   // Que nadie ataque durante la foto, y colocarse junto a un cofre con algún enemigo cerca
   await s.ev((zoom) => {
     const sc = window.__GRAVEVOW__.scene();

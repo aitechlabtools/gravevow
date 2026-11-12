@@ -50,7 +50,7 @@ const OUT = process.argv[3] || '/tmp/claude-0/social';
   await page.fill('[data-testid=name-input]', 'Morgana');
   await page.click('[data-testid=class-mage]');
   await page.click('[data-testid=btn-create]');
-  await page.click('[data-testid=btn-tutorial-ok]');
+  
 
   // 1 · Kael en el castillo: triángulo verde, aviso especial, presentación, alianza (sin duelo)
   await enter('castillo', 15, { forceKael: true, forceBetrayal: true });

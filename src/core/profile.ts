@@ -54,7 +54,7 @@ export function createProfile(name: string, classId: ClassId, appearance: Appear
     reputation: {},
     pocket: emptyGrid(POCKET_SIZE),
     activeExpedition: null,
-    tutorialSeen: { lobby: false, dungeon: false },
+    tutorialSeen: { lobby: false, dungeon: true },
     tutorialDone: false,
     kael: { missStreak: 0 },
     lastSubzone: null,

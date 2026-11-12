@@ -27,7 +27,7 @@ async function newHero(p, name, gold) {
   await p.act('btn-play');
   await p.evaluate(() => document.fullscreenElement && document.exitFullscreen());
   await p.fill('[data-testid=name-input]', name); await p.act('btn-create');
-  if (await p.$('[data-testid=btn-tutorial-ok]')) await p.act('btn-tutorial-ok');
+  
   await p.evaluate((g) => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; G.setState({ profile: { ...pr, gold: g, stats: { ...pr.stats, expeditions: 4 } } }); }, gold);
   await p.waitForTimeout(400);
   await p.evaluate(() => window.__GRAVEVOW__.actions.goto('title')); await p.waitForTimeout(300);

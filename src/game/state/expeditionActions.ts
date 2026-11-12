@@ -123,7 +123,7 @@ export const expeditionActions = {
     // Recompensa: oro y objetos para empezar (config en data/tutorial.ts)
     let stash = profile.backpack;
     for (const it of TUTORIAL_REWARD.items) stash = addToGrid(stash, { uid: makeUid(), itemId: it.itemId, qty: it.qty }, LAYOUTS.stash).grid;
-    profile = { ...earnGoldSafe({ ...profile, backpack: stash }, TUTORIAL_REWARD.gold), wounds: null, tutorialDone: true, tutorialSeen: { lobby: true, dungeon: true } };
+    profile = { ...earnGoldSafe({ ...profile, backpack: stash }, TUTORIAL_REWARD.gold), wounds: null, tutorialDone: true, tutorialSeen: { lobby: false, dungeon: true } };
     summary = { ...summary, tutorialNote: `Has sobrevivido a tu primera bajada. El intendente te espera en el Bastión: te ha dejado ${TUTORIAL_REWARD.gold} monedas de oro, 3 pociones y unos guantes de cuero en tu almacén.` };
     markTutorialDoneOnDevice();
     set({ profile, summary, tutorial: null, expedition: null, screen: 'summary', combat: null, modal: null, merc: null });
@@ -135,7 +135,7 @@ export const expeditionActions = {
     const s = state;
     const t = s.tutorial;
     if (!t || !s.profile) return;
-    const profile = t.replay ?? { ...s.profile, tutorialDone: true, tutorialSeen: { lobby: true, dungeon: true } };
+    const profile = t.replay ?? { ...s.profile, tutorialDone: true, tutorialSeen: { lobby: false, dungeon: true } };
     if (!t.replay) markTutorialDoneOnDevice();
     set({ profile, tutorial: null, expedition: null, dungeon: null, screen: 'lobby', summary: null, combat: null, modal: null, merc: null, bags: {}, chests: {} });
     if (!t.replay) await saveNow();

@@ -13,7 +13,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'curas', dev] = process.arg
   const G = (fn, arg) => p.evaluate(fn, arg);
   const cls = (sel) => p.getAttribute(sel, 'class');
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile;
     const bp = pr.backpack.slice(); const free = () => bp.findIndex((x) => !x);
     bp[free()] = { uid: 'sp1', itemId: 'splint', qty: 2 }; bp[free()] = { uid: 'bd1', itemId: 'bandage', qty: 1 };

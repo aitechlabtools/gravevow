@@ -25,7 +25,7 @@ const DEVICE = process.argv[4];
   await G(() => document.fullscreenElement && document.exitFullscreen());
   await page.fill('[data-testid=name-input]', 'Penitente');
   await tap('[data-testid=btn-create]');
-  await tap('[data-testid=btn-tutorial-ok]');
+  
   ok(!(await page.$('[data-testid=tab-wardrobe]')), 'ya no hay pestaña Vestuario');
   await G(() => { const d = window.__GRAVEVOW__; const p = d.getState().profile; d.setState({ profile: { ...p, gold: 500 } }); }); // 500 monedas: da para unos atuendos (150, 400) pero no para el de 900
 
@@ -67,7 +67,7 @@ const DEVICE = process.argv[4];
   // Mazmorra y combate
   await tap('[data-testid=tab-play]');
   await tap('[data-testid=btn-enter-dungeon]');
-  if (await page.$('[data-testid=btn-dungeon-tutorial-ok]')) await tap('[data-testid=btn-dungeon-tutorial-ok]');
+  
   await page.waitForTimeout(900);
   ok((await G(() => window.__GRAVEVOW__.scene().heroLook)).endsWith('|skin_penitent'), 'en la mazmorra se dibuja con el atuendo');
   await page.screenshot({ path: `${OUT}/mazmorra.png` });

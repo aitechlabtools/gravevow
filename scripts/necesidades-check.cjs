@@ -12,7 +12,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   const G = (fn, arg) => p.evaluate(fn, arg);
   const box = async (sel) => (await p.$(sel))?.boundingBox();
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; pr.tutorialSeen.dungeon = true; g.setState({ profile: { ...pr, needs: { sat: 50, hyd: 40, rest: 20 } } }); });
   if (await p.$('[data-testid=base-needs]')) fail('Jugar ya no debe enseñar las necesidades');
   await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]'); await p.waitForSelector('[data-testid=vendor-list]');

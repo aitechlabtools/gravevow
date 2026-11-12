@@ -22,7 +22,7 @@ require('fs').mkdirSync(OUT, { recursive: true });
   await tap('[data-testid=btn-play]');
   await p.fill('[data-testid=name-input]', 'Aldric');
   await tap('[data-testid=btn-create]');
-  await tap('[data-testid=btn-tutorial-ok]');
+  
   await tap('[data-testid=tab-quests]');
   await p.waitForSelector('[data-testid=quests-active]');
   ok(!(await p.$('[data-testid=claim-q_bones]')), 'al empezar no llevas misiones aceptadas');

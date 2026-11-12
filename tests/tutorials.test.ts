@@ -6,12 +6,13 @@ import { MINI_TUTORIALS, getMini } from '../src/core/data/tutorials';
 import { emptySave, sanitizeSave } from '../src/core/save';
 
 describe('mini tutoriales: datos', () => {
-  it('cada uno tiene id único y de 2 a 4 pasos con texto', () => {
+  it('cada uno tiene id único y de 2 a 4 pasos con texto (la bienvenida, hasta 12)', () => {
     const ids = MINI_TUTORIALS.map((m) => m.id);
     expect(new Set(ids).size).toBe(ids.length);
+    expect(MINI_TUTORIALS.filter((m) => m.long).map((m) => m.id)).toEqual(['bienvenida']);
     for (const m of MINI_TUTORIALS) {
       expect(m.steps.length, m.id).toBeGreaterThanOrEqual(2);
-      expect(m.steps.length, m.id).toBeLessThanOrEqual(4);
+      expect(m.steps.length, m.id).toBeLessThanOrEqual(m.long ? 12 : 4);
       for (const s of m.steps) expect(s.text.trim().length, m.id).toBeGreaterThan(0);
       for (const s of m.steps) if (s.action === 'click') expect(s.target, `${m.id}: acción real sin elemento`).toBeTruthy();
     }
@@ -24,9 +25,24 @@ describe('mini tutoriales: datos', () => {
     const ids = new Set(MINI_TUTORIALS.flatMap((m) => [m.badge, ...m.steps.map((s) => s.target)]).filter((x): x is string => !!x));
     for (const id of ids) {
       // Literal («data-testid="x"») o con plantilla («tab-${t.id}», «vendor-${id}»…): basta con que exista su prefijo fijo
-      const found = src.includes(`"${id}"`) || src.includes(`'${id}'`) || [...src.matchAll(/data-testid=\{`([^`$]*)\$\{/g)].some((mm) => mm[1] && id.startsWith(mm[1]));
+      const found = src.includes(`"${id}"`) || src.includes(`'${id}'`) || [...src.matchAll(/`([a-z][a-z-]*-)\$\{/g)].some((mm) => mm[1] && id.startsWith(mm[1]));
       expect(found, `no existe data-testid «${id}»`).toBe(true);
     }
+  });
+});
+
+describe('bienvenida al Bastión', () => {
+  it('la cuenta el intendente y termina en Descender', () => {
+    const w = getMini('bienvenida')!;
+    expect(w.narrator).toBe('intendant');
+    expect(w.trigger).toBe('lobby:welcome');
+    expect(w.steps[w.steps.length - 1].target).toBe('btn-enter-dungeon');
+    expect(w.steps.filter((s) => s.action === 'click').map((s) => s.target)).toEqual(['tab-stash', 'group-gold-backpack', 'empty-backpack', 'tab-merchants', 'tab-play']);
+  });
+  it('un perfil nuevo no ve el cartel viejo de la mazmorra', async () => {
+    const { createProfile } = await import('../src/core/profile');
+    const p = createProfile('Prueba', 'warrior', { skin: 0, hair: 0, hairColor: 0 } as never);
+    expect(p.tutorialSeen).toEqual({ lobby: false, dungeon: true });
   });
 });
 

@@ -20,14 +20,14 @@ const DEVICE = process.argv[4];
   await page.fill('[data-testid=name-input]', 'Minera');
   await tap('[data-testid=class-warrior]');
   await tap('[data-testid=btn-create]');
-  await tap('[data-testid=btn-tutorial-ok]');
+  
   await page.evaluate(() => { const d = window.__GRAVEVOW__; const p = d.getState().profile; d.setState({ profile: { ...p, gold: 500, stats: { ...p.stats, expeditions: 1 } } }); });
   await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]');
   await tap('[data-testid=vendor-nira]');
   await tap('[data-testid=buy-miner_pick]');
   await tap('[data-testid=tab-play]');
   await tap('[data-testid=btn-enter-dungeon]');
-  await tap('[data-testid=btn-dungeon-tutorial-ok]');
+  
   await page.waitForTimeout(800);
   console.log('mochila al entrar:', await bp());
   await page.evaluate(() => window.__GRAVEVOW__.scene().enemies.forEach((e) => { e.dead = true; e.sprite.setVisible(false); }));

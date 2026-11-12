@@ -16,7 +16,7 @@ const LOOT = [['knight_sword', 'rare'], ['war_mace', 'common'], ['iron_shield', 
     const act = async (id) => { const s = `[data-testid=${id}]`; await p.waitForSelector(s, { timeout: 6000 }); touch ? await p.tap(s) : await p.click(s); await p.waitForTimeout(300); };
     await p.goto(URL + '?debug&noclass'); await p.evaluate(() => indexedDB.deleteDatabase('gravevow')); await p.reload(); await p.waitForTimeout(700);
     await act('btn-play'); await p.evaluate(() => document.fullscreenElement && document.exitFullscreen());
-    await p.fill('[data-testid=name-input]', 'Beohtord'); await act('btn-create'); await act('btn-tutorial-ok');
+    await p.fill('[data-testid=name-input]', 'Beohtord'); await act('btn-create'); 
     await p.evaluate(([LOOT, AT, COV]) => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; const bp = [...pr.backpack];
       const bp0 = bp.map(() => null); bp.splice(0, bp.length, ...bp0); LOOT.forEach(([id, rarity, qty], i) => { bp[AT[i]] = { uid: 'bp' + i, itemId: id, qty: qty ?? 1, ...(rarity ? { rarity } : {}) }; for (const d of COV[i] ?? []) bp[AT[i] + d] = { uid: 'cover:' + 'bp' + i, itemId: 'cover', qty: 1 }; });
       G.setState({ profile: { ...pr, backpack: bp, character: { ...pr.character, level: 14 }, tutorialSeen: { ...pr.tutorialSeen, lobby: true, stash: true, vendors: true } } }); }, [LOOT, AT, COV]);

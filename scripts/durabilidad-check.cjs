@@ -11,7 +11,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'durabilidad', dev] = proce
   const fail = (m) => { console.log('FALLO:', m); process.exitCode = 1; };
   const G = (fn, arg) => p.evaluate(fn, arg);
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   // Arma rota y casco gastado, con oro para pagar
   const breakGear = () => G(() => {
     const g = window.__GRAVEVOW__, pr = g.getState().profile;

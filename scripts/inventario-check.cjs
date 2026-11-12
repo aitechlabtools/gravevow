@@ -14,7 +14,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'inventario', dev] = proces
   const box = async (sel) => (await p.$(sel))?.boundingBox();
   const bp = () => G(() => window.__GRAVEVOW__.getState().profile.backpack.map((x) => x && (x.itemId === 'cover' ? 'c' : x.itemId + (x.rot ? '@r' : ''))));
   await p.goto(url + '?debug'); await tap('[data-testid=btn-play]');
-  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
+  await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); 
   // Mochila de prueba: una espada (3×1) arriba a la izquierda y nada más
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; const bpk = pr.backpack.map(() => null);
     bpk[0] = { uid: 'sw', itemId: 'iron_sword', qty: 1 }; bpk[1] = { uid: 'cover:sw', itemId: 'cover', qty: 1 }; bpk[2] = { uid: 'cover:sw', itemId: 'cover', qty: 1 };

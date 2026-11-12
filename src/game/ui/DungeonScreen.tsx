@@ -40,7 +40,6 @@ export function DungeonScreen() {
   const modal = useGame((s) => s.modal);
   const combat = useGame((s) => s.combat);
   const tutorial = useGame((s) => s.tutorial);
-  const profile = useGame((s) => s.profile)!;
 
   useEffect(() => {
     if (!host.current) return;
@@ -117,7 +116,6 @@ export function DungeonScreen() {
       {modal?.type === 'merc' && <MercModal />}
       {modal?.type === 'body' && <BodyModal />}
       {combat && <CombatScreen />}
-      {!profile.tutorialSeen.dungeon && !tutorial && !modal && !combat && <DungeonTutorial />}
       {tutorial && <TutorialGuide />}
     </div>
   );
@@ -620,22 +618,6 @@ function PauseModal() {
         )}
       </div>
       <div className="mt-4 text-sm text-stone-400 font-body text-base">Controles completos en Ajustes › Controles</div>
-    </Modal>
-  );
-}
-
-function DungeonTutorial() {
-  return (
-    <Modal onClose={() => actions.markTutorial('dungeon')} testId="dungeon-tutorial">
-      <h2 className="panel-title text-xl mb-3">Las Criptas de Umbravel</h2>
-      <ul className="font-body text-lg space-y-1.5">
-        <li><b>Moverse:</b> WASD, flechas o clic en el suelo.</li>
-        <li><b>Interactuar:</b> E (cofres, puertas, otros aventureros, portal).</li>
-        <li><b>Combate:</b> al tocar a un enemigo empieza un combate por turnos.</li>
-        <li><b>Extraer:</b> busca el portal violeta y canaliza 3 segundos sin moverte.</li>
-        <li><b>Tiempo:</b> si el reloj llega a cero, la cripta se queda con todo.</li>
-      </ul>
-      <button className="btn btn-gold mt-4" onClick={() => actions.markTutorial('dungeon')} data-testid="btn-dungeon-tutorial-ok">¡A por ello!</button>
     </Modal>
   );
 }

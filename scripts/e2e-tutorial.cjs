@@ -57,7 +57,7 @@ const DEVICE = process.argv[4];
   ok(!(await page.$('[data-testid=skip-tutorial]')), 'la primera vez no se puede saltar el tutorial al crear el personaje');
   await page.fill('[data-testid=name-input]', 'Novata');
   await tap('[data-testid=btn-create]');
-  await tap('[data-testid=btn-tutorial-ok]');
+  
   await tap('[data-testid=btn-enter-dungeon]');
   await page.waitForSelector('[data-testid=tutorial-guide]');
   ok((await G(() => window.__GRAVEVOW__.getState().dungeon.id)) === 'tutorial', 'la primera expedición es el tutorial (mapa a mano en las Afueras)');
