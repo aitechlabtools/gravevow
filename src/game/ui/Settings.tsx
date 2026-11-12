@@ -11,6 +11,8 @@ import { canFullscreen, enterFullscreen, exitFullscreen, isIOS, isStandalone, us
 import { backupAgoLabel } from '../../core/backup';
 import { MailButton } from '../../legal/LegalPage';
 import { CommunityLinks } from './TitleScreen';
+import { guideEntries, miniTitle, TOPIC_NAME, type TutTopic } from '../../core/data/tutorials';
+import { narratorName, rich } from './MiniTutorial';
 
 export type SettingsTab = 'sound' | 'screen' | 'controls' | 'game' | 'community' | 'info';
 export const GAME_VERSION = 'Alpha v0.1';
@@ -29,13 +31,15 @@ const isTab = (t: unknown): t is SettingsTab => TABS.some((x) => x.id === t);
 /** Sección recordada mientras no haya cuenta (pantalla de título sin partida). */
 let lastTabNoProfile: SettingsTab = 'sound';
 
-export function SettingsModal({ onClose, onExit }: { onClose: () => void; onExit?: () => void }) {
+export function SettingsModal({ onClose, onExit, initialTab }: { onClose: () => void; onExit?: () => void; /** El «?» del menú abre directamente Partida › Guía. */ initialTab?: SettingsTab }) {
   const profile = useGame((s) => s.profile);
   const backup = useGame((s) => s.backup);
   const layout = useLayout();
   const phone = layout === 'phone';
   const saved = profile?.settings.settingsTab;
-  const [tab, setTabState] = useState<SettingsTab>(isTab(saved) ? saved : lastTabNoProfile);
+  const [tab, setTabState] = useState<SettingsTab>(initialTab ?? (isTab(saved) ? saved : lastTabNoProfile));
+  // Primera vez que se abre con una partida: el mini tutorial de Ajustes (sale encima de esta ventana)
+  useEffect(() => { if (profile && !initialTab) actions.tutorialEvent('screen:settings'); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const setTab = (t: SettingsTab) => {
     sfx('click'); setTabState(t); lastTabNoProfile = t;
     if (profile) actions.setSettings({ settingsTab: t });
@@ -59,7 +63,7 @@ export function SettingsModal({ onClose, onExit }: { onClose: () => void; onExit
           <button className="btn icon-btn ml-auto" onClick={onClose} aria-label="Cerrar ajustes" data-testid="settings-x">✕</button>
         </div>
         <div className="set-body">
-          <nav className="set-nav scroll-thin" aria-label="Secciones de Ajustes">
+          <nav className="set-nav scroll-thin" aria-label="Secciones de Ajustes" data-testid="settings-nav">
             {TABS.map((t) => (
               <button key={t.id} className={`set-tab ${t.id === tab ? 'on' : ''}`} onClick={() => setTab(t.id)} aria-current={t.id === tab ? 'page' : undefined}
                 aria-label={t.label} title={phone ? t.label : undefined} data-testid={`settings-tab-${t.id}`}>
@@ -73,7 +77,7 @@ export function SettingsModal({ onClose, onExit }: { onClose: () => void; onExit
             {tab === 'sound' && <SoundSection />}
             {tab === 'screen' && <ScreenSection />}
             {tab === 'controls' && <ControlsSection />}
-            {tab === 'game' && <GameSection onClose={onClose} />}
+            {tab === 'game' && <GameSection onClose={onClose} guide={initialTab === 'game'} />}
             {tab === 'community' && <Block title="Comunidad"><p className="set-note mb-3">Se abre en otra pestaña y tu partida sigue aquí.</p><CommunityLinks testPrefix="settings" /></Block>}
             {tab === 'info' && <InfoSection />}
           </div>
@@ -180,9 +184,8 @@ function ControlsSection() {
   return <>{touch ? [touchT, ...keys] : [...keys, touchT]}</>;
 }
 
-function GameSection({ onClose }: { onClose: () => void }) {
+function GameSection({ onClose, guide }: { onClose: () => void; guide?: boolean }) {
   const screen = useGame((s) => s.screen);
-  const profile = useGame((s) => s.profile);
   const backup = useGame((s) => s.backup);
   const roster = useGame((s) => s.roster);
   const inRun = screen === 'dungeon';
@@ -203,13 +206,90 @@ function GameSection({ onClose }: { onClose: () => void }) {
           <p className="set-note">Ahí puedes crear o borrar personajes (hasta 4).</p>
         </Block>
       )}
-      {screen === 'lobby' && profile?.tutorialDone && (
-        <Block title="Tutorial">
-          <button className="btn" onClick={() => { onClose(); actions.replayTutorial(); }} data-testid="btn-replay-tutorial">Repetir el tutorial</button>
-          <p className="set-note">Sin recompensas y sin tocar tu inventario.</p>
-        </Block>
-      )}
+      {roster.length > 0 && <GuideBlock onClose={onClose} scrollTo={!!guide} />}
     </>
+  );
+}
+
+/**
+ * Guía (fase 6): los mini tutoriales por tema. Los vistos se pueden releer aquí mismo; los que no, «Aún por descubrir».
+ * Debajo: repetir el tutorial inicial, desactivar los mini tutoriales y reiniciarlos.
+ */
+function GuideBlock({ onClose, scrollTo }: { onClose: () => void; scrollTo: boolean }) {
+  const screen = useGame((s) => s.screen);
+  const profile = useGame((s) => s.profile);
+  const t = useGame((s) => s.tutorials);
+  const [topic, setTopic] = useState<TutTopic | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const touch = useIsTouch();
+  useEffect(() => { if (scrollTo) document.querySelector('[data-testid=settings-guide]')?.scrollIntoView({ block: 'start' }); }, [scrollTo]);
+  const groups = guideEntries();
+  return (
+    <section className="set-block" data-testid="settings-guide">
+      <h3 className="set-h">Guía</h3>
+      <div className="set-card">
+        <p className="set-note mb-2">Lo que te han contado en el Bastión y en la mazmorra. Toca un tema y luego lo que quieras releer.</p>
+        <div className="flex flex-col gap-1.5">
+          {groups.map((g) => {
+            const seen = g.minis.filter((m) => t.seen.includes(m.id)).length;
+            const on = topic === g.topic;
+            return (
+              <div key={g.topic}>
+                <button className={`btn w-full flex justify-between items-center text-left ${on ? 'btn-gold' : ''}`} style={{ minHeight: 44 }} aria-expanded={on}
+                  onClick={() => { sfx('click'); setTopic(on ? null : g.topic); setOpen(null); }} data-testid={`guide-topic-${g.topic}`}>
+                  <span>{TOPIC_NAME[g.topic]}</span><span className="text-xs opacity-80">{seen} / {g.minis.length}</span>
+                </button>
+                {on && (
+                  <ul className="flex flex-col gap-1 mt-1.5 pl-2" data-testid={`guide-list-${g.topic}`}>
+                    {g.minis.map((m) => {
+                      const known = t.seen.includes(m.id);
+                      const isOpen = open === m.id;
+                      return (
+                        <li key={m.id}>
+                          <button className="btn w-full text-left text-sm" style={{ minHeight: 44 }} disabled={!known} aria-expanded={known ? isOpen : undefined}
+                            onClick={() => { sfx('click'); setOpen(isOpen ? null : m.id); }} data-testid={`guide-item-${m.id}`}>
+                            {known ? miniTitle(m) : <span className="italic text-stone-500">Aún por descubrir</span>}
+                          </button>
+                          {known && isOpen && (
+                            <div className="px-3 py-2 text-sm border-l-2 border-gold/60 bg-black/30" data-testid={`guide-text-${m.id}`}>
+                              <div className="font-display text-gold text-[11px] uppercase tracking-wider mb-1">{narratorName(m.narrator ?? 'intendant')}</div>
+                              {m.steps.map((st, i) => <p key={i} className="mb-1">{rich(touch && st.touch ? st.touch : st.text)}</p>)}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="set-card mt-2">
+        {screen === 'lobby' && profile?.tutorialDone ? (
+          <>
+            <button className="btn" onClick={() => { onClose(); actions.replayTutorial(); }} data-testid="btn-replay-tutorial">Repetir el tutorial inicial</button>
+            <p className="set-note mb-2">Sin recompensas y sin tocar tu inventario.</p>
+          </>
+        ) : screen === 'lobby' ? null : <p className="set-note mb-2">El tutorial inicial se repite desde el Bastión.</p>}
+        <label className="flex items-center gap-3 cursor-pointer" style={{ minHeight: 44 }}>
+          <input type="checkbox" checked={t.disabled} onChange={(e) => { sfx('click'); actions.setMinisDisabled(e.target.checked); }} className="accent-[#e8b33a] w-5 h-5" data-testid="minis-disabled" />
+          <span>Desactivar los mini tutoriales</span>
+        </label>
+        <p className="set-note mb-2">Para quien ya conoce el juego. Los avisos de mejora de las estaciones siguen saliendo.</p>
+        {confirmReset ? (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm">¿Volver a verlos todos desde el principio?</span>
+            <button className="btn btn-gold" onClick={() => { sfx('click'); actions.resetMinis(); setConfirmReset(false); setOpen(null); }} data-testid="minis-reset-yes">Sí, reiniciar</button>
+            <button className="btn" onClick={() => setConfirmReset(false)} data-testid="minis-reset-no">No</button>
+          </div>
+        ) : (
+          <button className="btn" onClick={() => { sfx('click'); setConfirmReset(true); }} data-testid="minis-reset">Reiniciar los mini tutoriales</button>
+        )}
+      </div>
+    </section>
   );
 }
 

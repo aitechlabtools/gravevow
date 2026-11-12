@@ -116,6 +116,7 @@ const DEVICE = process.argv[4];
 
   // Copia de seguridad (desde Ajustes)
   await tap('[data-testid=btn-lobby-settings]');
+  await walk('screen.settings');
   await tap('[data-testid=settings-tab-game]');
   await tap('[data-testid=settings-open-backup]');
   await walk('screen.backup');

@@ -29,6 +29,7 @@ import { getMerc } from '../../core/data/mercenaries';
 import { mercBaseStats, STANCE_DESC, STANCE_NAME } from '../../core/mercenaries';
 import { getWanderer } from '../../core/data/wanderers';
 import { TutorialGuide } from './TutorialGuide';
+import { ExpeditionMinis } from './ExpeditionMinis';
 import { RISK, GOLD_SHARE, SHARE_FAIR_RATIO, type RiskLevel } from '../../config/wanderers';
 import { shareVerdict } from '../../core/social';
 import { pinnedQuests, questDef, questProgress } from '../../core/quests';
@@ -117,6 +118,7 @@ export function DungeonScreen() {
       {modal?.type === 'body' && <BodyModal />}
       {combat && <CombatScreen />}
       {tutorial && <TutorialGuide />}
+      <ExpeditionMinis />
     </div>
   );
 }

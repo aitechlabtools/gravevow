@@ -50,7 +50,9 @@
 - **Legal:** aviso legal, privacidad y cookies. Los datos del titular solo van en imagen y el correo de contacto también.
 
 ## En curso / por verificar
-- **Bloque 3 (tutoriales):** fases 1 a 4 hechas. Siguiente: fase 5, mini tutoriales de la expedición (reloj, heridas, mochila llena, necesidades, mercenarios, Kael, élites, jefes, subzonas y habilidad de clase). Después: 6 (Ajustes › Partida), 7 (regla y `docs/tutoriales.md`) y 8 (migración). Plan en `docs/plan-tutoriales.md`. Quedan de la fase 4 para más adelante: los desbloqueos `unlock.stash-page`, `unlock.shared-page` y `unlock.class-skill`, y el de Ajustes (`screen.settings`), que no puede salir sobre la ventana de Ajustes: va en la fase 6.
+- **12/11, tutoriales fase 5:** mini tutoriales de la expedición: reloj, necesidades, sangrado, fractura, zona vital, pieza rota, mochila llena, triángulo del errante y Kael (encima de su ventana), élite, jefe y habilidad de clase (en combate) y uno por subzona desde la segunda. Los lanza `ExpeditionMinis.tsx`. Prueba: `scripts/e2e-exp-minis.cjs`.
+- **12/11, tutoriales fase 6:** Guía en Ajustes › Partida (por temas; releer lo visto, «Aún por descubrir» lo demás), repetir el tutorial inicial, desactivar y reiniciar (con confirmación) los mini tutoriales, icono «?» de 44 px junto al engranaje y mini de Ajustes. Prueba: `scripts/e2e-guia.cjs`. Se ajustaron `minis-check`, `e2e-bastion-minis` (el mini de Ajustes sale primero) y `ajustes-check` (esperaba poco antes de forzar el aviso de copia).
+- **Bloque 3 (tutoriales):** fases 1 a 6 hechas. Siguiente: fase 7 (regla y `docs/tutoriales.md`) y 8 (migración). Plan en `docs/plan-tutoriales.md`. Quedan de la fase 4 para más adelante: los desbloqueos `unlock.stash-page`, `unlock.shared-page` y `unlock.class-skill`,.
 - Comprobar en un móvil real que el arrastre de objetos se nota suave. Se optimizó el 5/11 y las pruebas automáticas pasan.
 - Configuración externa, que hace el usuario:
   - **Enforce HTTPS** en GitHub Pages y que `www.gravevow.com` funcione;

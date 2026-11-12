@@ -8,6 +8,7 @@
 import type { VendorId } from './vendors';
 import { STATIONS } from '../../config/stations';
 import type { CraftStation } from './crafting';
+import { SUBZONES } from './subzones';
 
 /** Temas de la Guía (Ajustes › Partida). */
 export type TutTopic = 'combate' | 'cuerpo' | 'objetos' | 'bastion' | 'mercaderes' | 'progresion' | 'cuenta';
@@ -47,6 +48,8 @@ export interface MiniTutorial {
   steps: TutStep[];
   /** Recorrido largo por varias pestañas (solo la bienvenida al Bastión). */
   long?: boolean;
+  /** Habla de la ventana abierta (el errante): puede salir encima de ella. El resto espera a que se cierre. */
+  overModal?: boolean;
   /** Aviso que sale aunque se desactiven los mini tutoriales (subidas de nivel de las estaciones). */
   always?: boolean;
 }
@@ -188,6 +191,15 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
       { text: 'Póntelo o quítatelo cuando quieras aquí mismo. Solo cambia el aspecto.' },
     ],
   },
+  {
+    id: 'screen.settings', topic: 'cuenta', trigger: 'screen:settings', overModal: true,
+    steps: [
+      { text: 'Sonido, pantalla, controles y tu partida. Cada sección, a la izquierda.', target: 'settings-nav' },
+      { text: 'En **Partida** están la **copia de seguridad** y la **Guía**, con todo lo que ya te he contado.', target: 'settings-tab-game' },
+    ],
+  },
+  ...EXPEDITION_MINIS(),
+  ...SUBZONE_MINIS(),
   ...VENDOR_MINIS(),
   ...STATION_MINIS(),
   ...STATION_LEVEL_NOTICES(),
@@ -272,6 +284,83 @@ function STATION_LEVEL_NOTICES(): MiniTutorial[] {
       { text: STATIONS[st].levels[lv].effect },
     ],
   })));
+}
+
+// ── Expedición (fase 5): salen la primera vez que pasa algo en la mazmorra. Los dispara `useExpeditionMinis`. ──
+function EXPEDITION_MINIS(): MiniTutorial[] {
+  return [
+    { id: 'exp.clock', topic: 'combate', trigger: 'exp:clock', steps: [
+      { text: 'El **reloj** corre. Si llega a cero, la mazmorra se queda con todo lo que lleves encima.', target: 'hud-timer' },
+      { text: 'Busca el **portal** antes. Lo que saques por él es tuyo; lo del bolsillo seguro vuelve pase lo que pase.' },
+    ] },
+    { id: 'exp.vital-wound', topic: 'cuerpo', trigger: 'exp:vital-wound', steps: [
+      { text: '**Zona vital** herida: la cabeza o el tórax. Si una llega a cero, mueres, aunque el resto del cuerpo aguante.', target: 'hud-body' },
+      { text: 'Cúrala primero. Abre el cuerpo y trata esa zona antes que las demás.', touch: 'Cúrala primero. Toca la figura y trata esa zona antes que las demás.', target: 'hud-body' },
+    ] },
+    { id: 'exp.fracture', topic: 'cuerpo', trigger: 'exp:fracture', steps: [
+      { text: 'Hueso roto. Esa parte rinde menos: un brazo pega peor y una pierna te frena.', target: 'hud-body' },
+      { text: 'Ponle una **férula** desde el cuerpo. Sigue rota al volver: en el Bastión, Vesper te la cura.' },
+    ] },
+    { id: 'exp.bleeding', topic: 'cuerpo', trigger: 'exp:bleeding', steps: [
+      { text: 'Sangras. Pierdes vida cada poco, también mientras caminas.', target: 'hud-body' },
+      { text: 'Una **venda** lo corta si es leve. Si es grave, **torniquete** o hemostático.' },
+    ] },
+    { id: 'exp.armor-broken', topic: 'objetos', trigger: 'exp:armor-broken', steps: [
+      { text: 'Se te ha roto una pieza. No desaparece, pero ya no protege ni suma nada.', target: 'btn-inventory' },
+      { text: 'Un kit de campo la apaña aquí abajo. En el Bastión, Brand la deja como nueva en su yunque.' },
+    ] },
+    { id: 'exp.backpack-full', topic: 'objetos', trigger: 'exp:backpack-full', steps: [
+      { text: 'Vas **sobrecargado** o ya no te cabe nada.', target: 'hud-player' },
+      { text: 'Suelta lo que valga poco o agrúpalo. Con sobrecarga caminas más lento y te cansas antes.', target: 'btn-inventory' },
+    ] },
+    { id: 'exp.need-low', topic: 'cuerpo', trigger: 'exp:need-low', steps: [
+      { text: 'Tienes **hambre**, **sed** o **sueño**. Cada barra baja te recorta el Ímpetu o el Maná.', target: 'hud-needs' },
+      { text: 'Come o bebe desde la mochila. A cero, el hambre y la sed te hieren el tórax.', target: 'btn-inventory' },
+    ] },
+    { id: 'exp.merc-triangle', topic: 'combate', trigger: 'exp:merc-triangle', overModal: true, steps: [
+      { text: 'Fíjate en el **triángulo**. Naranja: dudoso. Rojo: te la jugará en cuanto pueda.', target: 'risk-badge' },
+      { text: 'Puedes aliarte, dejarlo estar o atacarlo. Si os aliáis, repartir bien le quita ganas de traicionarte.' },
+    ] },
+    { id: 'exp.kael', topic: 'combate', trigger: 'exp:kael', overModal: true, steps: [
+      { text: '**Kael**. No es un errante cualquiera: lleva años bajando solo y casi nunca traiciona.', target: 'risk-badge' },
+      { text: 'Si te alías con él, reparte a partes iguales. Lo que no quieras, se lo queda.' },
+    ] },
+    { id: 'exp.elite', topic: 'combate', trigger: 'exp:elite', inCombat: true, steps: [
+      { text: '**Élite**. Más vida, golpes más duros y mejor botín. No te dejes nada en la recámara.' },
+      { text: 'Cuando anuncie un golpe fuerte, ponte en **Guardia**: lo encajas mucho mejor y queda expuesto después.' },
+    ] },
+    { id: 'exp.boss', topic: 'combate', trigger: 'exp:boss', inCombat: true, steps: [
+      { text: '**Jefe** de la subzona. Vencerlo abre la siguiente. Si huyes, conserva la vida que le hayas quitado.' },
+      { text: 'Al bajar de la mitad de la vida cambia de fase y de golpes. Guarda algo para entonces.' },
+    ] },
+    { id: 'combat.class-skill', topic: 'combate', trigger: 'combat:class-skill', inCombat: true, steps: [
+      { text: 'Tu **habilidad de clase** está lista. Es tu mejor golpe; luego tarda unos turnos en volver.', target: 'act-class' },
+      { text: 'Lleva una equipada. Las demás las desbloqueas y eliges en **Personaje**, en la ruta de tu clase.' },
+    ] },
+  ];
+}
+
+// ── Una por subzona a partir de la segunda: nombre y niveles, la primera vez que bajas. ──
+function SUBZONE_MINIS(): MiniTutorial[] {
+  return Object.values(SUBZONES).filter((z) => z.index > 1).map((z) => ({
+    id: `exp.subzone.${z.id}`, topic: 'progresion' as const, trigger: `subzone:${z.id}`,
+    steps: [
+      { text: `**${z.name}**, niveles ${z.levels[0]} a ${z.levels[1]}. ${z.tagline}`, target: 'hud-room' },
+      { text: 'Criaturas nuevas. Lo que mates queda en el **Bestiario** del Bastión.' },
+    ],
+  }));
+}
+
+/** Nombre corto para la Guía: la primera frase del primer paso, sin negritas. */
+export function miniTitle(m: MiniTutorial): string {
+  const t = m.steps[0].text.replace(/\*\*/g, '');
+  const first = t.split(/(?<=[.!?:])\s/)[0];
+  return first.length > 70 ? first.slice(0, 68).trimEnd() + '…' : first;
+}
+
+/** Lo que sale en la Guía: todo menos los avisos de subida de nivel. Por tema, en el orden del archivo. */
+export function guideEntries(): { topic: TutTopic; minis: MiniTutorial[] }[] {
+  return (Object.keys(TOPIC_NAME) as TutTopic[]).map((topic) => ({ topic, minis: MINI_TUTORIALS.filter((m) => m.topic === topic && !m.always) })).filter((g) => g.minis.length);
 }
 
 export function getMini(id: string): MiniTutorial | undefined {

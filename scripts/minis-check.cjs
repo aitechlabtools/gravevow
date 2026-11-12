@@ -33,8 +33,9 @@ const [,, url = 'http://localhost:5173/play/', out = 'minis', dev] = process.arg
   await p.waitForSelector('[data-testid=tut-dot-tab-quests]').catch(() => fail('Misiones no tiene el «!» de pendiente'));
   if (!(await p.$('[data-testid=tut-dot-tab-shop]'))) fail('Tienda no tiene el «!»');
   if (await p.$('[data-testid=tut-dot-tab-play]')) fail('Jugar tiene «!» sin mini tutorial');
-  // Con Ajustes abierto (otra ventana) no sale; al cerrarlo, sí
+  // Con Ajustes abierto (otra ventana) no sale; al cerrarlo, sí. El de Ajustes sí sale encima de su ventana: se salta
   await tap('[data-testid=btn-lobby-settings]');
+  await p.waitForSelector('[data-testid=mini-tutorial][data-mini="screen.settings"]', { timeout: 3000 }).then(() => tap('[data-testid=mini-skip]')).catch(() => fail('no sale el de Ajustes encima de su ventana'));
   await G(() => window.__GRAVEVOW__.actions.tutorialEvent('tab:quests'));
   await p.waitForTimeout(400);
   if (await p.$('[data-testid=mini-tutorial]')) fail('sale encima de otra ventana');

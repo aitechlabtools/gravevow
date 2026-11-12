@@ -41,6 +41,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'ajustes', dev] = process.a
   await p.screenshot({ path: out + '-sonido.png' });
   for (const t of ['screen', 'controls', 'community', 'info', 'game']) { await tap(`[data-testid=settings-tab-${t}]`); await p.waitForSelector(`[data-testid=settings-section-${t}]`); await fits(t); }
   if (!(await p.$('[data-testid=settings-open-backup]'))) fail('Partida sin botón de copia');
+  await p.waitForTimeout(600); // el guardado de la sección elegida refresca el estado de la copia: se espera antes de forzarlo
   await G(() => window.__GRAVEVOW__.setState({ backup: { lastAt: null, days: null, expeditionsSince: 3, remind: true } })); await p.waitForTimeout(100);
   if (!(await p.$('.set-dot'))) fail('Partida sin punto de aviso');
   await p.screenshot({ path: out + '-partida.png' });

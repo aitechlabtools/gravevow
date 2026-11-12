@@ -95,7 +95,8 @@ const DEVICE = process.argv[4];
   await page.waitForTimeout(400);
   ok(!!(await page.$('[data-testid=tutorial-guide].in-combat')), 'el cartel se ve durante el combate');
   ok((await page.textContent('[data-testid=tutorial-count]')).trim() === 'Paso 2 de 8', 'el combate es el paso 2');
-  ok(await pulsing('[data-testid=act-attack]'), '«Atacar» se resalta');
+  let pulse = false; for (let k = 0; k < 20 && !(pulse = await pulsing('[data-testid=act-attack]')); k++) await page.waitForTimeout(200); // si la rata va primero, el resaltado llega en tu turno
+  ok(pulse, '«Atacar» se resalta');
   ok(await page.$eval('[data-testid=act-flee]', (e) => e.disabled), 'no se puede huir');
   await page.screenshot({ path: `${OUT}/02-atacar.png` });
   for (let i = 0; i < 4; i++) {

@@ -40,7 +40,7 @@ export function pendingBadges(t: TutorialsSave): Set<string> {
 
 /** ¿Puede salir ahora? Uno a la vez; nunca durante el tutorial inicial ni en un combate que no sea el suyo, ni sobre otra ventana. */
 export function canShowNow(m: MiniTutorial, ctx: { combat: boolean; modal: boolean; tutorialRun: boolean }): boolean {
-  if (ctx.tutorialRun || ctx.modal) return false;
+  if (ctx.tutorialRun || (ctx.modal && !m.overModal)) return false;
   return !ctx.combat || !!m.inCombat;
 }
 

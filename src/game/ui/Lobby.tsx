@@ -28,7 +28,7 @@ export type LobbyTab = 'play' | 'character' | 'stash' | 'merchants' | 'quests' |
 export function Lobby() {
   const profile = useGame((s) => s.profile)!;
   const [tab, setTab] = useState<LobbyTab>('play');
-  const [settings, setSettings] = useState(false);
+  const [settings, setSettings] = useState<false | 'menu' | 'guide'>(false);
   const backupRemind = useGame((s) => !!s.backup?.remind);
   const touch = useIsTouch();
   // Esc abre Ajustes si no hay otra ventana abierta (el propio panel se cierra con Esc)
@@ -36,7 +36,7 @@ export function Lobby() {
     if (settings) return;
     const h = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || (e.target as HTMLElement)?.tagName === 'INPUT' || document.querySelector('[data-modal]')) return;
-      e.preventDefault(); setSettings(true);
+      e.preventDefault(); setSettings('menu');
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
@@ -85,7 +85,9 @@ export function Lobby() {
         <div className={`flex items-center justify-end min-w-0 ${layout === 'phone' ? 'gap-1.5' : 'gap-2.5'}`}>
         <GoldAmount value={profile.gold} className={layout === 'phone' ? 'text-sm' : 'text-lg'} />
         <FullscreenButton className="icon-btn" />
-        <button className="btn icon-btn relative" onClick={() => { sfx('click'); setSettings(true); }} style={{ minWidth: 44, minHeight: 44 }}
+        <button className="btn icon-btn" onClick={() => { sfx('click'); setSettings('guide'); }} style={{ minWidth: 44, minHeight: 44 }}
+          aria-label="Guía" title={touch ? undefined : 'Guía'} data-testid="btn-lobby-guide"><span className="font-display text-lg leading-none" aria-hidden>?</span></button>
+        <button className="btn icon-btn relative" onClick={() => { sfx('click'); setSettings('menu'); }} style={{ minWidth: 44, minHeight: 44 }}
           aria-label={backupRemind ? 'Ajustes (copia de seguridad recomendada)' : 'Ajustes'} title={touch ? undefined : 'Ajustes (Esc)'} data-testid="btn-lobby-settings">
           <GearIcon />{backupRemind && <span className="gear-dot" data-testid="gear-dot" />}
         </button>
@@ -104,7 +106,7 @@ export function Lobby() {
         </div>
       </main>
       {switcher && <CharacterSwitcher onClose={() => setSwitcher(false)} />}
-      {settings && <SettingsModal onClose={() => setSettings(false)} onExit={() => actions.goto('title')} />}
+      {settings && <SettingsModal onClose={() => setSettings(false)} onExit={() => actions.goto('title')} initialTab={settings === 'guide' ? 'game' : undefined} />}
       {profile.tutorialSeen.lobby && <ClassUnlockNotice />}
     </div>
   );

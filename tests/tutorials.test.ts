@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { canShowNow, currentMini, emptyTutorials, enqueueTrigger, isPending, markSeen, pendingBadges, sanitizeTutorials } from '../src/core/tutorials';
-import { MINI_TUTORIALS, getMini } from '../src/core/data/tutorials';
+import { MINI_TUTORIALS, getMini, guideEntries, miniTitle } from '../src/core/data/tutorials';
 import { emptySave, sanitizeSave } from '../src/core/save';
 
 describe('mini tutoriales: datos', () => {
@@ -175,5 +175,36 @@ describe('fase 4: Bastión y estaciones', () => {
     const { VENDOR_ORDER } = await import('../src/core/data/vendors');
     for (const v of VENDOR_ORDER) expect(getMini(`vendor.${v}`)?.narrator, v).toBe(v);
     for (const st of ['kitchen', 'bench', 'infirmary', 'forge', 'alchemy', 'runic']) expect(getMini(`station.${st}`)?.trigger, st).toBe(`station:${st}`);
+  });
+});
+
+describe('fase 5: expedición', () => {
+  it('hay uno por mecánica de la expedición y uno por subzona desde la segunda', async () => {
+    for (const id of ['exp.clock', 'exp.vital-wound', 'exp.fracture', 'exp.bleeding', 'exp.armor-broken', 'exp.backpack-full', 'exp.need-low', 'exp.merc-triangle', 'exp.kael', 'exp.elite', 'exp.boss', 'combat.class-skill']) expect(getMini(id), id).toBeTruthy();
+    const { SUBZONE_ORDER } = await import('../src/core/data/subzones');
+    expect(getMini('exp.subzone.afueras')).toBeUndefined();
+    for (const z of SUBZONE_ORDER.slice(1)) expect(getMini(`exp.subzone.${z}`)?.trigger, z).toBe(`subzone:${z}`);
+  });
+  it('los de combate salen en combate; los del errante, encima de su ventana; el resto espera', () => {
+    const ctx = { combat: true, modal: false, tutorialRun: false };
+    for (const id of ['exp.elite', 'exp.boss', 'combat.class-skill']) expect(canShowNow(getMini(id)!, ctx), id).toBe(true);
+    expect(canShowNow(getMini('exp.bleeding')!, ctx)).toBe(false);
+    const modal = { combat: false, modal: true, tutorialRun: false };
+    expect(canShowNow(getMini('exp.kael')!, modal)).toBe(true);
+    expect(canShowNow(getMini('exp.merc-triangle')!, modal)).toBe(true);
+    expect(canShowNow(getMini('exp.clock')!, modal)).toBe(false);
+    expect(canShowNow(getMini('exp.kael')!, { ...modal, tutorialRun: true })).toBe(false);
+  });
+});
+
+describe('fase 6: Guía en Ajustes', () => {
+  it('la Guía lista todos menos los avisos de nivel, por tema y con nombre corto', () => {
+    const all = guideEntries().flatMap((g) => g.minis);
+    expect(all.length).toBe(MINI_TUTORIALS.filter((m) => !m.always).length);
+    expect(all.some((m) => m.always)).toBe(false);
+    for (const m of all) { const t = miniTitle(m); expect(t.length, m.id).toBeGreaterThan(3); expect(t.length, m.id).toBeLessThanOrEqual(70); expect(t.includes('**'), m.id).toBe(false); }
+  });
+  it('el de Ajustes sale encima de su propia ventana', () => {
+    expect(canShowNow(getMini('screen.settings')!, { combat: false, modal: true, tutorialRun: false })).toBe(true);
   });
 });
