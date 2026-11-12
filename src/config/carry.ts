@@ -28,7 +28,7 @@ export const FAMILY_WEIGHT: Record<WeaponFamily, number> = {
 export const CATEGORY_WEIGHT: Record<ItemCategory, number> = {
   weapon: 3, shield: 5, helmet: 2, armor: 4, gloves: 1, boots: 1.5, ring: 0.1, amulet: 0.2,
   potion: 0.3, material: 0.5, relic: 1, jewel: 0.1, key: 0.1, quest: 0.5, coin: 0.1, tool: 2.5,
-  container: 0.3, cover: 0, gold: 0.01, bag: 1.5,
+  container: 0.3, cover: 0, gold: 0.01, bag: 1.5, blueprint: 0.1,
 };
 export const HEAVY_ARMOR_WEIGHT = 12;
 /** Peso de cada moneda (sueltas o dentro de un saquito o un saco). */

@@ -8,7 +8,9 @@ export type ItemCategory =
   | 'weapon' | 'shield' | 'helmet' | 'armor' | 'gloves' | 'boots' | 'ring' | 'amulet'
   | 'potion' | 'material' | 'relic' | 'jewel' | 'key' | 'quest' | 'coin' | 'tool'
   /** Sacos de oro (contenedores). `cover`: casilla tapada por un objeto de varias casillas (interno, no se ve). */
-  | 'container' | 'cover' | 'gold' | 'bag';
+  | 'container' | 'cover' | 'gold' | 'bag'
+  /** Planos de crafteo (bloque 2): se aprenden y desaparecen. */
+  | 'blueprint';
 
 export type EquipSlot = 'mainHand' | 'offHand' | 'helmet' | 'armor' | 'gloves' | 'boots' | 'ring' | 'amulet';
 
@@ -259,6 +261,8 @@ export interface Profile {
   workshop?: { station: 'forge' | 'alchemy'; recipe: string; readings: number[]; picks: ('up' | 'hold' | 'down')[] } | null;
   /** Recetas de forja y alquimia hechas al menos una vez (abren la producción rápida). */
   crafted?: string[];
+  /** Planos aprendidos (bloque 2): ids de los objetos plano. No se pierden. */
+  blueprints?: string[];
   /** Recepción de excedentes (Fase 9): lo que no cupo al recibirlo. Solo se retira, se vende, se desguaza o se descarta. */
   reception?: ItemStack[];
   /** Tiempo de juego activo acumulado en expediciones (ms, reloj de juego). Formato de guardado 4. */

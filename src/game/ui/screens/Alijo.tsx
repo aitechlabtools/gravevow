@@ -232,7 +232,8 @@ function HeroColumn({ onDetails, needs }: { onDetails: () => void; needs?: boole
     <>
       <div className="ui-arch mx-auto w-full shrink-0" style={{ height: 26 * scale + 40 }}><div className="pb-3"><PlayerSprite scale={scale} /></div></div>
       <div className="text-center font-display text-gold mt-3">◆ {cls.name} ◆</div>
-      <div className="mt-2"><StatsColumn stats={stats} base={baseStats(ch.classId, ch.level)} resourceName={cls.resourceName} /></div>
+      {/* En «Estado» no van las estadísticas: así las necesidades suben y se ven sin desplazar */}
+      {!needs && <div className="mt-2"><StatsColumn stats={stats} base={baseStats(ch.classId, ch.level)} resourceName={cls.resourceName} /></div>}
       {needs && <div className="needs-side mt-3"><NeedsPanel needs={needsOf(profile.needs)} backpack={profile.backpack} onUse={(id) => actions.eatItem(id)} atBase note="El catre está en el Bastión, en los barracones." /></div>}
       <div className="flex-1" />
       <button className="btn w-full mt-3 font-display tracking-[0.1em] uppercase" style={{ minHeight: 'var(--btn-h)' }} onClick={onDetails} data-testid="btn-hero-details">Ver detalles</button>
