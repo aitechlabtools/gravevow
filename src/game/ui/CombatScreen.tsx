@@ -18,7 +18,9 @@ import { zoneBackdrop, zoneFor } from './combatZones';
 import { areaDef } from '../../core/data/zones';
 import { getEnemy } from '../../core/data/enemies';
 import { Bar, ItemIcon } from './inventory';
-import { BodyFigure } from './BodyFigure';
+import { BodyFigure, BodyPanel, woundsOf } from './BodyFigure';
+import { Modal } from './common';
+import { NeedsPanel } from './NeedsBars';
 import { TREATMENT_ITEM } from '../state/medicalActions';
 import { bestTreatment, isDisabled, painfulRegions, REGIONS, treatError, TREATMENT_NAME, urgencies, type Body, type Treatment } from '../../core/anatomy';
 import { REGION_NAME } from '../../config/anatomy';
@@ -55,6 +57,10 @@ export function CombatScreen() {
   const [floats, setFloats] = useState<Float[]>([]);
   const [anim, setAnim] = useState<{ step: number; actorId: string | null; hit: Set<string>; fx: string | null; fromLeft: boolean }>({ step: 0, actorId: null, hit: new Set(), fx: null, fromLeft: true });
   const floatId = useRef(0);
+  // Panel de heridas y necesidades en combate (fase 8): curar, comer o beber gasta el turno
+  const [bodyOpen, setBodyOpen] = useState(false);
+  const acted = useRef(false);
+  useEffect(() => { if (acted.current) { acted.current = false; setBodyOpen(false); } }, [cs.log.length]);
 
   const sideA = cs.combatants.filter((c) => c.side === 'A');
   const sideB = cs.combatants.filter((c) => c.side === 'B');
@@ -270,7 +276,7 @@ export function CombatScreen() {
         </div>
         <div className="absolute right-[3%] bottom-[6%] flex flex-col items-end gap-2 info-stack info-stack-br">
           {allies.map((c) => <InfoFrame key={c.id} c={c} small />)}
-          <InfoFrame c={player} nums level={profile.character.level} sub={CLASS_NAME[profile.character.classId]} spend={spendPreview} />
+          <InfoFrame c={player} nums level={profile.character.level} sub={CLASS_NAME[profile.character.classId]} spend={spendPreview} onBody={player.body && !combat.state.outcome ? () => setBodyOpen(true) : undefined} />
         </div>
       </div>
 
@@ -316,6 +322,18 @@ export function CombatScreen() {
           </>
         )}
       </div>
+      {bodyOpen && player.body && expedition && (
+        <Modal onClose={() => setBodyOpen(false)} wide testId="combat-body-modal">
+          <h2 className="font-display text-2xl mb-2">Heridas y necesidades</h2>
+          <BodyPanel body={player.body} backpack={expedition.backpack} combat surgery={player.surgery ? { region: player.surgery.region, left: 1 } : null}
+            onTreat={playerTurn ? (id, r) => { acted.current = true; actions.combatAct({ type: 'item', itemId: id, region: r }); } : undefined}
+            note={playerTurn ? 'Curar, comer o beber gasta tu turno.' : 'Espera a tu turno para curarte, comer o beber.'}>
+            {player.needs && <NeedsPanel needs={player.needs} body={player.body} backpack={expedition.backpack}
+              onUse={playerTurn ? (id) => { acted.current = true; actions.combatAct({ type: 'item', itemId: id }); } : undefined} />}
+          </BodyPanel>
+          <button className="btn mt-3 text-sm" onClick={() => setBodyOpen(false)} data-testid="combat-body-close">Cerrar</button>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -365,7 +383,8 @@ function intentLine(c: Combatant, all: Combatant[]): { text: string; hint: strin
   };
 }
 
-function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent }: { c: Combatant; nums?: boolean; sub?: string; small?: boolean; level?: number; spend?: number; target?: { on: boolean; pick: () => void }; duo?: boolean; intent?: { text: string; hint: string } | null }) {
+function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent, onBody }: { c: Combatant; nums?: boolean; sub?: string; small?: boolean; level?: number; spend?: number; target?: { on: boolean; pick: () => void }; duo?: boolean; intent?: { text: string; hint: string } | null; onBody?: () => void }) {
+  const hurt = !!c.body && REGIONS.some((r) => woundsOf(c.body!, r).some((k) => k !== 'hurt'));
   const exposed = (c.exposed ?? 0) > 0 && c.hp > 0;
   const kind = c.boss ? 'boss' : c.side === 'A' && c.control !== 'player' ? 'ally' : '';
   // Con dos enemigos, tocar su ficha lo marca como objetivo (zona táctil grande)
@@ -386,6 +405,10 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent 
             </div>); })()}
         </div>
         {small && <span className="text-xs text-stone-400">{c.hp} / {c.stats.maxHp}</span>}
+        {onBody && (
+          <button type="button" className={`combat-body-btn ${hurt ? 'hurt' : ''}`} onClick={(e) => { e.stopPropagation(); onBody(); }}
+            aria-label={hurt ? 'Heridas y necesidades: tienes heridas' : 'Heridas y necesidades'} title="Heridas y necesidades (curar, comer o beber gasta el turno)" data-testid="combat-body">🩸</button>
+        )}
       </div>
       {c.body && !small && (
         <div className="frame-body">

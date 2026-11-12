@@ -136,7 +136,7 @@ function RegionTag({ body, r, on, onPick, drop }: { body: Body; r: Region; on: b
 }
 
 /** Lesiones de una región, de la más urgente a la menos. */
-function woundsOf(b: Body, r: Region): WoundKind[] {
+export function woundsOf(b: Body, r: Region): WoundKind[] {
   const p = b.parts[r];
   const out: WoundKind[] = [];
   if (p.bleed === 2) out.push('bleed2');

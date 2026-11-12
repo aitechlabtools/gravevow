@@ -49,7 +49,7 @@ export const medicalActions = {
   treat(itemId: string, region: Region) {
     const s = state;
     if (!s.profile || !s.expedition || s.screen !== 'dungeon') return invError('Las heridas se tratan durante la incursión; en el Bastión, Hermana Vesper.');
-    if (s.combat) return invError('En combate, los tratamientos se usan desde la mochila del combate.');
+    if (s.combat) return actions.combatAct({ type: 'item', itemId, region });
     const def = getItem(itemId);
     if (def.use?.kind !== 'treat') return invError('Esto no cura heridas.');
     if (countItem(s.expedition.backpack, itemId) <= 0) return invError(`No llevas ${def.name.toLowerCase()}.`);

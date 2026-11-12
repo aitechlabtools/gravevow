@@ -498,7 +498,7 @@ export const actions = {
     toast(def.use.kind === 'repair' ? 'Remiendas tu equipo con el kit.' : `Usas ${def.name}.`, 'good', def.icon);
   },
 
-  /** Comer o beber (Fase 5): en la mazmorra fuera de combate y también en el Bastión antes de salir. */
+  /** Comer o beber (Fase 5): en la mazmorra, en el Bastión antes de salir y en combate (gasta el turno). */
   eat(loc: Loc) {
     const s = state;
     const c = containersFor(s);
@@ -507,7 +507,8 @@ export const actions = {
     if (!st) return;
     const def = getItem(st.itemId);
     if (def.use?.kind !== 'need') return;
-    if (s.combat) return invError('No hay tiempo para comer en mitad de un combate.');
+    // En combate, comer o beber gasta el turno (bloque 1, fase 8)
+    if (s.combat) return loc.kind === 'grid' && loc.container === 'backpack' ? actions.combatAct({ type: 'item', itemId: st.itemId }) : invError('En combate solo puedes usar lo que llevas en la mochila.');
     const inDungeon = s.screen === 'dungeon' && !!s.expedition;
     if (def.use.dish) {
       // Platos del Refugio: en el Bastión; preparan la siguiente incursión aunque la barra esté llena

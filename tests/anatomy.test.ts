@@ -249,6 +249,18 @@ describe('Combate con anatomía', () => {
     expect(getCombatant(s, 'player').body!.parts.armL.bleed).toBe(0);
     expect(() => performAction({ ...s, turnIndex: s.order.indexOf('player') }, { type: 'item', itemId: 'surgery_kit', region: 'armL' })).toThrow(/aún funciona/);
   });
+  it('comer o beber en combate gasta el turno; sin sed no se gasta y los platos no se comen (fase 8)', () => {
+    const pl = hero('warrior', 4, true);
+    pl.stats = { ...pl.stats, spd: 99 };
+    pl.needs = { sat: 100, hyd: 20, rest: 100, satZero: 0, hydZero: 0 } as typeof pl.needs;
+    const s = createCombat([pl, enemyCombatant('bandit', 'e1', 'B', 1)], 3);
+    expect(() => performAction(s, { type: 'item', itemId: 'ration' })).toThrow(/hambre/);
+    expect(() => performAction(s, { type: 'item', itemId: 'hearty_stew' })).toThrow(/Bastión/);
+    const n = performAction(s, { type: 'item', itemId: 'water' });
+    expect(n.events.some((e) => e.type === 'itemUsed' && e.itemId === 'water')).toBe(true);
+    expect(getCombatant(n, 'player').needs!.hyd).toBeGreaterThanOrEqual(49);
+    expect(currentActor(n)?.id).not.toBe('player');
+  });
   it('S1: ambas clases siguen ganando 1 contra 1 y 1 contra 2 con anatomía', () => {
     const runs = 200;
     for (const cls of ['warrior', 'mage'] as const) {

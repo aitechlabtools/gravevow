@@ -1,5 +1,5 @@
 import { NEED_LOW, NEED_NAME, type Need } from '../config/needs';
-import { effectiveMaxMp, exhaustionLoss, tickNeeds, type NeedLevel, type Needs } from './needs';
+import { effectiveMaxMp, exhaustionLoss, feed, tickNeeds, type NeedLevel, type Needs } from './needs';
 import { potionAmount, resourcePotionAmount, resourceGain, skillCost, turnRegen, IMPETUS_ON_HIT, IMPETUS_WHEN_HIT } from '../config/progression';
 import type { DamageKind, ItemEffect, SkillDef, Stats, StatusId, StatusInstance } from './types';
 import { makeRng, type Rng } from './rng';
@@ -739,6 +739,18 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
         s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item' });
         s.events.push({ type: 'itemUsed', actorId: actor.id, itemId: def.id });
         s.log.push(r.text);
+        return;
+      }
+      if (def.use.kind === 'need') {
+        // Comer o beber en combate (bloque 1, fase 8): gasta el turno, como una poción. Los platos, solo en el Bastión.
+        if (def.use.dish) throw new Error('Este plato se come en el Bastión, antes de bajar.');
+        if (!actor.needs) throw new Error('Objeto no utilizable');
+        const fed = feed(actor.needs, { sat: def.use.sat, hyd: def.use.hyd, rest: def.use.rest });
+        if (!fed) throw new Error(def.use.hyd ? 'No tienes sed.' : 'No tienes hambre.');
+        actor.needs = fed;
+        s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item' });
+        s.events.push({ type: 'itemUsed', actorId: actor.id, itemId: def.id });
+        s.log.push(`${actor.name} ${def.use.hyd && !def.use.sat ? 'bebe' : 'come'}: ${def.name.toLowerCase()}.`);
         return;
       }
       s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item' });
