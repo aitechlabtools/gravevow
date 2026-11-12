@@ -27,12 +27,13 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   // Intendencia → Estado: beber y curarse con lo propio
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, wounds: { pct: { thorax: 0.5, legL: 0.6 }, fractures: ['legL'] } } }); });
   await tap('[data-testid=tab-stash]'); await tap('[data-testid=seg-status]');
-  await p.waitForSelector('[data-testid=intendencia-status] [data-testid=needs-panel]');
+  await p.waitForSelector('[data-testid=screen-stash] [data-testid=needs-panel]');
   if (!(await p.$('[data-testid=alijo-backpack]'))) fail('la mochila no está al lado del Estado');
-  const hb = await box('[data-testid=need-use-hyd]');
-  if (dev && (!hb || hb.height < 43.5)) fail('botón de beber en la base menor de 44 px');
+  // Las necesidades van bajo las estadísticas (en móvil, bajo el cuerpo) y sin botón de comer: se come desde la mochila
+  if (await p.$('[data-testid=screen-stash] [data-testid=need-use-hyd]')) fail('en Estado no debería haber botón de beber');
+  if (!dev && !(await p.$('[data-testid=alijo-hero] [data-testid=needs-panel]'))) fail('las necesidades no están bajo el aventurero');
   await p.screenshot({ path: out + '-estado.png' });
-  await tap('[data-testid=need-use-hyd]'); await p.waitForTimeout(150);
+  await G(() => window.__GRAVEVOW__.actions.eatItem('water')); await p.waitForTimeout(150);
   const hyd = await G(() => window.__GRAVEVOW__.getState().profile.needs.hyd);
   if (!(hyd > 40)) fail('beber en la base no subió la hidratación: ' + hyd);
   const r = await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile;

@@ -162,13 +162,15 @@ function fixHint(k: WoundKind, t: Treatment): string {
  * parte elegida con cada lesión y lo que la cura (lo que llevas, con «Usar»; lo que no, dice quién lo vende) y,
  * debajo, las necesidades (`children`).
  */
-export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, combat, children }: {
+export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, combat, full, children }: {
   body: Body; backpack?: Grid; onTreat?: (itemId: string, region: Region) => void;
   /** Pociones de vida (Estado, en el Bastión): curan el cuerpo entero. */
   onHeal?: (itemId: string) => void;
   surgery?: { region: Region; left: number } | null; note?: string;
   /** En combate, curar gasta el turno. */
   combat?: boolean;
+  /** Ocupa todo el alto disponible (Intendencia → Estado). */
+  full?: boolean;
   children?: ReactNode;
 }) {
   const touch = useIsTouch();
@@ -210,7 +212,7 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, comb
   const hurtCount = REGIONS.filter((r) => woundsOf(body, r).some((k) => k !== 'hurt')).length;
   const btnCls = `btn body-treat ${touch ? 'touch' : ''}`;
   return (
-    <div className="body-panel" data-testid="body-panel">
+    <div className={`body-panel ${full ? 'full' : ''}`} data-testid="body-panel">
       <div className="body-box">
         <div className="body-box-head"><span className="font-display text-parchment">Cuerpo</span><span className="body-legend">◆ zona vital</span></div>
         <div className="body-map" data-testid="body-map">

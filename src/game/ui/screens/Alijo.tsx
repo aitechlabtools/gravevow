@@ -107,7 +107,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
       onQuick={(l) => { actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
   );
   const card = <ItemCard loc={sel} mode={MODE} onClear={clear} compact={phone} />;
-  const status = <StatusView />;
+  const status = <StatusView withNeeds={phone} />;
   const seg = (opts: { id: 'gear' | 'storage' | 'status'; label: string }[]) => (
     <Segmented options={opts} value={view} onChange={(v) => { setView(v); setSel(null); sfx('click'); }} testId="alijo-seg" />
   );
@@ -153,8 +153,8 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
       <div className="h-full flex flex-col" data-testid="screen-stash" style={padX}>
         {deskSeg}
         <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: `${side}px minmax(0,1fr) ${layout === 'tablet' ? 300 : 360}px`, gap: 'var(--gap)' }}>
-          <Panel title="Aventurero" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero"><HeroColumn onDetails={onDetails} /></Panel>
-          <Panel title="Heridas y necesidades" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{status}</Panel>
+          <Panel title="Aventurero" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero"><HeroColumn onDetails={onDetails} needs /></Panel>
+          <Panel title="Heridas" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">{status}</Panel>
           <Panel title="Mochila" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}{sel && <div className="panel p-3 mt-3">{card}</div>}</Panel>
         </div>
         {pickerModal}
@@ -218,7 +218,7 @@ function EquipmentGrid({ sel, onSelect, onEmpty, onDone, onSkin }: { sel: Loc | 
   );
 }
 
-function HeroColumn({ onDetails }: { onDetails: () => void }) {
+function HeroColumn({ onDetails, needs }: { onDetails: () => void; needs?: boolean }) {
   const profile = useGame((s) => s.profile)!;
   const ch = profile.character;
   const cls = CLASSES[ch.classId];
@@ -226,9 +226,10 @@ function HeroColumn({ onDetails }: { onDetails: () => void }) {
   const stats = computeStats(ch.classId, ch.level, profile.equipment);
   return (
     <>
-      <div className="ui-arch mx-auto w-full" style={{ height: 26 * scale + 40 }}><div className="pb-3"><PlayerSprite scale={scale} /></div></div>
+      <div className="ui-arch mx-auto w-full shrink-0" style={{ height: 26 * scale + 40 }}><div className="pb-3"><PlayerSprite scale={scale} /></div></div>
       <div className="text-center font-display text-gold mt-3">◆ {cls.name} ◆</div>
       <div className="mt-2"><StatsColumn stats={stats} base={baseStats(ch.classId, ch.level)} resourceName={cls.resourceName} /></div>
+      {needs && <div className="needs-side mt-3"><NeedsPanel needs={needsOf(profile.needs)} atBase note="El catre está en el Bastión, en los barracones." /></div>}
       <div className="flex-1" />
       <button className="btn w-full mt-3 font-display tracking-[0.1em] uppercase" style={{ minHeight: 'var(--btn-h)' }} onClick={onDetails} data-testid="btn-hero-details">Ver detalles</button>
     </>
@@ -274,17 +275,16 @@ function BagSlot({ sel, onDone }: { sel: Loc | null; onDone: () => void }) {
 }
 
 /** Vista «Estado» de la Intendencia: heridas (curables con lo que llevas en la mochila) y necesidades (comer y beber). */
-function StatusView() {
+function StatusView({ withNeeds }: { withNeeds?: boolean }) {
   const profile = useGame((s) => s.profile)!;
   const body = baseBody(profile);
   const cure = useCure();
   return (
-    <div data-testid="intendencia-status">
-      {cure && <div className="mb-3"><CureOffer /></div>}
-      <BodyPanel body={body} backpack={profile.backpack} onTreat={(id, r) => actions.baseTreat(id, r)} onHeal={(id) => actions.baseHeal(id)}
+    <div className="flex-1 min-h-0 flex flex-col status-wrap" data-testid="intendencia-status">
+      {cure && <div className="mb-3 status-center"><CureOffer /></div>}
+      <BodyPanel body={body} backpack={profile.backpack} onTreat={(id, r) => actions.baseTreat(id, r)} onHeal={(id) => actions.baseHeal(id)} full
         note={cure ? 'Toca una parte para ver qué le pasa y curarla con lo que llevas, o arrastra una venda, una férula o una poción hasta ella.' : 'Estás entero.'}>
-        <NeedsPanel needs={needsOf(profile.needs)} body={body} backpack={profile.backpack} onUse={(id) => actions.eatItem(id)} atBase
-          note="El catre está en el Bastión, en los barracones." />
+        {withNeeds && <NeedsPanel needs={needsOf(profile.needs)} body={body} atBase note="El catre está en el Bastión, en los barracones." />}
       </BodyPanel>
     </div>
   );
