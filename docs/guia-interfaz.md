@@ -62,6 +62,11 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
   Con arte final: `sprites.sheet` apuntando a `public/skins/<id>.png` (los tonos #FF00FF/#B000B0 se cambian por la piel del jugador).
 - Comprar exige confirmación; los botones miden `var(--btn-h)` (44 px o más en táctil).
 
+## Tutoriales
+- Mapa completo, disparadores y reglas en `docs/tutoriales.md`.
+- Mini tutoriales: cartel `MiniTutorial.tsx` con retrato de quien lo cuenta, atenuado y hueco sobre el `data-testid` del paso; el «!» va en el `badge`. Botones «Entendido» y «Saltar» de 44 px o más.
+- Un elemento que un tutorial resalta no cambia de `data-testid` sin actualizar el tutorial.
+
 ## Mercenarios errantes y tutorial
 
 - Triángulo de riesgo: `RiskBadge` (`DungeonScreen.tsx`), con color y símbolo (✓, !, !!, ☠, ⚔) para que se distinga sin color.

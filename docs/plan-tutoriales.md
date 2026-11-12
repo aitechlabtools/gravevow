@@ -444,7 +444,7 @@ La Guía:
    - Reiniciar los mini tutoriales.
    - Desactivarlos.
    - Icono «?» de 44 px en el menú, junto al engranaje.
-7. **Regla permanente.**
+7. **Regla permanente.** ✅ Hecho (12/11). El test de `data-testid` ya existía; se añade otro que comprueba que cada disparador se lanza en `src/`.
    - En CLAUDE.md y en `guia-interfaz.md`, apartado «Tutoriales».
    - Nuevo `docs/tutoriales.md` con el mapa de identificadores, disparadores y elementos resaltados.
    - Test que comprueba que cada `data-testid` de `tutorials.ts` existe en `src/`.

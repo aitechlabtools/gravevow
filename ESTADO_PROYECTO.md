@@ -51,6 +51,7 @@
 
 ## En curso / por verificar
 - **12/11, tutoriales fase 5:** mini tutoriales de la expedición: reloj, necesidades, sangrado, fractura, zona vital, pieza rota, mochila llena, triángulo del errante y Kael (encima de su ventana), élite, jefe y habilidad de clase (en combate) y uno por subzona desde la segunda. Los lanza `ExpeditionMinis.tsx`. Prueba: `scripts/e2e-exp-minis.cjs`.
+- **12/11, tutoriales fase 7:** regla permanente en `CLAUDE.md` y `guia-interfaz.md` (apartado «Tutoriales»), nuevo `docs/tutoriales.md` con el mapa de los 66 mini tutoriales (disparador, quién lo cuenta, «!», qué resalta) y test nuevo: cada disparador se lanza en `src/`. Siguiente: fase 8 (migración, opción a).
 - **12/11, tutoriales fase 6:** Guía en Ajustes › Partida (por temas; releer lo visto, «Aún por descubrir» lo demás), repetir el tutorial inicial, desactivar y reiniciar (con confirmación) los mini tutoriales, icono «?» de 44 px junto al engranaje y mini de Ajustes. Prueba: `scripts/e2e-guia.cjs`. Se ajustaron `minis-check`, `e2e-bastion-minis` (el mini de Ajustes sale primero) y `ajustes-check` (esperaba poco antes de forzar el aviso de copia).
 - **Bloque 3 (tutoriales):** fases 1 a 6 hechas. Siguiente: fase 7 (regla y `docs/tutoriales.md`) y 8 (migración). Plan en `docs/plan-tutoriales.md`. Quedan de la fase 4 para más adelante: los desbloqueos `unlock.stash-page`, `unlock.shared-page` y `unlock.class-skill`,.
 - Comprobar en un móvil real que el arrastre de objetos se nota suave. Se optimizó el 5/11 y las pruebas automáticas pasan.

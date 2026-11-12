@@ -29,6 +29,18 @@ describe('mini tutoriales: datos', () => {
       expect(found, `no existe data-testid «${id}»`).toBe(true);
     }
   });
+  it('cada disparador se lanza en algún sitio de src/', () => {
+    const files: string[] = [];
+    const walk = (d: string) => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else if (/\.tsx?$/.test(f) && !p.includes('data/tutorials')) files.push(p); } };
+    walk('src');
+    const src = files.map((f) => readFileSync(f, 'utf8')).join('\n');
+    // Plantillas como `station:${st}` o `station-up:${id}:${lvl}`: basta con su prefijo fijo
+    const prefixes = [...src.matchAll(/`([a-z-]+:)\$\{/g)].map((mm) => mm[1]);
+    for (const m of MINI_TUTORIALS) {
+      const found = src.includes(`'${m.trigger}'`) || src.includes(`"${m.trigger}"`) || prefixes.some((p) => m.trigger.startsWith(p));
+      expect(found, `nadie lanza «${m.trigger}» (${m.id})`).toBe(true);
+    }
+  });
 });
 
 describe('bienvenida al Bastión', () => {

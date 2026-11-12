@@ -77,6 +77,11 @@ Capas: datos → lógica → estado → interfaz y motor.
   - El correo lo monta `MailButton` al pulsarlo.
   - Si los datos cambian, se regeneran las imágenes: Crimson Pro 400, 80 px, interlineado 1,3, color #e9e1cc en la ficha y #d6d1c4 dentro de un párrafo.
 
+## Tutoriales (regla permanente)
+- Toda mecánica, pantalla o botón nuevo que el jugador deba entender lleva su mini tutorial en `src/core/data/tutorials.ts`, o se añade a uno existente. Mapa y reglas: `docs/tutoriales.md`.
+- Si se cambia o quita un elemento con `data-testid` resaltado por un tutorial, se actualiza el tutorial. `tests/tutorials.test.ts` falla si un `target`, `badge` o disparador no existe en `src/`.
+- Cada resumen de trabajo lleva la línea «Tutoriales: …» (actualizados, revisados sin cambios o no aplica, y por qué).
+
 ## Comprobar los cambios
 - Siempre: `npx tsc --noEmit` y `npx vitest run`.
 - Pruebas en el navegador, con el servidor en marcha (`npx vite --port 5173`, o `npx vite build` y luego `npx vite preview`):
