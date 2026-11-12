@@ -1,3 +1,4 @@
+import { RECRUIT_NOTE } from '../../config/recruit';
 import { CureOffer } from './CureOffer';
 import { actions, useGame } from '../state/store';
 import { getItem, RARITY_INFO } from '../../core/data/items';
@@ -52,8 +53,8 @@ export function SummaryScreen() {
         {summary.wandererNote && <div className="panel p-3 mt-3 text-center font-body text-lg text-parchment" data-testid="wanderer-note">{summary.wandererNote}</div>}
         {summary.recruitKit && (
           <div className="panel p-3 mt-3 text-center border-heal" data-testid="recruit-kit">
-            <span className="text-heal">El intendente del Bastión te ha dado un equipo de recluta</span>
-            <span className="font-body text-lg text-stone-300"> (arma, armadura y una poción) para que puedas volver a bajar.</span>
+            <span className="text-heal block">{RECRUIT_NOTE}</span>
+            <span className="font-body text-lg text-stone-300">Equipo de recluta en las ranuras vacías, vendas, pan y agua. No se vende ni se pierde al morir.</span>
           </div>
         )}
         <div className="panel p-4 mt-3 space-y-4">

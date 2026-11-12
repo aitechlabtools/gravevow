@@ -173,7 +173,9 @@ fs.mkdirSync(out, { recursive: true });
   if (w2.sub !== 'afueras' || w2.seed === null) fail('la segunda bajada no es un mapa de S1 con semilla: ' + JSON.stringify(w2));
   await G(() => window.__GRAVEVOW__.actions.trapHit(9999));
   await p.waitForSelector('[data-testid=summary]');
-  await p.waitForSelector('[data-testid=recruit-kit]', { timeout: 3000 }).catch(() => null);
+  const rk = await p.waitForSelector('[data-testid=recruit-kit]', { timeout: 3000 }).catch(() => null);
+  if (!rk) fail('al volver sin arma no sale el aviso del equipo de recluta');
+  else if (!/Has vuelto sin nada/.test(await rk.textContent())) fail('el aviso de recluta no dice el texto acordado');
   await shot('6-muerte');
   // Curación completa tras caer: 1 moneda (o gratis si no te queda ninguna)
   step('Curarse tras caer');
@@ -198,6 +200,39 @@ fs.mkdirSync(out, { recursive: true });
   if (dead.deaths < 1 || dead.ext < 1) fail('estadísticas: ' + JSON.stringify(dead));
   // La espada iba en la mochila: se pierde con lo demás que llevabas
   if ((await count('base', 'iron_sword')) !== 0) fail('lo transportado no se perdió al morir');
+  if (!/^recruit_/.test(dead.weapon ?? '')) fail('el arma tras morir no es de recluta: ' + dead.weapon);
+
+  // ── Equipo de recluta (fase 9): no se pierde al morir, no se vende y se pide a mano una vez por vuelta ──
+  step('Equipo de recluta');
+  await tap('[data-testid=tab-play]'); await tap('[data-testid=btn-enter-dungeon]'); await p.waitForTimeout(1000);
+  await G(() => window.__GRAVEVOW__.actions.trapHit(9999));
+  await p.waitForSelector('[data-testid=summary]');
+  if (await p.$('[data-testid=recruit-kit]')) fail('vuelve a dar el kit aunque el de recluta no se perdió');
+  await tap('[data-testid=btn-back-lobby]');
+  const rec = await G(() => { const pr = window.__GRAVEVOW__.getState().profile; return { main: pr.equipment.mainHand?.itemId, armor: pr.equipment.armor?.itemId }; });
+  if (!/^recruit_/.test(rec.main ?? '') || !/^recruit_/.test(rec.armor ?? '')) fail('el equipo de recluta se perdió al morir: ' + JSON.stringify(rec));
+  // Sin armadura: el intendente la ofrece a mano, una sola vez
+  await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, equipment: { ...pr.equipment, armor: null } } }); });
+  await tap('[data-testid=tab-stash]'); await tap('[data-testid=seg-gear]');
+  const ro = await p.waitForSelector('[data-testid=recruit-claim]', { timeout: 3000 }).catch(() => null);
+  if (!ro) fail('el intendente no ofrece el equipo de recluta sin armadura');
+  else {
+    const bb = await ro.boundingBox();
+    if (bb.height < 43.5) fail('«Equipo de recluta» menor de 44 px');
+    await shot('6b-recluta');
+    await tap('[data-testid=recruit-claim]'); await p.waitForTimeout(200);
+    const got = await G(() => window.__GRAVEVOW__.getState().profile.equipment.armor?.itemId ?? null);
+    if (!/^recruit_/.test(got ?? '')) fail('pedir el equipo de recluta no puso la armadura: ' + got);
+    await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, equipment: { ...pr.equipment, armor: null } } }); });
+    await p.waitForTimeout(150);
+    if (await p.$('[data-testid=recruit-claim]')) fail('el equipo de recluta se puede pedir en bucle');
+    await G(() => window.__GRAVEVOW__.actions.claimRecruitKit());
+    if (await G(() => window.__GRAVEVOW__.getState().profile.equipment.armor)) fail('claimRecruitKit dio dos veces en la misma vuelta');
+  }
+  // No se vende
+  const sold = await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; const bp = [...pr.backpack]; const i = bp.findIndex((x) => !x); bp[i] = { uid: 'rv', itemId: 'recruit_doublet', qty: 1 }; g.setState({ profile: { ...pr, backpack: bp } }); const before = g.getState().profile.gold; g.actions.sell?.('backpack', i); const after = g.getState().profile; return { gone: !after.backpack[i], gold: after.gold - before }; });
+  if (sold.gone || sold.gold) fail('el equipo de recluta se ha vendido: ' + JSON.stringify(sold));
+  await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, backpack: pr.backpack.map((x) => (x && x.uid === 'rv' ? null : x)) } }); });
 
   // ── Curar partes desde Intendencia → Estado: tocar la parte y elegir, o arrastrar la férula ──
   step('Curar partes desde Estado');
@@ -235,6 +270,7 @@ fs.mkdirSync(out, { recursive: true });
 
   // ── Y puede volver a bajar ──
   await tap('[data-testid=tab-play]');
+  if (!(await p.$('[data-testid=jugar-cure] [data-testid=cure-btn]'))) fail('Jugar no ofrece curarse yendo herido');
   const lock = await G(() => !!document.querySelector('[data-testid=btn-enter-dungeon]')?.disabled);
   if (lock) fail('tras morir no se puede volver a bajar');
   await shot('7-listo');

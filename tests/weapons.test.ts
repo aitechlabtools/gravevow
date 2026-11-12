@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { combatLoadout } from '../src/core/loadout';
-import { createProfile, grantRecruitKit, needsRecruitKit } from '../src/core/profile';
+import { createProfile, grantRecruitKit, needsRecruitKit, recruitGaps } from '../src/core/profile';
 import { emptyEquipment, emptyGrid, addToGrid, canEquip, countItem } from '../src/core/inventory';
 import { createCombat, performAction, rollDamage, getCombatant, currentActor, runAITurn } from '../src/core/combat';
 import { enemyCombatant, playerCombatant, levelScale } from '../src/core/combatants';
@@ -125,14 +125,46 @@ describe('Nuevos efectos de combate', () => {
 });
 
 describe('Kit de recluta', () => {
-  it('incluye arma, armadura y una poción', () => {
-    const p = { ...createProfile('K', 'warrior', { cloak: 0, skin: 0 }), backpack: emptyGrid(24), equipment: emptyEquipment() };
+  it('rellena solo las ranuras vacías, con vendas, pan y agua sin acumular', () => {
+    const p = { ...createProfile('K', 'warrior', { cloak: 0, skin: 0 }), backpack: emptyGrid(24), stash: emptyGrid(24), equipment: emptyEquipment() };
     expect(needsRecruitKit(p)).toBe(true);
+    expect(recruitGaps(p)).toBe(true);
     const k = grantRecruitKit(p);
-    expect(k.equipment.mainHand?.itemId).toBe('rusty_sword');
-    expect(k.equipment.armor?.itemId).toBe('padded_tunic');
-    expect(countItem(k.backpack, 'health_potion')).toBe(1);
-    expect(needsRecruitKit(k)).toBe(false);
+    expect(k.equipment.mainHand?.itemId).toBe('recruit_sword');
+    expect(k.equipment.offHand?.itemId).toBe('plank_shield');
+    expect(k.equipment.armor?.itemId).toBe('recruit_doublet');
+    expect(countItem(k.backpack, 'bandage')).toBe(2);
+    expect(countItem(k.backpack, 'stale_bread')).toBe(1);
+    expect(recruitGaps(k)).toBe(false);
+    // Otra vez sin armadura: solo vuelve la armadura y las vendas no se acumulan
+    const again = grantRecruitKit({ ...k, equipment: { ...k.equipment, armor: null } });
+    expect(again.equipment.mainHand?.uid).toBe(k.equipment.mainHand?.uid);
+    expect(again.equipment.armor?.itemId).toBe('recruit_doublet');
+    expect(countItem(again.backpack, 'bandage')).toBe(2);
+    // Si la pieza de recluta está en el almacén, se usa esa (no se crea otra)
+    const st = emptyGrid(24); st[3] = { uid: 'r1', itemId: 'recruit_doublet', qty: 1 };
+    const fromStash = grantRecruitKit({ ...k, stash: st, equipment: { ...k.equipment, armor: null } });
+    expect(fromStash.equipment.armor?.uid).toBe('r1');
+    expect(fromStash.stash[3]).toBeNull();
+  });
+
+  it('no se vende, no se desguaza y no se pierde al morir', async () => {
+    const { sell } = await import('../src/core/economy');
+    const { scrapYield } = await import('../src/core/refuge');
+    const p = grantRecruitKit({ ...createProfile('K', 'mage', { cloak: 0, skin: 0 }), backpack: emptyGrid(24), equipment: emptyEquipment() });
+    expect(p.equipment.mainHand?.itemId).toBe('recruit_staff');
+    const bp = [...p.backpack]; bp[10] = { uid: 'g', itemId: 'worn_grimoire', qty: 1 };
+    const r = sell({ ...p, backpack: bp }, 'backpack', 10);
+    expect(r.ok).toBe(false);
+    expect(scrapYield(bp[10]!)).toBeNull();
+    const { startExpedition, endExpedition } = await import('../src/core/expedition');
+    const { profile: p2, expedition: e } = startExpedition({ ...p, backpack: bp }, 1);
+    const out = endExpedition(p2, e, 'died', 2);
+    expect(out.profile.equipment.mainHand?.itemId).toBe('recruit_staff');
+    expect(out.profile.equipment.armor?.itemId).toBe('recruit_robe');
+    expect(countItem(out.profile.backpack, 'worn_grimoire')).toBe(1);
+    expect(countItem(out.profile.backpack, 'bandage')).toBe(0);
+    expect(out.summary.lost.some((x) => x.itemId === 'recruit_staff')).toBe(false);
   });
 });
 

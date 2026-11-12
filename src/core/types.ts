@@ -76,6 +76,8 @@ export interface ItemDef {
   mineTime?: number;
   /** Habilidades que concede mientras está equipado. */
   grants?: string[];
+  /** Equipo de recluta (Bloque 1, fase 9): prestado por el Bastión. No se vende, no se desguaza y no se pierde al morir. */
+  recruit?: boolean;
 }
 
 export interface ItemStack {
@@ -208,6 +210,8 @@ export interface Contract {
 export interface Profile {
   /** Fase 10: cayó en la última incursión (la curación completa cuesta 1 moneda, o nada si no tiene). */
   fallen?: boolean;
+  /** Bloque 1, fase 9: ya pidió el equipo de recluta al intendente desde la última vuelta al Bastión. */
+  recruitClaimed?: boolean;
   /** 2 = escala de niveles 1–100. Los perfiles de la versión 1 se migran al cargarlos. */
   version: 2;
   character: CharacterData;

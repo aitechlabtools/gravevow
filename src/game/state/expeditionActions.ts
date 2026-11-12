@@ -1,7 +1,7 @@
 // Acciones de la expedición: entrar, tutorial, reloj, trampas, vetas, cofres, botín y errantes.
 import type { ItemStack, Profile } from '../../core/types';
 import { RARITY_ORDER, rollStacks } from '../../core/data/rarity';
-import { createProfile, grantRecruitKit, needsRecruitKit } from '../../core/profile';
+import { createProfile, grantRecruitKit, recruitGaps } from '../../core/profile';
 import { startExpedition, endExpedition, timeLeft, type EndReason } from '../../core/expedition';
 import { addManyToGrid, addToGrid, countItem, emptyGrid, removeItem, cloneGrid, removeAt, isCover, LAYOUTS } from '../../core/inventory';
 import { coins as coinsStack, gridGold, isCoins } from '../../core/gold';
@@ -229,8 +229,10 @@ export const expeditionActions = {
     const mo = settleMerc(profile, s.merc, reason === 'extracted');
     profile = mo.profile;
     if (mo.note) summary = { ...summary, mercNote: mo.note };
-    // Kit de recluta automático: si al morir no te queda ningún arma, el intendente te equipa
-    if (reason !== 'extracted' && needsRecruitKit(profile)) {
+    // Equipo de recluta (Bloque 1, fase 9): al volver sin arma o sin armadura, el Bastión rellena las ranuras vacías.
+    // Pedirlo a mano al intendente vuelve a estar disponible una vez en cada vuelta.
+    profile = { ...profile, recruitClaimed: false };
+    if (recruitGaps(profile)) {
       profile = grantRecruitKit(profile);
       summary = { ...summary, recruitKit: true };
     }

@@ -20,6 +20,7 @@ import { usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
 import { DISCORD_HINT, DISCORD_URL, DiscordIcon, EXTERNAL, HeartIcon, SUPPORT_HINT, SUPPORT_URL } from '../../../shared/community';
 import { sfx, startMusic } from '../../audio';
+import { CureButton, useCure } from '../CureOffer';
 
 /** La subzona elegida se recuerda mientras dure la sesión (al cambiar de pestaña y volver). */
 let lastPick: SubzoneId | null = null;
@@ -28,6 +29,7 @@ export type QuickTarget = 'quests' | 'merchants' | 'bestiary' | 'contracts';
 
 export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) {
   const profile = useGame((s) => s.profile)!;
+  const cure = useCure();
   const ch = profile.character;
   const layout = useLayout();
   const phone = layout === 'phone';
@@ -114,6 +116,12 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
           {!phone && <div className="text-[11px] text-stone-400 mt-1">{EXPEDITION_DURATION_MS / 60000} minutos para encontrar el portal. Si caes, pierdes lo que llevas.</div>}
           {lock && <div className="text-xs text-blood mt-1" data-testid="zone-lock">{lock}</div>}
           {!profile.equipment.mainHand && <div className="text-xs text-ember mt-1">Vas sin arma. Revisa tu equipo en la Intendencia.</div>}
+          {cure && (
+            <div className="flex items-center gap-2 mt-2" data-testid="jugar-cure">
+              <span className="text-xs text-blood flex-1">{cure.fallen ? 'Caíste en la última incursión.' : 'Vas herido.'} Vesper puede dejarte entero.</span>
+              <CureButton className="shrink-0 text-sm" />
+            </div>
+          )}
           <button className="btn btn-gold cta w-full mt-2" onClick={descend} disabled={!!lock} data-testid="btn-enter-dungeon">Descender</button>
         </div>
       </section>

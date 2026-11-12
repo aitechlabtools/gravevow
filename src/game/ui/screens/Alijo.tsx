@@ -27,6 +27,7 @@ import { BodyPanel } from '../BodyFigure';
 import { NeedsPanel } from '../NeedsBars';
 import { needsOf } from '../../../core/needs';
 import { CureOffer, useCure } from '../CureOffer';
+import { RecruitOffer } from '../RecruitOffer';
 import { baseBody } from '../../state/medicalActions';
 import { useLayout } from '../../../config/ui';
 import { ItemCard } from './ItemCard';
@@ -74,7 +75,9 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
     </Modal>
   );
 
-  const equipment = <EquipmentGrid sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} />;
+  const equipment = (
+    <EquipmentGrid sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} />
+  );
   const pickerModal = <>{picker && <SkinPicker onClose={() => setPicker(false)} onShop={onShop} />}{emptyModal}</>;
   const backpack = (
     <div data-testid="alijo-backpack">
@@ -124,7 +127,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
             </>
           ) : view === 'gear' ? (
             <>
-              <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex items-start justify-center">{equipment}</Panel>
+              <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col items-center"><RecruitOffer />{equipment}</Panel>
               <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}{pocket}</Panel>
             </>
           ) : (
@@ -171,6 +174,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
       </Panel>
       <Panel title="Equipo" className="min-h-0" bodyClassName="min-h-0 flex flex-col">
         <div className="flex-1 min-h-0 overflow-y-auto scroll-thin">
+          <div className="mb-3"><RecruitOffer /></div>
           <div className="w-fit mx-auto">
             <div className="flex justify-center mb-4">{equipment}</div>
             {backpack}

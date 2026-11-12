@@ -71,6 +71,7 @@ export function sell(p: Profile, container: 'backpack' | 'stash', index: number,
   if (!s || isCover(s)) return { ok: false, error: 'No hay nada que vender.' };
   if (s.itemId === COIN_ID) return { ok: false, error: 'Las monedas ya son oro: no se venden.' };
   if ((s.gold ?? 0) > 0) return { ok: false, error: 'Vacía el saco antes de venderlo.' };
+  if (getItem(s.itemId).recruit) return { ok: false, error: 'Es equipo de recluta: el Bastión te lo presta, no se vende.' };
   const qty = all ? s.qty : 1;
   if (!buysThis(vendor, s.itemId)) return { ok: false, error: `${VENDORS[vendor].name} no compra eso: solo joyas y tesoros.` };
   const gain = vendorSellPrice(vendor, s.itemId, s) * qty;

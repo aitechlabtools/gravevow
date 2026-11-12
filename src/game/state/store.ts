@@ -4,7 +4,7 @@
 // ════════════════════════════════════════════════════════════════════
 import { feed, needsOf, sleep, toSaved } from '../../core/needs';
 import type { Appearance, ClassId, ItemStack, Profile } from '../../core/types';
-import { createProfile, grantRecruitKit, needsRecruitKit } from '../../core/profile';
+import { createProfile, grantRecruitKit, needsRecruitKit, recruitGaps } from '../../core/profile';
 import { clearUndo, loadSave, loadUndo, saveSave, saveUndo } from '../persistence/db';
 import { backupFileName, backupToCode, backupToJson, buildBackup, totalExpeditions } from '../../core/backup';
 import { STASH_PAGE_SIZE } from '../../config/stash';
@@ -934,10 +934,13 @@ export const actions = {
     return left;
   },
 
+  /** El intendente da el equipo de recluta a mano: gratis, si falta arma o armadura, una vez por vuelta al Bastión. */
   claimRecruitKit() {
     const p = state.profile;
-    if (!p || !needsRecruitKit(p)) return;
-    set({ profile: grantRecruitKit(p) });
+    if (!p) return;
+    if (!recruitGaps(p)) return invError('Ya llevas arma y armadura.');
+    if (p.recruitClaimed) return invError('El intendente ya te dio lo suyo. Vuelve de otra incursión.');
+    set({ profile: { ...grantRecruitKit(p), recruitClaimed: true } });
     sfx('equip');
     toast('El intendente te presta un equipo de recluta.', 'info');
   },

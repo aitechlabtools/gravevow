@@ -5,7 +5,8 @@ import type { Equipment, Grid, ItemStack, Profile } from './types';
 import { cloneGrid, gridValue, equippedValue } from './inventory';
 import { computeStats, applyXp } from './stats';
 import { updateQuests } from './quests';
-import { emptyEquipment, emptyGrid } from './inventory';
+import { addToGrid, emptyEquipment, emptyGrid, LAYOUTS } from './inventory';
+import { getItem } from './data/items';
 import { fromWounds, stabilize, summaryHp, toWounds, type Body, type Region } from './anatomy';
 
 // ════════════════════════════════════════════════════════════════════
@@ -116,6 +117,18 @@ export function timeLeft(e: ExpeditionState, now: number): number {
   return Math.max(0, e.startedAt + e.durationMs - now);
 }
 
+/** Al morir, el equipo de recluta vuelve contigo (Bloque 1, fase 9): lo puesto sigue puesto. */
+function keptRecruitGear(eq: ExpeditionState['equipment']): ExpeditionState['equipment'] {
+  const out = emptyEquipment();
+  for (const [slot, st] of Object.entries(eq)) if (st && getItem(st.itemId).recruit) (out as Record<string, unknown>)[slot] = st;
+  return out;
+}
+function keptRecruitGrid(g: ExpeditionState['backpack'], size: number): ExpeditionState['backpack'] {
+  let out = emptyGrid(size);
+  for (const st of g) if (st && st.itemId !== 'cover' && getItem(st.itemId).recruit) out = addToGrid(out, st, LAYOUTS.backpack).grid;
+  return out;
+}
+
 function carried(e: ExpeditionState): ItemStack[] {
   return [...Object.values(e.equipment), ...e.backpack].filter((s): s is ItemStack => !!s && s.itemId !== 'cover');
 }
@@ -131,8 +144,8 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
   const profile0: Profile = {
     ...p,
     character: { ...p.character, level: xp.level, xp: xp.xp },
-    backpack: extracted ? cloneGrid(e.backpack) : emptyGrid(p.backpack.length),
-    equipment: extracted ? { ...e.equipment } : emptyEquipment(),
+    backpack: extracted ? cloneGrid(e.backpack) : keptRecruitGrid(e.backpack, p.backpack.length),
+    equipment: extracted ? { ...e.equipment } : keptRecruitGear(e.equipment),
     // El bolsillo seguro se conserva siempre, también al morir
     pocket: cloneGrid(e.pocket ?? p.pocket),
     quests,
@@ -162,7 +175,7 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
       levelsGained: xp.levelsGained,
       kills: { ...e.kills },
       kept: extracted ? carried(e) : [],
-      lost: extracted ? [] : carried(e),
+      lost: extracted ? [] : carried(e).filter((x) => !getItem(x.itemId).recruit),
       found: e.found.map((s) => ({ ...s })),
       extractedValue,
     },

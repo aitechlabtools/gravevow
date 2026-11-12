@@ -6,9 +6,10 @@ import { initialClassSkills, sanitizeClassSkills } from './classSkills';
 import { isSubzoneId } from './data/subzones';
 import { MERCENARIES } from './data/mercenaries';
 import { SKINS } from './data/skins';
-import type { Appearance, ClassId, Profile } from './types';
+import type { Appearance, ClassId, ItemStack, Profile } from './types';
+import { RECRUIT_KITS } from '../config/recruit';
 import { CLASSES } from './data/classes';
-import { addToGrid, BACKPACK_SIZE, emptyEquipment, emptyGrid, LAYOUTS, repairGrid, repairGridEx, STASH_SIZE } from './inventory';
+import { addToGrid, removeAt, BACKPACK_SIZE, emptyEquipment, emptyGrid, LAYOUTS, repairGrid, repairGridEx, STASH_SIZE } from './inventory';
 import { STASH_PAGE_SIZE } from '../config/stash';
 import { getItem } from './data/items';
 import { initialQuests, migrateQuests } from './quests';
@@ -156,21 +157,41 @@ export function needsRecruitKit(p: Profile): boolean {
   return !all.some((s) => s && getItem(s.itemId).category === 'weapon');
 }
 
+/** Bloque 1, fase 9: falta arma en la mano derecha o armadura en el torso. */
+export function recruitGaps(p: Profile): boolean {
+  return !p.equipment.mainHand || !p.equipment.armor;
+}
+
+/** ¿Es equipo de recluta? (prestado: no se vende, no se desguaza, no se pierde al morir). */
+export function isRecruit(itemId: string): boolean {
+  return !!getItem(itemId).recruit;
+}
+
+/**
+ * Equipo de recluta: rellena solo las ranuras vacías del kit de la clase (si ya tienes una pieza de recluta
+ * en la mochila o el almacén, se usa esa en vez de crear otra) y completa vendas, pan y agua hasta lo del kit.
+ */
 export function grantRecruitKit(p: Profile): Profile {
-  const cls = CLASSES[p.character.classId];
-  const weapon = cls.starterKit.find((k) => getItem(k.itemId).category === 'weapon')!;
-  const armor = cls.starterKit.find((k) => getItem(k.itemId).category === 'armor');
-  let backpack = p.backpack;
+  const kit = RECRUIT_KITS[p.character.classId];
+  if (!kit) return p;
+  let backpack = [...p.backpack];
+  const stash = [...p.stash];
   const equipment = { ...p.equipment };
-  for (const k of [weapon, armor]) {
-    if (!k) continue;
-    const def = getItem(k.itemId);
-    const stack = { uid: makeUid(), itemId: k.itemId, qty: 1 };
-    if (def.slot && !equipment[def.slot]) equipment[def.slot] = stack;
-    else backpack = addToGrid(backpack, stack, LAYOUTS.backpack).grid;
+  const mainDef = equipment.mainHand ? getItem(equipment.mainHand.itemId) : null;
+  for (const id of kit.gear) {
+    const def = getItem(id);
+    if (!def.slot || equipment[def.slot]) continue;
+    if (def.slot === 'offHand' && mainDef?.hands === 2) continue;
+    let stack: ItemStack | null = null;
+    for (const g of [backpack, stash]) {
+      const k = g.findIndex((x) => x && x.itemId === id);
+      if (k >= 0) { stack = removeAt(g, k).stack; break; }
+    }
+    equipment[def.slot] = stack ?? { uid: makeUid(), itemId: id, qty: 1 };
   }
-  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'health_potion', qty: 1 }, LAYOUTS.backpack).grid;
-  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'ration', qty: 1 }, LAYOUTS.backpack).grid;
-  backpack = addToGrid(backpack, { uid: makeUid(), itemId: 'water', qty: 1 }, LAYOUTS.backpack).grid;
-  return { ...p, backpack, equipment };
+  for (const s of kit.supplies) {
+    const have = backpack.filter((x) => x && x.itemId === s.itemId).reduce((a, x) => a + x!.qty, 0);
+    if (have < s.qty) backpack = addToGrid(backpack, { uid: makeUid(), itemId: s.itemId, qty: s.qty - have }, LAYOUTS.backpack).grid;
+  }
+  return { ...p, backpack, stash, equipment };
 }

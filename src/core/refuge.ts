@@ -122,6 +122,7 @@ export function receptionScrap(p: Profile, i: number): Result {
   const st = receptionAt(p, i);
   if (!st) return { ok: false, error: 'Ya no está en la recepción.' };
   const y = scrapYield(st, refugeOf(p).bench);
+  if (!y && getItem(st.itemId).recruit) return { ok: false, error: 'Es equipo de recluta: el Bastión te lo presta, no se desguaza.' };
   if (!y) return { ok: false, error: `Orik no saca nada útil de ${getItem(st.itemId).name.toLowerCase()}.` };
   return { ok: true, profile: giveItems(withoutReception(p, i), [y]), note: `${getItem(y.itemId).name} ×${y.qty}` };
 }
@@ -177,7 +178,7 @@ export function scrapMaterial(itemId: string): string | null {
 
 /** Lo que rinde desguazar este ejemplar (con o sin banco). null si no se puede. */
 export function scrapYield(stack: ItemStack, bench = 0): { itemId: string; qty: number } | null {
-  if (isCover(stack) || (stack.gold ?? 0) > 0) return null;
+  if (isCover(stack) || (stack.gold ?? 0) > 0 || getItem(stack.itemId).recruit) return null;
   const mat = scrapMaterial(stack.itemId);
   if (!mat) return null;
   const def = getItem(stack.itemId);
