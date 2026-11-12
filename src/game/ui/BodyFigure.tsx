@@ -198,13 +198,28 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, comb
     const f = (e: Event) => {
       const { itemId, region } = (e as CustomEvent<{ itemId: string; region: Region }>).detail;
       const use = getItem(itemId).use;
-      setSel(region);
+      setSel(region); setPick(null);
       if (use?.kind === 'treat') onTreat(itemId, region);
       else if (use?.kind === 'heal' && onHeal) onHeal(itemId);
     };
     window.addEventListener('cr-drop-body', f);
     return () => window.removeEventListener('cr-drop-body', f);
   }, [onTreat, onHeal]);
+  // Tocar para curar (fase 6): eliges una cura de tu mochila y el cuerpo resalta dónde sirve; o eliges una parte y se resaltan sus curas.
+  const [pick, setPick] = useState<string | null>(null);
+  const kit = onTreat && backpack ? [...new Set(backpack.filter((x) => x && x.itemId !== 'cover').map((x) => x!.itemId))]
+    .filter((id) => { const u = getItem(id).use; return (u?.kind === 'treat' && u.treat !== 'painkiller') || (u?.kind === 'heal' && !!onHeal); }) : [];
+  const apply = (itemId: string, r: Region) => {
+    const use = getItem(itemId).use;
+    if (use?.kind === 'treat') onTreat!(itemId, r);
+    else if (use?.kind === 'heal' && onHeal) onHeal(itemId);
+  };
+  const tapRegion = (r: Region) => {
+    if (pick && !surgery && usefulOn(body, pick, r)) { apply(pick, r); setPick(null); }
+    else if (pick) setPick(null);
+    setSel(r);
+  };
+  const shown = dragging ?? (pick && kit.includes(pick) ? pick : null);
   const wounds = woundsOf(body, sel);
   const canTreat = !!onTreat && !surgery;
   const potion = onHeal && backpack && !isDisabled(body, sel) && body.parts[sel].hp < regionMaxes(body.total)[sel] ? (backpack.find((x) => x && x.itemId !== 'cover' && getItem(x.itemId).use?.kind === 'heal')?.itemId ?? null) : null;
@@ -217,7 +232,7 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, comb
         <div className="body-box-head"><span className="font-display text-parchment">Cuerpo</span><span className="body-legend">◆ zona vital</span></div>
         <div className="body-map" data-testid="body-map">
           <Ghost body={body} />
-          {REGIONS.map((r) => <RegionTag key={r} body={body} r={r} on={sel === r} onPick={() => setSel(r)} drop={dragging ? (usefulOn(body, dragging, r) ? 'yes' : 'no') : null} />)}
+          {REGIONS.map((r) => <RegionTag key={r} body={body} r={r} on={sel === r} onPick={() => tapRegion(r)} drop={shown ? (usefulOn(body, shown, r) ? 'yes' : 'no') : null} />)}
         </div>
         <div className={`body-total ${dead ? 'dead' : ''}`} data-testid="body-total">
           <span>Vida <b>{dead ? 0 : total}</b> / {body.total}</span>
@@ -225,6 +240,23 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, comb
         </div>
       </div>
       <div className="body-side">
+        {kit.length > 0 && (
+          <div className="body-kit" data-testid="body-kit">
+            <span className="body-kit-title">{pick ? `${touch ? 'Toca' : 'Elige'} la parte que quieres curar` : 'Tus curas'}</span>
+            <div className="body-kit-row">
+              {kit.map((id) => {
+                const fit = usefulOn(body, id, sel);
+                return (
+                  <button key={id} type="button" className={`body-kit-item ${pick === id ? 'on' : ''} ${fit ? 'fit' : ''}`} aria-pressed={pick === id}
+                    aria-label={`${getItem(id).name} (${countItem(backpack!, id)})${fit ? `: sirve en ${REGION_NAME[sel].toLowerCase()}` : ''}`} title={getItem(id).name}
+                    onClick={() => setPick(pick === id ? null : id)} data-testid={`kit-${id}`}>
+                    <ItemIcon itemId={id} size={24} /><b>{countItem(backpack!, id)}</b>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {note && <p className="body-note">{note}</p>}
         {surgery && <p className="text-sm text-gold mb-2" data-testid="body-surgery">Operando {REGION_NAME[surgery.region].toLowerCase()}: faltan {surgery.left} pulsos. Si algo te hiere, se pierde el equipo.</p>}
         {body.painFree ? <p className="text-xs text-[#b48ad8] mb-2" data-testid="body-painfree">Analgésico: sin dolor durante {body.painFree} pulsos más.</p>
@@ -286,7 +318,7 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, comb
         )}
         {onTreat && !REGIONS.some((r) => options(r).length) && urgencies(body).length > 0 && <p className="body-note mt-2">No llevas nada que sirva para estas heridas. Hermana Vesper vende vendas, torniquetes, férulas y hemostáticos.</p>}
         {!urgencies(body).length && <p className="body-note mt-2">Sin sangrados ni fracturas.{REGIONS.some((r) => isLimb(r) && body.parts[r].hp < regionCap(body, r)) ? ' La vida perdida se recupera con pociones.' : ''}</p>}
-        <p className="body-note body-hint">{touch ? 'Toca' : 'Haz clic en'} otra parte del cuerpo para ver sus heridas.</p>
+        <p className="body-note body-hint">{kit.length ? `${touch ? 'Toca' : 'Haz clic en'} una cura y luego la parte del cuerpo${touch ? '' : ', o arrástrala hasta ella'}.` : `${touch ? 'Toca' : 'Haz clic en'} otra parte del cuerpo para ver sus heridas.`}</p>
       </div>
       {children && <div className="body-needs">{children}</div>}
     </div>

@@ -576,3 +576,13 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .status-wrap{container-type:inline-size}
 @container (max-width:820px){.body-panel.full{grid-template-columns:1fr;grid-template-rows:auto auto auto}.body-panel.full .body-box{min-height:420px}}
 @media (max-height:560px){.status-wrap .body-panel.full{grid-template-columns:46% minmax(0,1fr);grid-template-rows:auto auto}.status-wrap .body-panel.full .body-box{min-height:0}.status-wrap .body-panel.full .body-map{flex:none;height:230px;min-height:0}}
+
+/* Bloque 1, fase 6: curas de la mochila dentro del panel (tocar una cura y luego la parte) */
+.body-kit{margin-bottom:.5rem;padding:.4rem .5rem;border:1px solid #3a3640;background:#141217}
+.body-kit-title{display:block;font-size:.75rem;color:#a8a29e;margin-bottom:.3rem}
+.body-kit-row{display:flex;flex-wrap:wrap;gap:.35rem}
+.body-kit-item{position:relative;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #3a3640;background:#1d1a21;cursor:pointer}
+.body-kit-item b{position:absolute;right:2px;bottom:0;font-size:.7rem;color:#e9e1cc}
+.body-kit-item.fit{border-color:#7fa35a;box-shadow:inset 0 0 0 1px #7fa35a}
+.body-kit-item.on{border-color:#d4a64a;box-shadow:0 0 0 2px #d4a64a;background:#2a2318}
+@media (max-height:560px){.body-kit{padding:.25rem .35rem}.body-kit-title{font-size:.7rem;margin-bottom:.15rem}}
