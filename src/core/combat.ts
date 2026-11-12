@@ -1,5 +1,6 @@
 import { NEED_LOW, NEED_NAME, type Need } from '../config/needs';
 import { effectiveMaxMp, exhaustionLoss, feed, tickNeeds, type NeedLevel, type Needs } from './needs';
+import { BOMBS, BOMB_DMG_NAME, type BombDef } from '../config/bombs';
 import { potionAmount, resourcePotionAmount, resourceGain, skillCost, turnRegen, IMPETUS_ON_HIT, IMPETUS_WHEN_HIT } from '../config/progression';
 import type { DamageKind, ItemEffect, SkillDef, Stats, StatusId, StatusInstance } from './types';
 import { makeRng, type Rng } from './rng';
@@ -123,7 +124,7 @@ export type CombatAction =
   | { type: 'attack'; targetId: string }
   | { type: 'skill'; skillId: string; targetId?: string }
   | { type: 'defend' }
-  | { type: 'item'; itemId: string; /** Región a tratar (vendas, férulas…). */ region?: Region }
+  | { type: 'item'; itemId: string; /** Región a tratar (vendas, férulas…). */ region?: Region; /** Bombas: enemigo al que se lanza. */ targetId?: string }
   | { type: 'flee' }
   /** Segunda ronda de una cirugía empezada (o `cancel` para dejarla: el equipo se pierde). */
   | { type: 'surgery'; cancel?: boolean }
@@ -278,6 +279,26 @@ export function rollDamage(att: Combatant, def: Combatant, kind: DamageKind, pow
     if (m && st.turns > 0) dmg *= m;
   }
   return { amount: Math.max(1, Math.round(dmg)), crit, miss: false };
+}
+
+/** Daño de una bomba: el mejor de Ataque y Magia, sin esquiva; Defensa contra metralla y clavos, Resistencia contra el fuego. */
+export function bombDamage(att: Combatant, def: Combatant, b: BombDef, rng: Rng): { amount: number; crit: boolean } {
+  const off = Math.max(att.stats.atk, att.stats.mag);
+  const mit = b.dmg === 'fire' ? def.stats.res : def.stats.def;
+  let dmg = b.power * off * (DAMAGE_K / (DAMAGE_K + Math.max(0, mit))) * (0.9 + rng.next() * 0.2);
+  const crit = rng.chance(att.stats.crit / 100);
+  if (crit) dmg *= 1.5;
+  if (def.undead && b.undeadMult) dmg *= b.undeadMult;
+  if (def.body) dmg *= ANATOMY.damageTaken;
+  if (def.defending) dmg *= 0.5;
+  for (const st of def.statuses) { const m = STATUSES[st.id].damageTakenMult; if (m && st.turns > 0) dmg *= m; }
+  return { amount: Math.max(1, Math.round(dmg)), crit };
+}
+/** Daño esperado de una bomba contra un objetivo (para la ficha), sin azar. */
+export function bombPreview(att: Combatant, def: Combatant, b: BombDef): number {
+  const off = Math.max(att.stats.atk, att.stats.mag);
+  const mit = b.dmg === 'fire' ? def.stats.res : def.stats.def;
+  return Math.max(1, Math.round(b.power * off * (DAMAGE_K / (DAMAGE_K + Math.max(0, mit))) * (def.undead && b.undeadMult ? b.undeadMult : 1)));
 }
 
 export function fleeChance(actor: Combatant, foes: Combatant[]): number {
@@ -751,6 +772,23 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
         s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item' });
         s.events.push({ type: 'itemUsed', actorId: actor.id, itemId: def.id });
         s.log.push(`${actor.name} ${def.use.hyd && !def.use.sat ? 'bebe' : 'come'}: ${def.name.toLowerCase()}.`);
+        return;
+      }
+      if (def.use.kind === 'bomb') {
+        const b = BOMBS[def.use.bomb];
+        if (!b) throw new Error('Objeto no utilizable');
+        const first = resolveTarget(s, actor, action.targetId);
+        if (!first) throw new Error('No hay a quién lanzarla.');
+        const targets = b.target === 'all' ? [first, ...opponents(s, actor).filter((x) => x !== first)] : [first];
+        s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item', targetId: first.id });
+        s.events.push({ type: 'itemUsed', actorId: actor.id, itemId: def.id });
+        s.log.push(`${actor.name} lanza ${def.name.toLowerCase()}${b.target === 'all' ? ' contra todos' : ` contra ${first.name}`}.`);
+        for (const t of targets) {
+          const r = bombDamage(actor, t, b, rng);
+          s.log.push(`${t.name} encaja ${r.amount} de daño ${BOMB_DMG_NAME[b.dmg]}${r.crit ? ' ¡CRÍTICO!' : ''}${b.undeadMult && t.undead ? ' (no muerto: el doble)' : ''}.`);
+          dealDamage(s, t, r.amount, r.crit, 'hit', { rng, kind: 'physical', by: actor, noInjury: true });
+          if (b.status && alive(t) && rng.chance(b.status.chance)) applyStatus(s, t, b.status.id, b.status.turns, rng);
+        }
         return;
       }
       s.events.push({ type: 'action', actorId: actor.id, label: def.name, fx: 'item' });

@@ -49,6 +49,11 @@ export const CRAFT_MATERIALS: ItemDef[] = [
   { id: 'rune_ink', name: 'Tinta rúnica', description: 'Tinta de hueso y esquirla. Las runas no se borran.', icon: 'ink', category: 'material', rarity: 'common', value: 12, stack: 20 },
   { id: 'pitch', name: 'Brea', description: 'Resina negra hervida. Pega y arde.', icon: 'pitch', category: 'material', rarity: 'common', value: 6, stack: 20 },
   { id: 'bone_powder', name: 'Pólvora de hueso', description: 'Polvo de hueso y ala molidos. Mejor lejos del fuego.', icon: 'powder', category: 'material', rarity: 'uncommon', value: 17, stack: 20 },
+  // Bloque 2, fase 6: bombas y frascos (cifras de combate en config/bombs.ts)
+  { id: 'nail_bomb', name: 'Bomba de clavos', description: 'Pólvora de hueso y chatarra en un saco atado. A un enemigo: daño contundente medio y 25 % de aturdirlo un turno. Gasta el turno.', icon: 'bomb_nails', category: 'potion', rarity: 'common', value: 30, stack: 5, use: { kind: 'bomb', bomb: 'nail_bomb' } },
+  { id: 'pitch_flask', name: 'Frasco de brea', description: 'Brea encendida con una mecha de trapo. A todos los enemigos: daño de fuego bajo y quemadura 3 turnos. Gasta el turno.', icon: 'flask_pitch', category: 'potion', rarity: 'common', value: 20, stack: 5, use: { kind: 'bomb', bomb: 'pitch_flask' } },
+  { id: 'silver_shrapnel', name: 'Metralla de plata', description: 'Esquirlas de plata que cortan carne y mortaja. A un enemigo: daño cortante alto, el doble contra no muertos. Gasta el turno.', icon: 'bomb_silver', category: 'potion', rarity: 'uncommon', value: 90, stack: 5, use: { kind: 'bomb', bomb: 'silver_shrapnel' } },
+  { id: 'sulfur_flask', name: 'Frasco incendiario de azufre', description: 'Azufre y brea: el aire mismo arde. A todos los enemigos: daño de fuego alto y quemadura fuerte (5 turnos). Gasta el turno.', icon: 'flask_sulfur', category: 'potion', rarity: 'rare', value: 80, stack: 5, use: { kind: 'bomb', bomb: 'sulfur_flask' } },
 ];
 
 /** Planos: se aprenden una vez y ya no se pierden. */
@@ -177,6 +182,10 @@ export const CRAFT_RECIPES: CraftRecipe[] = [
   { id: 'c_splint', result: 'splint', qty: 1, station: 'infirmary', level: 1, ingredients: [{ itemId: 'old_wood', qty: 2 }, { itemId: 'strap', qty: 1 }] },
   { id: 'c_hemostatic', result: 'hemostatic', qty: 1, station: 'infirmary', level: 2, ingredients: [{ itemId: 'bitter_herb', qty: 2 }, { itemId: 'bone_dust', qty: 1 }] },
   { id: 'c_surgery_kit', result: 'surgery_kit', qty: 1, station: 'infirmary', level: 3, ingredients: [{ itemId: 'iron_ingot', qty: 1 }, { itemId: 'woven_cloth', qty: 2 }, { itemId: 'strap', qty: 1 }] },
+  { id: 'c_nail_bomb', result: 'nail_bomb', qty: 1, station: 'alchemy', level: 1, ingredients: [{ itemId: 'bone_powder', qty: 1 }, { itemId: 'scrap_metal', qty: 2 }] },
+  { id: 'c_pitch_flask', result: 'pitch_flask', qty: 1, station: 'alchemy', level: 1, ingredients: [{ itemId: 'pitch', qty: 1 }, { itemId: 'ragged_cloth', qty: 1 }, { itemId: 'water', qty: 1 }] },
+  { id: 'c_silver_shrapnel', result: 'silver_shrapnel', qty: 1, station: 'alchemy', level: 2, ingredients: [{ itemId: 'bone_powder', qty: 1 }, { itemId: 'silver_ingot', qty: 1 }] },
+  { id: 'c_sulfur_flask', result: 'sulfur_flask', qty: 1, station: 'alchemy', level: 3, ingredients: [{ itemId: 'pitch', qty: 1 }, { itemId: 'sulfur', qty: 1 }] },
   { id: 'c_health_potion', result: 'health_potion', qty: 1, station: 'alchemy', level: 1, ingredients: [{ itemId: 'bitter_herb', qty: 1 }, { itemId: 'cave_mushroom', qty: 1 }, { itemId: 'water', qty: 1 }] },
   { id: 'c_mana_potion', result: 'mana_potion', qty: 1, station: 'alchemy', level: 1, ingredients: [{ itemId: 'arcane_shard', qty: 2 }, { itemId: 'water', qty: 1 }] },
   { id: 'c_focus_tonic', result: 'focus_tonic', qty: 1, station: 'alchemy', level: 1, ingredients: [{ itemId: 'arcane_shard', qty: 1 }, { itemId: 'cave_mushroom', qty: 1 }, { itemId: 'water', qty: 1 }] },

@@ -3,6 +3,7 @@
 // el sangrado, las pociones y el recurso pasan de un combate al siguiente, y entre combates se explora unos pulsos.
 // Uso: node scripts/simular.mjs [partidas]   →   escribe docs/equilibrio/simulador-<escenario>.md
 import { createCombat, currentActor, getCombatant, opponents, performAction, runAITurn, canUseSkill, type CombatState, type CombatAction, type Combatant } from '../../src/core/combat';
+import { BOMBS } from '../../src/config/bombs';
 import { enemyCombatant, playerCombatant, rivalCombatant } from '../../src/core/combatants';
 import { createProfile } from '../../src/core/profile';
 import { emptyEquipment } from '../../src/core/inventory';
@@ -77,7 +78,7 @@ export const GEAR: Record<string, Record<Cls, Equipment>> = {
     mage: kit({ mainHand: 'abyss_scepter', offHand: 'burning_tome', helmet: 'ash_cowl', armor: 'ash_robe', boots: 'cinder_boots', ring: 'ember_ring', amulet: 'reliquary_amulet' }),
   },
 };
-const starter = (cls: Cls) => createProfile('Sim', cls, { cloak: 0, skin: 0 }).equipment;
+export const starter = (cls: Cls) => createProfile('Sim', cls, { cloak: 0, skin: 0 }).equipment;
 
 /** Estados que perjudican (los que pone el enemigo). */
 const BAD = new Set(['veneno', 'quemadura', 'aturdimiento', 'congelación', 'debilidad', 'armadura rota']);
@@ -99,8 +100,14 @@ function readLog(log: string[], from: number, me: string, t: Tally) {
 }
 
 /** El jugador «razonable» de las pruebas: lee los anuncios, se cura por debajo del 35 % y usa sus habilidades. */
-function playerTurn(s: CombatState, me: Combatant, potions: { n: number }, seed: number, novice = false): CombatAction {
+function playerTurn(s: CombatState, me: Combatant, potions: { n: number }, seed: number, novice = false, bombs?: { id: string; n: number; fight: number; used: number }): CombatAction {
   if (me.hp / me.stats.maxHp < 0.35 && potions.n > 0) { potions.n--; return { type: 'item', itemId: 'health_potion' }; }
+  // Bombas (bloque 2, fase 6): una por combate mientras queden; las de área, mejor con dos enemigos o en el último combate
+  if (bombs && bombs.n > 0 && bombs.used !== bombs.fight) {
+    const foes = opponents(s, me);
+    const area = BOMBS[bombs.id].target === 'all';
+    if (!area || foes.length > 1 || bombs.fight >= 3) { bombs.n--; bombs.used = bombs.fight; return { type: 'item', itemId: bombs.id, targetId: foes.sort((x, y) => y.hp - x.hp)[0].id }; }
+  }
   if (novice) return { type: 'attack', targetId: opponents(s, me)[0].id };
   const r = readIntents(s, me);
   if (r.breakable) return { type: 'attack', targetId: r.breakable.id };
@@ -119,6 +126,8 @@ export interface ChainOpts {
   pairChance: number; fights: number; headHits: boolean; depth?: number;
   /** Pulsos de exploración entre combates (el sangrado sigue corriendo). */
   pulsesBetween: number; bandages: number; noInjuries?: boolean; novice?: boolean; sub?: string;
+  /** Bombas que se llevan (bloque 2, fase 6): se lanza una por combate. */
+  bombs?: { id: string; n: number };
 }
 export interface ChainResult { survived: number; hpAfter: number[]; died: boolean; tally: Tally; potionsUsed: number }
 
@@ -135,7 +144,9 @@ export function runChain(o: ChainOpts, seed: number): ChainResult {
   const t = tally();
   const hpAfter: number[] = [];
   let cooldowns: Record<string, number> = {};
+  const bombs = o.bombs ? { ...o.bombs, fight: 0, used: -1 } : undefined;
   for (let f = 0; f < o.fights; f++) {
+    if (bombs) bombs.fight = f;
     const pl = playerCombatant(ch, o.gear, summaryHp(body), mp, cooldowns, undefined, { body, headHits: o.headHits, depth: o.depth ?? (o.headHits ? 2 : 0), noInjuries: o.noInjuries });
     const pick = () => o.enemies[Math.floor(rnd() * o.enemies.length)];
     const foe = (id: string) => tuneEnemy(enemyCombatant(pick(), id, 'B', o.enemyLevel), o.sub ?? '');
@@ -162,7 +173,7 @@ export function runChain(o: ChainOpts, seed: number): ChainResult {
       }
       const me = getCombatant(s, 'player');
       const n = s.log.length;
-      s = performAction(s, playerTurn(s, me, potions, seed + g, o.novice));
+      s = performAction(s, playerTurn(s, me, potions, seed + g, o.novice, bombs));
       readLog(s.log, n, 'Sim', t);
     }
     const me = getCombatant(s, 'player');

@@ -1,8 +1,6 @@
-import { enemyAttackLine, enemyAttackShort, enemyThreats } from '../../core/armor';
-import { hitsVitals } from '../../core/damage';
 import { useEffect, useRef, useState } from 'react';
 import { actions, useGame } from '../state/store';
-import { cooldownLeft, currentActor, fleeChance, intentDamage, opponents, readIntents, type Combatant, type CombatEvent } from '../../core/combat';
+import { bombPreview, cooldownLeft, currentActor, fleeChance, intentDamage, opponents, readIntents, type Combatant, type CombatEvent } from '../../core/combat';
 import { getMove } from '../../core/data/intents';
 import { DEFEND_TELEGRAPHED } from '../../config/intents';
 import { getSkill } from '../../core/data/skills';
@@ -10,6 +8,8 @@ import { combatLoadout } from '../../core/loadout';
 import { getItem } from '../../core/data/items';
 import { CLASSES } from '../../core/data/classes';
 import { STATUSES } from '../../core/statuses';
+import { BOMBS, BOMB_DMG_NAME } from '../../config/bombs';
+const BOMB_ORDER = ['nail_bomb', 'pitch_flask', 'silver_shrapnel', 'sulfur_flask'];
 import { countItem } from '../../core/inventory';
 import { wornSkin } from '../../core/skins';
 import { allyBackUrl, heroBackUrl, monsterUrl, FLYER_SPECS, iconUrl } from '../../shared/art';
@@ -146,6 +146,19 @@ export function CombatScreen() {
     id, key: '', name: getItem(id).name, fx: 'bag', source: 'basic' as const, sourceLabel: `x${countItem(expedition!.backpack, id)}`, cost: 0, disabled: false,
     desc: getItem(id).description, lines: [], onUse: () => actions.combatAct({ type: 'item', itemId: id }), testId: `use-${id}`, itemId: id,
   }));
+  // Bombas y frascos: al enemigo marcado (o a todos); la ficha dice el daño esperado y el estado. Gastan el turno.
+  for (const id of BOMB_ORDER) {
+    if (!expedition || !tgt || countItem(expedition.backpack, id) <= 0) continue;
+    const b = BOMBS[(getItem(id).use as { bomb: string }).bomb];
+    const hits = b.target === 'all' ? foes : [tgt];
+    const exp = hits.map((f) => `${f.name}: ~${bombPreview(player, f, b)}`).join(' · ');
+    const st = b.status ? ` ${b.status.chance < 1 ? `${Math.round(b.status.chance * 100)} % de ` : ''}${STATUSES[b.status.id].name.toLowerCase()} ${b.status.turns} turno${b.status.turns > 1 ? 's' : ''}.` : '';
+    bagEntries.push({
+      id, key: '', name: getItem(id).name, fx: 'bag', source: 'basic' as const, sourceLabel: `${b.target === 'all' ? 'A todos' : `A ${tgt.name}`} · x${countItem(expedition.backpack, id)}`, cost: 0, disabled: false,
+      desc: `${b.target === 'all' ? 'Alcanza a todos los enemigos' : `Alcanza a ${tgt.name}`}. Daño ${BOMB_DMG_NAME[b.dmg]} esperado: ${exp}.${st}${b.undeadMult ? ` ×${b.undeadMult} contra no muertos.` : ''} No se esquiva. Gasta el turno.`,
+      lines: [], onUse: () => actions.combatAct({ type: 'item', itemId: id, targetId: tgt.id }), testId: `use-${id}`, itemId: id,
+    });
+  }
   // Tratamientos: uno por herida que tenga remedio en la mochila, con la región a la vista antes de gastarlo (gasta el turno)
   if (player.body && expedition) {
     const have = (t: Treatment) => countItem(expedition.backpack, TREATMENT_ITEM[t]) > 0;
@@ -389,7 +402,6 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent,
   const kind = c.boss ? 'boss' : c.side === 'A' && c.control !== 'player' ? 'ally' : '';
   // Con dos enemigos, tocar su ficha lo marca como objetivo (zona táctil grande)
   const pick = target ? { role: 'button', tabIndex: -1, 'aria-pressed': target.on, onClick: target.pick, style: { cursor: 'pointer', outline: target.on ? '2px solid #c4283b' : undefined, outlineOffset: 1 } } : {};
-  const depth = useGame((st) => st.combat?.state.combatants.find((x) => x.body)?.depth ?? 0);
   return (
     <div className={`frame ${kind} ${small ? 'frame-sm' : ''} ${duo ? 'frame-duo' : ''}`} data-testid={`info-${c.id}`} {...pick}>
       <div className="flex items-center gap-2.5">
@@ -397,12 +409,6 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent,
         <div className="flex-1 min-w-0">
           <div className={`fname ${c.side === 'B' ? 'text-[#ffb3a8]' : ''}`}>{target?.on ? <span className="text-blood" data-testid={`target-${c.id}`} aria-label="Objetivo">▶ </span> : ''}{c.name}{kind === 'ally' ? <span className="text-heal text-xs"> · aliado</span> : ''}</div>
           {sub && !small && <div className="text-[11px] text-stone-400 truncate">{sub}</div>}
-          {c.side === 'B' && c.ref && c.ref !== 'rival' && !small && <div className="tall-only text-[11px] text-stone-300 truncate" data-testid={`zones-${c.id}`} title="A qué zonas de tu cuerpo apunta y de qué tipo son sus golpes. Cortes y mordiscos hacen sangrar; los contundentes rompen huesos.">{enemyAttackLine(c.ref)}{hitsVitals(c.ref, !!c.boss, depth) ? <span className="text-blood" data-testid={`vital-${c.id}`}> · ☠ zonas vitales</span> : ''}</div>}
-          {c.side === 'B' && c.ref && c.ref !== 'rival' && !small && (() => { const t = enemyThreats(c.ref); return t.length ? <div className="tall-only text-[11px] text-[#e8b33a] truncate" data-testid={`threats-${c.id}`} title="Lo que puede causarte. La armadura de la parte golpeada evita sangrados y fracturas.">Puede causar: {t.join(' · ')}</div> : null; })()}
-          {c.side === 'B' && c.ref && c.ref !== 'rival' && !small && (() => { const t = enemyThreats(c.ref); return (
-            <div className="short-only card-short text-[10px] leading-[12px] text-stone-300" data-testid={`zones-short-${c.id}`}>
-              {enemyAttackShort(c.ref)}{hitsVitals(c.ref, !!c.boss, depth) ? <span className="text-blood"> · ☠</span> : ''}{t.length ? <span className="text-[#e8b33a]"> · {t.join(' · ')}</span> : ''}
-            </div>); })()}
         </div>
         {small && <span className="text-xs text-stone-400">{c.hp} / {c.stats.maxHp}</span>}
         {onBody && (
@@ -449,7 +455,7 @@ function StageFighter({ c, x, bottom, h, shadowW, shadowBottom, flip, anim, floa
       <div className="fighter-shadow" style={{ left: `${x}%`, bottom: `${shadowBottom}%`, width: `${shadowW}%`, opacity: dead ? 0.3 : 1 }} />
       <div className={`absolute ${selectable ? 'cursor-pointer' : ''}`} style={{ left: `${x}%`, bottom: `${bottom}%`, height: `${h}%`, translate: '-50% 0' }} onClick={selectable ? onSelect : undefined} data-testid={`fighter-${c.id}`}>
         {(active || selected) && !dead && <div className={`absolute left-1/2 -translate-x-1/2 -top-6 text-xl ${selected ? 'text-blood' : 'text-gold'} turn-arrow`}>▼</div>}
-        <div key={`${anim.step}-${c.id}`} className={`h-full ${dead ? 'death-fade' : motion || (fly ? 'bob' : 'breathe')}`}>
+        <div key={dead ? `dead-${c.id}` : `${anim.step}-${c.id}`} className={`h-full ${dead ? 'death-fade' : motion || (fly ? 'bob' : 'breathe')}`}>
           <img src={src} alt={c.name} draggable={false} className={`h-full w-auto pixelated ${flip ? '-scale-x-100' : ''}`} style={dim ? { filter: 'brightness(.85)' } : undefined} />
         </div>
         {floats.filter((f) => f.targetId === c.id).map((f, i) => (

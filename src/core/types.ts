@@ -32,6 +32,8 @@ export type ItemEffect =
   /** Tratamientos de la anatomía (venda, hemostático, torniquete, férula, cirugía): se aplican a una región. */
   | { kind: 'treat'; treat: 'bandage' | 'hemostatic' | 'tourniquet' | 'splint' | 'surgery' | 'painkiller' }
   /** Comida y bebida (Fase 5): suben Saciedad, Hidratación o Descanso. Fuera de combate. */
+  /** Bombas y frascos (bloque 2, fase 6): se lanzan en combate, gastan el turno. Cifras en config/bombs.ts. */
+  | { kind: 'bomb'; bomb: string }
   | { kind: 'need'; sat?: number; hyd?: number; rest?: number; /** Plato del Refugio (Fase 9): ventaja para la siguiente incursión; solo se come en el Bastión. */ dish?: boolean };
 
 /** Familias de armas y objetos de mano izquierda (ver data/weapons.ts). */

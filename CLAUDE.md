@@ -93,6 +93,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Inventario y peso: `node scripts/inventario-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Exploración: `node scripts/exploracion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Runas: `node scripts/simular-runas.mjs 200`.
+  - Bombas: `node scripts/simular-bombas.mjs 150` y `node scripts/bombas-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Refugio, estaciones, crafteo, runas, desguace y cocina: `node scripts/refugio-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Desguace (seguro y posible, recluta fuera, confirmación y varios a la vez): `node scripts/desguace-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Materias y planos en tiendas, compra de plano y resumen: `node scripts/fuentes-check.cjs <url>/play/ <carpeta> [dispositivo]`.
