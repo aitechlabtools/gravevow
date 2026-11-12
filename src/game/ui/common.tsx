@@ -100,6 +100,7 @@ export function ItemActions({ loc, mode, onClear, lootId, buttonsOnly = false }:
   // Fase 6: girar 90° (mochila y almacén; en su sitio; si no cabe, no cambia nada). Con teclado: R
   if (inGrid && loc.container !== 'loot' && loc.container !== 'pocket' && canRotate(st.itemId)) btns.push(b('Girar ⟳', () => actions.rotate(loc), '', 'act-rotate'));
   if (def.use && mode === 'dungeon' && inGrid && loc.container === 'backpack') btns.push(b('Usar', () => actions.useItem(loc), 'btn-gold', 'act-use'));
+  if (def.use?.kind === 'need' && !def.use.dish && mode === 'lobby' && inGrid && (loc.container === 'backpack' || loc.container === 'stash')) btns.push(b(def.use.hyd && !def.use.sat ? 'Beber' : 'Comer', () => { actions.useItem(loc); }, 'btn-gold', 'act-eat'));
   if (mode === 'lobby' && inGrid && loc.container === 'backpack') btns.push(b('Al almacén', () => { actions.quickMove(loc, 'stash'); onClear(); }, '', 'act-stash'));
   if (mode === 'lobby' && inGrid && (loc.container === 'stash' || loc.container === 'shared')) btns.push(b('A la mochila', () => { actions.quickMove(loc, 'backpack'); onClear(); }, '', 'act-backpack'));
   if (mode === 'lobby' && inGrid && BAG_SIZES[st.itemId] && loc.container !== 'loot' && loc.container !== 'pocket') btns.push(b('Equipar mochila', () => { actions.equipBag(loc); onClear(); }, 'btn-gold', 'act-equip-bag'));

@@ -1264,6 +1264,12 @@ const ICONS: Record<string, IconVariant> = {
   cave_mushroom: { shape: 'shroom', a: '#6a5a8a', A: '#3a2e50', h: '#b8a8d8' },
   stew: { shape: 'bowl', a: '#8a4a1a', h: '#e8d8c0', g: '#6a4a32', A: '#4a2e1a' },
   broth: { shape: 'bowl', a: '#c9a03a', h: '#e8d8c0', g: '#6a4a32', A: '#4a2e1a' },
+  stale_bread: { shape: 'bread', a: '#9a7a4a', A: '#5a4428', h: '#c8a878', g: '#7a5a3a' },
+  wrinkled_apple: { shape: 'orb', a: '#a8402a', A: '#5a1e14', h: '#e0906a' },
+  jerky: { shape: 'meat', a: '#6a2e1a', A: '#3a160c', h: '#a85a3a' },
+  aged_cheese: { shape: 'bread', a: '#e0b84a', A: '#8a6a1a', h: '#f8e08a', g: '#c8982a' },
+  watered_wine: { shape: 'skin', a: '#6a3a4a', A: '#3a1a24', h: '#a84a6a' },
+  bitter_tea: { shape: 'chalice', a: '#7a8a4a', A: '#3a4424', h: '#b8c88a' },
   surgery_kit: { shape: 'medkit', a: PAL.steel2, g: PAL.threat2 },
 };
 

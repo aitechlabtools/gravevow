@@ -34,7 +34,7 @@ export const HEAVY_ARMOR_WEIGHT = 12;
 /** Peso de cada moneda (sueltas o dentro de un saquito o un saco). */
 export const COIN_WEIGHT = 0.01;
 /** Pesos propios de algunos objetos. */
-export const ITEM_WEIGHT: Record<string, number> = { ration: 0.5, water: 1, gold_sack: 0.5 };
+export const ITEM_WEIGHT: Record<string, number> = { ration: 0.5, water: 1, jerky: 0.25, stale_bread: 0.5, wrinkled_apple: 0.3, aged_cheese: 0.5, watered_wine: 1, bitter_tea: 0.5, gold_sack: 0.5 };
 
 /** Capacidad de carga por clase: el Guerrero lleva objetos más grandes y pesados, y aguanta más. */
 export const CARRY_CAPACITY: Record<string, number> = { warrior: 40, mage: 30, rogue: 34, cleric: 36 };

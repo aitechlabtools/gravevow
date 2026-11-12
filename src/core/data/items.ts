@@ -14,6 +14,7 @@ import { CRIPTA_ITEMS } from './zones/cripta';
 import { INFIERNO_ITEMS } from './zones/infierno';
 import { FORGED_ITEMS } from './forge';
 import { SUBZONE_ITEMS } from './subzoneItems';
+import { foodUse } from '../../config/food';
 
 // Clases que pueden usar cada familia: la clase define quién eres, el arma cómo luchas.
 const W = ['warrior'] as const;
@@ -90,14 +91,20 @@ const list: ItemDef[] = [
   { id: 'painkiller', name: 'Analgésico alquímico', description: 'Adormece el dolor de fracturas y miembros inutilizados durante 10 pulsos (o rondas): quita su penalización extra. No cura ni detiene hemorragias.', icon: 'painkiller', category: 'potion', rarity: 'uncommon', value: 24, stack: 3, use: { kind: 'treat', treat: 'painkiller' } },
   { id: 'surgery_kit', name: 'Equipo de cirugía', description: 'Fuera de combate y en dos pulsos, devuelve el uso a un miembro o al abdomen inutilizado (20 % de vida, máximo al 60 % hasta el Bastión). Una vez por región e incursión; si te interrumpen, se pierde.', icon: 'surgery_kit', category: 'potion', rarity: 'rare', value: 90, stack: 1, use: { kind: 'treat', treat: 'surgery' } },
   // ── Comida y bebida (Fase 5): fuera de combate ──
-  { id: 'ration', name: 'Ración de viaje', description: 'Pan duro, cecina y queso envueltos en tela encerada. Recupera 25 de Saciedad.', icon: 'ration', category: 'potion', rarity: 'common', value: 6, stack: 5, use: { kind: 'need', sat: 25 } },
-  { id: 'water', name: 'Odre de agua', description: 'Agua del pozo del Bastión, con regusto a cuero. Recupera 30 de Hidratación.', icon: 'water', category: 'potion', rarity: 'common', value: 5, stack: 5, use: { kind: 'need', hyd: 30 } },
+  { id: 'ration', name: 'Ración de viaje', description: 'Pan duro, cecina y queso envueltos en tela encerada. Recupera 30 de Saciedad.', icon: 'ration', category: 'potion', rarity: 'common', value: 6, stack: 5, use: foodUse('ration') },
+  { id: 'water', name: 'Odre de agua', description: 'Agua del pozo del Bastión, con regusto a cuero. Recupera 30 de Hidratación.', icon: 'water', category: 'potion', rarity: 'common', value: 5, stack: 5, use: foodUse('water') },
+  { id: 'stale_bread', name: 'Pan duro', description: 'Hogaza de hace días. Recupera 20 de Saciedad.', icon: 'stale_bread', category: 'potion', rarity: 'common', value: 3, stack: 5, use: foodUse('stale_bread') },
+  { id: 'wrinkled_apple', name: 'Manzana arrugada', description: 'Del huerto muerto tras la muralla. Recupera 10 de Saciedad y 10 de Hidratación.', icon: 'wrinkled_apple', category: 'potion', rarity: 'common', value: 3, stack: 5, use: foodUse('wrinkled_apple') },
+  { id: 'jerky', name: 'Cecina', description: 'Carne seca y prensada: ocupa poco y pesa menos. Recupera 35 de Saciedad.', icon: 'jerky', category: 'potion', rarity: 'common', value: 7, stack: 5, use: foodUse('jerky') },
+  { id: 'aged_cheese', name: 'Queso curado', description: 'Duro como la piedra y igual de fiable. Recupera 25 de Saciedad y 3 de Descanso.', icon: 'aged_cheese', category: 'potion', rarity: 'common', value: 6, stack: 5, use: foodUse('aged_cheese') },
+  { id: 'watered_wine', name: 'Vino aguado', description: 'Más agua que vino, pero templa los nervios. Recupera 20 de Hidratación y 5 de Descanso.', icon: 'watered_wine', category: 'potion', rarity: 'common', value: 6, stack: 5, use: foodUse('watered_wine') },
+  { id: 'bitter_tea', name: 'Té de raíz amarga', description: 'Infusión de la enfermería. Recupera 25 de Hidratación y 3 de Descanso.', icon: 'bitter_tea', category: 'potion', rarity: 'common', value: 9, stack: 5, use: foodUse('bitter_tea') },
   { id: 'repair_kit', name: 'Kit de reparación', description: 'Remaches, cuero y piedra de afilar. Fuera de combate devuelve parte de la durabilidad a todo lo que llevas puesto y a tus picos.', icon: 'repair_kit', category: 'tool', rarity: 'common', value: 45, stack: 3, use: { kind: 'repair' } },
   // ── Cocina del Refugio (Fase 9): ingredientes de Garth y platos ──
   { id: 'salted_meat', name: 'Carne en salazón', description: 'Tiras de carne de bestia curadas en sal. Garth las cocina; cruda, mejor no.', icon: 'salted_meat', category: 'material', rarity: 'common', value: 5, stack: 10 },
   { id: 'cave_mushroom', name: 'Setas de galería', description: 'Crecen donde no llega la luz. Dan cuerpo al caldo.', icon: 'cave_mushroom', category: 'material', rarity: 'common', value: 3, stack: 10 },
-  { id: 'hearty_stew', name: 'Guiso del Bastión', description: 'Espeso y caliente. Recupera 40 de Saciedad y, en la siguiente incursión, gastas un 10 % menos de Descanso. Se come en el Bastión.', icon: 'stew', category: 'potion', rarity: 'uncommon', value: 4, stack: 3, use: { kind: 'need', sat: 40, dish: true } },
-  { id: 'spiced_broth', name: 'Caldo especiado', description: 'Pica en la garganta y asienta el estómago. Recupera 30 de Hidratación y, en la siguiente incursión, gastas un 10 % menos de Saciedad e Hidratación. Se come en el Bastión.', icon: 'broth', category: 'potion', rarity: 'uncommon', value: 4, stack: 3, use: { kind: 'need', hyd: 30, dish: true } },
+  { id: 'hearty_stew', name: 'Guiso del Bastión', description: 'Espeso y caliente. Recupera 40 de Saciedad y 10 de Hidratación y, en la siguiente incursión, gastas un 10 % menos de Descanso. Se come en el Bastión.', icon: 'stew', category: 'potion', rarity: 'uncommon', value: 4, stack: 3, use: foodUse('hearty_stew') },
+  { id: 'spiced_broth', name: 'Caldo especiado', description: 'Pica en la garganta y asienta el estómago. Recupera 30 de Hidratación y 10 de Saciedad y, en la siguiente incursión, gastas un 10 % menos de Saciedad e Hidratación. Se come en el Bastión.', icon: 'broth', category: 'potion', rarity: 'uncommon', value: 4, stack: 3, use: foodUse('spiced_broth') },
   // ── Desguace (Fase 9): lo que sale de despiezar equipo en el taller de Orik ──
   { id: 'scrap_metal', name: 'Chatarra', description: 'Remaches, hebillas y trozos de hoja. Orik la usa para levantar el Refugio.', icon: 'scrap_metal', category: 'material', rarity: 'common', value: 4, stack: 20 },
   { id: 'leather_scrap', name: 'Retales de cuero', description: 'Cuero curtido aprovechable de correas y jubones.', icon: 'leather_scrap', category: 'material', rarity: 'common', value: 3, stack: 20 },

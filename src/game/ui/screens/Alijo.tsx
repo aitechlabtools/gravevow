@@ -229,7 +229,7 @@ function HeroColumn({ onDetails, needs }: { onDetails: () => void; needs?: boole
       <div className="ui-arch mx-auto w-full shrink-0" style={{ height: 26 * scale + 40 }}><div className="pb-3"><PlayerSprite scale={scale} /></div></div>
       <div className="text-center font-display text-gold mt-3">◆ {cls.name} ◆</div>
       <div className="mt-2"><StatsColumn stats={stats} base={baseStats(ch.classId, ch.level)} resourceName={cls.resourceName} /></div>
-      {needs && <div className="needs-side mt-3"><NeedsPanel needs={needsOf(profile.needs)} atBase note="El catre está en el Bastión, en los barracones." /></div>}
+      {needs && <div className="needs-side mt-3"><NeedsPanel needs={needsOf(profile.needs)} backpack={profile.backpack} onUse={(id) => actions.eatItem(id)} atBase note="El catre está en el Bastión, en los barracones." /></div>}
       <div className="flex-1" />
       <button className="btn w-full mt-3 font-display tracking-[0.1em] uppercase" style={{ minHeight: 'var(--btn-h)' }} onClick={onDetails} data-testid="btn-hero-details">Ver detalles</button>
     </>
@@ -284,7 +284,7 @@ function StatusView({ withNeeds }: { withNeeds?: boolean }) {
       {cure && <div className="mb-3 status-center"><CureOffer /></div>}
       <BodyPanel body={body} backpack={profile.backpack} onTreat={(id, r) => actions.baseTreat(id, r)} onHeal={(id) => actions.baseHeal(id)} full
         note={cure ? 'Toca una parte para ver qué le pasa y curarla con lo que llevas, o arrastra una venda, una férula o una poción hasta ella.' : 'Estás entero.'}>
-        {withNeeds && <NeedsPanel needs={needsOf(profile.needs)} body={body} atBase note="El catre está en el Bastión, en los barracones." />}
+        {withNeeds && <NeedsPanel needs={needsOf(profile.needs)} body={body} backpack={profile.backpack} onUse={(id) => actions.eatItem(id)} atBase note="El catre está en el Bastión, en los barracones." />}
       </BodyPanel>
     </div>
   );
