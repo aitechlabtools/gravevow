@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════════════════════
 // Refugio, desguace y cocina (Fase 9). Lógica pura: sin React ni Phaser.
-//  · Módulos: se mejoran al momento con materiales y oro; cada nivel lo construye un mercader que ya esté en el Bastión.
+//  · Estaciones: 3 niveles; las construye y mejora su encargado al momento, con materiales y oro (config/stations.ts).
 //  · Desguace (taller de Orik): un objeto de equipo se convierte en materiales según tipo, rareza y estado, una sola vez.
 //    Nunca rinde (a precio de venta) más de lo que cuesta comprarlo: no hay bucle de comprar, desguazar y vender.
 //  · Cocina: la receta se compromete al empezar (los ingredientes se gastan una vez) y se guarda en el perfil; cada paso
@@ -10,44 +10,57 @@
 import type { Grid, ItemStack, Profile } from './types';
 import type { Need } from '../config/needs';
 import { REFUGE_CFG } from '../config/refuge';
-import { MODULES, COOK_EVENTS, DISHES, getDish, dishOfItem, type Heat, type ModuleId, type DishRecipe } from './data/refuge';
+import { MODULES, MODULE_ORDER, COOK_EVENTS, DISHES, getDish, dishOfItem, type Heat, type ModuleId, type DishRecipe } from './data/refuge';
 import { getItem } from './data/items';
 import { addToGrid, anchorIndex, cloneGrid, countItem, isCover, LAYOUTS, removeAt, removeItem } from './inventory';
 import { durability, hasDurability, maxDurability } from './durability';
 import { RARITY_RULES } from './data/rarity';
 import { buyPrice, sellPrice } from './economy';
 import { earnGoldSafe, spendGold } from './wallet';
-import { vendorUnlocked } from './vendors';
-import { VENDORS } from './data/vendors';
+import { VENDORS, type VendorId } from './data/vendors';
+import { STATION_FX } from '../config/stations';
+import { CRAFT_CFG } from '../config/crafting';
 import { makeRng, makeUid } from './rng';
 
 export type Result = { ok: true; profile: Profile; note?: string } | { ok: false; error: string };
 
 // ── Estado del Refugio en el perfil ─────────────────────────────────
-export interface RefugeState { cot: number; kitchen: number; bench: number; infirmary: number; alchemy: number }
-export const EMPTY_REFUGE: RefugeState = { cot: 0, kitchen: 0, bench: 0, infirmary: 0, alchemy: 0 };
+/** Nivel de cada estación (0 = bloqueada, 1 a 3). `v: 2` = formato de la parte 2.1 (catre desde nivel 1). */
+export interface RefugeState { cot: number; kitchen: number; bench: number; infirmary: number; forge: number; alchemy: number; runic: number; v?: 2 }
+export const EMPTY_REFUGE: RefugeState = { cot: 1, kitchen: 0, bench: 0, infirmary: 0, forge: 0, alchemy: 0, runic: 0, v: 2 };
+/** Estado con migración: en el formato antiguo el catre empezaba en 0 (paja) y el jergón era el 1; ahora son 1 y 2.
+ *  Lo demás conserva su nivel (el antiguo nivel 1 es el desbloqueo, el 2 de la cocina es su primera mejora). */
 export function refugeOf(p: Pick<Profile, 'refuge'>): RefugeState {
-  return { ...EMPTY_REFUGE, ...(p.refuge ?? {}) };
+  const raw = (p.refuge ?? {}) as Partial<RefugeState>;
+  const out: RefugeState = { ...EMPTY_REFUGE, ...raw, v: 2 };
+  if (p.refuge && raw.v !== 2) out.cot = Math.min(3, (raw.cot ?? 0) + 1);
+  for (const k of MODULE_ORDER) out[k] = Math.max(0, Math.min(3, Math.floor(out[k] ?? 0)));
+  out.cot = Math.max(1, out.cot);
+  return out;
 }
 
-/** Preparación para la siguiente incursión: catre mejorado y un plato (el último que comiste sustituye al anterior). */
-export interface Prep { cot?: boolean; dish?: string }
+/** Preparación para la siguiente incursión: catre mejorado y un plato (el último que comiste sustituye al anterior).
+ *  `cot` y `dishCut` guardan el recorte según el nivel de la estación (true = 10 %, de partidas antiguas). */
+export interface Prep { cot?: boolean | number; dish?: string; dishCut?: number }
+
+const cotCut = (prep: Prep) => (typeof prep.cot === 'number' ? prep.cot : prep.cot ? REFUGE_CFG.prepCut : 0);
+const dishCut = (prep: Prep) => prep.dishCut ?? REFUGE_CFG.prepCut;
 
 /** Recorte del consumo de cada necesidad por la preparación (negativo = gastas menos). Las fuentes se suman. */
 export function prepMods(prep: Prep | null | undefined): Partial<Record<Need, number>> {
   const out: Partial<Record<Need, number>> = {};
   if (!prep) return out;
-  if (prep.cot) out.rest = (out.rest ?? 0) - REFUGE_CFG.prepCut;
+  if (cotCut(prep)) out.rest = (out.rest ?? 0) - cotCut(prep);
   const d = prep.dish ? DISHES.find((x) => x.result === prep.dish) : undefined;
-  for (const n of d?.prep ?? []) out[n] = (out[n] ?? 0) - REFUGE_CFG.prepCut;
+  for (const n of d?.prep ?? []) out[n] = (out[n] ?? 0) - dishCut(prep);
   return out;
 }
 
 /** Texto corto de la preparación (para el panel y el HUD). */
 export function prepText(prep: Prep | null | undefined): string[] {
   const t: string[] = [];
-  if (prep?.cot) t.push('Bien dormido: −10 % de Descanso');
-  if (prep?.dish) t.push(`${getItem(prep.dish).name}: ${(dishOfItem(prep.dish)?.prep ?? []).map((n) => ({ sat: 'Saciedad', hyd: 'Hidratación', rest: 'Descanso' })[n]).join(' e ')} −10 %`);
+  if (prep && cotCut(prep)) t.push(`Bien dormido: −${Math.round(cotCut(prep) * 100)} % de Descanso`);
+  if (prep?.dish) t.push(`${getItem(prep.dish).name}: ${(dishOfItem(prep.dish)?.prep ?? []).map((n) => ({ sat: 'Saciedad', hyd: 'Hidratación', rest: 'Descanso' })[n]).join(' e ')} −${Math.round(dishCut(prep) * 100)} %`);
   return t;
 }
 
@@ -132,34 +145,56 @@ export function receptionDiscard(p: Profile, i: number): Result {
   return { ok: true, profile: withoutReception(p, i) };
 }
 
-// ── Módulos ─────────────────────────────────────────────────────────
-/** null si se puede mejorar; si no, el motivo (se enseña junto al botón). */
+// ── Estaciones ──────────────────────────────────────────────────────
+/** Coste del siguiente nivel (null si está al máximo). */
+export function nextCost(p: Profile, id: ModuleId) {
+  return MODULES[id].levels[refugeOf(p)[id] + 1]?.cost ?? null;
+}
+/** Lo que falta para el siguiente nivel (vacío = se puede pedir ya). */
+export function missingFor(p: Profile, id: ModuleId): { itemId: string; have: number; need: number }[] {
+  const cost = nextCost(p, id);
+  return (cost?.items ?? []).map((m) => ({ itemId: m.itemId, have: ownedQty(p, m.itemId), need: m.qty })).filter((m) => m.have < m.need);
+}
+/** null si se puede construir o mejorar; si no, el motivo (se enseña junto al botón). */
 export function upgradeBlock(p: Profile, id: ModuleId): string | null {
-  const lvl = refugeOf(p)[id];
-  const next = MODULES[id].levels[lvl + 1];
-  if (!next?.cost) return 'Ya está al máximo.';
-  const by = next.cost.by;
-  if (!vendorUnlocked(p, by)) return `Lo construye ${VENDORS[by].name}, que aún no ha llegado al Bastión.`;
-  if (p.gold < next.cost.gold) return `Oro insuficiente: necesitas ${next.cost.gold}.`;
-  for (const m of next.cost.items) if (ownedQty(p, m.itemId) < m.qty) return `Te falta ${getItem(m.itemId).name.toLowerCase()} (${ownedQty(p, m.itemId)}/${m.qty}).`;
+  const cost = nextCost(p, id);
+  if (!cost) return 'Está al máximo.';
+  const miss = missingFor(p, id)[0];
+  if (miss) return `Te falta ${getItem(miss.itemId).name.toLowerCase()} (${miss.have}/${miss.need}).`;
+  if (p.gold < cost.gold) return `Oro insuficiente: necesitas ${cost.gold}.`;
   return null;
 }
+/** Estaciones que se pueden construir o mejorar ya con lo que tienes (para los avisos). */
+export function readyStations(p: Profile, by?: VendorId): ModuleId[] {
+  return MODULE_ORDER.filter((id) => (!by || MODULES[id].by === by) && !upgradeBlock(p, id));
+}
 
+/** Pedir al encargado que construya (nivel 1) o mejore la estación: cobra materiales y oro y la deja lista al momento. */
 export function upgradeModule(p: Profile, id: ModuleId): Result {
   const block = upgradeBlock(p, id);
   if (block) return { ok: false, error: block };
   const ref = refugeOf(p);
-  const next = MODULES[id].levels[ref[id] + 1];
-  const taken = takeItems(p, next.cost!.items);
+  const lvl = ref[id] + 1;
+  const cost = nextCost(p, id)!;
+  const taken = takeItems(p, cost.items);
   if (!taken) return { ok: false, error: 'Te faltan materiales.' };
-  const paid = spendGold(taken, next.cost!.gold);
+  const paid = spendGold(taken, cost.gold);
   if (!paid.ok) return paid;
-  return { ok: true, profile: { ...paid.profile, refuge: { ...ref, [id]: ref[id] + 1 } }, note: `${next.name}: ${next.effect}` };
+  const m = MODULES[id];
+  return { ok: true, profile: { ...paid.profile, refuge: { ...ref, [id]: lvl } }, note: `${VENDORS[m.by].name}: ${m.lines[lvl - 1]}` };
 }
 
-/** Dormir en el catre: Descanso a 100 y, con el catre mejorado, preparación de Descanso. */
+/** Lote máximo de la estación según su nivel (5, 10 o 20). */
+export function stationBatch(p: Pick<Profile, 'refuge'>, id: ModuleId): number {
+  return Math.max(1, CRAFT_CFG.batch[refugeOf(p)[id]] ?? 1);
+}
+
+/** Dormir en el catre: con el catre mejorado (nivel 2 o 3), además, preparación de Descanso. */
+export function cotPrepCut(p: Profile): number {
+  return STATION_FX.cotPrep[refugeOf(p).cot] ?? 0;
+}
 export function canSleepForPrep(p: Profile): boolean {
-  return refugeOf(p).cot >= 1 && !p.prep?.cot;
+  return cotPrepCut(p) > 0 && cotCut(p.prep ?? {}) < cotPrepCut(p);
 }
 
 // ── Desguace ────────────────────────────────────────────────────────
@@ -184,7 +219,7 @@ export function scrapYield(stack: ItemStack, bench = 0): { itemId: string; qty: 
   const def = getItem(stack.itemId);
   const cond = hasDurability(def) ? REFUGE_CFG.scrapBrokenFloor + (1 - REFUGE_CFG.scrapBrokenFloor) * (durability(stack) / Math.max(1, maxDurability(stack))) : 1;
   const rk = stack.rarity ? RARITY_RULES[stack.rarity].statMult / RARITY_RULES[def.rarity].statMult : 1;
-  const raw = def.value * REFUGE_CFG.scrapPerValue * rk * cond * (1 + (bench >= 1 ? REFUGE_CFG.benchBonus : 0));
+  const raw = def.value * REFUGE_CFG.scrapPerValue * rk * cond * (1 + (STATION_FX.benchBonus[Math.min(3, bench)] ?? 0));
   // Tope: lo desguazado, a precio de venta, nunca supera el 80 % de lo que cuesta comprar el objeto
   const cap = Math.floor((buyPrice(stack.itemId) * REFUGE_CFG.scrapMaxOfBuy) / sellPrice(mat));
   const qty = Math.max(1, Math.min(cap, Math.floor(raw)));
@@ -258,7 +293,7 @@ export function cheapestIngredient(d: { ingredients: { itemId: string; qty: numb
 export function cookBatch(p: Profile, recipeId: string, qty: number): Result {
   const d = getDish(recipeId);
   if (!(p.cooked ?? []).includes(d.id)) return { ok: false, error: 'Primero cocínala una vez en el fogón.' };
-  const n = Math.max(1, Math.min(REFUGE_CFG.maxBatch, Math.floor(qty)));
+  const n = Math.max(1, Math.min(stationBatch(p, 'kitchen'), Math.floor(qty)));
   const block = cookBlock(p, recipeId, n);
   if (block) return { ok: false, error: block };
   const taken = takeItems(p, d.ingredients.map((m) => ({ itemId: m.itemId, qty: m.qty * n })));

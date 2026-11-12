@@ -2,18 +2,16 @@
 // Todo se decide tocando: nada depende del hover ni de reflejos.
 import { useState } from 'react';
 import { actions, useGame } from '../state/store';
-import { MODULES, MODULE_ORDER, COOK_EVENTS, DISHES, HEAT_NAME, getDish, type Heat } from '../../core/data/refuge';
-import { canSleepForPrep, knownDishes, ownedQty, prepText, refugeOf, scrapYield, upgradeBlock, cookBlock } from '../../core/refuge';
+import { MODULES, COOK_EVENTS, DISHES, HEAT_NAME, getDish, type Heat } from '../../core/data/refuge';
+import { knownDishes, ownedQty, prepText, refugeOf, scrapYield, cookBlock, stationBatch } from '../../core/refuge';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { stackRarity } from '../../core/data/rarity';
 import { durability, hasDurability, maxDurability, wearLevel } from '../../core/durability';
 import { WEAR_COLOR } from '../../config/durability';
-import { REFUGE_CFG } from '../../config/refuge';
-import { VENDORS } from '../../core/data/vendors';
-import { needsOf } from '../../core/needs';
 import { isCover } from '../../core/inventory';
 import { ItemIcon } from './inventory';
 import { ReceptionSection } from './WorkshopPanels';
+import { CraftPanel, RunePanel, StationGrid, type GoTo } from './StationPanels';
 import { sfx } from '../audio';
 import type { ItemStack } from '../../core/types';
 
@@ -33,10 +31,20 @@ function Cost({ items, gold }: { items: { itemId: string; qty: number }[]; gold:
 }
 
 /** El Refugio: módulos, catre y lo que te prepara para la siguiente bajada. */
-export function RefugePanel({ onBack }: { onBack: () => void }) {
+export function RefugePanel({ onBack, onGo }: { onBack: () => void; onGo?: GoTo }) {
   const profile = useGame((s) => s.profile)!;
   const ref = refugeOf(profile);
-  const needs = needsOf(profile.needs);
+  const [inside, setInside] = useState<string | null>(null);
+  const back = () => { setInside(null); sfx('click'); };
+  const wrap = (node: React.ReactNode) => <div className="h-full overflow-y-auto scroll-thin" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-refuge"><div className="w-full max-w-[1200px] mx-auto">{node}</div></div>;
+  if (inside === 'forge' || inside === 'runic') return wrap(<CraftPanel station={inside} onBack={back} />);
+  if (inside === 'runes') return wrap(<RunePanel onBack={back} />);
+  if (inside === 'runic-menu') return wrap(
+    <div className="flex flex-wrap gap-2 pt-2" data-testid="runic-menu">
+      <button className="btn btn-gold font-display" style={{ minHeight: 52 }} onClick={() => setInside('runic')} data-testid="runic-craft">Fabricar en el atril</button>
+      <button className="btn btn-gold font-display" style={{ minHeight: 52 }} onClick={() => setInside('runes')} data-testid="runic-runes">Grabar runas</button>
+      <button className="btn" style={{ minHeight: 52 }} onClick={back}>◂ Refugio</button>
+    </div>);
   const prep = prepText(profile.prep);
   const dishes = [...profile.backpack, ...profile.stash].filter((x): x is ItemStack => !!x && !isCover(x) && !!getItem(x.itemId).use && (getItem(x.itemId).use as { dish?: boolean }).dish === true);
   const dishIds = [...new Set(dishes.map((d) => d.itemId))];
@@ -46,7 +54,6 @@ export function RefugePanel({ onBack }: { onBack: () => void }) {
       if (index >= 0) { actions.eat({ kind: 'grid', container, index }); return; }
     }
   };
-  const sleepPrep = canSleepForPrep(profile);
   return (
     <div className="h-full overflow-y-auto scroll-thin" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-refuge">
       <div className="w-full max-w-[1200px] mx-auto flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -54,37 +61,8 @@ export function RefugePanel({ onBack }: { onBack: () => void }) {
         <button className="btn font-display tracking-[0.1em] uppercase" style={BTN} onClick={onBack} data-testid="refuge-back">◂ Bastión</button>
       </div>
       <ReceptionSection />
-      <div className="w-full max-w-[1200px] mx-auto grid gap-2 md:grid-cols-3 mt-2">
-        {MODULE_ORDER.map((id) => {
-          const m = MODULES[id];
-          const lvl = ref[id];
-          const cur = m.levels[lvl];
-          const next = m.levels[lvl + 1];
-          const block = next ? upgradeBlock(profile, id) : null;
-          return (
-            <div key={id} className="panel p-3 flex flex-col gap-2" data-testid={`module-${id}`}>
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="font-display text-parchment tracking-[0.08em]">{m.name}</span>
-                <span className="text-[11px] text-stone-400">Nivel {lvl}/{m.levels.length - 1}</span>
-              </div>
-              <div className="text-sm"><span className="text-gold">{cur.name}.</span> <span className="text-stone-300">{cur.effect}</span></div>
-              {id === 'cot' && (
-                <button className="btn" style={BTN} disabled={needs.rest >= 100 && !sleepPrep} onClick={() => { actions.sleepCot(); sfx('click'); }} data-testid="btn-cot">
-                  {sleepPrep ? 'Dormir · bajarás descansado' : `Dormir · Descanso ${Math.round(needs.rest)}`}
-                </button>
-              )}
-              {next ? (
-                <div className="border-t border-stone-800 pt-2 mt-auto flex flex-col gap-2">
-                  <div className="text-sm"><span className="text-stone-400">Siguiente: </span><span className="text-parchment">{next.name}.</span> <span className="text-stone-300">{next.effect}</span></div>
-                  <Cost items={next.cost!.items} gold={next.cost!.gold} />
-                  <div className="text-[11px] text-stone-400">Lo construye {VENDORS[next.cost!.by].name}.</div>
-                  <button className="btn btn-gold" style={BTN} disabled={!!block} onClick={() => actions.upgradeModule(id)} data-testid={`upgrade-${id}`}>Mejorar</button>
-                  {block && <div className="text-xs text-[#d0905a]" data-testid={`upgrade-block-${id}`}>{block}</div>}
-                </div>
-              ) : <div className="text-xs text-stone-400 italic mt-auto">No se puede mejorar más por ahora.</div>}
-            </div>
-          );
-        })}
+      <div className="w-full max-w-[1200px] mx-auto mt-2">
+        <StationGrid onGo={onGo} onEnter={(id) => setInside(id === 'runic' && ref.runic >= 3 ? 'runic-menu' : id)} />
       </div>
       <div className="w-full max-w-[1200px] mx-auto panel p-3 mt-2 flex flex-wrap items-center gap-3" data-testid="refuge-prep">
         <span className="font-display text-parchment tracking-[0.08em]">Preparación</span>
@@ -187,7 +165,7 @@ export function CookPanel() {
         {DISHES.map((d) => {
           const knows = known.includes(d);
           const done = (profile.cooked ?? []).includes(d.id);
-          const n = Math.max(1, Math.min(REFUGE_CFG.maxBatch, qty[d.id] ?? 1));
+          const n = Math.max(1, Math.min(stationBatch(profile, 'kitchen'), qty[d.id] ?? 1));
           const block = knows ? cookBlock(profile, d.id) : null;
           const blockN = knows ? cookBlock(profile, d.id, n) : null;
           return (
@@ -201,7 +179,7 @@ export function CookPanel() {
                   <div className="flex items-center gap-2">
                     <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [d.id]: n - 1 })} disabled={n <= 1} aria-label="Menos">−</button>
                     <span className="w-6 text-center text-parchment" data-testid={`batch-qty-${d.id}`}>{n}</span>
-                    <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [d.id]: n + 1 })} disabled={n >= REFUGE_CFG.maxBatch} aria-label="Más">+</button>
+                    <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [d.id]: n + 1 })} disabled={n >= stationBatch(profile, 'kitchen')} aria-label="Más">+</button>
                     <button className="btn flex-1" style={BTN} disabled={!!blockN} onClick={() => actions.cookBatch(d.id, n)} data-testid={`cook-batch-${d.id}`}>Cocinar {n}</button>
                   </div>
                 ) : <div className="text-xs text-stone-400">Cocínala una vez al fogón para poder hacerla por lotes.</div>}

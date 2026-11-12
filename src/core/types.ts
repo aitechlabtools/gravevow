@@ -102,6 +102,8 @@ export interface ItemStack {
   rot?: boolean;
   /** Atributos aleatorios de este ejemplar (ids de data/rarity.ts, p. ej. «vampire»). */
   affixes?: string[];
+  /** Runas grabadas en el Atril rúnico (un id por hueco; null = hueco vacío). */
+  runes?: (string | null)[];
 }
 
 export type Grid = (ItemStack | null)[];
@@ -250,9 +252,9 @@ export interface Profile {
   /** Saciedad, Hidratación y Descanso (Fase 5) al volver al Bastión. Sin valor: llenas. */
   needs?: { sat: number; hyd: number; rest: number } | null;
   /** Refugio (Fase 9): nivel de cada módulo. Sin valor: todo a 0. */
-  refuge?: { cot: number; kitchen: number; bench: number; infirmary?: number; alchemy?: number };
+  refuge?: { cot: number; kitchen: number; bench: number; infirmary?: number; forge?: number; alchemy?: number; runic?: number; v?: 2 };
   /** Preparación para la siguiente incursión (catre mejorado, plato). Se gasta al bajar. */
-  prep?: { cot?: boolean; dish?: string } | null;
+  prep?: { cot?: boolean | number; dish?: string; dishCut?: number } | null;
   /** Receta en el fogón (ingredientes ya gastados): se retoma al volver a la cocina. */
   cooking?: { recipe: string; events: number[]; picks: ('low' | 'mid' | 'high')[] } | null;
   /** Recetas cocinadas al menos una vez (abren la producción normal por lotes). */

@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { actions, useGame } from '../state/store';
 import { CLASSES } from '../../core/data/classes';
 import { readyQuestCount } from '../../core/quests';
+import { readyStations } from '../../core/refuge';
 import { xpForNextLevel } from '../../core/stats';
 import { PlayerSprite, HeroSprite, GoldAmount, Modal } from './common';
 import { SettingsModal } from './TitleScreen';
@@ -32,8 +33,9 @@ export function Lobby() {
   const ch = profile.character;
   const cls = CLASSES[ch.classId];
   const questsReady = readyQuestCount(profile);
+  const stationsReady = readyStations(profile).length;
   const tabs: PillTab<LobbyTab>[] = [
-    { id: 'play', label: 'Jugar' }, { id: 'character', label: 'Personaje' }, { id: 'stash', label: 'Intendencia' }, { id: 'merchants', label: 'Bastión' },
+    { id: 'play', label: 'Jugar' }, { id: 'character', label: 'Personaje' }, { id: 'stash', label: 'Intendencia' }, { id: 'merchants', label: 'Bastión', badge: stationsReady },
     { id: 'quests', label: 'Misiones', badge: questsReady }, { id: 'bestiary', label: 'Bestiario' }, { id: 'shop', label: 'Tienda' },
   ];
   const go = (t: LobbyTab) => { setTab(t); sfx('click'); };

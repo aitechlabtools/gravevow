@@ -1304,6 +1304,10 @@ const ICONS: Record<string, IconVariant> = {
   blueprint: { shape: 'scroll', a: '#3d6a9a', A: '#1f3a5a', h: '#a8c8f0', g: '#e9e1cc' },
   blueprint_gold: { shape: 'scroll', a: '#3a2a1a', A: '#1a120a', h: PAL.gold3, g: PAL.gold2 },
   surgery_kit: { shape: 'medkit', a: PAL.steel2, g: PAL.threat2 },
+  rune_vampire: { shape: 'gem', a: PAL.threat1, A: '#2a0a10', h: PAL.threat2 },
+  rune_stone: { shape: 'gem', a: '#8a8478', A: '#3a3630', h: '#d8d0c0' },
+  rune_hermit: { shape: 'gem', a: '#5a8a4a', A: '#1f3a1a', h: '#b8e0a0' },
+  rune_swift: { shape: 'gem', a: '#4a8ac8', A: '#1a3a5a', h: '#c8e8ff' },
 };
 
 export function drawIcon(key: string): Canvas {

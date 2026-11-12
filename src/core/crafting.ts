@@ -7,7 +7,11 @@
 //    (si no cabe, al almacén y, si tampoco, a la recepción). Nada se pierde.
 // ════════════════════════════════════════════════════════════════════
 import type { ItemStack, Profile, Rarity } from './types';
-import { CRAFT_RECIPES, type CraftRecipe, type CraftStation } from './data/crafting';
+import { CRAFT_RECIPES as BASE_RECIPES, type CraftRecipe, type CraftStation } from './data/crafting';
+import { RUNE_RECIPES } from './data/runes';
+
+/** Todas las recetas: las de cada objeto y las runas del Atril. */
+export const CRAFT_RECIPES: CraftRecipe[] = [...BASE_RECIPES, ...RUNE_RECIPES];
 import { getItem } from './data/items';
 import { RARITY_ORDER, rollAffixes } from './data/rarity';
 import { addToGrid, countItem, removeItem, LAYOUTS } from './inventory';
@@ -19,7 +23,7 @@ import { jobResult } from './workshop';
 import { CRAFT_CFG } from '../config/crafting';
 
 export const STATION_NAMES: Record<CraftStation, string> = {
-  kitchen: 'Cocina', bench: 'Banco de trabajo', infirmary: 'Rincón de cura', forge: 'Forja', alchemy: 'Mesa de alquimia',
+  kitchen: 'Cocina', bench: 'Banco de trabajo', infirmary: 'Rincón de cura', forge: 'Forja', alchemy: 'Mesa de alquimia', runic: 'Atril rúnico',
 };
 
 export function getRecipe(id: string): CraftRecipe {

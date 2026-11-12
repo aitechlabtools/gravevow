@@ -58,6 +58,7 @@ export function ItemTooltip({ stack, equipment, mode }: { stack: ItemStack; equi
       {def.uses === undefined && maxDurability(stack) > 0 && <div className="text-xs mb-1" style={{ color: WEAR_COLOR[wearLevel(stack)] }} data-testid="tooltip-dur">{isBroken(stack) ? 'Rota: no da estadísticas ni especiales. Repárala con Brand o un kit.' : `Durabilidad: ${durability(stack)}/${maxDurability(stack)}`}</div>}
       {stack.quality !== undefined && <div className="text-xs mb-1" style={{ color: ['#9a9a9a', '#5fbf4a', '#e8b33a'][stack.quality] }}>Calidad {QUALITIES[stack.quality].name.toLowerCase()}{QUALITIES[stack.quality].bonus ? ` (+${Math.round(QUALITIES[stack.quality].bonus * 100)}%)` : ''}{stack.forgedBy ? ` · Forjada por ${stack.forgedBy}` : ''}</div>}
       {stack.affixes?.length ? <div className="text-xs mb-1 text-gold">{stack.affixes.map((a) => AFFIXES[a]?.description).filter(Boolean).join(' ')}</div> : null}
+      {stack.runes?.some(Boolean) ? <div className="text-xs mb-1 text-[#b58cff]">Runas: {stack.runes.filter((x): x is string => !!x).map((r) => getItem(r).name).join(', ')}</div> : null}
       {def.stats && (() => {
         const st = stackStats(stack, def);
         return (

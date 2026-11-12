@@ -18,6 +18,7 @@ import { effectiveMaxMp, type Needs } from './needs';
 import { getPact } from './data/altars';
 import { AUX_SCALE } from '../config/intents';
 import { resizeBody, summaryHp, type Body } from './anatomy';
+import { stackAffixes } from './runes';
 
 /** Zona de origen de una criatura (la de su archivo de datos). Las nuevas, diseñadas a escala de la Mazmorra, no se tocan. */
 const ORIGIN: Record<string, string> = {};
@@ -57,7 +58,7 @@ export function playerCombatant(ch: CharacterData, equipment: Equipment, hp: num
     ...(body ? { armor: armorGuards(equipment) } : {}),
     ...(opts.unbreakable ? { unbreakable: true } : {}),
     // Atributos del equipo («del vampiro», «de sangrado»…) y especiales mejorados por la rareza de cada arma
-    affixes: [equipment.mainHand, equipment.offHand].flatMap((x) => x?.affixes ?? []),
+    affixes: [equipment.mainHand, equipment.offHand].flatMap((x) => stackAffixes(x)),
     skillMods: Object.assign({}, ...(['mainHand', 'offHand'] as const).map((sl) => {
       const st = equipment[sl];
       if (!st) return {};

@@ -31,7 +31,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Armadura y lesiones (Fase 10): `armor.ts` (pieza que cubre cada región, protección por tramos de durabilidad, lesión según el tipo de golpe, «Puede causar» de la ficha); cifras en `config/armor.ts`. Curación completa: `cureCost` en `anatomy.ts` (tras caer, `Profile.fallen`, 1 moneda o gratis).
   - Anatomía: `anatomy.ts` (7 regiones, muerte solo por cabeza o tórax, exceso de daño, sangrado por pulso con techo, fracturas, tratamientos, estabilización y heridas guardadas en `Profile.wounds`); cifras en `config/anatomy.ts`. Solo el jugador tiene cuerpo (`Combatant.body`); la vida `hp` es su resumen.
   - Necesidades: `needs.ts` (Saciedad, Hidratación y Descanso de 0 a 100; se gastan por pulso de 6 s o por ronda; recortan el máximo de Ímpetu o Maná; a cero, sed y hambre hieren el tórax; guardadas en `Profile.needs`); cifras en `config/needs.ts`.
-  - Refugio (Fase 9): `refuge.ts` (módulos, desguace, cocina por pasos, preparación `Profile.prep` → `Expedition.prep`); datos en `data/refuge.ts`, cifras en `config/refuge.ts`. Taller: `workshop.ts` (yunque, mesa de alquimia y rincón de cura; datos en `data/workshop.ts`); recepción de excedentes en `refuge.ts` (`deliver`).
+  - Refugio (Fase 9 y bloque 2): estaciones con encargado y 3 niveles en `config/stations.ts`; runas en `runes.ts`; crafteo común en `crafting.ts`. `refuge.ts` (estaciones, desguace, cocina por pasos, preparación `Profile.prep` → `Expedition.prep`); datos en `data/refuge.ts`, cifras en `config/refuge.ts`. Taller: `workshop.ts` (yunque, mesa de alquimia y rincón de cura; datos en `data/workshop.ts`); recepción de excedentes en `refuge.ts` (`deliver`).
   - Botín: `loot.ts`. Oro físico: `gold.ts`, `bag.ts` y `inventory.ts`.
   - Inventario espacial: `inventory.ts` (objetos de varias casillas con marcas `cover`, giro `rot`, `splitStack`) y peso en `carry.ts` (carga por clase, tramos y tope del 150 %); cifras en `config/carry.ts`.
   - Expedición: `expedition.ts`, `dungeonGen.ts` y `dungeon.ts`.
@@ -46,7 +46,7 @@ Capas: datos → lógica → estado → interfaz y motor.
 - `src/game/engine`: la escena de mazmorra (`DungeonScene.ts`) solo dibuja y mueve; los hechos del juego pasan por acciones del estado.
 - `src/game/ui`: pantallas.
   - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
-  - Mercaderes: los 8 del plan maestro en `data/vendors.ts` (lugar y subzona de llegada); `core/vendors.ts` decide quién está (`vendorUnlocked`) y migra la reputación antigua.
+  - Mercaderes: los 8 del plan maestro en `data/vendors.ts`; todos están desde el principio (`core/vendors.ts`), que migra la reputación antigua.
   - Las piezas comunes están en `kit/`.
   - Mazmorra, combate y resumen: `DungeonScreen`, `CombatScreen` y `SummaryScreen`. El arrastre de objetos está en `pointerDrag.tsx`.
 - `src/game/persistence/db.ts`: guardado en IndexedDB «gravevow», con respaldo en localStorage `gravevow.*`.
@@ -92,7 +92,8 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Necesidades: `node scripts/necesidades-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Inventario y peso: `node scripts/inventario-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Exploración: `node scripts/exploracion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
-  - Refugio, desguace y cocina: `node scripts/refugio-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Runas: `node scripts/simular-runas.mjs 200`.
+  - Refugio, estaciones, crafteo, runas, desguace y cocina: `node scripts/refugio-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Forja, alquimia, rincón de cura y recepción: `node scripts/taller-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Ataques anunciados y jefes: `node scripts/intenciones-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Ciclo completo en S1 (sección 33; curación tras caer y curar partes en Estado): `node scripts/ciclo-check.cjs <url>/play/ <carpeta> <warrior|mage> <nueva|migrada> [dispositivo]`.

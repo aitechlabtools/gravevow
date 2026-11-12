@@ -33,7 +33,7 @@ export function ItemCard({ loc, mode, onClear, compact = false }: { loc: Loc | n
   const def = getItem(st.itemId);
   const r = RARITY_INFO[stackRarity(st, def)];
   const who = s.profile?.character;
-  const stats = def.stats || st.affixes?.length ? stackStats(st, def) : null;
+  const stats = def.stats || st.affixes?.length || st.runes?.some(Boolean) ? stackStats(st, def) : null;
   const specials = def.slot === 'mainHand' || def.slot === 'offHand' ? itemSpecials(def) : [];
   const statLine = stats ? STAT_KEYS.filter((k) => stats[k]).map((k) => `${stats[k]! > 0 ? '+' : ''}${stats[k]} ${k === 'maxMp' && who ? CLASSES[who.classId].resourceName : STAT_LABELS[k]}`) : [];
   const wrongClass = !!(def.slot && who && def.classes && !def.classes.includes(who.classId));
@@ -63,6 +63,7 @@ export function ItemCard({ loc, mode, onClear, compact = false }: { loc: Loc | n
           ) : null}
           {specials.length && Object.keys(specialMods(st, def, specials)).length ? <span className="text-[#c79bff]" data-testid="item-card-mods">{' · '}{Object.entries(specialMods(st, def, specials)).map(([id, m]) => `${getSkill(id).name}${m.cooldown ? ` ${m.cooldown} recarga` : ''}${m.power ? ` +${Math.round(m.power * 100)} %` : ''}`).join(', ')}</span> : null}
           {st.affixes?.length ? <span className="text-gold" data-testid="item-card-affixes">{' · '}{st.affixes.map((a) => AFFIXES[a]?.description).filter(Boolean).join(' ')}</span> : null}
+          {st.runes?.some(Boolean) ? <span className="text-[#b58cff]" data-testid="item-card-runes">{' · Runas: '}{st.runes.filter((x): x is string => !!x).map((r) => getItem(r).name).join(', ')}</span> : null}
           {capacityOf(st) > 0 && <span className="text-gold text-sm mr-2" data-testid="card-gold">Lleva {st.gold ?? 0}/{capacityOf(st)} monedas.</span>}
           {!statLine.length && !specials.length && <span className="font-body italic text-stone-300 text-[15px]">{def.description}</span>}
         </div>

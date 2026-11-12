@@ -10,7 +10,9 @@ import { PLACES, VENDORS, VENDOR_ORDER, type VendorId } from '../../../core/data
 import { vendorLockText, vendorUnlocked } from '../../../core/vendors';
 import { QUESTS } from '../../../core/data/quests';
 import { needsOf } from '../../../core/needs';
-import { canSleepForPrep } from '../../../core/refuge';
+import { canSleepForPrep, readyStations } from '../../../core/refuge';
+import { MODULES, MODULE_ORDER } from '../../../core/data/refuge';
+import { StationGrid } from '../StationPanels';
 import { REP_RANKS, rankOf } from '../../../config/reputation';
 import { readyQuestCount } from '../../../core/quests';
 import { getItem } from '../../../core/data/items';
@@ -38,7 +40,7 @@ import { Card, Drawer, Panel, SubHead, usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
 import { sfx } from '../../audio';
 
-const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Misiones', sell: 'Vender', forge: 'Forja', repair: 'Reparar', contracts: 'Contratos', infirmary: 'Enfermería', cook: 'Cocina', scrap: 'Desguace', alchemy: 'Alquimia', care: 'Rincón de cura' };
+const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Misiones', sell: 'Vender', forge: 'Forja', repair: 'Reparar', contracts: 'Contratos', infirmary: 'Enfermería', cook: 'Cocina', scrap: 'Desguace', alchemy: 'Alquimia', care: 'Rincón de cura', stations: 'Encargos del Refugio' };
 
 function servicesOf(id: VendorId): VendorView[] {
   const v: VendorView[] = ['shop'];
@@ -52,6 +54,7 @@ function servicesOf(id: VendorId): VendorView[] {
   if (id === 'orik') v.push('scrap');
   if (id === 'eldrin') v.push('alchemy');
   if (id === 'vesper') v.push('care');
+  if (MODULE_ORDER.some((m) => MODULES[m].by === id)) v.push('stations');
   return v;
 }
 /** El servicio propio de cada mercader (se resalta en su tarjeta). */
@@ -62,9 +65,10 @@ export function Mercaderes({ target, onConsumed }: { target: VendorTarget | null
   useEffect(() => { if (target) { setOpen(target); onConsumed(); } }, [target]); // eslint-disable-line react-hooks/exhaustive-deps
   const profile = useGame((s) => s.profile)!;
   const [refuge, setRefuge] = useState(false);
-  if (refuge && !open) return <RefugePanel onBack={() => { setRefuge(false); sfx('click'); }} />;
+  const goTo = (vendor: VendorId, view: VendorView) => { setRefuge(false); setOpen({ vendor, view }); };
+  if (refuge && !open) return <RefugePanel onBack={() => { setRefuge(false); sfx('click'); }} onGo={goTo} />;
   return open && vendorUnlocked(profile, open.vendor)
-    ? <VendorInterior vendor={open.vendor} initial={open.view} onBack={() => { setOpen(null); sfx('click'); }} />
+    ? <VendorInterior key={`${open.vendor}-${open.view}`} vendor={open.vendor} initial={open.view} onBack={() => { setOpen(null); sfx('click'); }} onGo={goTo} />
     : <VendorCards onTalk={(vendor) => { setOpen({ vendor, view: 'shop' }); sfx('click'); }} onRefuge={() => { setRefuge(true); sfx('click'); }} />;
 }
 
@@ -81,7 +85,7 @@ function VendorCards({ onTalk, onRefuge }: { onTalk: (v: VendorId) => void; onRe
         <div className="flex items-center gap-2" data-testid="bastion-cot">
           <span className="text-[12px] text-stone-300">Barracones · Descanso {Math.round(needs.rest)}</span>
           <button className="btn text-xs" style={{ minHeight: 44 }} onClick={() => { actions.sleepCot(); sfx('click'); }} disabled={needs.rest >= 100 && !canSleepForPrep(profile)} title="Descanso a 100, gratis" data-testid="btn-cot">Dormir en el catre</button>
-          <button className="btn btn-gold text-xs" style={{ minHeight: 44 }} onClick={onRefuge} data-testid="btn-refuge">Tu Refugio{(profile.reception ?? []).length ? ` · recepción ${(profile.reception ?? []).length}` : ''}</button>
+          <button className="btn btn-gold text-xs" style={{ minHeight: 44 }} onClick={onRefuge} data-testid="btn-refuge">Tu Refugio{(profile.reception ?? []).length ? ` · recepción ${(profile.reception ?? []).length}` : ''}{readyStations(profile).length ? ` · ${readyStations(profile).length} por construir` : ''}</button>
         </div>
       </div>
       <div className="grid w-full max-w-[1200px]" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: 'var(--gap)' }} data-testid="vendor-list">
@@ -89,7 +93,7 @@ function VendorCards({ onTalk, onRefuge }: { onTalk: (v: VendorId) => void; onRe
           const v = VENDORS[id];
           const here = vendorUnlocked(profile, id);
           const rep = profile.reputation[id] ?? 0;
-          const ready = here ? readyQuestCount(profile, id) : 0;
+          const ready = here ? readyQuestCount(profile, id) + readyStations(profile, id).length : 0;
           const special = SPECIAL[id];
           return (
             <Card key={id} title={v.name} badge={ready} testId={`vendor-card-${id}`} className={here ? '' : 'opacity-60'}
@@ -113,7 +117,7 @@ function VendorCards({ onTalk, onRefuge }: { onTalk: (v: VendorId) => void; onRe
   );
 }
 
-function VendorInterior({ vendor, initial, onBack }: { vendor: VendorId; initial: VendorView; onBack: () => void }) {
+function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; initial: VendorView; onBack: () => void; onGo: (v: VendorId, x: VendorView) => void }) {
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
@@ -130,7 +134,7 @@ function VendorInterior({ vendor, initial, onBack }: { vendor: VendorId; initial
   // Quién compra al vender (Grizk solo joyas y tesoros, y paga mejor)
   useEffect(() => { actions.setActiveVendor(vendor); return () => actions.setActiveVendor(null); }, [vendor]);
 
-  const title = view === 'alchemy' ? `Mesa de ${v.name}` : view === 'care' ? 'Rincón de cura' : view === 'cook' ? `Cocina de ${v.name}` : view === 'scrap' ? `Desguace de ${v.name}` : view === 'forge' ? `Forja de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'infirmary' ? `Enfermería de ${v.name}` : view === 'contracts' ? 'Contratos de Grizk' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
+  const title = view === 'alchemy' ? `Mesa de ${v.name}` : view === 'care' ? 'Rincón de cura' : view === 'stations' ? `Encargos del Refugio · ${v.name}` : view === 'cook' ? `Cocina de ${v.name}` : view === 'scrap' ? `Desguace de ${v.name}` : view === 'forge' ? `Forja de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'infirmary' ? `Enfermería de ${v.name}` : view === 'contracts' ? 'Contratos de Grizk' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
   const center: ReactNode =
     view === 'shop' ? <ShopStock vid={vendor} cols={`grid gap-2 ${phone ? 'grid-cols-1' : 'grid-cols-2 2xl:grid-cols-3'}`} />
       : view === 'quests' ? <VendorQuests vendor={vendor} />
@@ -142,6 +146,7 @@ function VendorInterior({ vendor, initial, onBack }: { vendor: VendorId; initial
           : view === 'scrap' ? <ScrapPanel />
           : view === 'alchemy' ? <AlchemyPanel />
           : view === 'care' ? <CarePanel />
+          : view === 'stations' ? <div className="space-y-2"><p className="font-body text-base text-stone-300">Lo que {v.name} puede construir o mejorar en tu Refugio. Cobra los materiales y el oro y lo deja listo al momento.</p><StationGrid by={vendor} onGo={onGo} /></div>
             : <SellGrids sel={sel} setSel={setSel} marks={marks} setMarks={setMarks} vendor={vendor} />;
   const side: ReactNode = view === 'sell'
     ? <Panel title="A vender" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="sale-panel">
@@ -162,7 +167,7 @@ function VendorInterior({ vendor, initial, onBack }: { vendor: VendorId; initial
       {discount > 0 && <div className="text-[11px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento por tu reputación</div>}
       <div className="flex flex-col gap-2 mt-3">
         {servicesOf(vendor).map((s) => (
-          <button key={s} className={`btn font-display tracking-[0.1em] uppercase ${view === s ? 'btn-gold' : ''}`} style={{ minHeight: 'var(--btn-h)' }} onClick={() => go(s)} data-testid={`vendor-view-${s}`}>{VIEW_LABEL[s]}</button>
+          <button key={s} className={`btn font-display tracking-[0.1em] uppercase ${view === s ? 'btn-gold' : ''}`} style={{ minHeight: 'var(--btn-h)' }} onClick={() => go(s)} data-testid={`vendor-view-${s}`}>{VIEW_LABEL[s]}{s === 'stations' && readyStations(profile, vendor).length ? <span className="ml-1 text-heal" data-testid="stations-ready">●</span> : null}</button>
         ))}
         <button className="btn font-display tracking-[0.1em] uppercase" style={{ minHeight: 'var(--btn-h)' }} onClick={onBack} data-testid="vendor-back">◂ Volver</button>
       </div>

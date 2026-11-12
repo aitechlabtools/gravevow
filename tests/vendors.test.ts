@@ -1,5 +1,4 @@
 import { vendorUnlocked, migrateReputation } from '../src/core/vendors';
-import type { VendorId } from '../src/core/data/vendors';
 import { withGold } from './helpers';
 import { describe, expect, it } from 'vitest';
 import { VENDORS, VENDOR_ORDER } from '../src/core/data/vendors';
@@ -107,14 +106,9 @@ describe('Aviso de misiones listas', () => {
 });
 
 describe('Fase 5b: los ocho mercaderes del Bastión', () => {
-  it('Vesper, Garth y Nira están desde el principio; los demás llegan con su subzona', () => {
+  it('parte 2.1: todos los mercaderes están en el Bastión desde el principio', () => {
     const p = createProfile('A', 'warrior', { cloak: 0, skin: 0 });
-    expect(['vesper', 'garth', 'nira'].every((v) => vendorUnlocked(p, v as VendorId))).toBe(true);
-    expect(['orik', 'grizk', 'brand', 'valerius', 'eldrin'].some((v) => vendorUnlocked(p, v as VendorId))).toBe(false);
-    const p12 = { ...p, character: { ...p.character, level: 12 } };
-    expect(vendorUnlocked(p12, 'orik')).toBe(true);
-    expect(vendorUnlocked(p12, 'grizk')).toBe(false);
-    expect(buy(withGold(p, 100), 'backpack_30', 'grizk').ok).toBe(false);
+    expect(VENDOR_ORDER.every((v) => vendorUnlocked(p, v))).toBe(true);
   });
   it('quien ya tenía un mercenario rescatado conserva a Grizk', () => {
     const p = createProfile('A', 'warrior', { cloak: 0, skin: 0 });

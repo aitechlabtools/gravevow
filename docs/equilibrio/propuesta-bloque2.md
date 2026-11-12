@@ -246,6 +246,45 @@ Respuestas del usuario (12/11):
 6. **Bombas en combate.** Acción, ficha, estados y simulador.
 7. **Equilibrio y cierre.** Simulador de economía y de combate con bombas, arreglo de `almacen-check` en ordenador, migración (las calidades de lo ya forjado se conservan), comprobación del ciclo en 3 tamaños y estado del proyecto.
 
+## 11. Parte 2.1: estaciones, encargados, 3 niveles y Atril rúnico
+
+Sustituye al desbloqueo por subzona y encargo del apartado 2. Datos editables en `src/config/stations.ts` (costes, beneficios, frases y encargados) y `MATERIAL_SOURCES` (dónde conseguir cada material).
+
+- Todos los mercaderes están en el Bastión desde el principio. Sin requisito de subzona.
+- Todo empieza bloqueado menos el Catre (nivel 1). Construir o mejorar es pedírselo al encargado: desde la tarjeta del Refugio o desde el mercader → «Encargos del Refugio». Al hacerlo dice su frase.
+- Mientras está bloqueada queda la alternativa básica (rancho, vendas de Vesper, pociones de Eldrin, desguace normal de Orik).
+- Aviso: la pestaña Bastión, el botón «Tu Refugio», la tarjeta del mercader y su servicio «Encargos del Refugio» marcan lo que ya puedes pagar.
+- Migración: el catre antiguo sube un nivel (paja → 1, jergón → 2); lo demás conserva su nivel.
+
+| Estación | Encargado | Nivel 1 (desbloqueo) | Nivel 2 | Nivel 3 |
+|---|---|---|---|---|
+| Catre | Orik | Empieza hecho: dormir llena el Descanso | 6 chatarra, 6 retales, 80 oro · −10 % Descanso la siguiente incursión | 4 mena de hierro, 2 de plata, 10 retales, 250 oro · −15 % |
+| Cocina | Garth | 2 chatarra, 2 setas, 15 oro · Guiso, lotes de 5 | 6 chatarra, 4 retales, 2 hierro, 100 oro · Caldo, lotes de 10 | 4 plata, 6 polvo de hueso, 4 hierro, 250 oro · lotes de 20 y platos al 15 % |
+| Banco de trabajo | Orik | 3 chatarra, 2 retales, 10 oro · desguace +25 % | 8 chatarra, 4 hierro, 120 oro · +40 % | 3 plata, 10 retales, 4 hierro, 280 oro · +55 % |
+| Rincón de cura | Hermana Vesper | 3 retales, 1 agua, 10 oro · vendas, torniquetes y férulas, lotes de 5 | 8 retales, 2 hierro, 100 oro · lotes de 10 | 4 plata, 6 polvo de hueso, 220 oro · lotes de 20 |
+| Forja | Maese Brand | 5 chatarra, 1 polvo de hueso, 20 oro · recetas de nivel 1, lotes de 5 | 6 hierro, 10 chatarra, 4 polvo, 150 oro · nivel 2, lotes de 10, 10 % de acabado fino | 6 plata, 6 hierro, 320 oro · nivel 3, lotes de 20, 20 % fino |
+| Mesa de alquimia | Eldrin | 2 esquirlas, 2 setas, 20 oro · antídotos, maná y tónicos, lotes de 5 | 3 hierro, 6 esquirlas, 4 polvo, 130 oro · lotes de 10 | 4 plata, 10 esquirlas, 280 oro · lotes de 20 |
+| Atril rúnico | Eldrin | 3 esquirlas, 2 polvo de hueso, 20 oro · equipo mágico de nivel 1, lotes de 5 | 8 esquirlas, 2 plata, 6 polvo, 150 oro · equipo mágico de nivel 2, 10 % fino | 12 esquirlas, 6 plata, 320 oro · nivel 3 y runas |
+
+**Desbloquear todo con S1.** Las seis estaciones cerradas piden en total 13 chatarra, 7 retales, 4 setas, 1 agua, 5 esquirlas arcanas, 3 polvo de hueso y 95 oro. En S1 la chatarra y los retales salen de desguazar lo que se encuentra (una espada o una armadura comunes dan de 2 a 6), las esquirlas de desguazar equipo de Mago, el polvo de hueso de los enemigos (20 %, 1–2) y de Orik, y las setas y el agua de Garth. Una incursión normal en S1 deja 50–150 oro y de 4 a 8 piezas de equipo: con una o dos bajadas se abren todas. Lo comprueba `tests/refuge.test.ts` (ningún desbloqueo pide más de 6 materiales ni más de 120 oro en total, y solo materiales de S1).
+
+**Encargados.** Catre y Banco son de Orik (el taller); Cocina de Garth; Rincón de Vesper; Forja de Maese Brand (el herrero; la Forja estaba en la propuesta aprobada y la parte 2.1 no la nombra, así que se mantiene); Mesa de alquimia y Atril rúnico de Eldrin, el único mercader arcano: no hace falta un personaje nuevo.
+
+**Reparto Mesa / Atril.** La Mesa hace consumibles (pociones, antídotos, tónicos, brea, pólvora y bombas). El Atril hace báculos, varitas, tomos, orbes y amuletos, los intermedios arcanos (cristales, pergamino, tinta rúnica) y las runas. Ninguna receta está en las dos (`tests/runes.test.ts`).
+
+**Runas (Atril nivel 3).** Huecos: común y poco común 1, rara y épica 2, legendaria 0. Una runa sobre un hueco ocupado sustituye a la anterior; no se repite la misma runa en un objeto; no suben el precio de venta. Primer conjunto:
+
+| Runa | Efecto | Dónde | Receta |
+|---|---|---|---|
+| Runa del vampiro | Te curas el 8 % del daño | Solo armas | 2 tinta rúnica, 1 cristal de ectoplasma, 1 lingote de plata |
+| Runa de piedra | +2 defensa | Cualquiera | 1 tinta, 1 cristal tallado, 2 lingotes de hierro |
+| Runa del ermitaño | +6 vida máxima | Cualquiera | 1 tinta, 1 cristal tallado, 2 polvo de hueso molido |
+| Runa veloz | +1 velocidad | Cualquiera | 1 tinta, 1 cristal tallado, 2 telas tejidas |
+
+Simulador (`node scripts/simular-runas.mjs 200`, `simulador-runas.md`): con los valores de los atributos encontrados (+4 defensa, +12 vida) una runa por pieza daba hasta +20 puntos de supervivencia y dos por pieza casi duplicaban la del Mago en S4. Por eso las runas de estadística dan la mitad. Ahora una runa por pieza suma de 3 a 16 puntos en S4–S10 y dos por pieza (todo raro o épico y unas doce runas de S4 en adelante) de 6 a 24: más o menos lo que da subir el equipo un escalón de rareza.
+
+**Interfaz.** Tarjeta por estación: bloqueada con candado, para qué sirve, la alternativa, el encargado y el coste en verde o rojo; abierta con «Nivel N/3», lo que hace y la siguiente mejora; al máximo, «Nivel 3/3 · está al máximo». Lo que falta dice dónde se consigue, con «Ir» al servicio (desguace de Orik o tienda). Forja y Atril tienen «Entrar» al menú de crafteo común (recetas por grupo, «Solo las que puedo hacer», componentes en verde o rojo, «Ir a su receta», cantidad, «A la mochila» o «Craftear al almacén»). El Atril a nivel 3 da además «Grabar runas»: objetos equipados, de la mochila y del almacén, sus huecos y las runas, todo tocando. Cocina, Rincón y Mesa siguen con sus paneles actuales hasta la fase 3, que los pasa al mismo menú.
+
 ## Anexo: tablas completas
 
 ### Materias primas

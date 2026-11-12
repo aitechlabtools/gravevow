@@ -33,7 +33,10 @@ import { applyXp } from '../../core/stats';
 import { potionAmount, resourcePotionAmount } from '../../config/progression';
 import { makeUid, randomSeed } from '../../core/rng';
 import { vendorUnlocked } from '../../core/vendors';
-import { canSleepForPrep, cookBatch, cookStep, receptionDiscard, receptionScrap, receptionSell, receptionWithdraw, scrap, startCooking, upgradeModule } from '../../core/refuge';
+import { STATION_FX } from '../../config/stations';
+import { craft as craftItems, getRecipe, storeCrafted } from '../../core/crafting';
+import { applyRune, type RuneLoc } from '../../core/runes';
+import { canSleepForPrep, cotPrepCut, refugeOf, cookBatch, cookStep, receptionDiscard, receptionScrap, receptionSell, receptionWithdraw, RECEPTION_NOTE, scrap, startCooking, upgradeModule } from '../../core/refuge';
 import { alchemyBatch, prepareCare, quickForge, startAlchemy, startForging, workshopStep } from '../../core/workshop';
 import type { Move } from '../../core/data/workshop';
 import type { Heat, ModuleId } from '../../core/data/refuge';
@@ -518,7 +521,7 @@ export const actions = {
       grid[loc.index] = st.qty > 1 ? { ...st, qty: st.qty - 1 } : null;
       applyContainers({ ...c, [loc.container]: grid });
       const fed = feed(needsOf(s.profile.needs), { sat: def.use.sat, hyd: def.use.hyd, rest: def.use.rest }) ?? needsOf(s.profile.needs);
-      set((s2) => ({ profile: s2.profile ? { ...s2.profile, needs: toSaved(fed), prep: { ...(s2.profile.prep ?? {}), dish: st.itemId } } : s2.profile }));
+      set((s2) => ({ profile: s2.profile ? { ...s2.profile, needs: toSaved(fed), prep: { ...(s2.profile.prep ?? {}), dish: st.itemId, dishCut: STATION_FX.dishPrep[refugeOf(s2.profile).kitchen] } } : s2.profile }));
       sfx('heal');
       toast(`Comes: ${def.name.toLowerCase()}. Bajarás preparado.`, 'good', def.icon);
       return;
@@ -551,9 +554,10 @@ export const actions = {
     const n = needsOf(p.needs);
     const prep = canSleepForPrep(p);
     if (n.rest >= 100 && !prep) return invError('Ya estás descansado.');
-    set({ profile: { ...p, needs: toSaved(sleep(n)), ...(prep ? { prep: { ...(p.prep ?? {}), cot: true } } : {}) } });
+    const cut = cotPrepCut(p);
+    set({ profile: { ...p, needs: toSaved(sleep(n)), ...(prep ? { prep: { ...(p.prep ?? {}), cot: cut } } : {}) } });
     sfx('heal');
-    toast(prep ? 'Duermes en el jergón del Refugio. Bajarás descansado: −10 % de Descanso en la próxima incursión.' : 'Duermes en el catre del Bastión. Descanso recuperado.', 'good');
+    toast(prep ? `Duermes en el catre del Refugio. Bajarás descansado: −${Math.round(cut * 100)} % de Descanso en la próxima incursión.` : 'Duermes en el catre del Bastión. Descanso recuperado.', 'good');
   },
 
   drinkPotion() {
@@ -601,7 +605,7 @@ export const actions = {
     if (!r.ok) return invError(r.error);
     sfx('equip');
     set({ profile: r.profile });
-    toast(`Refugio · ${r.note}`, 'good');
+    toast(r.note ?? 'Hecho.', 'good');
   },
 
   /** Desguace en el taller de Orik. */
@@ -617,6 +621,30 @@ export const actions = {
   },
 
   /** Cocina: empezar una receta en el fogón (gasta los ingredientes). */
+  /** Crafteo común (Forja y Atril rúnico por ahora): fabrica n y lo coloca en la mochila o el almacén. */
+  craft(recipeId: string, n: number, fine: boolean, dest: 'backpack' | 'stash') {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const r = craftItems(p, recipeId, n, fine, randomSeed());
+    if (!r.ok) return invError(r.error);
+    const placed = storeCrafted(r.crafted.profile, r.crafted.made, dest);
+    set({ profile: placed.profile });
+    sfx('equip');
+    const def = getItem(getRecipe(recipeId).result);
+    toast(`${def.name} ×${r.crafted.made.reduce((a, m) => a + m.qty, 0)}${r.crafted.fineCount ? ` · ${r.crafted.fineCount} con acabado fino` : ''}.${placed.toReception ? RECEPTION_NOTE : ''}`, 'good', def.icon);
+  },
+
+  /** Atril rúnico: grabar una runa en un hueco de un objeto. */
+  applyRune(loc: RuneLoc, slotIdx: number, runeId: string) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    const r = applyRune(p, loc, slotIdx, runeId);
+    if (!r.ok) return invError(r.error);
+    set({ profile: r.profile });
+    sfx('equip');
+    toast(r.note ?? 'Runa grabada.', 'good');
+  },
+
   startCooking(recipeId: string) {
     const p = state.profile;
     if (!p || state.expedition) return;

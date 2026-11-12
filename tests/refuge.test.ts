@@ -7,7 +7,7 @@ import { ITEMS, getItem } from '../src/core/data/items';
 import { VENDORS } from '../src/core/data/vendors';
 import { buyPrice, sellPrice } from '../src/core/economy';
 import { withDurability, maxDurability } from '../src/core/durability';
-import { COOK_EVENTS, DISHES, MODULES } from '../src/core/data/refuge';
+import { COOK_EVENTS, DISHES, MODULES, MODULE_ORDER } from '../src/core/data/refuge';
 import { cookBatch, cookStep, prepMods, refugeOf, scrap, scrapMaterial, scrapYield, startCooking, upgradeBlock, upgradeModule } from '../src/core/refuge';
 import { consumptionMult, tickNeeds, FULL_NEEDS } from '../src/core/needs';
 import { startExpedition } from '../src/core/expedition';
@@ -32,29 +32,53 @@ const withOrik = (p: Profile): Profile => ({ ...p, character: { ...p.character, 
 const total = (p: Profile, id: string) => countItem(p.backpack, id) + countItem(p.stash, id);
 
 describe('Refugio', () => {
-  it('los módulos empiezan a 0 y la mejora gasta materiales y oro una vez', () => {
-    let p = rich(give(base(), 'copper_ore', 3));
-    expect(refugeOf(p)).toEqual({ cot: 0, kitchen: 0, bench: 0, infirmary: 0, alchemy: 0 });
+  it('parte 2.1: todo bloqueado menos el catre (nivel 1); el desbloqueo gasta materiales y oro una vez', () => {
+    let p = rich(give(give(base(), 'scrap_metal', 3), 'cave_mushroom', 3));
+    expect(refugeOf(p)).toEqual({ cot: 1, kitchen: 0, bench: 0, infirmary: 0, forge: 0, alchemy: 0, runic: 0, v: 2 });
     const gold0 = p.gold;
     const r = upgradeModule(p, 'kitchen');
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     p = r.profile;
     expect(refugeOf(p).kitchen).toBe(1);
-    expect(total(p, 'copper_ore')).toBe(1);
+    expect(total(p, 'scrap_metal')).toBe(1);
+    expect(total(p, 'cave_mushroom')).toBe(1);
     expect(gold0 - p.gold).toBe(MODULES.kitchen.levels[1].cost!.gold);
+    expect(r.note).toMatch(/Garth/);
   });
 
-  it('las mejoras de Orik esperan a que llegue y dicen qué falta', () => {
+  it('sin requisito de llegada: solo dice qué falta', () => {
     const p = rich(give(give(base(), 'scrap_metal', 20), 'leather_scrap', 20));
-    expect(upgradeBlock(p, 'bench')).toMatch(/Orik/);
-    expect(upgradeBlock(withOrik(base()), 'bench')).toMatch(/Oro|chatarra/i);
-    expect(upgradeModule(withOrik(p), 'bench').ok).toBe(true);
+    expect(upgradeBlock(base(), 'bench')).toMatch(/chatarra|oro/i);
+    expect(upgradeModule(p, 'bench').ok).toBe(true);
   });
 
-  it('no se mejora por encima del máximo', () => {
-    const p = { ...base(), refuge: { cot: 1, kitchen: 2, bench: 1, infirmary: 1, alchemy: 1 } };
-    for (const id of ['cot', 'kitchen', 'bench', 'infirmary', 'alchemy'] as const) expect(upgradeBlock(p, id)).toMatch(/máximo/);
+  it('migración: el catre sube uno y lo demás conserva su nivel', () => {
+    const old = { ...base(), refuge: { cot: 1, kitchen: 2, bench: 1, infirmary: 1, alchemy: 1 } };
+    expect(refugeOf(old)).toMatchObject({ cot: 2, kitchen: 2, bench: 1, infirmary: 1, alchemy: 1, forge: 0, runic: 0 });
+    expect(refugeOf({ ...base(), refuge: { cot: 0, kitchen: 0, bench: 0 } }).cot).toBe(1);
+    // Ya migrado: no vuelve a subir
+    expect(refugeOf({ ...base(), refuge: refugeOf(old) }).cot).toBe(2);
+  });
+
+  it('no se mejora por encima del nivel 3', () => {
+    const p = { ...base(), refuge: { cot: 3, kitchen: 3, bench: 3, infirmary: 3, forge: 3, alchemy: 3, runic: 3, v: 2 as const } };
+    for (const id of MODULE_ORDER) expect(upgradeBlock(p, id)).toMatch(/máximo/);
+  });
+
+  it('cada estación tiene 3 niveles con coste y encargado, y el desbloqueo es simbólico', () => {
+    let gold = 0;
+    for (const id of MODULE_ORDER) {
+      const m = MODULES[id];
+      expect(VENDORS[m.by]).toBeTruthy();
+      for (const l of [2, 3]) expect(m.levels[l].cost!.gold).toBeGreaterThan(m.levels[1].cost?.gold ?? 0);
+      if (id === 'cot') continue;
+      const c = m.levels[1].cost!;
+      gold += c.gold;
+      for (const it of c.items) expect(['scrap_metal', 'leather_scrap', 'cave_mushroom', 'water', 'arcane_shard', 'bone_dust', 'copper_ore']).toContain(it.itemId);
+      expect(c.items.reduce((a, b) => a + b.qty, 0)).toBeLessThanOrEqual(6);
+    }
+    expect(gold).toBeLessThanOrEqual(120);
   });
 });
 

@@ -15,6 +15,7 @@ import { INFIERNO_ITEMS } from './zones/infierno';
 import { FORGED_ITEMS } from './forge';
 import { SUBZONE_ITEMS } from './subzoneItems';
 import { CRAFT_MATERIALS, BLUEPRINT_ITEMS } from './crafting';
+import { RUNE_ITEMS } from './runes';
 import { foodUse } from '../../config/food';
 
 // Clases que pueden usar cada familia: la clase define quién eres, el arma cómo luchas.
@@ -144,7 +145,7 @@ const list: ItemDef[] = [
 ];
 
 // Objetos de la Mazmorra (arriba) + los de cada zona más profunda (archivos de zones/)
-export const ITEMS: Record<string, ItemDef> = Object.fromEntries([...list, ...CRIPTA_ITEMS, ...INFIERNO_ITEMS, ...FORGED_ITEMS, ...SUBZONE_ITEMS, ...CRAFT_MATERIALS, ...BLUEPRINT_ITEMS].map((i) => [i.id, i]));
+export const ITEMS: Record<string, ItemDef> = Object.fromEntries([...list, ...CRIPTA_ITEMS, ...INFIERNO_ITEMS, ...FORGED_ITEMS, ...SUBZONE_ITEMS, ...CRAFT_MATERIALS, ...BLUEPRINT_ITEMS, ...RUNE_ITEMS].map((i) => [i.id, i]));
 
 export function getItem(id: string): ItemDef {
   const def = ITEMS[id];

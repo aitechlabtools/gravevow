@@ -43,7 +43,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.ar
   // 1 · Refugio: los dos módulos nuevos
   await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=btn-refuge]');
   await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=screen-refuge]');
-  if ((await p.$$('[data-testid^=module-]')).length !== 5) fail('el Refugio no enseña sus cinco módulos');
+  if ((await p.$$('[data-testid=station-grid] > div')).length !== 7) fail('el Refugio no enseña sus siete estaciones');
   await small('[data-testid=upgrade-alchemy]', 'Mejorar la mesa');
   await tap('[data-testid=upgrade-infirmary]'); await p.waitForTimeout(150);
   await tap('[data-testid=upgrade-alchemy]'); await p.waitForTimeout(150);

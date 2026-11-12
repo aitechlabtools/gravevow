@@ -5,12 +5,11 @@ import { actions, useGame } from '../state/store';
 import { STATIONS, ALCHEMY, CARE, type Move } from '../../core/data/workshop';
 import { MODULES } from '../../core/data/refuge';
 import { alchemyBlock, careBlock, jobBand, jobResult, jobSteps, knownAlchemy } from '../../core/workshop';
-import { ownedQty, refugeOf, scrapYield } from '../../core/refuge';
+import { ownedQty, refugeOf, scrapYield, stationBatch } from '../../core/refuge';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { stackRarity } from '../../core/data/rarity';
 import { sellPrice } from '../../core/economy';
 import { vendorUnlocked } from '../../core/vendors';
-import { REFUGE_CFG } from '../../config/refuge';
 import { ItemIcon } from './inventory';
 
 const BTN = { minHeight: 44 } as const;
@@ -87,7 +86,7 @@ export function AlchemyPanel() {
         {ALCHEMY.map((r) => {
           const knows = known.includes(r);
           const done = (profile.crafted ?? []).includes(r.id);
-          const n = Math.max(1, Math.min(REFUGE_CFG.maxBatch, qty[r.id] ?? 1));
+          const n = Math.max(1, Math.min(stationBatch(profile, 'alchemy'), qty[r.id] ?? 1));
           const block = knows ? alchemyBlock(profile, r.id) : null;
           const blockN = knows ? alchemyBlock(profile, r.id, n) : null;
           return (
@@ -100,7 +99,7 @@ export function AlchemyPanel() {
                 <div className="flex items-center gap-2">
                   <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [r.id]: n - 1 })} disabled={n <= 1} aria-label="Menos">−</button>
                   <span className="w-6 text-center text-parchment">{n}</span>
-                  <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [r.id]: n + 1 })} disabled={n >= REFUGE_CFG.maxBatch} aria-label="Más">+</button>
+                  <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [r.id]: n + 1 })} disabled={n >= stationBatch(profile, 'alchemy')} aria-label="Más">+</button>
                   <button className="btn flex-1" style={BTN} disabled={!!blockN} onClick={() => actions.alchemyBatch(r.id, n)} data-testid={`alchemy-batch-${r.id}`}>Destilar {n}</button>
                 </div>
               ) : <div className="text-xs text-stone-400">Prepárala una vez en la mesa para poder hacerla por lotes.</div>}
@@ -131,7 +130,7 @@ export function CarePanel() {
       <p className="font-body text-base text-stone-300 max-w-2xl">Retales hervidos y chatarra enderezada. Sin prisas ni pruebas: lo preparas y listo.</p>
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
         {CARE.map((r) => {
-          const n = Math.max(1, Math.min(REFUGE_CFG.maxBatch, qty[r.id] ?? 1));
+          const n = Math.max(1, Math.min(stationBatch(profile, 'infirmary'), qty[r.id] ?? 1));
           const block = careBlock(profile, r.id, n);
           return (
             <div key={r.id} className="panel p-3 flex flex-col gap-2" data-testid={`care-${r.id}`}>
@@ -140,7 +139,7 @@ export function CarePanel() {
               <div className="flex items-center gap-2">
                 <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [r.id]: n - 1 })} disabled={n <= 1} aria-label="Menos">−</button>
                 <span className="w-6 text-center text-parchment">{n}</span>
-                <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [r.id]: n + 1 })} disabled={n >= REFUGE_CFG.maxBatch} aria-label="Más">+</button>
+                <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [r.id]: n + 1 })} disabled={n >= stationBatch(profile, 'infirmary')} aria-label="Más">+</button>
                 <button className="btn btn-gold flex-1" style={BTN} disabled={!!block} onClick={() => actions.prepareCare(r.id, n)} data-testid={`care-make-${r.id}`}>Preparar</button>
               </div>
               {block && <div className="text-xs text-[#d0905a]">{block}</div>}

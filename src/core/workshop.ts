@@ -11,10 +11,9 @@ import { STATIONS, FORGE_BANDS, FORGE_STEPS, ALCHEMY, getAlchemy, getCare, type 
 import { QUALITIES } from './data/forge';
 import { forgeBlock, forgeCost, recipe as forgeRecipe } from './forge';
 import { getItem } from './data/items';
-import { cheapestIngredient, deliver, ownedQty, RECEPTION_NOTE, refugeOf, takeItems, type Result } from './refuge';
+import { cheapestIngredient, deliver, ownedQty, RECEPTION_NOTE, refugeOf, stationBatch, takeItems, type Result } from './refuge';
 import { spendGold } from './wallet';
 import { makeRng } from './rng';
-import { REFUGE_CFG } from '../config/refuge';
 
 export type WorkshopJob = NonNullable<Profile['workshop']>;
 
@@ -112,7 +111,7 @@ export function startAlchemy(p: Profile, recipeId: string, seed: number): Result
 }
 export function alchemyBatch(p: Profile, recipeId: string, qty: number): Result {
   if (!done(p, recipeId)) return { ok: false, error: 'Primero prepárala una vez en la mesa.' };
-  const n = Math.max(1, Math.min(REFUGE_CFG.maxBatch, Math.floor(qty)));
+  const n = Math.max(1, Math.min(stationBatch(p, 'alchemy'), Math.floor(qty)));
   const block = alchemyBlock(p, recipeId, n);
   if (block) return { ok: false, error: block };
   const r = getAlchemy(recipeId);
@@ -156,7 +155,7 @@ export function careBlock(p: Profile, id: string, qty = 1): string | null {
   return null;
 }
 export function prepareCare(p: Profile, id: string, qty: number): Result {
-  const n = Math.max(1, Math.min(REFUGE_CFG.maxBatch, Math.floor(qty)));
+  const n = Math.max(1, Math.min(stationBatch(p, 'infirmary'), Math.floor(qty)));
   const block = careBlock(p, id, n);
   if (block) return { ok: false, error: block };
   const r = getCare(id);

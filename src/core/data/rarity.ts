@@ -7,6 +7,7 @@ import type { ItemDef, ItemStack, Rarity, Stats } from '../types';
 import { STAT_KEYS } from '../types';
 import { qualityStats } from '../forge';
 import { RARITY_INFO } from './items';
+import { RUNES } from './runes';
 
 export const RARITY_ORDER: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 
@@ -46,6 +47,10 @@ export const AFFIXES: Record<string, AffixDef> = {
   stone: { id: 'stone', suffix: 'de piedra', description: '+4 de defensa.', on: 'any', stats: { def: 4 } },
   sage: { id: 'sage', suffix: 'del sabio', description: '−1 turno de recarga en el primer especial del objeto.', on: 'weapon' },
   hermit: { id: 'hermit', suffix: 'del ermitaño', description: '+12 de vida máxima.', on: 'any', stats: { maxHp: 12 } },
+  // Atributos de las runas del Atril (bloque 2): más flojos que los encontrados, porque se graban en todas las piezas
+  rune_stone: { id: 'rune_stone', suffix: '', description: 'Runa de piedra: +2 de defensa.', on: 'any', stats: { def: 2 } },
+  rune_hermit: { id: 'rune_hermit', suffix: '', description: 'Runa del ermitaño: +6 de vida máxima.', on: 'any', stats: { maxHp: 6 } },
+  rune_swift: { id: 'rune_swift', suffix: '', description: 'Runa veloz: +1 de velocidad.', on: 'any', stats: { spd: 1 } },
 };
 
 /** Rareza de un ejemplar (la suya o, si no tiene, la del objeto). */
@@ -71,13 +76,18 @@ export function rarityColor(r: Rarity): string {
   return RARITY_INFO[r].color;
 }
 
+/** Atributos que dan las runas grabadas (bloque 2). */
+export function runeAffixes(stack: ItemStack): string[] {
+  return (stack.runes ?? []).map((id) => (id ? RUNES[id]?.affix : undefined)).filter((x): x is string => !!x);
+}
+
 /** Estadísticas de un ejemplar tal como suman al equipo: calidad de forja, rareza y atributos. */
 export function stackStats(stack: ItemStack, def: ItemDef): Partial<Stats> {
   const q = qualityStats(def.stats, stack.quality);
   const f = rarityStatFactor(stack, def);
   const out: Partial<Stats> = {};
   for (const k of STAT_KEYS) {
-    const v = Math.round((q[k] ?? 0) * f) + (stack.affixes ?? []).reduce((n, a) => n + (AFFIXES[a]?.stats?.[k] ?? 0), 0);
+    const v = Math.round((q[k] ?? 0) * f) + [...(stack.affixes ?? []), ...runeAffixes(stack)].reduce((n, a) => n + (AFFIXES[a]?.stats?.[k] ?? 0), 0);
     if (v) out[k] = v;
   }
   return out;
@@ -115,7 +125,7 @@ export function rollAffixes(def: ItemDef, rarity: Rarity, next: () => number): s
   const [lo, hi] = RARITY_RULES[rarity].affixes;
   const n = lo + Math.floor(next() * (hi - lo + 1));
   const isWeapon = def.slot === 'mainHand' || def.slot === 'offHand';
-  const pool = Object.values(AFFIXES).filter((a) => a.on === 'any' || (a.on === 'weapon' ? isWeapon : !isWeapon)).map((a) => a.id);
+  const pool = Object.values(AFFIXES).filter((a) => !a.id.startsWith('rune_')).filter((a) => a.on === 'any' || (a.on === 'weapon' ? isWeapon : !isWeapon)).map((a) => a.id);
   const out: string[] = [];
   while (out.length < n && pool.length) out.push(pool.splice(Math.floor(next() * pool.length), 1)[0]);
   return out;
