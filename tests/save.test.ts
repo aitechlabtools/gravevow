@@ -15,7 +15,7 @@ function veteran(): Profile {
   p.character.level = 34; p.character.xp = 120;
   p.stash = Array.from({ length: 72 }, (_, i) => ({ uid: `s${i}`, itemId: i % 2 ? 'health_potion' : 'iron_sword', qty: i % 2 ? 3 : 1 }));
   p.skins = { owned: ['skin_penitent', 'skin_ash_lord'], equipped: 'skin_ash_lord' };
-  p.settings = { volume: 0.25, music: false };
+  p.settings = { volume: 0.25, music: false, musicVolume: 1, sfxVolume: 1 };
   p.tutorialDone = true;
   p.stats = { expeditions: 41, extractions: 30, deaths: 11, kills: 507 };
   p.reputation = { orvel: 120 };
@@ -32,7 +32,7 @@ describe('Partida (formato 3): migración desde un solo personaje', () => {
     expect(s.characters[0].slot).toBe(0);
     expect(s.account.lastCharacterId).toBe(s.characters[0].id);
     expect(s.account.skinsOwned).toEqual(['skin_penitent', 'skin_ash_lord']);
-    expect(s.account.settings).toEqual({ volume: 0.25, music: false });
+    expect(s.account.settings).toEqual({ volume: 0.25, music: false, musicVolume: 1, sfxVolume: 1 });
     expect(s.account.tutorialDone).toBe(true);
     const p = composeProfile(s, s.characters[0].id)!;
     expect(p.gold).toBe(Math.ceil((12480 + 16000) / 10)); // + lo pagado por las ampliaciones, todo en monedas (÷10)

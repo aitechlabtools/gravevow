@@ -82,6 +82,7 @@ Capas: datos → lógica → estado → interfaz y motor.
 - Pruebas en el navegador, con el servidor en marcha (`npx vite --port 5173`, o `npx vite build` y luego `npx vite preview`):
   - Interfaz o mecánica: `node scripts/e2e.cjs <url>/play/ <carpeta>`, `node scripts/touch-check.cjs <url>/play/` y `node scripts/mobile-check.cjs <url>/play/ <carpeta>`, esta última también con `"iPad (gen 7) landscape"` como tercer argumento.
   - Menús: `node scripts/menus-check.cjs`.
+  - Ajustes: `node scripts/ajustes-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Tutorial: `node scripts/e2e-tutorial.cjs`.
   - Personajes y guardado: `node scripts/personajes-check.cjs`.
   - Almacén: `node scripts/almacen-check.cjs`.

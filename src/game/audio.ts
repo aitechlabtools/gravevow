@@ -3,7 +3,11 @@ let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let musicGain: GainNode | null = null;
 let musicNodes: AudioNode[] = [];
+let sfxBus: GainNode | null = null;
+let musicBus: GainNode | null = null;
 let volume = 0.6;
+let musicVolume = 1;
+let sfxVolume = 1;
 
 function ac(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -14,6 +18,9 @@ function ac(): AudioContext | null {
     master = ctx.createGain();
     master.gain.value = volume;
     master.connect(ctx.destination);
+    // Dos buses bajo el general: efectos y música, cada uno con su volumen (Ajustes › Sonido)
+    sfxBus = ctx.createGain(); sfxBus.gain.value = sfxVolume; sfxBus.connect(master);
+    musicBus = ctx.createGain(); musicBus.gain.value = musicVolume; musicBus.connect(master);
   }
   if (ctx.state === 'suspended') void ctx.resume();
   return ctx;
@@ -22,6 +29,13 @@ function ac(): AudioContext | null {
 export function setVolume(v: number) {
   volume = v;
   if (master) master.gain.value = v;
+}
+
+/** Aplica los tres volúmenes de Ajustes (0..1). Los que no vengan se quedan como están. */
+export function setAudio(o: { volume?: number; musicVolume?: number; sfxVolume?: number }) {
+  if (o.volume !== undefined) setVolume(o.volume);
+  if (o.musicVolume !== undefined) { musicVolume = o.musicVolume; if (musicBus) musicBus.gain.value = musicVolume; }
+  if (o.sfxVolume !== undefined) { sfxVolume = o.sfxVolume; if (sfxBus) sfxBus.gain.value = sfxVolume; }
 }
 
 function noiseBuffer(c: AudioContext, dur: number) {
@@ -33,7 +47,7 @@ function noiseBuffer(c: AudioContext, dur: number) {
 
 function tone(freq: number, dur: number, type: OscillatorType, gain: number, slideTo?: number, delay = 0) {
   const c = ac();
-  if (!c || !master) return;
+  if (!c || !sfxBus) return;
   const t = c.currentTime + delay;
   const o = c.createOscillator();
   const g = c.createGain();
@@ -42,14 +56,14 @@ function tone(freq: number, dur: number, type: OscillatorType, gain: number, sli
   if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
   g.gain.setValueAtTime(gain, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(master);
+  o.connect(g).connect(sfxBus);
   o.start(t);
   o.stop(t + dur + 0.02);
 }
 
 function noise(dur: number, gain: number, filterFreq: number, delay = 0, type: BiquadFilterType = 'lowpass') {
   const c = ac();
-  if (!c || !master) return;
+  if (!c || !sfxBus) return;
   const t = c.currentTime + delay;
   const s = c.createBufferSource();
   s.buffer = noiseBuffer(c, dur);
@@ -59,7 +73,7 @@ function noise(dur: number, gain: number, filterFreq: number, delay = 0, type: B
   const g = c.createGain();
   g.gain.setValueAtTime(gain, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(f).connect(g).connect(master);
+  s.connect(f).connect(g).connect(sfxBus);
   s.start(t);
 }
 
@@ -98,7 +112,7 @@ export function startMusic(mood: 'lobby' | 'dungeon') {
   musicGain = c.createGain();
   musicGain.gain.value = 0;
   musicGain.gain.linearRampToValueAtTime(mood === 'dungeon' ? 0.16 : 0.12, c.currentTime + 3);
-  musicGain.connect(master);
+  musicGain.connect(musicBus!);
   const filt = c.createBiquadFilter();
   filt.type = 'lowpass';
   filt.frequency.value = 500;

@@ -13,7 +13,7 @@ export function Logo() {
 }
 
 /** Apoyar (Ko-fi) y Discord: enlaces externos en una pestaña nueva, para no sacar al jugador de su partida. */
-function CommunityLinks({ testPrefix }: { testPrefix: string }) {
+export function CommunityLinks({ testPrefix }: { testPrefix: string }) {
   return (
     <div className="grid grid-cols-2 gap-2" data-testid={`${testPrefix}-community`}>
       <a className="btn flex items-center justify-center gap-2" href={SUPPORT_URL} {...EXTERNAL} title={SUPPORT_HINT}
@@ -28,51 +28,8 @@ function CommunityLinks({ testPrefix }: { testPrefix: string }) {
   );
 }
 
-export function SettingsModal({ onClose, onExit }: { onClose: () => void; onExit?: () => void }) {
-  const profile = useGame((s) => s.profile);
-  const screen = useGame((s) => s.screen);
-  return (
-    <Modal onClose={onClose} testId="settings">
-      <h2 className="panel-title text-xl mb-4">Ajustes</h2>
-      {profile ? (
-        <div className="space-y-4">
-          <label className="block">
-            <span className="text-sm text-stone-300">Volumen general: {Math.round(profile.settings.volume * 100)}%</span>
-            <input type="range" min={0} max={1} step={0.05} value={profile.settings.volume} onChange={(e) => actions.setSettings({ volume: +e.target.value })} className="w-full accent-[#e8b33a]" />
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={profile.settings.music} onChange={(e) => actions.setSettings({ music: e.target.checked })} className="accent-[#e8b33a] w-4 h-4" />
-            <span>Música ambiental</span>
-          </label>
-          {screen === 'lobby' && profile.tutorialDone && (
-            <div className="pt-3 border-t border-stone-700">
-              <button className="btn text-sm" onClick={() => { onClose(); actions.replayTutorial(); }} data-testid="btn-replay-tutorial">Repetir el tutorial</button>
-              <p className="text-xs text-stone-400 mt-1">Sin recompensas y sin tocar tu inventario.</p>
-            </div>
-          )}
-          <p className="pt-3 border-t border-stone-700 text-sm text-stone-400">Para crear o borrar personajes, ve a <b className="text-stone-200">Elegir personaje</b> en el menú principal.</p>
-        </div>
-      ) : (
-        <p className="font-body text-lg">Crea un personaje para ajustar el sonido. El juego se guarda automáticamente en este navegador.</p>
-      )}
-      <div className="mt-5 text-xs text-stone-400 font-body text-base">Controles: WASD/flechas o clic para moverte · E interactuar · Q beber poción · I inventario · Esc menú · 1-5 acciones de combate.</div>
-      <p className="mt-3 text-sm text-stone-400 font-body" data-testid="settings-legal">
-        Tu partida se guarda solo en este navegador.{' '}
-        <a href="../privacidad.html" target="_blank" rel="noopener" className="underline underline-offset-2 text-stone-300 hover:text-parchment inline-block py-2">Privacidad</a>
-        {' · '}
-        <a href="../cookies.html" target="_blank" rel="noopener" className="underline underline-offset-2 text-stone-300 hover:text-parchment inline-block py-2">Cookies</a>
-      </p>
-      <div className="mt-3 pt-3 border-t border-stone-700">
-        <p className="text-sm text-stone-300 mb-2">Comunidad · se abre en otra pestaña y tu partida sigue aquí.</p>
-        <CommunityLinks testPrefix="settings" />
-      </div>
-      <div className="flex gap-2 mt-4 flex-wrap">
-        <button className="btn" onClick={onClose}>Cerrar</button>
-        {onExit && <button className="btn" onClick={() => { onClose(); onExit(); }} data-testid="btn-exit-title">Salir al título</button>}
-      </div>
-    </Modal>
-  );
-}
+import { SettingsModal } from './Settings';
+export { SettingsModal };
 
 export function TitleScreen() {
   const profile = useGame((s) => s.profile);

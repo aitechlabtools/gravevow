@@ -1,0 +1,235 @@
+// Panel de Ajustes por secciones (12/11): Sonido, Pantalla, Controles, Partida, Comunidad e Información.
+// Escritorio y tableta: lista de secciones a la izquierda y contenido a la derecha. Móvil horizontal: columna de
+// iconos a la izquierda y el nombre de la sección en la cabecera (se gasta ancho, que sobra, y no alto).
+// El pie con «Cerrar» y «Salir al título» queda siempre fijo. Los cambios se guardan en la cuenta, no en el personaje.
+import { useEffect, useState, type ReactNode } from 'react';
+import { actions, useGame } from '../state/store';
+import { sfx } from '../audio';
+import { useLayout } from '../../config/ui';
+import { useIsTouch } from '../../shared/device';
+import { canFullscreen, enterFullscreen, exitFullscreen, isIOS, isStandalone, useFullscreen } from '../../shared/fullscreen';
+import { backupAgoLabel } from '../../core/backup';
+import { MailButton } from '../../legal/LegalPage';
+import { CommunityLinks } from './TitleScreen';
+
+export type SettingsTab = 'sound' | 'screen' | 'controls' | 'game' | 'community' | 'info';
+export const GAME_VERSION = 'Alpha v0.1';
+
+/** Iconos provisionales (glifos en un recuadro discontinuo). Los definitivos, en docs/ASSETS.md. */
+const TABS: { id: SettingsTab; label: string; icon: string }[] = [
+  { id: 'sound', label: 'Sonido', icon: '♪' },
+  { id: 'screen', label: 'Pantalla', icon: '▣' },
+  { id: 'controls', label: 'Controles', icon: '⌨' },
+  { id: 'game', label: 'Partida', icon: '⛁' },
+  { id: 'community', label: 'Comunidad', icon: '♥' },
+  { id: 'info', label: 'Información', icon: 'ℹ' },
+];
+const isTab = (t: unknown): t is SettingsTab => TABS.some((x) => x.id === t);
+
+/** Sección recordada mientras no haya cuenta (pantalla de título sin partida). */
+let lastTabNoProfile: SettingsTab = 'sound';
+
+export function SettingsModal({ onClose, onExit }: { onClose: () => void; onExit?: () => void }) {
+  const profile = useGame((s) => s.profile);
+  const backup = useGame((s) => s.backup);
+  const layout = useLayout();
+  const phone = layout === 'phone';
+  const saved = profile?.settings.settingsTab;
+  const [tab, setTabState] = useState<SettingsTab>(isTab(saved) ? saved : lastTabNoProfile);
+  const setTab = (t: SettingsTab) => {
+    sfx('click'); setTabState(t); lastTabNoProfile = t;
+    if (profile) actions.setSettings({ settingsTab: t });
+  };
+  // Esc cierra el panel (por encima de cualquier otra tecla de la pantalla de debajo)
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); onClose(); } };
+    window.addEventListener('keydown', h, true);
+    return () => window.removeEventListener('keydown', h, true);
+  }, [onClose]);
+  const cur = TABS.find((t) => t.id === tab)!;
+  const remind = !!backup?.remind;
+
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 fade-in set-scrim" data-modal data-testid="settings"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={`panel panel-gold set-panel ${phone ? 'is-phone' : ''}`} role="dialog" aria-label="Ajustes">
+        <div className="set-head">
+          <h2 className="panel-title text-xl">Ajustes</h2>
+          {phone && <span className="set-cur" data-testid="settings-current">· {cur.label}</span>}
+          <button className="btn icon-btn ml-auto" onClick={onClose} aria-label="Cerrar ajustes" data-testid="settings-x">✕</button>
+        </div>
+        <div className="set-body">
+          <nav className="set-nav scroll-thin" aria-label="Secciones de Ajustes">
+            {TABS.map((t) => (
+              <button key={t.id} className={`set-tab ${t.id === tab ? 'on' : ''}`} onClick={() => setTab(t.id)} aria-current={t.id === tab ? 'page' : undefined}
+                aria-label={t.label} title={phone ? t.label : undefined} data-testid={`settings-tab-${t.id}`}>
+                <span className="set-ic" aria-hidden>{t.icon}</span>
+                {!phone && <span>{t.label}</span>}
+                {t.id === 'game' && remind && <span className="set-dot" aria-label="Copia de seguridad recomendada" />}
+              </button>
+            ))}
+          </nav>
+          <div className="set-content scroll-thin" data-testid={`settings-section-${tab}`}>
+            {tab === 'sound' && <SoundSection />}
+            {tab === 'screen' && <ScreenSection />}
+            {tab === 'controls' && <ControlsSection />}
+            {tab === 'game' && <GameSection onClose={onClose} />}
+            {tab === 'community' && <Block title="Comunidad"><p className="set-note mb-3">Se abre en otra pestaña y tu partida sigue aquí.</p><CommunityLinks testPrefix="settings" /></Block>}
+            {tab === 'info' && <InfoSection />}
+          </div>
+        </div>
+        <div className="set-foot">
+          <button className="btn" onClick={onClose} data-testid="settings-close">Cerrar</button>
+          {onExit && <button className="btn" onClick={() => { onClose(); onExit(); }} data-testid="btn-exit-title">Salir al título</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Block({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="set-block">
+      <h3 className="set-h">{title}</h3>
+      <div className="set-card">{children}</div>
+    </section>
+  );
+}
+
+function Slider({ label, value, onChange, testId }: { label: string; value: number; onChange: (v: number) => void; testId: string }) {
+  return (
+    <label className="set-row">
+      <span>{label}</span>
+      <input type="range" min={0} max={1} step={0.05} value={value} onChange={(e) => onChange(+e.target.value)} className="accent-[#e8b33a]" data-testid={testId} />
+      <span className="set-val">{Math.round(value * 100)} %</span>
+    </label>
+  );
+}
+
+function SoundSection() {
+  const s = useGame((st) => st.profile?.settings);
+  if (!s) return <Block title="Sonido"><p className="set-note">Crea un personaje para ajustar el sonido.</p></Block>;
+  return (
+    <>
+      <Block title="Volumen">
+        <Slider label="General" value={s.volume} onChange={(v) => actions.setSettings({ volume: v })} testId="vol-master" />
+        <Slider label="Música" value={s.musicVolume ?? 1} onChange={(v) => actions.setSettings({ musicVolume: v })} testId="vol-music" />
+        <Slider label="Efectos" value={s.sfxVolume ?? 1} onChange={(v) => { actions.setSettings({ sfxVolume: v }); sfx('click'); }} testId="vol-sfx" />
+      </Block>
+      <Block title="Música">
+        <label className="set-toggle">
+          <input type="checkbox" checked={s.music} onChange={(e) => actions.setSettings({ music: e.target.checked })} className="accent-[#e8b33a] w-5 h-5" data-testid="music-toggle" />
+          <span>Música ambiental</span>
+        </label>
+        <p className="set-note">Los cambios se oyen al momento y valen para todos tus personajes.</p>
+      </Block>
+    </>
+  );
+}
+
+function ScreenSection() {
+  const on = useFullscreen();
+  const supported = canFullscreen();
+  return (
+    <Block title="Pantalla completa">
+      {isStandalone() ? (
+        <p className="set-note">El juego está instalado y ya se abre sin las barras del navegador.</p>
+      ) : supported ? (
+        <>
+          <button className="btn" onClick={() => { sfx('click'); if (on) void exitFullscreen(); else void enterFullscreen(); }} data-testid="settings-fullscreen">
+            {on ? 'Salir de pantalla completa' : 'Pantalla completa'}
+          </button>
+          <p className="set-note">También puedes salir con la tecla Esc o el gesto del sistema.</p>
+        </>
+      ) : isIOS() ? (
+        <p className="set-note">En iPhone no hay pantalla completa: usa «Compartir» › «Añadir a pantalla de inicio» y abre el juego desde ese icono.</p>
+      ) : (
+        <p className="set-note">Este navegador no permite la pantalla completa.</p>
+      )}
+    </Block>
+  );
+}
+
+const KEYS_DUNGEON: [string, string][] = [
+  ['WASD, flechas o clic', 'Moverte'], ['E o Espacio', 'Interactuar'], ['1 – 9', 'Elegir una opción al interactuar'],
+  ['Q', 'Beber una poción'], ['I', 'Inventario'], ['R', 'Girar el objeto seleccionado'], ['Esc', 'Pausa, o cerrar la ventana abierta'],
+];
+const KEYS_COMBAT: [string, string][] = [
+  ['1 – 6', 'Atacar, Especial, Habilidad, Mochila, Huir y Guardia'], ['1 – 4 (en un submenú)', 'Elegir'], ['Flechas y Enter', 'Moverte por las acciones y usar'],
+  ['Tab', 'Cambiar de objetivo (en la Mochila, de página)'], ['Esc o Retroceso', 'Volver atrás'], ['Enter o Espacio', 'Cerrar el resultado'],
+];
+const GESTURES: [string, string][] = [
+  ['Joystick y botones', 'Moverte, interactuar, poción e inventario en la mazmorra'], ['Tocar', 'Seleccionar o usar'],
+  ['Mantener pulsado', 'Ver la ficha'], ['Arrastrar', 'Mover objetos'], ['Tocar objeto y luego casilla', 'Colocar sin arrastrar'],
+];
+
+function KeyTable({ title, rows, testId }: { title: string; rows: [string, string][]; testId: string }) {
+  return (
+    <Block title={title}>
+      <table className="set-keys" data-testid={testId}>
+        <tbody>{rows.map(([k, v]) => <tr key={k}><th>{k}</th><td>{v}</td></tr>)}</tbody>
+      </table>
+    </Block>
+  );
+}
+
+function ControlsSection() {
+  const touch = useIsTouch();
+  const keys = [<KeyTable key="d" title="Teclado · mazmorra" rows={KEYS_DUNGEON} testId="keys-dungeon" />, <KeyTable key="c" title="Teclado · combate" rows={KEYS_COMBAT} testId="keys-combat" />];
+  const touchT = <KeyTable key="t" title="Táctil" rows={GESTURES} testId="keys-touch" />;
+  return <>{touch ? [touchT, ...keys] : [...keys, touchT]}</>;
+}
+
+function GameSection({ onClose }: { onClose: () => void }) {
+  const screen = useGame((s) => s.screen);
+  const profile = useGame((s) => s.profile);
+  const backup = useGame((s) => s.backup);
+  const roster = useGame((s) => s.roster);
+  const inRun = screen === 'dungeon';
+  return (
+    <>
+      <Block title="Copia de seguridad">
+        {backup && <p className={`mb-2 ${backup.remind ? 'text-gold' : ''}`} data-testid="settings-backup-age">{backupAgoLabel(backup)}{backup.remind ? ' · conviene hacer una.' : '.'}</p>}
+        {inRun ? <p className="set-note">Disponible en el Bastión, al terminar la expedición.</p> : roster.length > 0 ? (
+          <button className={`btn ${backup?.remind ? 'btn-gold' : ''}`} onClick={() => { sfx('click'); onClose(); void actions.openBackup(); }} data-testid="settings-open-backup">Abrir copia de seguridad</button>
+        ) : null}
+        <p className="set-note">Tu partida se guarda solo en este navegador. Si borras sus datos, se pierde.</p>
+      </Block>
+      {roster.length > 0 && (
+        <Block title="Personajes">
+          {inRun ? <p className="set-note">Para cambiar de personaje, vuelve antes al Bastión.</p> : (
+            <button className="btn" onClick={() => { sfx('click'); onClose(); void actions.openSelect(); }} data-testid="settings-choose-char">Elegir personaje</button>
+          )}
+          <p className="set-note">Ahí puedes crear o borrar personajes (hasta 4).</p>
+        </Block>
+      )}
+      {screen === 'lobby' && profile?.tutorialDone && (
+        <Block title="Tutorial">
+          <button className="btn" onClick={() => { onClose(); actions.replayTutorial(); }} data-testid="btn-replay-tutorial">Repetir el tutorial</button>
+          <p className="set-note">Sin recompensas y sin tocar tu inventario.</p>
+        </Block>
+      )}
+    </>
+  );
+}
+
+function InfoSection() {
+  return (
+    <>
+      <Block title="Versión">
+        <p data-testid="settings-version">{GAME_VERSION} · en desarrollo: puede tener fallos y cambiar.</p>
+      </Block>
+      <Block title="Legal">
+        <div className="flex flex-wrap gap-2" data-testid="settings-legal">
+          <a className="btn" href="../aviso-legal.html" target="_blank" rel="noopener">Aviso legal</a>
+          <a className="btn" href="../privacidad.html" target="_blank" rel="noopener">Privacidad</a>
+          <a className="btn" href="../cookies.html" target="_blank" rel="noopener">Cookies</a>
+        </div>
+        <p className="set-note">Se abren en otra pestaña.</p>
+      </Block>
+      <Block title="Contacto">
+        <MailButton />
+      </Block>
+    </>
+  );
+}

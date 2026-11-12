@@ -488,3 +488,13 @@ ficha del enemigo con «Puede causar», textos del tutorial. Pruebas: tests/armo
 scripts/ciclo-check.cjs (clase, partida nueva o migrada, dispositivo). Maquetas: mockups/curacion/index.html.
 Cómo probar: npx vitest run; node scripts/ciclo-check.cjs <url>/play/ <carpeta> warrior nueva (y mage migrada, con
 "iPhone 13 Pro Max landscape" e "iPad (gen 7) landscape"); node scripts/simular.mjs 300 actual.
+
+## 12/11 · Ajustes por secciones
+Panel nuevo en src/game/ui/Settings.tsx con seis secciones (Sonido, Pantalla, Controles, Partida, Comunidad, Información) y pie
+fijo. Volúmenes de música y efectos reales (audio.ts: buses sfxBus y musicBus, setAudio), guardados en la cuenta con la última
+sección (Settings.musicVolume, sfxVolume, settingsTab; migran solos con valores por defecto). Tabla de controles revisada
+(combate 1–6, Tab, flechas, Esc; mazmorra con 1–9 y R). Partida lleva a la Copia de seguridad y a Elegir personaje. Guía y mini
+tutoriales no existen: no se enseñan. Invertir controles táctiles: aplazado. Engranaje nuevo 16×16, 44 px, ayuda «Ajustes (Esc)»
+y punto de copia recomendada; Esc abre Ajustes en el Bastión. Iconos provisionales apuntados en docs/ASSETS.md.
+Cómo probar: npx vitest run; node scripts/ajustes-check.cjs <url>/play/ <carpeta> (y con "iPad (gen 7) landscape" e
+"iPhone 13 landscape"). Maquetas: mockups/ajustes/index.html.

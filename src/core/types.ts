@@ -199,8 +199,13 @@ export interface ProfileStats {
 }
 
 export interface Settings {
-  volume: number; // 0..1
+  volume: number; // 0..1, general
   music: boolean;
+  /** Volumen de la música y de los efectos (0..1), bajo el general. */
+  musicVolume: number;
+  sfxVolume: number;
+  /** Última sección abierta del panel de Ajustes. */
+  settingsTab?: string;
 }
 
 export type MercStance = 'aggressive' | 'cautious';

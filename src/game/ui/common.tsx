@@ -54,7 +54,7 @@ export function GoldAmount({ value, className = '' }: { value: number; className
 
 export function Modal({ children, onClose, wide = false, testId }: { children: ReactNode; onClose?: () => void; wide?: boolean; testId?: string }) {
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 fade-in" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()} data-testid={testId}>
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 fade-in" data-modal onMouseDown={(e) => e.target === e.currentTarget && onClose?.()} data-testid={testId}>
       <div className={`panel panel-gold p-5 ${wide ? 'max-w-4xl' : 'max-w-lg'} w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto scroll-thin`}>{children}</div>
     </div>
   );

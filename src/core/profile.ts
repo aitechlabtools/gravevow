@@ -58,7 +58,7 @@ export function createProfile(name: string, classId: ClassId, appearance: Appear
     tutorialDone: false,
     kael: { missStreak: 0 },
     lastSubzone: null,
-    settings: { volume: 0.6, music: true },
+    settings: { volume: 0.6, music: true, musicVolume: 1, sfxVolume: 1 },
     createdAt: Date.now(),
   };
 }
@@ -104,7 +104,7 @@ export function sanitizeProfile(raw: unknown): Profile | null {
   p.kael = { missStreak: Number.isFinite(streak) && streak > 0 ? Math.floor(streak) : 0, met: Number.isFinite(met) && met > 0 ? Math.floor(met) : 0, grudge: Number.isFinite(grudge) && grudge > 0 ? Math.min(3, Math.floor(grudge)) : 0 };
   p.classSkills = sanitizeClassSkills(p);
   p.lastSubzone = isSubzoneId(p.lastSubzone) ? p.lastSubzone : null;
-  p.settings = Object.assign({ volume: 0.6, music: true }, p.settings ?? {});
+  p.settings = Object.assign({ volume: 0.6, music: true, musicVolume: 1, sfxVolume: 1 }, p.settings ?? {});
   // Partidas de antes de las zonas: si ya cobraste «El trono vacío», el Señor del Osario cuenta como derrotado
   if (!Array.isArray(p.bossesDefeated)) p.bossesDefeated = p.quests.some((q) => q.id === 'q_lord' && q.progress >= 1) ? ['ossuary_lord'] : [];
   if (!p.contract || typeof p.contract !== 'object' || !MERCENARIES[p.contract.mercId] || !(p.contract.left > 0)) p.contract = null;

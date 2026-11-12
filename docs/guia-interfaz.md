@@ -135,3 +135,14 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
   materiales / tesoros», «Vender N objetos · X oro» (`actions.sellMany`; confirma si hay algo raro, épico, legendario o mejor que
   lo puesto) y «Recomprar» los últimos 5 al mismo precio mientras sigas con ese mercader (`state.buyback`, `actions.buyBack`).
 - Pruebas: `node scripts/objetos-check.cjs <url>/play/ <carpeta>` y `node scripts/arrastre-check.cjs`.
+
+## Ajustes por secciones (12/11)
+
+`src/game/ui/Settings.tsx` (`SettingsModal`; `TitleScreen.tsx` la reexporta). Maquetas en `mockups/ajustes/index.html`.
+- Secciones: Sonido (general, música y efectos, y música ambiental), Pantalla (pantalla completa o, en iPhone, cómo instalar), Controles (teclado de mazmorra y combate, y táctil; primero lo del dispositivo), Partida (botón a la Copia de seguridad, Elegir personaje y Repetir el tutorial; en la mazmorra solo avisos), Comunidad e Información (versión, legales y `MailButton`).
+- Escritorio y tableta: lista de secciones de 200 px a la izquierda. Móvil (alto ≤ 520): dos columnas de iconos de 44 px y el nombre de la sección en la cabecera.
+- Pie fijo con «Cerrar» y «Salir al título» (este, solo en el Bastión). Esc cierra el panel; en el Bastión, Esc lo abre si no hay otra ventana (`data-modal`).
+- La sección abierta y los volúmenes se guardan en la cuenta (`Settings.settingsTab`, `musicVolume`, `sfxVolume`); el audio tiene un bus de música y otro de efectos bajo el general (`setAudio`).
+- El punto verde (copia de seguridad recomendada, `backup.remind`) sale en el engranaje y en Partida.
+- Si un control cambia, actualiza las tablas `KEYS_DUNGEON`, `KEYS_COMBAT` y `GESTURES`.
+- Prueba: `node scripts/ajustes-check.cjs <url>/play/ <carpeta> [dispositivo]`.

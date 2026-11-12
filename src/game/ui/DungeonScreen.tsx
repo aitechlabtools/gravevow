@@ -619,7 +619,7 @@ function PauseModal() {
           </div>
         )}
       </div>
-      <div className="mt-4 text-sm text-stone-400 font-body text-base">WASD/flechas o clic: moverse · E: interactuar · Q: poción · I: inventario · Esc: menú</div>
+      <div className="mt-4 text-sm text-stone-400 font-body text-base">Controles completos en Ajustes › Controles</div>
     </Modal>
   );
 }

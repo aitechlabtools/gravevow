@@ -26,3 +26,12 @@ Se dibujan hoy en `src/shared/art.ts` (tabla `ICONS` y sprites de mercader). Sus
 | `sack` | Saco grande de oro (hasta 250 monedas) | Ocupa 2×2: icono de 64×64 |
 | `bag1`, `bag2`, `bag3` | Mochilas de 24, 30 y 36 casillas | Se ven en su hueco bajo «Pies» y en la tienda |
 | `vendor_collector` | El Coleccionista (goblin mercader) | Mismo tamaño y estilo que el resto de mercaderes |
+
+## Ajustes (provisionales, para diseñar)
+
+Hoy son glifos dentro de un recuadro discontinuo (`TABS` en `src/game/ui/Settings.tsx`) y una rueda dentada en SVG (`GearIcon` en `Lobby.tsx`).
+
+| Icono | Medida | Notas |
+|---|---|---|
+| Engranaje de Ajustes | 16×16 (se ve a ×2, 32 px dentro de un botón de 44) | Claro sobre fondo oscuro; lleva encima un punto verde de 9 px cuando hay aviso |
+| Sonido, Pantalla, Controles, Partida, Comunidad, Información | 16×16 cada uno (se ven a ×2, 32 px) | Uno por sección; activos en dorado #e8b33a y el resto en hueso #e9e1cc (o dos versiones) |

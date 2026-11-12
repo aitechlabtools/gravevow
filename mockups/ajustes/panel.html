@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ajustes · maqueta</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Crimson+Pro:wght@400;600&family=Grenze:wght@500;700&display=swap">
+<style>
+:root{--gold:#e8b33a;--bone:#e9e1cc;--muted:#8c8693;--stone:#1a1820;--line:#3a3741;--touch:44px}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:#07060a radial-gradient(ellipse at 50% 120%,#2a1d10 0,#07060a 60%);color:var(--bone);font-family:Grenze,Georgia,serif;overflow:hidden}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#141219;border:2px solid #6b4a12;box-shadow:0 0 0 2px #07060a,0 20px 60px #000;display:grid;grid-template-rows:auto 1fr auto;width:min(860px,100%);height:min(640px,100%)}
+.head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.head h2{font-family:Cinzel,serif;color:var(--gold);letter-spacing:.12em;margin:0;font-size:22px}
+.head .sec{font-family:Cinzel,serif;color:var(--muted);font-size:14px;letter-spacing:.08em}
+.x{margin-left:auto;width:var(--touch);height:var(--touch)}
+.body{display:grid;grid-template-columns:210px 1fr;min-height:0}
+nav{border-right:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav button{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 12px;background:transparent;border:2px solid transparent;color:var(--bone);font:600 17px Grenze,serif;text-align:left;cursor:pointer;position:relative}
+nav button.on{background:#221e28;border-color:#6b4a12;color:var(--gold)}
+nav .ic{width:32px;height:32px;flex:none;border:2px dashed #6b5a3a;display:grid;place-items:center;font-size:16px;image-rendering:pixelated}
+nav .dot{position:absolute;right:10px;top:50%;width:10px;height:10px;margin-top:-5px;background:#7fd65a;box-shadow:0 0 0 2px #07060a}
+.content{overflow:auto;padding:18px 22px;min-width:0}
+h3{font-family:Cinzel,serif;font-size:15px;letter-spacing:.1em;color:var(--gold);margin:4px 0 10px;text-transform:uppercase}
+.card{border:1px solid var(--line);background:#19171f;padding:14px;margin-bottom:14px}
+.row{display:grid;grid-template-columns:150px 1fr 52px;align-items:center;gap:12px;min-height:var(--touch)}
+.row span.v{text-align:right;color:var(--gold)}
+input[type=range]{width:100%;accent-color:var(--gold);height:var(--touch)}
+.tog{display:flex;align-items:center;gap:12px;min-height:var(--touch)}
+.sw{width:52px;height:28px;border:2px solid #07060a;background:#3a3741;position:relative}.sw.on{background:#8a5d14}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;background:var(--bone)}.sw.on::after{left:26px;background:#fbe7a6}
+.btn{min-height:var(--touch);padding:0 16px;font:700 16px Grenze,serif;color:var(--bone);background:linear-gradient(#2a2730,#1b1920);border:2px solid #07060a;box-shadow:inset 0 1px 0 #4a4652;cursor:pointer}
+.btn.gold{color:#1a1206;background:linear-gradient(#f2c75a,#c48f22 55%,#8a5d14)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.note{color:var(--muted);font:15px "Crimson Pro",serif;margin:8px 0 0}
+.warn{color:#e8b33a}
+.soon{border:1px dashed #4a4652;color:var(--muted);padding:10px;font:15px "Crimson Pro",serif}
+.foot{border-top:1px solid var(--line);padding:10px 18px;display:flex;gap:10px;justify-content:flex-end;background:#110f15}
+.tag{position:fixed;left:8px;bottom:8px;font:12px monospace;color:#555}
+/* Tableta */
+.tablet .modal{width:100%;height:100%;max-width:1000px;max-height:720px}
+.tablet .body{grid-template-columns:190px 1fr}
+/* Móvil horizontal: carril de iconos a la izquierda, sección en la cabecera */
+.phone .scrim{padding:6px max(10px,env(safe-area-inset-left))}
+.phone .modal{width:100%;height:100%}
+.phone .head{padding:4px 10px;min-height:48px}.phone .head h2{font-size:17px}
+.phone .body{grid-template-columns:64px 1fr}
+.phone nav{padding:4px;gap:2px}
+.phone nav button{justify-content:center;padding:0;min-height:44px}
+.phone nav button .lb{display:none}
+.phone nav .dot{right:4px;top:8px;margin:0}
+.phone .content{padding:10px 14px}
+.phone .row{grid-template-columns:110px 1fr 44px}
+.phone .card{padding:10px;margin-bottom:10px}
+.phone .foot{padding:4px 10px}
+.phone .grid2{grid-template-columns:1fr 1fr 1fr 1fr}
+.phone .grid2 .btn{padding:0 6px;font-size:14px}
+</style></head><body>
+<div class="scrim"><div class="modal">
+  <div class="head"><h2>AJUSTES</h2><span class="sec" id="sec"></span><button class="btn x" aria-label="Cerrar">✕</button></div>
+  <div class="body"><nav id="nav"></nav><div class="content" id="content"></div></div>
+  <div class="foot"><button class="btn">Cerrar</button><button class="btn">Salir al título</button></div>
+</div></div>
+<div class="tag" id="tag"></div>
+<script>
+const q=new URLSearchParams(location.search), L=q.get('l')||'desktop', S=q.get('s')||'sonido';
+document.body.className=L;
+const secs=[['sonido','♪','Sonido'],['pantalla','▣','Pantalla'],['controles','⌨','Controles'],['partida','⛁','Partida',1],['comunidad','♥','Comunidad'],['info','ℹ','Información']];
+nav.innerHTML=secs.map(([id,ic,lb,d])=>`<button class="${id===S?'on':''}"><span class="ic">${ic}</span><span class="lb">${lb}</span>${d?'<span class="dot"></span>':''}</button>`).join('');
+sec.textContent=L==='phone'?'· '+secs.find(s=>s[0]===S)[2].toUpperCase():'';
+const slider=(n,v)=>`<label class="row"><span>${n}</span><input type="range" value="${v}"><span class="v">${v} %</span></label>`;
+const C={
+sonido:`<h3>Volumen</h3><div class="card">${slider('General',60)}${slider('Música',80)}${slider('Efectos',100)}</div>
+<h3>Música</h3><div class="card"><div class="tog"><span class="sw on"></span><span>Música ambiental</span></div><p class="note">Los cambios se oyen al momento y valen para todos tus personajes.</p></div>`,
+partida:`<h3>Copia de seguridad</h3><div class="card"><p style="margin:0 0 8px">Última copia: <b class="warn">hace 9 días</b> · se recomienda hacer una.</p>
+<div class="grid2"><button class="btn gold">Descargar archivo</button><button class="btn">Cargar archivo</button><button class="btn">Copiar código</button><button class="btn">Pegar código</button></div>
+<p class="note">Tu partida se guarda solo en este navegador. Si borras los datos del navegador, se pierde.</p></div>
+<h3>Personajes</h3><div class="card"><button class="btn">Elegir personaje</button><p class="note">Ahí puedes crear o borrar personajes (hasta 4).</p></div>
+<h3>Tutoriales</h3><div class="card"><button class="btn">Repetir el tutorial</button><p class="note">Sin recompensas y sin tocar tu inventario.</p>
+<div class="soon" style="margin-top:10px">Guía y mini tutoriales: aún no existen. Este hueco se queda preparado y no se enseña en el juego hasta que existan.</div></div>`};
+content.innerHTML=C[S];
+tag.textContent=L+' · '+S;
+</script></body></html>

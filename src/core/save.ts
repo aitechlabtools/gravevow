@@ -18,7 +18,7 @@ export const OLD_SAVE_FORMAT = 'cryptraiders-save';
 /** 4 = expansión: tiempo de juego activo por personaje (`playMs`). Las partidas 3 se migran al cargarlas. */
 export const SAVE_VERSION = 4;
 export const MAX_CHARACTERS = 4;
-const DEFAULT_SETTINGS: Settings = { volume: 0.6, music: true };
+const DEFAULT_SETTINGS: Settings = { volume: 0.6, music: true, musicVolume: 1, sfxVolume: 1 };
 
 export interface AccountData {
   /** Identificador de la cuenta (para el futuro guardado en la nube). */

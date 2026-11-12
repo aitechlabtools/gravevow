@@ -45,7 +45,7 @@ import { getSkin } from '../../core/data/skins';
 import { dismiss, hire, rescuedMerc, setStance, STANCE_NAME } from '../../core/mercenaries';
 import { getMerc } from '../../core/data/mercenaries';
 import type { MercStance } from '../../core/types';
-import { sfx, setVolume } from '../audio';
+import { sfx, setAudio } from '../audio';
 import { expeditionActions } from './expeditionActions';
 import { combatActions } from './combatActions';
 import { medicalActions, expBody, withBody } from './medicalActions';
@@ -75,7 +75,7 @@ export const actions = {
     void loadUndo().then((u) => set({ undoAt: u?.at ?? null }));
     ss.activeId = ss.save ? currentCharacterId(ss.save) : null;
     const p = ss.save && ss.activeId ? compose(ss.save, ss.activeId) : null;
-    if (ss.save) setVolume(ss.save.account.settings.volume);
+    if (ss.save) setAudio(ss.save.account.settings);
     // Avisos de una sola vez (p. ej., el oro devuelto al pasar el almacén a páginas)
     const notes = ss.save?.account.notes ?? [];
     if (ss.save && notes.length) {
@@ -135,7 +135,7 @@ export const actions = {
     await saveSave(ss.save);
     set({ ...initial, ...kept(), profile: p, screen: 'backup', undoAt: state.undoAt, persisted: state.persisted, toasts: state.toasts });
     refreshRoster();
-    if (p) setVolume(p.settings.volume);
+    if (p) setAudio(p.settings);
     toast('Partida cargada.', 'good');
   },
 
@@ -195,7 +195,7 @@ export const actions = {
     ss.save = applyProfile(ss.save, p, id); // pasa a ser el último usado
     set({ ...initial, ...kept(), profile: p, screen: 'lobby', roster: state.roster, toasts: state.toasts });
     refreshRoster();
-    if (p.settings) setVolume(p.settings.volume);
+    if (p.settings) setAudio(p.settings);
     await saveNow();
   },
 
@@ -222,7 +222,7 @@ export const actions = {
 
   setSettings(patch: Partial<Profile['settings']>) {
     const p = state.profile;
-    if (patch.volume !== undefined) setVolume(patch.volume);
+    setAudio(patch);
     if (!p) return;
     set({ profile: { ...p, settings: { ...p.settings, ...patch } } });
   },

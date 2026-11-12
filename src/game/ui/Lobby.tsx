@@ -1,6 +1,6 @@
 import { Tienda } from './screens/Atuendos';
 import { BestiaryTab } from './BestiaryTab';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { actions, useGame } from '../state/store';
 import { CLASSES } from '../../core/data/classes';
 import { readyQuestCount } from '../../core/quests';
@@ -10,6 +10,7 @@ import { PlayerSprite, HeroSprite, GoldAmount, Modal } from './common';
 import { SettingsModal } from './TitleScreen';
 import { sfx } from '../audio';
 import { FullscreenButton } from './FullscreenButton';
+import { useIsTouch } from '../../shared/device';
 import { Jugar } from './screens/Jugar';
 import { Alijo } from './screens/Alijo';
 import { Personaje } from './screens/Personaje';
@@ -26,6 +27,18 @@ export function Lobby() {
   const profile = useGame((s) => s.profile)!;
   const [tab, setTab] = useState<LobbyTab>('play');
   const [settings, setSettings] = useState(false);
+  const backupRemind = useGame((s) => !!s.backup?.remind);
+  const touch = useIsTouch();
+  // Esc abre Ajustes si no hay otra ventana abierta (el propio panel se cierra con Esc)
+  useEffect(() => {
+    if (settings) return;
+    const h = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || (e.target as HTMLElement)?.tagName === 'INPUT' || document.querySelector('[data-modal]')) return;
+      e.preventDefault(); setSettings(true);
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [settings]);
   const [switcher, setSwitcher] = useState(false);
   /** Acceso directo a un mercader concreto (p. ej., «Contrato» en Jugar abre los contratos de Grizk). */
   const [vendorTarget, setVendorTarget] = useState<VendorTarget | null>(null);
@@ -61,7 +74,10 @@ export function Lobby() {
         <div className={`flex items-center justify-end min-w-0 ${layout === 'phone' ? 'gap-1.5' : 'gap-2.5'}`}>
         <GoldAmount value={profile.gold} className={layout === 'phone' ? 'text-sm' : 'text-lg'} />
         <FullscreenButton className="icon-btn" />
-        <button className="btn icon-btn" onClick={() => setSettings(true)} aria-label="Ajustes" title="Ajustes" data-testid="btn-lobby-settings"><GearIcon /></button>
+        <button className="btn icon-btn relative" onClick={() => { sfx('click'); setSettings(true); }} style={{ minWidth: 44, minHeight: 44 }}
+          aria-label={backupRemind ? 'Ajustes (copia de seguridad recomendada)' : 'Ajustes'} title={touch ? undefined : 'Ajustes (Esc)'} data-testid="btn-lobby-settings">
+          <GearIcon />{backupRemind && <span className="gear-dot" data-testid="gear-dot" />}
+        </button>
         </div>
       </header>
 
@@ -115,11 +131,14 @@ function CharacterSwitcher({ onClose }: { onClose: () => void }) {
 }
 
 function GearIcon() {
-  // Rueda dentada provisional (12×12)
+  // Rueda dentada pixel art 16×16 a ×2 (provisional hasta el icono definitivo: docs/ASSETS.md)
   return (
-    <svg viewBox="0 0 12 12" width="20" height="20" fill="currentColor" shapeRendering="crispEdges" aria-hidden className="shrink-0">
-      <path d="M5 0h2v2H5zM5 10h2v2H5zM0 5h2v2H0zM10 5h2v2h-2zM2 2h2v2H2zM8 2h2v2H8zM2 8h2v2H2zM8 8h2v2H8zM3 3h6v6H3z" />
-      <rect x="5" y="5" width="2" height="2" fill="#131118" />
+    <svg viewBox="0 0 16 16" width="24" height="24" shapeRendering="crispEdges" aria-hidden className="shrink-0">
+      <path fill="#07060a" d="M6 0h4v3H6zM6 13h4v3H6zM0 6h3v4H0zM13 6h3v4h-3zM2 2h3v3H2zM11 2h3v3h-3zM2 11h3v3H2zM11 11h3v3h-3zM3 4h10v8H3zM4 3h8v10H4z" />
+      <path fill="#d9d3c1" d="M7 1h2v2H7zM7 13h2v2H7zM1 7h2v2H1zM13 7h2v2h-2zM3 3h2v2H3zM11 3h2v2h-2zM3 11h2v2H3zM11 11h2v2h-2zM5 4h6v1H5zM4 5h8v6H4zM5 11h6v1H5z" />
+      <path fill="#8c8693" d="M4 10h8v1H4zM5 11h6v1H5z" />
+      <path fill="#131118" d="M6 6h4v4H6z" />
+      <path fill="#e8b33a" d="M7 7h2v2H7z" />
     </svg>
   );
 }
