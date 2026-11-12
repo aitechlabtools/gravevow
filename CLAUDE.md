@@ -45,7 +45,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Con `?debug`, el estado se ve en `window.__GRAVEVOW__`.
 - `src/game/engine`: la escena de mazmorra (`DungeonScene.ts`) solo dibuja y mueve; los hechos del juego pasan por acciones del estado.
 - `src/game/ui`: pantallas.
-  - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
+  - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»: entrada con Mercaderes y Refugio), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
   - Mercaderes: los 8 del plan maestro en `data/vendors.ts`; todos están desde el principio (`core/vendors.ts`), que migra la reputación antigua.
   - Las piezas comunes están en `kit/`.
   - Mazmorra, combate y resumen: `DungeonScreen`, `CombatScreen` y `SummaryScreen`. El arrastre de objetos está en `pointerDrag.tsx`.
@@ -96,6 +96,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Runas: `node scripts/simular-runas.mjs 200`.
   - Bombas: `node scripts/simular-bombas.mjs 150` y `node scripts/bombas-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Economía del crafteo: `node scripts/simular-economia.mjs` (escribe `docs/equilibrio/simulador-economia.md`).
+  - Bastión (entrada, Mercaderes, Refugio con tarjetas y detalle de estación): `node scripts/bastion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Refugio, estaciones, crafteo, runas, desguace y cocina: `node scripts/refugio-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Desguace (seguro y posible, recluta fuera, confirmación y varios a la vez): `node scripts/desguace-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Materias y planos en tiendas, compra de plano y resumen: `node scripts/fuentes-check.cjs <url>/play/ <carpeta> [dispositivo]`.

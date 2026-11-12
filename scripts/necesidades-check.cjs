@@ -15,9 +15,10 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await tap('[data-testid=btn-tutorial-ok]');
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; pr.tutorialSeen.dungeon = true; g.setState({ profile: { ...pr, needs: { sat: 50, hyd: 40, rest: 20 } } }); });
   if (await p.$('[data-testid=base-needs]')) fail('Jugar ya no debe enseñar las necesidades');
-  await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=bastion-cot]');
+  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]'); await p.waitForSelector('[data-testid=vendor-list]');
   if ((await p.$$('[data-testid^=vendor-card-]')).length !== 8) fail('el Bastión no tiene los 8 mercaderes');
-  if (!(await p.$('[data-testid=vendor-lock-eldrin]'))) fail('Eldrin debería estar por llegar');
+  // El catre está en el Refugio: «Usar · Dormir» en su tarjeta
+  await tap('[data-testid=merchants-back]'); await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=btn-cot]');
   const cb = await box('[data-testid=btn-cot]');
   if (dev && (!cb || cb.height < 43.5)) fail('botón del catre menor de 44 px: ' + JSON.stringify(cb));
   await p.screenshot({ path: out + '-1.png' });

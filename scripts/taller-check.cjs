@@ -1,5 +1,6 @@
 // Bloque 2, fase 3: Refugio → Rincón de cura y Mesa de alquimia; Brand → Forja cerrada (se pide desde su servicio) y
 // menú común; Eldrin → Mesa; Vesper → Rincón de cura; ningún minijuego; recepción de excedentes (vender y descartar).
+// 12/11: el Refugio va con tarjetas como los mercaderes; «Pedir a…» en la tarjeta y la recepción en su propio panel.
 // Uso: node scripts/taller-check.cjs http://localhost:5173/play/ salida [dispositivo]
 const { chromium, devices } = require('playwright');
 const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.argv;
@@ -30,15 +31,15 @@ const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.ar
   // 1 · Refugio: los dos módulos nuevos
   await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=btn-refuge]');
   await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=screen-refuge]');
-  if ((await p.$$('[data-testid=station-grid] > div')).length !== 7) fail('el Refugio no enseña sus siete estaciones');
-  await small('[data-testid=upgrade-alchemy]', 'Mejorar la mesa');
-  await tap('[data-testid=upgrade-infirmary]'); await p.waitForTimeout(150);
-  await tap('[data-testid=upgrade-alchemy]'); await p.waitForTimeout(150);
+  if ((await p.$$('[data-testid=station-grid] > article')).length !== 7) fail('el Refugio no enseña sus siete estaciones');
+  await small('[data-testid=ask-alchemy]', 'Pedir la mesa');
+  await tap('[data-testid=ask-infirmary]'); await p.waitForTimeout(150);
+  await tap('[data-testid=ask-alchemy]'); await p.waitForTimeout(150);
   const ref = await G(() => window.__GRAVEVOW__.getState().profile.refuge);
   if (ref?.infirmary !== 1 || ref?.alchemy !== 1) fail('no se construyeron rincón y mesa: ' + JSON.stringify(ref));
   await wide('Refugio');
   await p.screenshot({ path: out + '-refugio.png' });
-  await tap('[data-testid=refuge-back]');
+  await tap('[data-testid=refuge-back]'); await tap('[data-testid=btn-merchants]');
 
   // 2 · Forja de Brand: cerrada se pide desde su servicio; abierta, menú común sin yunque
   await p.waitForSelector('[data-testid=vendor-brand]'); await tap('[data-testid=vendor-brand]');
@@ -76,9 +77,9 @@ const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.ar
 
   // 5 · Recepción: dos excedentes; se vende uno y se descarta otro (con confirmación)
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, reception: [{ uid: 'x1', itemId: 'chainmail', qty: 1 }, { uid: 'x2', itemId: 'iron_helm', qty: 1 }] } }); });
-  await p.waitForSelector('[data-testid=btn-refuge]');
-  if (!/recepción 2/.test(await p.textContent('[data-testid=btn-refuge]'))) fail('el botón del Refugio no avisa de la recepción');
-  await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=reception]');
+  await tap('[data-testid=merchants-back]'); await p.waitForSelector('[data-testid=btn-refuge]');
+  if (!/recepción 2/.test(await p.textContent('[data-testid=bastion-refuge]'))) fail('la tarjeta del Refugio no avisa de la recepción');
+  await tap('[data-testid=btn-refuge]'); await tap('[data-testid=btn-reception]'); await p.waitForSelector('[data-testid=reception]');
   await small('[data-testid=reception-sell-0]', 'Vender desde recepción');
   await wide('Recepción');
   await p.screenshot({ path: out + '-recepcion.png' });

@@ -650,3 +650,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .set-panel.is-phone .set-keys th{white-space:normal;width:38%}
 /* Engranaje con aviso */
 .gear-dot{position:absolute;top:4px;right:4px;width:9px;height:9px;background:#7fd65a;box-shadow:0 0 0 2px #07060a;pointer-events:none}
+
+/* Refugio: marcas sobre el arte de la estación (dentro del arco, abajo, para que el borde redondo no las corte) */
+.st-up{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--font-body,Grenze),serif;letter-spacing:.08em;text-transform:uppercase;color:#07060a;background:#7fd65a;padding:2px 6px}
+.st-dot{position:absolute;bottom:8px;right:10px;min-width:22px;height:22px;line-height:22px;text-align:center;background:#7fd65a;color:#000;font-weight:700}

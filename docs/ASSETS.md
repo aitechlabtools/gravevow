@@ -35,3 +35,19 @@ Hoy son glifos dentro de un recuadro discontinuo (`TABS` en `src/game/ui/Setting
 |---|---|---|
 | Engranaje de Ajustes | 16×16 (se ve a ×2, 32 px dentro de un botón de 44) | Claro sobre fondo oscuro; lleva encima un punto verde de 9 px cuando hay aviso |
 | Sonido, Pantalla, Controles, Partida, Comunidad, Información | 16×16 cada uno (se ven a ×2, 32 px) | Uno por sección; activos en dorado #e8b33a y el resto en hueso #e9e1cc (o dos versiones) |
+
+## Bastión y Refugio (provisionales, para diseñar)
+Marcadores dibujados por código en `src/game/ui/stationArt.ts`. Misma proporción que los retratos de los mercaderes (20 × 26 px de base; en escritorio se ven a ×6, 120 × 156). PNG con transparencia, apoyado en la parte de abajo. La versión bloqueada no hace falta: se oscurece por código y se pone el candado.
+
+| Clave | Qué es | Medida |
+|---|---|---|
+| `refuge` | Refugio (tarjeta de la entrada del Bastión; se ve a doble tamaño) | 20 × 26 px; recomendable 40 × 52 px |
+| `cot` | Catre | 20 × 26 px |
+| `kitchen` | Cocina con su fogón | 20 × 26 px |
+| `bench` | Banco de trabajo | 20 × 26 px |
+| `infirmary` | Rincón de cura | 20 × 26 px |
+| `forge` | Forja | 20 × 26 px |
+| `alchemy` | Mesa de alquimia | 20 × 26 px |
+| `runic` | Atril rúnico | 20 × 26 px |
+
+La tarjeta «Mercaderes» de la entrada usa el retrato de Garth.

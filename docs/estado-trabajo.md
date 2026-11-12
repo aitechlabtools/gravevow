@@ -4,6 +4,11 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 12/11: Bastión con entrada (Mercaderes y Refugio)
+- Plan: docs/plan-bastion-refugio.md; maquetas: mockups/bastion-refugio. Respuestas: recepción en panel y platos en la Cocina; botón «Detalles»; estaciones ocultas hasta que llega su encargado; Garth en la tarjeta de Mercaderes; fuera «Encargos del Refugio» de los mercaderes.
+- Código: `screens/Mercaderes.tsx` (BastionEntry, áreas entry/merchants/refuge), `RefugePanels.tsx` (RefugePanel nuevo, Dishes), `StationPanels.tsx` (StationTile, StationTiles, StationDetail, LevelMarks, StationArt), `stationArt.ts` (marcadores 20 × 26), `core/refuge.ts` (`stationVisible`, `visibleStations`; `readyStations` solo cuenta las visibles).
+- testids: `btn-merchants`, `btn-refuge` (Entrar), `merchants-back`, `refuge-back`, `module-<id>`, `ask-<id>`, `enter-<id>`, `btn-cot`, `details-<id>`, `station-detail-<id>`, `upgrade-<id>`, `detail-back`, `btn-reception`, `refuge-dishes`.
+
 ## Novedades del 5/11: varios personajes, almacén por páginas y copia de seguridad (en curso)
 - Plan aprobado: docs/plan-personajes-copia.md. Maquetas: mockups/personajes-copia (index.html).
 - Decisiones: bestiario de cada personaje; atuendos comprados de la cuenta y el puesto de cada personaje; precios de páginas

@@ -46,6 +46,8 @@
 - **Legal:** aviso legal, privacidad y cookies. Los datos del titular solo van en imagen y el correo de contacto también.
 
 ## En curso / por verificar
+- Bloque 3 (tutoriales): retomar tras el Bastión; el plan ya refleja la nueva entrada.
+- **Bloque 3 (tutorial nuevo y mini tutoriales): propuesta entregada, sin código.** Plan en `docs/plan-tutoriales.md`, maquetas en `mockups/tutorial/`. Esperando respuesta a las 6 preguntas del plan antes de implementar.
 - Comprobar en un móvil real que el arrastre de objetos se nota suave. Se optimizó el 5/11 y las pruebas automáticas pasan.
 - Configuración externa, que hace el usuario:
   - **Enforce HTTPS** en GitHub Pages y que `www.gravevow.com` funcione;
@@ -66,6 +68,8 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 12/11: **Bastión: entrada con Mercaderes y Refugio.** La pestaña abre dos tarjetas grandes (Garth y marcador del refugio) con lo pendiente. Mercaderes sin catre ni «Tu Refugio», con «◂ Bastión»; fuera «Encargos del Refugio» de los mercaderes. Refugio con tarjetas como los mercaderes (arte 20 × 26 provisional, nivel, encargado, marcas, «Pedir a X» / «Usar» / «Usar · Dormir», «Detalles», «▲ Mejora» y «!»), detalle con niveles, coste e «Ir», platos en el detalle de la Cocina, recepción en panel. Estaciones ocultas hasta que llega su encargado (`stationVisible`; el Catre siempre). Prueba nueva `scripts/bastion-check.cjs` (3 tamaños); `refugio`, `taller`, `necesidades` y los scripts que entran en mercaderes, adaptados. Assets en `docs/ASSETS.md`.
+- 12/11: **Bloque 3, análisis y propuesta.** Análisis del tutorial actual (13 pasos, oro dentro de la mazmorra, sin ataque especial ni curación por partes, Osric sin blindar, traición con temporizador), tabla de mecánicas y disparadores, guion del tutorial nuevo (9 pasos) y de la bienvenida (6 pasos), mini tutoriales de pantallas, estaciones, expedición y Bastión, Guía, preguntas y plan en 8 fases. Maquetas en `mockups/tutorial/` (7 escenas en escritorio y móvil, sobre el juego real).
 - 12/11: **Ajustes por secciones.** Panel nuevo (`ui/Settings.tsx`): Sonido (volumen general, de música y de efectos, reales y guardados en la cuenta), Pantalla, Controles (tabla revisada, primero la del dispositivo), Partida (lleva a Copia de seguridad y Elegir personaje; Repetir el tutorial), Comunidad e Información (versión, legales y correo con `MailButton`). Recuerda la última sección; pie fijo; en móvil, dos columnas de iconos. Engranaje pixel art de 44 px con ayuda «Ajustes (Esc)» y punto verde si conviene hacer copia; Esc abre Ajustes en el Bastión. Aplazado: invertir controles táctiles; Guía y mini tutoriales no se enseñan hasta que existan. Iconos provisionales en `docs/ASSETS.md`. Prueba: `scripts/ajustes-check.cjs` pasa en 3 tamaños; suite 455.
 - 12/11: **Combate: el botón «Heridas y necesidades» ya no parece un estado.** Antes enseñaba siempre una gota de sangre, aunque ya te hubieras vendado. Ahora la gota (con borde rojo) sale solo si tienes alguna lesión; sin lesiones, una cruz gris. Comprobado vendando un sangrado en combate.
 - 12/11: **Combate: la Mochila ya no se sale por la derecha en iPad.** Las columnas de botones del menú de combate (`.cmdgrid` en `game.css`) no podían encoger por debajo del texto; ahora encogen y los nombres largos se cortan con «…». `bombas-check` pasa en 3 tamaños.

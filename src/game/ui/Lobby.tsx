@@ -150,7 +150,7 @@ function LobbyTutorial() {
       <ol className="font-body text-lg space-y-2 list-decimal pl-5">
         <li><b>Intendencia:</b> tu equipo, tu mochila y el almacén; en «Estado», tus heridas, el hambre, la sed y el cansancio. Arrastra los objetos, o tócalos y luego toca la casilla donde los quieres.</li>
         <li><b>Almacén:</b> lo que guardes ahí está a salvo. Lo que lleves a la mazmorra, no.</li>
-        <li><b>Bastión:</b> los mercaderes, cada uno en su lugar: compra, vende, acepta encargos y duerme en el catre. Llegan más a medida que bajas.</li>
+        <li><b>Bastión:</b> entra en <b>Mercaderes</b> para comprar, vender y cumplir encargos, o en tu <b>Refugio</b> para dormir en el catre y pedir estaciones a sus encargados. Llegan más a medida que bajas.</li>
         <li><b>Jugar:</b> elige zona y pulsa <b>Descender</b>. Saquea, sobrevive y encuentra el portal antes de que acabe el tiempo.</li>
       </ol>
       <p className="font-body italic text-stone-300 mt-3">Y no te fíes de nadie que encuentres ahí abajo. O sí. Tú decides.</p>

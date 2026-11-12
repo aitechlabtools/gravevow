@@ -69,7 +69,7 @@ fs.mkdirSync(out, { recursive: true });
   step('Preparar');
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; const bp = [...pr.backpack]; const i = bp.findIndex((x) => !x); bp[i] = { uid: 'pots', itemId: 'health_potion', qty: 3 }; g.setState({ profile: { ...pr, backpack: bp } }); });
   const gold0 = await G(() => window.__GRAVEVOW__.getState().profile.gold);
-  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=vendor-vesper]');
+  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]'); await tap('[data-testid=vendor-vesper]');
   await tap('[data-testid=buy-bandage]'); await p.waitForTimeout(150);
   if (!((await G(() => window.__GRAVEVOW__.getState().profile.gold)) < gold0)) fail('la venda no costó oro');
   if ((await count('base', 'bandage')) < 1) fail('no hay venda tras comprarla');
@@ -158,7 +158,7 @@ fs.mkdirSync(out, { recursive: true });
 
   // ── Reparar con Nira ──
   step('Reparar');
-  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=vendor-nira]'); await tap('[data-testid=vendor-view-repair]');
+  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]'); await tap('[data-testid=vendor-nira]'); await tap('[data-testid=vendor-view-repair]');
   await p.waitForSelector('[data-testid=repair]');
   if (await p.$('[data-testid=repair-all]')) { await tap('[data-testid=repair-all]'); await p.waitForTimeout(200); }
   if (await p.$('[data-testid^=repair-eq-]')) fail('quedan piezas sin reparar');

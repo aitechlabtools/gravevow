@@ -146,3 +146,12 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 - El punto verde (copia de seguridad recomendada, `backup.remind`) sale en el engranaje y en Partida.
 - Si un control cambia, actualiza las tablas `KEYS_DUNGEON`, `KEYS_COMBAT` y `GESTURES`.
 - Prueba: `node scripts/ajustes-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+
+## Bastión: entrada, Mercaderes y Refugio (12/11)
+- La pestaña «Bastión» abre una **entrada** con dos tarjetas grandes (`kit/Card`, arte a doble escala en escritorio y tableta, a escala normal en móvil): **Mercaderes** (retrato de Garth) y **Refugio** (marcador pixel art). Cada una lleva una línea de qué es, lo pendiente en verde y el número del arco (encargos listos; estaciones listas para pedir + recepción).
+- **Mercaderes:** la pantalla de siempre, sin catre ni «Tu Refugio»; «◂ Bastión» arriba a la derecha. Los mercaderes ya no tienen «Encargos del Refugio»: todo lo de las estaciones vive en el Refugio (su servicio de fabricación sigue: Cocina de Garth, Forja de Brand…).
+- **Refugio:** tarjetas de estación con el formato de los mercaderes, en filas de 4 (3 en tabletas estrechas; 4 compactas en móvil horizontal, con desplazamiento vertical). Cabecera: Preparación, «Recepción (N)» (abre un panel) y «◂ Bastión».
+- **Tarjeta de estación** (`StationTile`): nombre · arte 20 × 26 px en el arco (oscurecido y con candado si está bloqueada) · «Nivel N/3», «Nivel 3/3 · máximo» o «Bloqueada» · «Encargado: X» · para qué sirve (no en móvil) · tres marcas de nivel en el sitio de la reputación · botón principal («Pedir a X», «Usar», «Usar · Dormir» en el Catre) · «Detalles». Marcas en el arco, abajo para que el borde redondo no las corte: «▲ Mejora» (mejora posible con lo que tienes) y «!» (bloqueada que ya puedes pedir).
+- **Detalle** (`StationDetail`): la tarjeta a la izquierda; a la derecha el encargado con su retrato, para qué sirve, la alternativa mientras está bloqueada, los tres niveles con su beneficio (el actual marcado), el coste con lo que tienes y lo que falta, «Ir» a dónde conseguirlo y «Pedir a X que la construya / mejore». En la Cocina, además, comer platos para bajar preparado. «◂ Refugio» a la izquierda y «◂ Bastión» a la derecha.
+- **Estaciones visibles:** el Catre siempre; las demás cuando ya están construidas o cuando el personaje ha abierto la subzona en la que llega su encargado (`stationVisible` en `core/refuge.ts`, según `unlockAt` de `data/vendors.ts`). Ocultas, no avisan.
+- Prueba: `node scripts/bastion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
