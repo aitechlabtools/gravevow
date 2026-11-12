@@ -148,6 +148,23 @@ export function sanitizeProfile(raw: unknown): Profile | null {
   }
   }
   p.pocket = repairGrid(p.pocket);
+  // Bloque 1, fase 10: heridas, necesidades y marcas de curación y de recluta, válidas al cargar
+  // (partidas de antes del bloque 1 no las tienen y quedan como estaban: sano, lleno, sin caída).
+  const REG = ['head', 'thorax', 'abdomen', 'armL', 'armR', 'legL', 'legR'] as const;
+  const w = p.wounds as { pct?: Record<string, unknown>; fractures?: unknown } | null | undefined;
+  if (w && typeof w === 'object') {
+    const pct: NonNullable<Profile['wounds']>['pct'] = {};
+    for (const r of REG) { const v = Number(w.pct?.[r]); if (w.pct?.[r] !== undefined && Number.isFinite(v) && v < 1) pct[r] = Math.max(0, v); }
+    const fractures = Array.isArray(w.fractures) ? REG.filter((r) => (w.fractures as unknown[]).includes(r)) : [];
+    p.wounds = Object.keys(pct).length || fractures.length ? { pct, fractures } : null;
+  } else p.wounds = null;
+  const n = p.needs as Record<string, unknown> | null | undefined;
+  if (n && typeof n === 'object') {
+    const f = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? Math.max(0, Math.min(100, x)) : 100; };
+    p.needs = { sat: f(n.sat), hyd: f(n.hyd), rest: f(n.rest) };
+  } else p.needs = null;
+  p.fallen = p.fallen === true;
+  p.recruitClaimed = p.recruitClaimed === true;
   return p;
 }
 

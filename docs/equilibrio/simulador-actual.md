@@ -39,30 +39,30 @@ Golpes que alcanzan al jugador y lo que provocan (sangrados y fracturas por la a
 
 | Clase | Escenario | Golpes | Sangrado leve | Sangrado grave | Fractura | Algún estado de cuerpo | Otros estados |
 |---|---|---|---|---|---|---|---|
-| Guerrero | S1 · nv 1 · inicial | 18.0 | 4 % | 2 % | 0 % | 6 % | — |
-| Guerrero | S1 · nv 5 · inicial | 19.9 | 4 % | 1 % | 0 % | 5 % | — |
-| Guerrero | S1 · nv 6 · su zona | 13.7 | 2 % | 0 % | 0 % | 2 % | — |
-| Guerrero | S2 · nv 15 · su zona | 19.7 | 1 % | 0 % | 0 % | 1 % | veneno 4 %, aturdimiento 0 % |
-| Guerrero | S3 · nv 25 · su zona | 17.6 | 2 % | 0 % | 0 % | 2 % | veneno 8 % |
-| Guerrero | S4 · nv 35 · su zona | 12.4 | 0 % | 0 % | 0 % | 1 % | veneno 3 %, aturdimiento 0 % |
-| Guerrero | S5 · nv 45 · su zona | 16.0 | 1 % | 0 % | 0 % | 1 % | congelación 5 %, veneno 2 %, aturdimiento 1 % |
-| Guerrero | S6 · nv 55 · su zona | 19.0 | 0 % | 0 % | 0 % | 1 % | veneno 1 %, aturdimiento 1 % |
-| Guerrero | S7 · nv 65 · su zona | 13.3 | 2 % | 0 % | 0 % | 2 % | quemadura 10 %, veneno 2 % |
-| Guerrero | S8 · nv 75 · su zona | 17.0 | 0 % | 0 % | 0 % | 1 % | quemadura 7 %, aturdimiento 0 % |
-| Guerrero | S9 · nv 85 · su zona | 17.6 | 1 % | 0 % | 0 % | 1 % | quemadura 6 %, aturdimiento 1 % |
-| Guerrero | S10 · nv 95 · su zona | 17.8 | 1 % | 0 % | 0 % | 2 % | aturdimiento 2 %, quemadura 2 % |
-| Mago | S1 · nv 1 · inicial | 13.5 | 7 % | 3 % | 0 % | 10 % | — |
-| Mago | S1 · nv 5 · inicial | 14.3 | 7 % | 2 % | 0 % | 10 % | — |
-| Mago | S1 · nv 6 · su zona | 7.6 | 5 % | 0 % | 0 % | 5 % | — |
-| Mago | S2 · nv 15 · su zona | 13.2 | 1 % | 0 % | 0 % | 1 % | veneno 5 %, aturdimiento 1 % |
-| Mago | S3 · nv 25 · su zona | 11.6 | 3 % | 1 % | 0 % | 4 % | veneno 13 % |
-| Mago | S4 · nv 35 · su zona | 9.1 | 0 % | 0 % | 0 % | 0 % | veneno 4 %, aturdimiento 1 % |
-| Mago | S5 · nv 45 · su zona | 10.8 | 1 % | 0 % | 0 % | 1 % | congelación 8 %, aturdimiento 4 %, veneno 3 % |
-| Mago | S6 · nv 55 · su zona | 11.4 | 0 % | 0 % | 0 % | 1 % | veneno 3 %, aturdimiento 1 % |
-| Mago | S7 · nv 65 · su zona | 5.9 | 3 % | 0 % | 0 % | 4 % | quemadura 18 %, veneno 3 % |
-| Mago | S8 · nv 75 · su zona | 10.0 | 1 % | 0 % | 1 % | 1 % | quemadura 12 %, aturdimiento 0 % |
-| Mago | S9 · nv 85 · su zona | 12.2 | 2 % | 0 % | 0 % | 2 % | quemadura 10 %, aturdimiento 3 % |
-| Mago | S10 · nv 95 · su zona | 11.0 | 1 % | 0 % | 0 % | 2 % | aturdimiento 5 %, quemadura 4 % |
+| Guerrero | S1 · nv 1 · inicial | 0.0 | 24300 % | 9000 % | 1300 % | 34600 % | — |
+| Guerrero | S1 · nv 5 · inicial | 0.0 | 22300 % | 8800 % | 1300 % | 32400 % | — |
+| Guerrero | S1 · nv 6 · su zona | 0.0 | 9200 % | 1000 % | 0 % | 10200 % | — |
+| Guerrero | S2 · nv 15 · su zona | 0.0 | 4800 % | 900 % | 1800 % | 7500 % | veneno 23500 %, aturdimiento 2600 % |
+| Guerrero | S3 · nv 25 · su zona | 0.0 | 8900 % | 1800 % | 1300 % | 12000 % | veneno 44600 % |
+| Guerrero | S4 · nv 35 · su zona | 0.0 | 1300 % | 400 % | 900 % | 2600 % | veneno 12100 %, aturdimiento 1000 % |
+| Guerrero | S5 · nv 45 · su zona | 0.0 | 3900 % | 600 % | 600 % | 5100 % | congelación 21700 %, veneno 8100 %, aturdimiento 7000 % |
+| Guerrero | S6 · nv 55 · su zona | 0.0 | 1700 % | 900 % | 1700 % | 4300 % | veneno 8000 %, aturdimiento 4100 % |
+| Guerrero | S7 · nv 65 · su zona | 0.0 | 6400 % | 800 % | 0 % | 7200 % | quemadura 40300 %, veneno 9900 % |
+| Guerrero | S8 · nv 75 · su zona | 0.0 | 2200 % | 500 % | 1400 % | 4100 % | quemadura 36800 %, aturdimiento 200 % |
+| Guerrero | S9 · nv 85 · su zona | 0.0 | 4700 % | 1200 % | 600 % | 6500 % | quemadura 33600 %, aturdimiento 7600 % |
+| Guerrero | S10 · nv 95 · su zona | 0.0 | 5100 % | 1200 % | 2400 % | 8700 % | aturdimiento 13200 %, quemadura 10500 % |
+| Mago | S1 · nv 1 · inicial | 0.0 | 30300 % | 10200 % | 400 % | 40900 % | — |
+| Mago | S1 · nv 5 · inicial | 0.0 | 31700 % | 9000 % | 300 % | 41000 % | — |
+| Mago | S1 · nv 6 · su zona | 0.0 | 10400 % | 1100 % | 100 % | 11600 % | — |
+| Mago | S2 · nv 15 · su zona | 0.0 | 4100 % | 500 % | 900 % | 5500 % | veneno 19900 %, aturdimiento 5000 % |
+| Mago | S3 · nv 25 · su zona | 0.0 | 11100 % | 2100 % | 900 % | 14100 % | veneno 43900 % |
+| Mago | S4 · nv 35 · su zona | 0.0 | 500 % | 400 % | 400 % | 1300 % | veneno 10300 %, aturdimiento 2200 % |
+| Mago | S5 · nv 45 · su zona | 0.0 | 2600 % | 100 % | 400 % | 3100 % | congelación 25900 %, aturdimiento 12900 %, veneno 10100 % |
+| Mago | S6 · nv 55 · su zona | 0.0 | 1000 % | 400 % | 1600 % | 3000 % | veneno 11600 %, aturdimiento 4800 % |
+| Mago | S7 · nv 65 · su zona | 0.0 | 6100 % | 500 % | 0 % | 6600 % | quemadura 31300 %, veneno 6100 % |
+| Mago | S8 · nv 75 · su zona | 0.0 | 1700 % | 300 % | 1600 % | 3600 % | quemadura 34900 %, aturdimiento 100 % |
+| Mago | S9 · nv 85 · su zona | 0.0 | 5600 % | 1100 % | 0 % | 6700 % | quemadura 36800 %, aturdimiento 12100 % |
+| Mago | S10 · nv 95 · su zona | 0.0 | 4300 % | 1300 % | 1300 % | 6900 % | aturdimiento 16500 %, quemadura 13400 % |
 
 ## Élites y jefes (un combate, cuerpo entero, 3 pociones)
 

@@ -93,16 +93,15 @@ const DEVICE = process.argv[4];
     d.actions.transfer({ kind: 'grid', container: 'backpack', index: c }, { kind: 'grid', container: 'backpack', index: pch });
     const i = d.getState().expedition.backpack.findIndex((x) => x?.itemId === 'gold_pouch'); d.actions.quickMove({ kind: 'grid', container: 'backpack', index: i }, 'pocket'); });
   ok(await waitStep('potion'), 'paso 5b: monedas al saquito y saquito al bolsillo seguro');
-  // 6 · Poción tras la trampa: se llega andando (la fila de pinchos va de pared a pared y no se puede esquivar)
-  if (!touch) {
+  // 6 · Poción tras la trampa: se llega andando (la fila de pinchos va de pared a pared y no se puede esquivar).
+  // También en táctil: saltar la trampa con el teletransporte deja la vida llena y la poción no cura nada.
+  {
     await tp(1 + 27 - 1, 3);
     const hp0 = await G(() => window.__GRAVEVOW__.getState().expedition.hp);
     for (let k = 0; k < 8 && (await G(() => window.__GRAVEVOW__.getState().expedition.hp)) >= hp0; k++) { await walk('ArrowRight', 250); if (process.env.DBG) console.log('  pos', await pos(), 'hp', await G(() => window.__GRAVEVOW__.getState().expedition.hp), 'paso', await stepId()); }
     ok((await G(() => window.__GRAVEVOW__.getState().expedition.hp)) < hp0, 'los pinchos hieren aunque entres pegado a la pared');
     const a = await pos(); await walk('ArrowRight', 700); const b2 = await pos();
     ok(a[0] === b2[0] && a[1] === b2[1], 'herido por la trampa: no te mueves hasta curarte');
-  } else {
-    await tp(1 + 27 + 3, 4);
   }
   await page.waitForTimeout(800);
   const hurt = await G(() => window.__GRAVEVOW__.getState().expedition.hp);

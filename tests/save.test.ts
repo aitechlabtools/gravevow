@@ -168,3 +168,31 @@ describe('Partida (formato 4): migración desde el formato 3', () => {
     expect(composeProfile(sanitizeSave(json(s))!, r.id)!.playMs).toBe(90_000);
   });
 });
+
+describe('Bloque 1, fase 10: partidas de antes del bloque 1 y datos dañados', () => {
+  it('una partida sin heridas, necesidades ni marcas nuevas carga sana, llena y sin caída', () => {
+    let s = emptySave(1000);
+    s = addCharacter(s, createProfile('Aldric', 'warrior', { cloak: 1, skin: 2 }))!.save;
+    const old = json(s) as unknown as { characters: Record<string, unknown>[] };
+    for (const c of old.characters) { delete c.wounds; delete c.needs; delete c.fallen; delete c.recruitClaimed; }
+    const m = sanitizeSave(old)!;
+    const c = m.characters[0] as unknown as Profile;
+    expect(c.wounds).toBeNull();
+    expect(c.needs).toBeNull();
+    expect(c.fallen).toBe(false);
+    expect(c.recruitClaimed).toBe(false);
+    expect(c.backpack).toEqual(s.characters[0].backpack);
+  });
+  it('heridas y necesidades dañadas se reparan sin perder lo válido', () => {
+    let s = emptySave(1000);
+    s = addCharacter(s, createProfile('Ilsa', 'mage', { cloak: 0, skin: 1 }))!.save;
+    const bad = json(s) as unknown as { characters: Record<string, unknown>[] };
+    bad.characters[0].wounds = { pct: { head: 'x', armL: 0.4, legR: -2, thorax: 1.5 }, fractures: ['legL', 'cola', 7] };
+    bad.characters[0].needs = { sat: 'mucho', hyd: 250, rest: 30 };
+    bad.characters[0].fallen = 'sí';
+    const c = sanitizeSave(bad)!.characters[0] as unknown as Profile;
+    expect(c.wounds).toEqual({ pct: { armL: 0.4, legR: 0 }, fractures: ['legL'] });
+    expect(c.needs).toEqual({ sat: 100, hyd: 100, rest: 30 });
+    expect(c.fallen).toBe(false);
+  });
+});
