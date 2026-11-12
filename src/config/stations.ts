@@ -22,10 +22,10 @@ export interface StationDef {
   icon: string;
   /** Para qué sirve, en una línea. */
   purpose: string;
-  /** Lo que hay mientras está bloqueada (nadie se queda sin la función básica). */
+  /** Lo que hay mientras sigue en ruinas (nadie se queda sin la función básica). */
   fallback: string;
   by: VendorId;
-  /** Frase del encargado al construir (nivel 1) y al mejorar (2 y 3). */
+  /** Frase del encargado al reconstruir (nivel 1) y al mejorar (2 y 3). */
   lines: [string, string, string];
   /** Índice = nivel (0 a 3). */
   levels: [StationLevel, StationLevel, StationLevel, StationLevel];
@@ -38,7 +38,7 @@ export const STATIONS: Record<StationId, StationDef> = {
     id: 'cot', name: 'Catre', icon: '🛏', by: 'orik',
     purpose: 'Dormir llena el Descanso y, mejorado, te deja preparado para bajar.',
     fallback: 'Paja en el suelo.',
-    lines: ['«Paja limpia. No preguntes de dónde.»', '«Un jergón como Dios manda. Casi.»', '«Mantas de lana y un somier que no chirría. Dormirás como un muerto. Uno contento.»'],
+    lines: ['«Entre estos muros caídos aún queda un rincón seco. Paja limpia; no preguntes de dónde.»', '«Un jergón como Dios manda. Casi.»', '«Mantas de lana y un somier que no chirría. Dormirás como un muerto. Uno contento.»'],
     levels: [
       { name: 'Sin catre', effect: 'Paja en el suelo.' },
       { name: 'Catre de paja', effect: 'Dormir recupera todo el Descanso, gratis.' },
@@ -50,7 +50,7 @@ export const STATIONS: Record<StationId, StationDef> = {
     id: 'kitchen', name: 'Cocina', icon: '🍲', by: 'garth',
     purpose: 'Platos que te preparan para bajar: gastas menos Saciedad, Hidratación o Descanso.',
     fallback: 'Solo el rancho comunitario y lo que vende Garth.',
-    lines: ['«Un fogón. Pequeño, pero mío. Bueno, tuyo.»', '«Especias del mercado de abajo. No quieras saber a cambio de qué.»', '«Ahora sí: una cocina donde se puede guisar para un regimiento.»'],
+    lines: ['«La vieja cocina del Bastión vuelve a tener fuego. Un fogón pequeño, pero tuyo.»', '«Especias del mercado de abajo. No quieras saber a cambio de qué.»', '«Ahora sí: una cocina donde se puede guisar para un regimiento.»'],
     levels: [
       { name: 'Sin fogón', effect: 'Solo el rancho comunitario.' },
       { name: 'Fogón', effect: 'Guiso del Bastión. Lotes de hasta 5.', cost: c(15, ['scrap_metal', 2], ['cave_mushroom', 2]) },
@@ -62,7 +62,7 @@ export const STATIONS: Record<StationId, StationDef> = {
     id: 'bench', name: 'Banco de trabajo', icon: '🪚', by: 'orik',
     purpose: 'Desguazar rinde más materiales. Cuero, tela, ropa, botas y bolsas.',
     fallback: 'Desguazas en el taller de Orik con su rendimiento normal.',
-    lines: ['«Tornillo, lima y un mazo. Lo demás lo pones tú.»', '«Un banco de roble con su tornillo de hierro. Esto ya es otra cosa.»', '«Herramienta fina. Si lo rompes tú, lo arreglas tú.»'],
+    lines: ['«He sacado los escombros del taller. Tornillo, lima y un mazo: lo demás lo pones tú.»', '«Un banco de roble con su tornillo de hierro. Esto ya es otra cosa.»', '«Herramienta fina. Si lo rompes tú, lo arreglas tú.»'],
     levels: [
       { name: 'Sin banco', effect: 'Desguazas con el rendimiento normal de Orik.' },
       { name: 'Banco de trabajo', effect: 'Desguazar rinde un 25 % más.', cost: c(10, ['scrap_metal', 3], ['leather_scrap', 2]) },
@@ -74,7 +74,7 @@ export const STATIONS: Record<StationId, StationDef> = {
     id: 'infirmary', name: 'Rincón de cura', icon: '✚', by: 'vesper',
     purpose: 'Vendas, torniquetes y férulas preparadas en casa.',
     fallback: 'Las vendas y férulas se compran a Vesper.',
-    lines: ['«Hilo hervido y tablillas. Que la orden te perdone el desorden.»', '«Más tablillas, más hilo. Menos excusas para morir desangrado.»', '«Un rincón digno de la enfermería. Casi me da envidia.»'],
+    lines: ['«He barrido la ceniza de la vieja enfermería. Hilo hervido y tablillas; que la orden te perdone el desorden.»', '«Más tablillas, más hilo. Menos excusas para morir desangrado.»', '«Un rincón digno de la enfermería. Casi me da envidia.»'],
     levels: [
       { name: 'Sin rincón', effect: 'Las vendas y férulas se compran a Vesper.' },
       { name: 'Rincón de cura', effect: 'Vendas, torniquetes y férulas. Lotes de hasta 5.', cost: c(10, ['leather_scrap', 3], ['water', 1]) },
@@ -86,7 +86,7 @@ export const STATIONS: Record<StationId, StationDef> = {
     id: 'forge', name: 'Forja', icon: '⚒', by: 'brand',
     purpose: 'Lingotes, armas y armaduras de metal, escudos, anillos y llaves.',
     fallback: 'Las armas y armaduras de metal se compran en la tienda de Brand.',
-    lines: ['«Un yunque viejo y un fuelle que respira. Suficiente para empezar.»', '«Ahora el fuego aguanta el hierro bueno.»', '«Esta forja ya no me da vergüenza. Haz algo digno con ella.»'],
+    lines: ['«La forja del Bastión respira otra vez. Un yunque viejo y un fuelle: suficiente para empezar.»', '«Ahora el fuego aguanta el hierro bueno.»', '«Esta forja ya no me da vergüenza. Haz algo digno con ella.»'],
     levels: [
       { name: 'Sin forja', effect: 'Lo de metal se compra en la tienda de Brand.' },
       { name: 'Forja', effect: 'Recetas de forja de nivel 1. Lotes de hasta 5.', cost: c(20, ['scrap_metal', 5], ['bone_dust', 1]) },
@@ -98,7 +98,7 @@ export const STATIONS: Record<StationId, StationDef> = {
     id: 'alchemy', name: 'Mesa de alquimia', icon: '⚗', by: 'eldrin',
     purpose: 'Consumibles: pociones, antídotos, tónicos y bombas.',
     fallback: 'Las pociones se compran a Eldrin.',
-    lines: ['«Redomas que no casan y un quemador que tose. Funciona.»', '«Alambique de cobre. Ya no destilarás veneno por error. Tanto.»', '«Una mesa de verdad. Hasta yo trabajaría aquí.»'],
+    lines: ['«He rescatado redomas de entre los cascotes. No casan y el quemador tose, pero funciona.»', '«Alambique de cobre. Ya no destilarás veneno por error. Tanto.»', '«Una mesa de verdad. Hasta yo trabajaría aquí.»'],
     levels: [
       { name: 'Sin mesa', effect: 'Las pociones se compran a Eldrin.' },
       { name: 'Mesa de alquimia', effect: 'Antídotos, pociones de maná y tónicos. Lotes de hasta 5.', cost: c(20, ['arcane_shard', 2], ['cave_mushroom', 2]) },
@@ -110,7 +110,7 @@ export const STATIONS: Record<StationId, StationDef> = {
     id: 'runic', name: 'Atril rúnico', icon: '📜', by: 'eldrin',
     purpose: 'Equipo mágico (báculos, varitas, tomos, orbes y amuletos) y, al máximo, runas.',
     fallback: 'El equipo mágico se encuentra o se compra.',
-    lines: ['«Un atril y tinta que no se seca. Lee despacio.»', '«Cristales tallados en el marco. Ahora el atril escucha.»', '«Ya puede grabar runas. Cuidado: una runa nueva borra la vieja.»'],
+    lines: ['«El atril estaba bajo media bóveda caída. Lo he enderezado, y la tinta no se seca. Lee despacio.»', '«Cristales tallados en el marco. Ahora el atril escucha.»', '«Ya puede grabar runas. Cuidado: una runa nueva borra la vieja.»'],
     levels: [
       { name: 'Sin atril', effect: 'El equipo mágico se encuentra o se compra.' },
       { name: 'Atril rúnico', effect: 'Equipo mágico básico (recetas de nivel 1). Lotes de hasta 5.', cost: c(20, ['arcane_shard', 3], ['bone_dust', 2]) },

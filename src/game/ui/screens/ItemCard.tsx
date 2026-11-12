@@ -12,7 +12,7 @@ import { CLASSES, STAT_LABELS } from '../../../core/data/classes';
 import { STAT_KEYS } from '../../../core/types';
 import { getSkill } from '../../../core/data/skills';
 import { QUALITIES } from '../../../core/data/forge';
-import { compareWithEquipped, ItemIcon, SLOT_LABELS, type InvMode } from '../inventory';
+import { compareWithEquipped, FoodLine, ItemIcon, SLOT_LABELS, type InvMode } from '../inventory';
 import { ItemActions } from '../common';
 import { useIsTouch } from '../../../shared/device';
 
@@ -67,6 +67,7 @@ export function ItemCard({ loc, mode, onClear, compact = false }: { loc: Loc | n
           {capacityOf(st) > 0 && <span className="text-gold text-sm mr-2" data-testid="card-gold">Lleva {st.gold ?? 0}/{capacityOf(st)} monedas.</span>}
           {!statLine.length && !specials.length && <span className="font-body italic text-stone-300 text-[15px]">{def.description}</span>}
         </div>
+        {def.use?.kind === 'need' && <FoodLine itemId={def.id} className="text-[13px] mt-1" />}
         {cmp && (
           <div className="mt-1.5 text-[13px] leading-snug" data-testid="item-card-compare">
             <span className="text-stone-400">{cmp.wornName ? <>Frente a <span className="text-stone-200">{cmp.wornName}</span>: </> : 'Ranura vacía: '}</span>

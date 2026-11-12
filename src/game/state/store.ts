@@ -616,7 +616,7 @@ export const actions = {
     const cut = cotPrepCut(p);
     set({ profile: { ...p, needs: toSaved(sleep(n)), ...(prep ? { prep: { ...(p.prep ?? {}), cot: cut } } : {}) } });
     sfx('heal');
-    toast(prep ? `Duermes en el catre del Refugio. Bajarás descansado: −${Math.round(cut * 100)} % de Descanso en la próxima incursión.` : 'Duermes en el catre del Bastión. Descanso recuperado.', 'good');
+    toast(prep ? `Duermes en el catre del Bastión. Bajarás descansado: −${Math.round(cut * 100)} % de Descanso en la próxima incursión.` : 'Duermes en el catre del Bastión. Descanso recuperado.', 'good');
   },
 
   drinkPotion() {

@@ -1,5 +1,5 @@
 // Prueba de los mini tutoriales del Bastión y de las estaciones (fase 4, data/tutorials.ts): el «!» en las tarjetas,
-// la entrada de Mercaderes (lleva a Nira), el de Nira, el del Refugio (lleva a Detalles de la cocina), construir la cocina
+// la entrada de Mercaderes (lleva a Nira), el de Nira, el del Bastión (lleva al detalle de la cocina en ruinas), construir la cocina
 // con regalo de materiales, el de la cocina con crafteo real, el aviso de subida de nivel aunque estén desactivados, la
 // primera venta, Intendencia › Estado y la copia de seguridad. Todos los botones del cartel miden 44 px.
 // Uso: node scripts/e2e-bastion-minis.cjs [url] [carpeta] [dispositivo de Playwright]
@@ -63,7 +63,7 @@ const DEVICE = process.argv[4];
 
   await tap('[data-testid=tab-merchants]');
   await page.waitForSelector('[data-testid=screen-bastion]');
-  ok(!!(await page.$('[data-testid=tut-dot-bastion-merchants]')) && !!(await page.$('[data-testid=tut-dot-bastion-refuge]')), 'el «!» sale en Mercaderes y en Refugio');
+  ok(!!(await page.$('[data-testid=tut-dot-bastion-merchants]')) && !!(await page.$('[data-testid=tut-dot-bastion-refuge]')), 'el «!» sale en Mercaderes y en Bastión');
   await tap('[data-testid=btn-merchants]');
   await walk('screen.bastion-entry');
   ok(!!(await page.$('[data-testid=vendor-interior]')) && (await page.textContent('[data-testid=vendor-name]')).includes('Nira'), 'tocar Hablar te deja dentro de Nira');
@@ -85,7 +85,7 @@ const DEVICE = process.argv[4];
   ok(!(await page.$('[data-testid=tut-dot-bastion-merchants]')), 'visto, el «!» de Mercaderes se va');
   await tap('[data-testid=btn-refuge]');
   await walk('tab.refugio');
-  ok(!!(await page.$('[data-testid=station-detail-kitchen]')), 'el Refugio acaba en los Detalles de la cocina');
+  ok(!!(await page.$('[data-testid=station-detail-kitchen]')), 'el Bastión acaba en el detalle de la cocina');
 
   // Construir la cocina: Garth regala los materiales de la primera receta
   const meat0 = await count('salted_meat');
@@ -101,8 +101,7 @@ const DEVICE = process.argv[4];
 
   // Subida a nivel 2 con los mini tutoriales desactivados: el aviso sale igual
   await G(() => window.__GRAVEVOW__.actions.setMinisDisabled(true));
-  await tap('[data-testid=craft-back]');
-  await tap('[data-testid=details-kitchen]');
+  await tap('[data-testid=upgrade-open-kitchen]');
   await tap('[data-testid=upgrade-kitchen]');
   ok(await G(() => window.__GRAVEVOW__.getState().profile.refuge.kitchen === 2), 'cocina a nivel 2');
   await walk('station.kitchen.lv2');

@@ -92,7 +92,7 @@ export function deliver(p: Profile, items: { itemId: string; qty: number; qualit
   const toReception = reception.length > (p.reception ?? []).length;
   return { profile: { ...p, backpack, stash, reception }, toReception };
 }
-export const RECEPTION_NOTE = ' No cabía: está en la recepción del Refugio.';
+export const RECEPTION_NOTE = ' No cabía: está en la recepción del Bastión.';
 export function giveItems(p: Profile, items: { itemId: string; qty: number }[]): Profile {
   return deliver(p, items).profile;
 }
@@ -101,7 +101,7 @@ export function giveItems(p: Profile, items: { itemId: string; qty: number }[]):
 /** Mientras haya excedentes no se baja (nunca se bloquea la llegada ni se borra nada). */
 export function receptionBlock(p: Profile): string | null {
   const n = (p.reception ?? []).length;
-  return n ? `Tienes ${n} ${n === 1 ? 'objeto' : 'objetos'} en la recepción del Refugio: retíralos, véndelos, desguázalos o descártalos antes de bajar.` : null;
+  return n ? `Tienes ${n} ${n === 1 ? 'objeto' : 'objetos'} en la recepción del Bastión: retíralos, véndelos, desguázalos o descártalos antes de bajar.` : null;
 }
 export function receptionAt(p: Profile, i: number): ItemStack | null {
   return (p.reception ?? [])[i] ?? null;

@@ -508,3 +508,34 @@ tutoriales no existen: no se enseñan. Invertir controles táctiles: aplazado. E
 y punto de copia recomendada; Esc abre Ajustes en el Bastión. Iconos provisionales apuntados en docs/ASSETS.md.
 Cómo probar: npx vitest run; node scripts/ajustes-check.cjs <url>/play/ <carpeta> (y con "iPad (gen 7) landscape" e
 "iPhone 13 landscape"). Maquetas: mockups/ajustes/index.html.
+
+## 12/11 · Bastión en reconstrucción
+Las estaciones son partes del Bastión de Ceniza en ruinas que el jugador reconstruye. Textos: «Refugio» → «Bastión» en interfaz,
+tutoriales, Guía, landing (roadmap) y docs; ids internos (`refuge`, `btn-refuge`, `tab.refugio`) sin tocar para no romper partidas.
+Interfaz: StationPanels.tsx (botón único «Reconstruir»/«Usar», tarjeta tocable, `UpgradeButton`, `CotPanel`, detalle con
+«Reconstruir» o «▲ Mejorar · nivel N», sin «Pedir a…» ni «Detalles»), RefugePanels.tsx («El Bastión», «◂ Entrada»/«◂ Volver»,
+«▲ Mejorar» dentro de cada estación en uso, platos en la Cocina, `initialDetail`), Mercaderes.tsx («Entrada del Bastión», tarjeta
+Bastión, «Ir al Bastión» desde Forja/Cocina/Alquimia/Rincón en ruinas), kit/Card.tsx (`onClick`), stationArt.ts (castillo en
+ruinas y versión en ruinas de cada estación). Datos: frases de nivel 1 de config/stations.ts, tutorials.ts (tab.refugio toca la
+tarjeta de la cocina; station.* acaba señalando «▲ Mejorar»). Pruebas actualizadas: bastion-check, refugio-check, taller-check,
+necesidades-check, e2e-bastion-minis. Maquetas: mockups/bastion-reconstruir/index.html.
+Cómo probar: npx tsc --noEmit; npx vitest run; node scripts/bastion-check.cjs <url>/play/ <carpeta> (y con "iPhone 13 landscape"
+e "iPad (gen 7) landscape"); igual refugio-check, taller-check, e2e-bastion-minis y necesidades-check.
+
+## 12/11 · Jugar con menos texto
+Jugar.tsx: quitadas las líneas fijas de la tarjeta de destino y de Expedición; nueva ficha `HoldTip` (ratón o pulsación larga
+con `useLongPress`; la pulsación larga no ejecuta el clic) con niveles, mapa nuevo y lema de la zona, y pociones, oro en riesgo,
+mercenario, minutos y pérdida al caer. También fuera: etiqueta «Demasiado fácil» sobre el arte (repetía la nota), «Nivel» bajo el
+anillo (el nivel ya sale junto al nombre del héroe; el anillo lleva title y aria-label) y `FirstTimeHint` (lo cuenta el tutorial).
+Textos: tutorial.ts (paso extract: «Si caes antes, pierdes lo que llevas») y tutorials.ts (bienvenida, último paso: portal,
+pérdida y cómo ver la ficha). Prueba nueva: scripts/jugar-ficha-check.cjs. Pasan subzones-check, menus-check y e2e-tutorial.
+
+## 12/11 · Comer y beber desde el objeto
+NeedsBars.tsx: `NeedsPanel` sin lista ni botones (prop `onUse` → `onShowFood`), aviso «Tienes comida/bebida en la mochila»
+(`need-food-*`), `NeedBar` con animación al subir y `foodGain`. inventory.tsx: `highlightItems` (evento `gv-hint-items`, clase
+`.slot-hint` en la mochila) y `FoodLine` en la ventanita; ItemCard.tsx la enseña también. common.tsx: «Comer»/«Beber» (`act-eat`)
+en la mazmorra en vez de «Usar» (solo mochila; los platos no). Alijo.tsx: doble toque come desde mochila y almacén; el aviso pasa a
+Equipo si la mochila no se ve. CombatScreen.tsx: comida y bebida en la Mochila de la barra. DungeonScreen.tsx: el aviso abre la
+mochila. tutorial.ts (paso eat: mochila → pan → Comer), tutorials.ts (exp.need-low, station.kitchen). Pruebas: necesidades-check,
+e2e-tutorial y curas-check adaptados; inventario-check arreglado (Esc abría Ajustes). Pasan también anatomia-check y grupos-check.
+

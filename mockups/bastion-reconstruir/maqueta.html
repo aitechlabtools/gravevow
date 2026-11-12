@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bastión en reconstrucción · maqueta</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--pad:24px;--gap:14px;--bar:68px;--btn:48px;--gold:#e8b33a;--bone:#e9e1cc;--heal:#6fcf7a}
+@media (max-height:520px){:root{--pad:10px;--gap:8px;--bar:52px;--btn:44px}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0b0a0e;color:var(--bone);font-family:"Crimson Pro",Georgia,serif;overflow:hidden}
+.top{height:var(--bar);display:flex;align-items:center;gap:8px;padding:0 var(--pad);background:linear-gradient(#17151c,#0e0d12);border-bottom:2px solid #2a2830}
+.logo{font-family:Cinzel;font-weight:800;color:var(--gold);letter-spacing:.12em;margin-right:12px}
+.pill{font-family:Cinzel;font-size:13px;padding:0 14px;min-height:44px;display:flex;align-items:center;border:2px solid #3a3741;border-radius:22px;color:#b9b2a3}
+.pill.on{border-color:var(--gold);color:var(--gold);background:#2a2110}
+@media (max-height:520px){.pill{font-size:11px;padding:0 9px}.logo{display:none}}
+main{height:calc(100% - var(--bar));overflow:auto;padding:var(--pad)}
+.head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 auto 10px;max-width:1500px}
+h2{font-family:Cinzel;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#c8a46a;margin:0;font-size:clamp(14px,1.8vw,26px)}
+.sub{color:#8c8693;font-size:14px}
+.btn{font-family:Cinzel;font-size:13px;letter-spacing:.08em;min-height:44px;padding:0 14px;border:2px solid #07060a;background:linear-gradient(#3a3741,#24222a);color:var(--bone);box-shadow:inset 0 1px 0 #55525e;cursor:pointer}
+.btn.gold{color:#1a1206;background:linear-gradient(#f2c75a,#c48f22 55%,#8a5d14);box-shadow:inset 0 1px 0 #fbe7a6,inset 0 -3px 0 #5a3c0a,0 0 0 1px #6b4a12;font-weight:800}
+.btn.sec{background:transparent;border:2px solid #5a5560;color:#c9c2b2}
+.btn.glow{animation:g 1.6s infinite}@keyframes g{50%{box-shadow:inset 0 1px 0 #fbe7a6,0 0 12px #e8b33a}}
+.ml{margin-left:auto}
+.card{position:relative;background:linear-gradient(#1b1920,#121117);border:2px solid #34313b;padding:12px;display:flex;flex-direction:column;gap:8px;cursor:pointer}
+.card:hover{border-color:#6b5a3a}
+.card h3{font-family:Cinzel;font-weight:600;text-align:center;margin:0;color:var(--bone);font-size:clamp(14px,1.3vw,20px)}
+.arch{margin:0 auto;border:2px solid #3a3741;border-radius:999px 999px 6px 6px;background:radial-gradient(circle at 50% 30%,#2a2a40,#0f0e16 70%);display:flex;align-items:flex-end;justify-content:center;position:relative;overflow:hidden}
+.arch canvas{image-rendering:pixelated;display:block}
+.badge{position:absolute;top:8px;right:8px;background:var(--heal);color:#0b0a0e;font-weight:800;border-radius:12px;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-family:Cinzel}
+.lv{display:flex;gap:4px;justify-content:center}.lv i{height:8px;flex:1;max-width:30%;border:1px solid #000;background:#2a2830}.lv i.on{background:linear-gradient(#f2c75a,#8a5d14)}
+.meta{font-size:13px;text-align:center;color:#b9b2a3}.meta b{font-weight:600}
+.state{font-size:13px;text-align:center}
+.mark{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-family:Cinzel;font-size:11px;padding:1px 6px;background:#0b0a0eE0;border:1px solid}
+.row{display:flex;gap:6px;margin-top:auto}.row .btn{flex:1}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--gap);max-width:1500px;margin:0 auto}
+.entry{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);max-width:1100px;margin:0 auto}
+.hint{font-size:12px;color:#d0905a;text-align:center}
+.det{display:grid;grid-template-columns:300px 1fr;gap:var(--gap);max-width:1300px;margin:0 auto}
+.panel{background:#121117;border:2px solid #34313b;padding:16px;display:flex;flex-direction:column;gap:10px}
+.who{display:flex;gap:12px;align-items:center}.who .pt{width:60px;height:78px;background:#2a2830;border:2px solid #3a3741;flex:none}
+.quote{font-style:italic;color:#d8cfb6}
+.lvls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.lvls div{border:1px solid #34313b;padding:8px;font-size:13px}.lvls .cur{border-color:var(--gold)}
+.cost{font-size:14px}.cost .ok{color:var(--heal)}.cost .no{color:#d0905a}
+.go{font-family:Cinzel;font-size:11px;min-height:44px;padding:0 10px;margin-left:6px}
+@media (max-height:520px){
+ .grid{grid-template-columns:repeat(4,minmax(0,1fr))}.card{padding:6px;gap:4px}.desc{display:none}.meta{font-size:11px}.btn{font-size:11px;padding:0 6px}
+ .mark{font-size:9px;padding:0 3px;bottom:2px}
+ .det{grid-template-columns:200px 1fr}.panel{padding:8px;gap:6px;overflow:auto;max-height:calc(100vh - var(--bar) - 70px)}.lvls div{font-size:11px;padding:4px}.cost{font-size:12px}.who .pt{width:40px;height:52px}
+ .entry .card{flex-direction:row;align-items:center}.entry .col{display:flex;flex-direction:column;gap:6px;flex:1}
+}
+</style></head><body>
+<div class="top"><span class="logo">GRAVEVOW</span><span class="pill">Jugar</span><span class="pill on">Bastión</span><span class="pill">Intendencia</span><span class="pill">Personaje</span><span class="pill">Misiones</span><span class="ml btn" style="min-width:44px;padding:0">⚙</span></div>
+<main id="m"></main>
+<script>
+const P=new URLSearchParams(location.search), V=P.get('v')||'entry', phone=innerHeight<=520;
+// ---------- Pixel art (marcadores) ----------
+const W='#5a3a1e',W2='#7a5230',ST='#5d5a66',ST2='#8a8794',FI='#f2a23a',FI2='#ffe08a',DK='#3a2a18';
+const ART={
+ cot:[[1,18,18,2,W],[1,20,2,4,W],[17,20,2,4,W],[2,14,16,4,'#c9b27a'],[2,13,5,3,'#e9e1cc'],[8,14,10,3,'#6b4a8a']],
+ kitchen:[[3,18,14,6,ST],[4,19,12,4,ST2],[6,15,8,4,'#2a2830'],[5,14,10,2,'#3a3741'],[7,19,6,3,FI],[8,20,4,1,FI2],[8,10,1,3,'#cfcfd8'],[11,8,1,4,'#cfcfd8']],
+ bench:[[1,14,18,3,W2],[2,17,2,7,W],[16,17,2,7,W],[4,11,4,3,ST2],[10,12,7,2,'#b8b8c4'],[14,9,2,3,W]],
+ infirmary:[[4,10,12,14,'#e9e1cc'],[5,11,10,12,'#d8cfb6'],[9,13,2,8,'#b02a2a'],[6,16,8,2,'#b02a2a'],[6,7,8,3,W]],
+ forge:[[4,16,12,3,ST],[7,19,6,5,ST],[3,15,14,1,ST2],[6,11,8,2,'#3a3741'],[13,6,2,6,W],[11,5,6,2,ST2],[2,21,3,3,FI]],
+ alchemy:[[1,18,18,2,W2],[2,20,2,4,W],[16,20,2,4,W],[4,11,4,7,'#5ab08a'],[5,9,2,2,'#cceeee'],[10,13,4,5,'#b58cff'],[11,11,2,2,'#cceeee'],[15,14,2,4,'#e8b33a']],
+ runic:[[9,12,2,12,W],[5,22,10,2,W],[4,8,12,5,W2],[5,9,10,3,'#e9e1cc'],[7,10,1,1,'#b58cff'],[10,10,1,1,'#b58cff'],[12,10,1,1,'#b58cff']],
+};
+// Castillo en ruinas, 20 × 26 (mismo tamaño que los retratos): noche, luna, torres partidas, brecha y una antorcha
+const S1='#3e3b48',S2='#55515f',S3='#6e6a79',SK='#141327';
+const CASTLE=[
+ [0,0,20,26,SK],[14,2,3,3,'#d9d3c1'],[15,2,2,1,'#f2ecd8'],[3,3,1,1,'#8c8693'],[9,1,1,1,'#8c8693'],[18,7,1,1,'#8c8693'],
+ // torre izquierda (alta, tejado partido)
+ [1,7,5,15,S1],[2,8,3,13,S2],[1,6,1,1,S1],[3,6,1,1,S1],[5,5,1,2,S1],[2,11,1,2,'#0b0a0e'],
+ // torre derecha (baja, almenas rotas)
+ [14,10,5,12,S1],[15,11,3,10,S2],[14,9,1,1,S1],[16,9,1,1,S1],[18,9,1,1,S1],[16,14,1,2,FI],[16,14,1,1,FI2],
+ // muralla con brecha
+ [6,14,3,8,S1],[6,13,1,1,S1],[8,13,1,1,S1],[11,15,3,7,S1],[11,14,1,1,S1],[13,14,1,1,S1],[7,15,1,6,S2],[12,16,1,5,S2],
+ // puerta
+ [8,17,3,5,'#0b0a0e'],[9,16,1,1,'#0b0a0e'],
+ // grietas
+ [3,15,1,2,'#24222a'],[4,17,1,1,'#24222a'],[17,17,1,2,'#24222a'],
+ // antorcha en la brecha (alguien reconstruye)
+ [10,13,1,3,W],[10,11,1,2,FI],[10,11,1,1,FI2],[9,12,1,1,'#f2a23a80'],[11,12,1,1,'#f2a23a80'],
+ // andamio de madera
+ [13,12,1,10,W2],[12,12,3,1,W2],
+ // suelo y piedras caídas
+ [0,22,20,4,'#1d1b22'],[0,22,20,1,'#2a2830'],[5,21,2,1,S3],[12,22,2,1,S3],[2,23,1,1,S3],[16,23,2,1,S2],[9,23,1,1,S2],
+];
+// Variante en ruinas de una estación: oscurecida, cascotes delante y grieta
+function ruin(rects){return rects.map(r=>[...r.slice(0,4),'#3a3741']).concat([[2,5,1,4,'#0b0a0e'],[3,9,1,3,'#0b0a0e'],[0,21,20,5,'#1d1b22'],[1,20,4,2,S2],[6,21,3,2,S3],[12,20,3,3,S2],[16,21,3,2,S3],[10,22,2,1,S1],[4,19,2,1,S1],[14,18,1,2,W]]);}
+function art(rects,scale){const c=document.createElement('canvas');c.width=20;c.height=26;const g=c.getContext('2d');for(const [x,y,w,h,col] of rects){g.fillStyle=col;g.fillRect(x,y,w,h);}c.style.width=20*scale+'px';c.style.height=26*scale+'px';return c;}
+// ---------- Datos de ejemplo ----------
+const ST_=[
+ {id:'cot',n:'Catre',by:'Orik',lv:1,max:3,d:'Duerme para recuperar Descanso.'},
+ {id:'kitchen',n:'Cocina',by:'Garth',lv:1,max:3,can:true,d:'Cocina platos que preparan la bajada.'},
+ {id:'bench',n:'Banco de trabajo',by:'Orik',lv:3,max:3,d:'Desguaza y fabrica piezas.'},
+ {id:'infirmary',n:'Enfermería',by:'Vesper',lv:2,max:3,can:false,d:'Vendas, férulas y curas.'},
+ {id:'forge',n:'Forja',by:'Brand',lv:0,max:3,ready:true,d:'Armas y armaduras.'},
+ {id:'alchemy',n:'Mesa de alquimia',by:'Mirela',lv:0,max:3,ready:false,d:'Pociones y bombas.'},
+ {id:'runic',n:'Atril rúnico',by:'Sennet',lv:0,max:3,ready:false,d:'Graba runas en el equipo.'},
+];
+const m=document.getElementById('m');
+const lvbar=l=>`<div class="lv">${[1,2,3].map(k=>`<i class="${k<=l?'on':''}"></i>`).join('')}</div>`;
+function stationCard(s,scale){
+ const locked=s.lv<1, el=document.createElement('div');el.className='card';el.title='Tocar la tarjeta abre el detalle';
+ const arch=document.createElement('div');arch.className='arch';arch.style.width=(20*scale+28)+'px';arch.style.height=(26*scale+16)+'px';
+ arch.appendChild(art(locked?ruin(ART[s.id]):ART[s.id],scale));
+ if(locked&&s.ready)arch.insertAdjacentHTML('beforeend',`<span class="mark" style="color:#6fcf7a;border-color:#6fcf7a">! Lista</span>`);
+ if(!locked&&s.can)arch.insertAdjacentHTML('beforeend',`<span class="mark" style="color:#e8b33a;border-color:#e8b33a">▲ Mejora</span>`);
+ el.insertAdjacentHTML('beforeend',`<h3>${s.n}</h3>`);el.appendChild(arch);
+ const st=locked?`<span style="color:#d0905a">En ruinas</span>`:s.lv>=s.max?`<span style="color:#e8b33a">Nivel 3/3 · máximo</span>`:`Nivel ${s.lv}/3`;
+ let btns;
+ if(locked) btns=`<button class="btn ${s.ready?'gold glow':'sec'}">Reconstruir</button>`;
+ else if(s.lv>=s.max) btns=`<button class="btn gold">${s.use||'Usar'}</button>`;
+ else btns=`<button class="btn gold">${s.use||'Usar'}</button>`;
+ el.insertAdjacentHTML('beforeend',`<div class="state">${st}</div><div class="meta">Encargado: <b style="color:#c8a46a">${s.by}</b></div><div class="meta desc">${s.d}</div>${lvbar(s.lv)}<div class="row">${btns}</div>`);
+ return el;
+}
+if(V==='entry'){
+ const sc=phone?3:6;
+ m.innerHTML=`<div class="head" style="max-width:1100px"><h2>Entrada del Bastión</h2></div><div class="entry" id="e"></div>`;
+ const e=document.getElementById('e');
+ const mk=(title,canv,text,note,badge)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`${badge?`<span class="badge">${badge}</span>`:''}`;
+  const a=document.createElement('div');a.className='arch';a.style.width=(20*sc+40)+'px';a.style.height=(26*sc+24)+'px';a.appendChild(canv);
+  const col=document.createElement('div');col.className='col';col.style.display='flex';col.style.flexDirection='column';col.style.gap='8px';col.style.flex='1';
+  col.innerHTML=`<h3>${title}</h3><div style="text-align:center;font-size:${phone?13:16}px">${text}</div><div style="text-align:center;font-size:12px;color:var(--heal)">${note}</div><button class="btn gold" style="margin-top:auto;min-height:${phone?44:56}px;letter-spacing:.12em">ENTRAR</button>`;
+  if(phone){c.appendChild(a);c.appendChild(col);}else{c.appendChild(col);col.insertBefore(a,col.children[1]);}
+  e.appendChild(c);};
+ // retrato de mercader: marcador simple
+ const merch=[[0,0,20,26,'#00000000'],[5,2,10,9,'#5a3a1e'],[6,4,8,7,'#d8b48a'],[7,6,2,1,'#2a1a0e'],[11,6,2,1,'#2a1a0e'],[7,9,6,2,'#7a5230'],[4,11,12,13,'#6b2a2a'],[5,12,10,11,'#8a3a3a'],[4,17,12,2,'#3a2a18'],[6,24,3,2,'#2a2420'],[11,24,3,2,'#2a2420']];
+ mk('Mercaderes',art(merch,sc),'Comercia, cumple encargos y gana su confianza.','1 encargo listo para entregar',1);
+ mk('Bastión',art(CASTLE,sc),'Reconstruye el Bastión: descansa, cocina, cura y fabrica.','1 estación lista para reconstruir · Descanso 100',1);
+}
+if(V==='stations'){
+ m.innerHTML=`<div class="head"><h2>El Bastión</h2><span class="sub">${phone?'':'Lo que queda en pie, y lo que vuelves a levantar.'}</span><span class="ml"></span><button class="btn">Preparación</button><button class="btn">Recepción (2)</button><button class="btn">◂ Entrada</button></div><div class="grid" id="g"></div>`;
+ const g=document.getElementById('g');for(const s of ST_)g.appendChild(stationCard(s,phone?2:4));
+}
+if(V==='use'){
+ const s=ST_[1];
+ m.innerHTML=`<div class="head"><button class="btn">◂ Volver</button><h2>Cocina</h2><span class="sub">Nivel 1/3 · Encargado: <b style="color:#c8a46a">Garth</b></span><span class="ml"></span><button class="btn gold glow">▲ Mejorar</button><button class="btn">◂ Entrada</button></div>
+ <div class="det" style="grid-template-columns:1fr 1fr"><div class="panel"><div style="font-family:Cinzel;color:#c8a46a">Recetas</div>${['Gachas de avena','Caldo de huesos','Pan negro','Estofado (nivel 2)'].map((r,i)=>`<div style="border:1px solid #34313b;padding:8px;min-height:44px;${i==3?'opacity:.45':''}">${r}</div>`).join('')}</div>
+ <div class="panel"><div style="font-family:Cinzel;color:#c8a46a">Gachas de avena</div><div class="sub">Saciedad +30. Baja preparado.</div><div class="cost"><span class="ok">✓ Avena 2/2</span> · <span class="ok">✓ Agua 1/1</span></div><button class="btn gold" style="min-height:var(--btn)">Cocinar</button></div></div>`;
+}
+if(V==='upgrade'||V==='detail'){
+ const built=V==='upgrade', s=built?ST_[1]:{...ST_[4],ready:false};
+ m.innerHTML=`<div class="head"><button class="btn">◂ Volver</button><h2>${built?'Mejorar · '+s.n:s.n}</h2><span class="ml"></span><button class="btn">◂ Entrada</button></div><div class="det"><div id="l"></div><div class="panel" id="r"></div></div>`;
+ document.getElementById('l').appendChild(stationCard(s,phone?2:5));
+ const r=document.getElementById('r');
+ const quote=built?'«Una olla mayor, unas brasas que no se apaguen. Tráeme lo que falta y esta cocina dará de comer a medio Bastión.»':'«Esta forja ardía cuando el Bastión aún tenía nombre. Tráeme hierro y carbón, y volverá a cantar.»';
+ const lv=built?['<b>1 · Fogón</b><br>Platos sencillos.','<b>2 · Horno</b><br>+1 plato y guisos.','<b>3 · Cocina mayor</b><br>Banquetes de bajada.']:['<b>1 · Fragua</b><br>Armas de hierro.','<b>2 · Yunque doble</b><br>Armaduras.','<b>3 · Gran forja</b><br>Piezas raras.'];
+ r.innerHTML=`<div class="who"><div class="pt"></div><div><div class="meta" style="text-align:left">Encargado: <b style="color:#c8a46a">${s.by}</b></div><div class="quote">${quote}</div></div></div>
+ ${built?'':'<div class="sub">Mientras esté en ruinas: Brand forja por encargo en su tienda, más caro.</div>'}
+ <div class="lvls">${lv.map((t,i)=>`<div class="${built&&i===0?'cur':''}">${t}</div>`).join('')}</div>
+ <div style="font-family:Cinzel;color:#c8a46a;font-size:13px">${built?'Para mejorar a nivel 2':'Para reconstruirla'}</div>
+ <div class="cost">${built?'<span class="ok">✓ Ladrillo refractario 4/4</span> · <span class="ok">✓ Hierro 3/3</span> · <span class="ok">✓ Oro 120/120</span>':'<span class="ok">✓ Piedra labrada 6/6</span> · <span class="no">✗ Hierro 1/4</span><button class="btn go">Ir ▸</button> · <span class="ok">✓ Oro 80/80</span>'}</div>
+ <button class="btn gold ${built?'glow':''}" style="min-height:var(--btn)" ${built?'':'disabled style="opacity:.45;min-height:var(--btn)"'}>${built?'▲ Mejorar · nivel 2':'Reconstruir'}</button>
+ ${built?'':'<div class="hint">Te faltan 3 de hierro.</div>'}`;
+}
+</script></body></html>

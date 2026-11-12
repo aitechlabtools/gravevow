@@ -2,7 +2,6 @@
 // panel de expedición con «Descender» abajo a la izquierda y nivel + accesos rápidos abajo a la derecha.
 import { useEffect, useState } from 'react';
 import { actions, useGame } from '../../state/store';
-import { CLASSES } from '../../../core/data/classes';
 import { ZONES, ZONE_ORDER, defaultSubzone, subzoneLock, zoneLock, type ZoneId } from '../../../core/data/zones';
 import { SUBZONE_ORDER, getSubzone, isSubzoneId, subzonesOf, type SubzoneDef, type SubzoneId } from '../../../core/data/subzones';
 import { overlevelPenalty } from '../../../config/subzones';
@@ -21,6 +20,7 @@ import { useLayout } from '../../../config/ui';
 import { DISCORD_HINT, DISCORD_URL, DiscordIcon, EXTERNAL, HeartIcon, SUPPORT_HINT, SUPPORT_URL } from '../../../shared/community';
 import { sfx, startMusic } from '../../audio';
 import { CureButton, useCure } from '../CureOffer';
+import { useLongPress } from '../combatActions';
 
 /** La subzona elegida se recuerda mientras dure la sesión (al cambiar de pestaña y volver). */
 let lastPick: SubzoneId | null = null;
@@ -87,33 +87,34 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
       {/* Abajo a la izquierda: la zona (con el mapa) y, debajo, la expedición con «Descender» */}
       <div className="absolute flex flex-col" style={{ left: edge.left, bottom: edge.bottom, width: phone ? 250 : 324, gap: 'var(--gap)' }}>
       {/* Tarjeta de zona */}
-      <section className="panel panel-gold overflow-hidden" data-testid="zone-card">
+      <HoldTip testId="zone-tip" tip={<><b className="text-parchment">{sub.name}</b> · {zone.name}<br />Niveles {sub.levels[0]}–{sub.levels[1]} · mapa nuevo cada vez.{sub.tagline ? <><br /><i>{sub.tagline}</i></> : null}</>}>
+      {(consume) => (
+      <section className="panel panel-gold overflow-hidden" data-testid="zone-card" onClickCapture={(e) => { if (consume()) { e.stopPropagation(); e.preventDefault(); } }}>
         <button className="block w-full text-left relative" onClick={() => !firstTime && setMap(true)} aria-label={`Destino: ${sub.name}, ${zone.name}. Abrir el mapa de zonas`} disabled={firstTime}>
           <ZoneArt sub={sub} height={phone ? 44 : 96} />
           {!phone && <span className="absolute top-2 left-2 ui-tag bg-black/70" data-testid="zone-zone">{zone.name} · {sub.index}/10</span>}
-          {easy && <span className="absolute top-2 right-2 ui-tag bg-black/70 text-ember" data-testid="zone-easy">Demasiado fácil</span>}
         </button>
         <div className={`flex items-center gap-3 ${phone ? 'px-3 py-1.5' : 'p-3'}`}>
           <div className="flex-1 min-w-0">
             <div className={`font-display text-parchment leading-tight ${phone ? 'text-base' : 'text-xl'}`} data-testid="zone-name">{sub.name}</div>
-            {!phone && <div className="text-[11px] text-stone-300 leading-tight mt-0.5">Niveles {sub.levels[0]}–{sub.levels[1]} · mapa nuevo cada vez</div>}
           </div>
           {!firstTime && <button className="btn text-xs shrink-0" onClick={() => { setMap(true); sfx('click'); }} data-testid="btn-zone-map">Mapa de zonas</button>}
         </div>
       </section>
+      )}
+      </HoldTip>
 
       {/* Expedición y Descender */}
-      <section className="panel panel-gold" data-testid="expedition-panel">
+      <HoldTip testId="expedition-tip" tip={<>
+        <span data-testid="expedition-summary">{potions} {potions === 1 ? 'poción' : 'pociones'} · {risk} de oro en riesgo{merc ? ` · ${merc.name} te acompaña` : ''}</span><br />
+        {EXPEDITION_DURATION_MS / 60000} minutos para encontrar el portal. Si caes, pierdes lo que llevas.
+      </>}>
+      {(consume) => (
+      <section className="panel panel-gold" data-testid="expedition-panel" onClickCapture={(e) => { if (consume()) { e.stopPropagation(); e.preventDefault(); } }}>
         <div className={phone ? 'p-2.5' : 'p-4'}>
           <h2 className="panel-title text-sm">Expedición</h2>
           <div className="font-body text-parchment leading-tight mt-1">{phone ? sub.name : zone.name} · Nv {sub.levels[0]}–{sub.levels[1]}</div>
           {easy && <div className="text-xs text-ember mt-1" data-testid="zone-easy-note">Demasiado fácil para ti: {Math.round(easy.xp * 100)} % de experiencia y {Math.round(easy.gold * 100)} % de oro.</div>}
-          {!phone && (
-            <div className="font-body text-stone-300 text-[15px] leading-snug mt-0.5" data-testid="expedition-summary">
-              {potions} {potions === 1 ? 'poción' : 'pociones'} · {risk} de oro en riesgo{merc ? ` · ${merc.name} te acompaña` : ''}
-            </div>
-          )}
-          {!phone && <div className="text-[11px] text-stone-400 mt-1">{EXPEDITION_DURATION_MS / 60000} minutos para encontrar el portal. Si caes, pierdes lo que llevas.</div>}
           {lock && <div className="text-xs text-blood mt-1" data-testid="zone-lock">{lock}</div>}
           {!profile.equipment.mainHand && <div className="text-xs text-ember mt-1">Vas sin arma. Revisa tu equipo en la Intendencia.</div>}
           {cure && (
@@ -125,6 +126,8 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
           <button className="btn btn-gold cta w-full mt-2" onClick={descend} disabled={!!lock} data-testid="btn-enter-dungeon">Descender</button>
         </div>
       </section>
+      )}
+      </HoldTip>
       </div>
 
       {/* Nivel y accesos rápidos */}
@@ -134,9 +137,8 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
           <QuickLink label="Apoyar" href={SUPPORT_URL} hint={SUPPORT_HINT} icon={<HeartIcon size={22} />} testId="quick-kofi" />
           <QuickLink label="Discord" href={DISCORD_URL} hint={DISCORD_HINT} icon={<DiscordIcon size={24} />} testId="quick-discord" />
         </div>
-        <div className="flex flex-col items-center gap-1" title={`Experiencia: ${xpPct}%`} data-testid="level-ring">
+        <div className="flex flex-col items-center gap-1" title={`Nivel ${ch.level} · experiencia ${xpPct} %`} aria-label={`Nivel ${ch.level}, experiencia ${xpPct} %`} data-testid="level-ring">
           <div className="lvl-ring" style={{ ['--p' as string]: xpPct }}><span>{ch.level}</span></div>
-          <span className="text-[10px] tracking-[0.2em] uppercase text-stone-300">Nivel</span>
         </div>
         {pins.length > 0 && (
           <button className="panel p-2 text-left border-gold max-w-[260px]" onClick={() => onNavigate('quests')} data-testid="jugar-pinned">
@@ -152,7 +154,22 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
       </div>
 
       {map && <ZoneMap current={subId} onPick={(z) => { setSubId(z); setMap(false); sfx('click'); }} onClose={() => setMap(false)} />}
-      {firstTime && !phone && <FirstTimeHint className={CLASSES[ch.classId].name} />}
+    </div>
+  );
+}
+
+/**
+ * Ficha de un bloque del lobby: aparece encima al pasar el ratón (escritorio) o al mantener pulsado (táctil), y se
+ * cierra al salir o al soltar. Guarda la información que antes iba en líneas de texto fijas.
+ */
+function HoldTip({ tip, testId, children }: { tip: React.ReactNode; testId: string; children: (consume: () => boolean) => React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const lp = useLongPress(() => setOpen(true), () => window.setTimeout(() => setOpen(false), 1600));
+  return (
+    <div className="relative" {...lp.handlers}
+      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setOpen(true); }} onPointerLeave={(e) => { if (e.pointerType === 'mouse') setOpen(false); }}>
+      {children(lp.consume)}
+      <div role="tooltip" className={`absolute left-0 right-0 bottom-full mb-2 panel p-2 z-20 text-[13px] leading-snug text-stone-300 pointer-events-none ${open ? '' : 'hidden'}`} data-testid={testId}>{tip}</div>
     </div>
   );
 }
@@ -282,14 +299,5 @@ function SubzoneRow({ sub, on, onPick }: { sub: SubzoneDef; on: boolean; onPick:
       </span>
       {l ? <span aria-label="Cerrada" className="text-blood shrink-0">🔒</span> : on ? <span className="text-gold shrink-0" aria-hidden>◆</span> : null}
     </button>
-  );
-}
-
-function FirstTimeHint({ className }: { className: string }) {
-  return (
-    <div className="absolute right-[max(var(--pad),env(safe-area-inset-right))] top-2 panel p-3 max-w-xs font-body text-[15px] text-stone-300 leading-snug" data-testid="first-time-hint">
-      <div className="text-gold font-display text-sm mb-1">Tu primera bajada</div>
-      Tu {className.toLowerCase()} baja a la Mazmorra. Coge lo que puedas y busca el portal antes de que se acabe el tiempo.
-    </div>
   );
 }

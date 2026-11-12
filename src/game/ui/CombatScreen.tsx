@@ -129,6 +129,8 @@ export function CombatScreen() {
 
   const myRes = CLASSES[profile.character.classId].resource;
   const usableItems = ['health_potion', 'focus_tonic', 'mana_potion', 'antidote'].filter((id) => expedition && countItem(expedition.backpack, id) > 0 && (!getItem(id).resource || getItem(id).resource === myRes));
+  // Comer o beber en combate también va por la Mochila (gasta el turno); ya no hay botones en el panel de necesidades
+  if (expedition) for (const st of expedition.backpack) { const u = st ? getItem(st.itemId).use : null; if (st && u?.kind === 'need' && !u.dish && !usableItems.includes(st.itemId)) usableItems.push(st.itemId); }
   const kit = combatLoadout(profile.character.classId, expedition?.equipment ?? profile.equipment, profile.classSkills.equipped);
   const res = player.resourceName;
   const twoHanded = kit.left.skills.length === 0;
@@ -341,9 +343,8 @@ export function CombatScreen() {
           <h2 className="font-display text-2xl mb-2">Heridas y necesidades</h2>
           <BodyPanel body={player.body} backpack={expedition.backpack} combat surgery={player.surgery ? { region: player.surgery.region, left: 1 } : null}
             onTreat={playerTurn ? (id, r) => { acted.current = true; actions.combatAct({ type: 'item', itemId: id, region: r }); } : undefined}
-            note={playerTurn ? 'Curar, comer o beber gasta tu turno.' : 'Espera a tu turno para curarte, comer o beber.'}>
-            {player.needs && <NeedsPanel needs={player.needs} body={player.body} backpack={expedition.backpack}
-              onUse={playerTurn ? (id) => { acted.current = true; actions.combatAct({ type: 'item', itemId: id }); } : undefined} />}
+            note={playerTurn ? 'Curar gasta tu turno. Para comer o beber, abre la Mochila de la barra (también gasta el turno).' : 'Espera a tu turno para curarte, comer o beber.'}>
+            {player.needs && <NeedsPanel needs={player.needs} body={player.body} backpack={expedition.backpack} />}
           </BodyPanel>
           <button className="btn mt-3 text-sm" onClick={() => setBodyOpen(false)} data-testid="combat-body-close">Cerrar</button>
         </Modal>

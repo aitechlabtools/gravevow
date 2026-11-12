@@ -45,7 +45,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Con `?debug`, el estado se ve en `window.__GRAVEVOW__`.
 - `src/game/engine`: la escena de mazmorra (`DungeonScene.ts`) solo dibuja y mueve; los hechos del juego pasan por acciones del estado.
 - `src/game/ui`: pantallas.
-  - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»: entrada con Mercaderes y Refugio), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
+  - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»: entrada con Mercaderes y Bastión; las estaciones se reconstruyen en `RefugePanels.tsx`), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
   - Mercaderes: los 8 del plan maestro en `data/vendors.ts`; todos están desde el principio (`core/vendors.ts`), que migra la reputación antigua.
   - Las piezas comunes están en `kit/`.
   - Mazmorra, combate y resumen: `DungeonScreen`, `CombatScreen` y `SummaryScreen`. El arrastre de objetos está en `pointerDrag.tsx`.
@@ -107,7 +107,8 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Migración de mini tutoriales (partida antigua: «!» solo en lo no usado): `node scripts/migracion-minis-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Guía de Ajustes, «?», desactivar y reiniciar mini tutoriales: `node scripts/e2e-guia.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Mini tutoriales (cola, «!», cartel, guardado en la cuenta): `node scripts/minis-check.cjs <url>/play/ <carpeta> [dispositivo]`. Con `?debug` los mini tutoriales no salen; con `?debug&minis`, sí.
-  - Bastión (entrada, Mercaderes, Refugio con tarjetas y detalle de estación): `node scripts/bastion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Jugar con fichas (ratón o mantener pulsado en zona y Expedición): `node scripts/jugar-ficha-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Bastión (entrada, Mercaderes, estaciones con «Reconstruir»/«Usar», «▲ Mejorar» dentro y detalle): `node scripts/bastion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Refugio, estaciones, crafteo, runas, desguace y cocina: `node scripts/refugio-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Desguace (seguro y posible, recluta fuera, confirmación y varios a la vez): `node scripts/desguace-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Materias y planos en tiendas, compra de plano y resumen: `node scripts/fuentes-check.cjs <url>/play/ <carpeta> [dispositivo]`.

@@ -1,5 +1,5 @@
-// El Refugio (estaciones, catre y platos) y el desguace de Orik. Lo que se fabrica va por el menú de crafteo común.
-// Todo se decide tocando: nada depende del hover ni de reflejos.
+// El Bastión (estaciones que se reconstruyen, catre y platos) y el desguace de Orik. Lo que se fabrica va por el menú de
+// crafteo común. Todo se decide tocando: nada depende del hover ni de reflejos.
 import { useEffect, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { prepText, refugeOf } from '../../core/refuge';
@@ -12,7 +12,7 @@ import { isCover } from '../../core/inventory';
 import { ItemIcon } from './inventory';
 import { ReceptionSection } from './WorkshopPanels';
 import type { CraftStation } from '../../core/data/crafting';
-import { CraftPanel, RunePanel, StationDetail, StationTiles, type GoTo } from './StationPanels';
+import { CotPanel, CraftPanel, RunePanel, StationDetail, StationTiles, UpgradeButton, type GoTo } from './StationPanels';
 import { MODULES, type ModuleId } from '../../core/data/refuge';
 import { Modal } from './common';
 import { sfx } from '../audio';
@@ -21,52 +21,72 @@ import type { ItemStack } from '../../core/types';
 const BTN = { minHeight: 44 } as const;
 
 /**
- * El Refugio: tarjetas de estación como las de los mercaderes (solo las que ya tocan), su detalle, el menú de crafteo de
- * cada una y la recepción de excedentes en un panel aparte. Los platos se comen desde el detalle de la Cocina.
+ * El Bastión: tarjetas de estación como las de los mercaderes («Reconstruir» o «Usar»), la pantalla de cada estación en uso
+ * (con «▲ Mejorar» arriba), el detalle para reconstruir o mejorar y la recepción de excedentes en un panel aparte.
+ * Los platos se comen en la Cocina (al usarla).
  */
-export function RefugePanel({ onBack, onGo }: { onBack: () => void; onGo?: GoTo }) {
+export function RefugePanel({ onBack, onGo, initialDetail }: { onBack: () => void; onGo?: GoTo; initialDetail?: ModuleId }) {
   const profile = useGame((s) => s.profile)!;
   const ref = refugeOf(profile);
   const [inside, setInside] = useState<string | null>(null);
-  const [detail, setDetail] = useState<ModuleId | null>(null);
+  const [detail, setDetail] = useState<ModuleId | null>(initialDetail ?? null);
   const [reception, setReception] = useState(false);
   const back = () => { setInside(null); sfx('click'); };
-  const use = (id: ModuleId) => setInside(id === 'runic' && ref.runic >= 3 ? 'runic-menu' : id);
+  const use = (id: ModuleId) => { setDetail(null); setInside(id === 'runic' && ref.runic >= 3 ? 'runic-menu' : id); };
   const recN = (profile.reception ?? []).length;
-  // Primera vez en el Refugio (vista de tarjetas): lo explica Orik
+  // Primera vez en el Bastión (vista de tarjetas): lo explica Orik
   const cards = !inside && !detail;
   useEffect(() => { if (cards) actions.tutorialEvent('bastion:refuge'); }, [cards]);
   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' } as const;
-  const bastion = <button className="btn font-display tracking-[0.1em] uppercase" style={BTN} onClick={onBack} data-testid="refuge-back">◂ Bastión</button>;
+  const entry = <button className="btn font-display tracking-[0.1em] uppercase" style={BTN} onClick={onBack} data-testid="refuge-back">◂ Entrada</button>;
   const wrap = (node: React.ReactNode) => <div className="h-full overflow-y-auto scroll-thin" style={pad} data-testid="screen-refuge"><div className="w-full max-w-[1200px] mx-auto">{node}</div></div>;
-  if (inside && inside !== 'runes' && inside !== 'runic-menu') return wrap(<CraftPanel station={inside as CraftStation} onBack={back} />);
-  if (inside === 'runes') return wrap(<RunePanel onBack={back} />);
-  if (inside === 'runic-menu') return wrap(
-    <div className="flex flex-wrap gap-2 pt-2" data-testid="runic-menu">
-      <button className="btn btn-gold font-display" style={{ minHeight: 52 }} onClick={() => setInside('runic')} data-testid="runic-craft">Fabricar en el atril</button>
-      <button className="btn btn-gold font-display" style={{ minHeight: 52 }} onClick={() => setInside('runes')} data-testid="runic-runes">Grabar runas</button>
-      <button className="btn" style={{ minHeight: 52 }} onClick={back}>◂ Refugio</button>
-    </div>);
-  const prep = prepText(profile.prep);
-  if (detail) return wrap(<>
-    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-      <div className="flex items-center gap-2">
-        <button className="btn font-display tracking-[0.1em] uppercase" style={BTN} onClick={() => { setDetail(null); sfx('click'); }} data-testid="detail-back">◂ Refugio</button>
-        <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">{MODULES[detail].name}</h2>
+  // Dentro de «Usar»: la estación con «▲ Mejorar» (abre el detalle) y «◂ Entrada»
+  const station: ModuleId | null = inside === 'runes' || inside === 'runic-menu' ? 'runic' : (inside as ModuleId | null);
+  const extra = station && !detail ? <><UpgradeButton id={station} onOpen={(id) => setDetail(id)} />{entry}</> : null;
+  if (detail) {
+    const lvl = ref[detail];
+    return wrap(<>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2">
+          <button className="btn font-display tracking-[0.1em] uppercase" style={BTN} onClick={() => { setDetail(null); sfx('click'); }} data-testid="detail-back">◂ Volver</button>
+          <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">{lvl >= 1 && lvl < 3 ? `Mejorar · ${MODULES[detail].name}` : MODULES[detail].name}</h2>
+        </div>
+        {entry}
       </div>
-      {bastion}
-    </div>
-    <StationDetail id={detail} onUse={use} onGo={onGo}>{detail === 'kitchen' && <Dishes />}</StationDetail>
+      <StationDetail id={detail} onUse={use} onGo={onGo} />
+    </>);
+  }
+  if (inside === 'cot') return wrap(<CotPanel onBack={back} extra={extra} />);
+  if (inside === 'runes') return wrap(<RunePanel onBack={() => setInside('runic-menu')} extra={extra} />);
+  if (inside === 'runic-menu') return wrap(
+    <div className="flex flex-col gap-2 pt-2" data-testid="runic-menu">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-display text-parchment tracking-[0.08em]">{MODULES.runic.name} · Nivel {ref.runic}/3</span>
+        <span className="ml-auto" />{extra}
+        <button className="btn text-xs" style={BTN} onClick={back} data-testid="runic-back">◂ Volver</button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button className="btn btn-gold font-display" style={{ minHeight: 52 }} onClick={() => setInside('runic')} data-testid="runic-craft">Fabricar en el atril</button>
+        <button className="btn btn-gold font-display" style={{ minHeight: 52 }} onClick={() => setInside('runes')} data-testid="runic-runes">Grabar runas</button>
+      </div>
+    </div>);
+  if (inside) return wrap(<>
+    <CraftPanel station={inside as CraftStation} onBack={ref.runic >= 3 && inside === 'runic' ? () => setInside('runic-menu') : back} extra={extra} />
+    {inside === 'kitchen' && <div className="panel p-3 mt-2"><Dishes /></div>}
   </>);
+  const prep = prepText(profile.prep);
   return (
     <div className="h-full overflow-y-auto scroll-thin" style={pad} data-testid="screen-refuge">
       <div className="min-h-full flex flex-col items-center justify-center">
         <div className="w-full max-w-[1200px] flex flex-wrap items-center justify-between gap-2 mb-2">
-          <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">El Refugio</h2>
+          <div className="min-w-0">
+            <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">El Bastión</h2>
+            <div className="text-[12px] text-stone-400 italic [@media(max-height:560px)]:hidden">Lo que queda en pie, y lo que vuelves a levantar.</div>
+          </div>
           <div className="flex flex-wrap items-center gap-2" data-testid="refuge-prep">
             <span className="text-[12px] text-stone-300" data-testid="prep-text">Preparación: {prep.length ? prep.join(' · ') : 'ninguna'}</span>
             {recN > 0 && <button className="btn btn-gold text-xs" style={BTN} onClick={() => { setReception(true); sfx('click'); }} data-testid="btn-reception">Recepción ({recN})</button>}
-            {bastion}
+            {entry}
           </div>
         </div>
         <div className="w-full max-w-[1200px]">
@@ -83,7 +103,7 @@ export function RefugePanel({ onBack, onGo }: { onBack: () => void; onGo?: GoTo 
   );
 }
 
-/** Platos que tienes: se comen desde el detalle de la Cocina para bajar preparado. */
+/** Platos que tienes: se comen en la Cocina (al usarla) para bajar preparado. */
 function Dishes() {
   const profile = useGame((s) => s.profile)!;
   const prep = prepText(profile.prep);

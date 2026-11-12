@@ -546,7 +546,15 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .needs-cell.critical .needs-bar,.needs-cell.empty .needs-bar{animation:needs-blink 1.2s steps(2) infinite}
 .needs-bar{position:relative;display:block;height:3px;background:#292524}
 .needs-bar.big{height:5px;margin:3px 0}
-.needs-bar span{position:absolute;inset:0 auto 0 0}
+.needs-bar span{position:absolute;inset:0 auto 0 0;transition:width .6s ease-out}
+.needs-bar.need-fill span{animation:need-fill .9s ease-out}
+@keyframes need-fill{0%{filter:brightness(2.2);box-shadow:0 0 8px #fff4c2}100%{filter:none;box-shadow:none}}
+.needs-food-hint{display:inline-flex;align-items:center;margin-top:3px;padding:0 6px;min-height:30px;font-size:12px;color:#7fbf6a;background:transparent;border:1px dashed #3d5a35;cursor:pointer;text-align:left}
+.needs-food-hint.touch{min-height:44px}
+.needs-food-hint.static{border:0;padding:0;min-height:0;cursor:default}
+.slot.slot-hint{z-index:2;animation:slot-hint .5s steps(2) 6;box-shadow:0 0 0 2px #07060a,0 0 0 4px #7fbf6a}
+@keyframes slot-hint{50%{box-shadow:0 0 0 2px #07060a,0 0 0 4px #e9e1cc}}
+@media (prefers-reduced-motion: reduce){.needs-bar span{transition:none}.needs-bar.need-fill span,.slot.slot-hint{animation:none}}
 @keyframes needs-blink{50%{opacity:.35}}
 .needs-panel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
 .needs-row{background:#0000004d;border:1px solid #292524;padding:6px 8px;display:flex;flex-direction:column;gap:2px}

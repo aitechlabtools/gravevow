@@ -2,13 +2,15 @@
 import type { ReactNode } from 'react';
 import { TutDot } from '../MiniTutorial';
 
-export function Card({ title, art, children, on = false, badge, className = '', testId, tutDot = true }: {
+export function Card({ title, art, children, on = false, badge, className = '', testId, tutDot = true, onClick }: {
   title: ReactNode; art: ReactNode; children?: ReactNode; on?: boolean; badge?: number; className?: string; testId?: string;
   /** Pinta el «!» si esta tarjeta tiene un mini tutorial pendiente (data/tutorials.ts, campo `badge`). */
   tutDot?: boolean;
+  /** Si se pasa, tocar la tarjeta entera hace esto (los botones de dentro paran la propagación). */
+  onClick?: () => void;
 }) {
   return (
-    <article className={`panel ui-card ${on ? 'ui-card on' : ''} ${className}`} data-testid={testId}>
+    <article className={`panel ui-card ${on ? 'ui-card on' : ''} ${className}`} data-testid={testId} onClick={onClick}>
       <h3 className="font-display text-parchment text-center leading-tight min-h-[1.5em]">{title}</h3>
       <div className="ui-arch relative">
         {art}

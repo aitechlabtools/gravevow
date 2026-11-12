@@ -20,7 +20,7 @@ const BAG_DROP = JSON.stringify({ type: 'bag' });
 import { Modal } from '../common';
 import type { EquipSlot, ItemStack } from '../../../core/types';
 import { CarryBar } from '../CarryBar';
-import { ItemSlot, GridView, StatsList, SLOT_LABELS, type InvMode } from '../inventory';
+import { ItemSlot, GridView, StatsList, SLOT_LABELS, highlightItems, type InvMode } from '../inventory';
 import { PlayerSprite, GoldAmount } from '../common';
 import { Panel, SubHead, Segmented, usePixelScale } from '../kit';
 import { BodyPanel } from '../BodyFigure';
@@ -56,7 +56,17 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
     setSel(same(sel, l) ? null : l); sfx('click');
   };
   const onEmpty = (l: Loc) => { if (!sel) return; actions.transfer(sel, l); clear(); };
-  const quickFromBag = (l: Loc, s: ItemStack) => { (getItem(s.itemId).slot ? actions.quickEquip(l) : actions.quickMove(l, 'stash')); clear(); };
+  // Doble toque o doble clic: equipar, comer o beber, o mandar al almacén
+  const quickFromBag = (l: Loc, s: ItemStack) => { const d = getItem(s.itemId); (d.slot ? actions.quickEquip(l) : d.use?.kind === 'need' ? actions.eat(l) : actions.quickMove(l, 'stash')); clear(); };
+  // «Tienes comida en la mochila»: si estás en Estado, vuelve a Equipo para ver la mochila resaltada
+  useEffect(() => {
+    const h = (e: Event) => {
+      if (document.querySelector('[data-testid=alijo-backpack]')) return;
+      const ids = (e as CustomEvent<string[]>).detail;
+      setView('gear'); window.setTimeout(() => highlightItems(ids), 120);
+    };
+    window.addEventListener('gv-hint-items', h); return () => window.removeEventListener('gv-hint-items', h);
+  }, []);
   const grids = { equipment: profile.equipment, mode: MODE, selected: sel, onSelect, onEmpty };
   // Vaciar la mochila: pide confirmación solo si hay algo raro o mejor
   const touchy = useIsTouch();
@@ -108,7 +118,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
   const stashCols = 8;
   const storage = (
     <StashPanel cols={stashCols} sel={sel} onSelect={onSelect} onEmpty={onEmpty}
-      onQuick={(l) => { actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
+      onQuick={(l, st) => { if (getItem(st.itemId).use?.kind === 'need') actions.eat(l); else actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
   );
   const card = <ItemCard loc={sel} mode={MODE} onClear={clear} compact={phone} />;
   const status = <StatusView withNeeds={phone} />;
@@ -235,7 +245,7 @@ function HeroColumn({ onDetails, needs }: { onDetails: () => void; needs?: boole
       <div className="text-center font-display text-gold mt-3">◆ {cls.name} ◆</div>
       {/* En «Estado» no van las estadísticas: así las necesidades suben y se ven sin desplazar */}
       {!needs && <div className="mt-2"><StatsColumn stats={stats} base={baseStats(ch.classId, ch.level)} resourceName={cls.resourceName} /></div>}
-      {needs && <div className="needs-side mt-3"><NeedsPanel needs={needsOf(profile.needs)} backpack={profile.backpack} onUse={(id) => actions.eatItem(id)} atBase note="El catre está en el Bastión, en los barracones." /></div>}
+      {needs && <div className="needs-side mt-3"><NeedsPanel needs={needsOf(profile.needs)} backpack={profile.backpack} onShowFood={highlightItems} atBase note="El catre está en el Bastión, en los barracones." /></div>}
       <div className="flex-1" />
       <button className="btn w-full mt-3 font-display tracking-[0.1em] uppercase" style={{ minHeight: 'var(--btn-h)' }} onClick={onDetails} data-testid="btn-hero-details">Ver detalles</button>
     </>
@@ -290,7 +300,7 @@ function StatusView({ withNeeds }: { withNeeds?: boolean }) {
       {cure && <div className="mb-3 status-center"><CureOffer /></div>}
       <BodyPanel body={body} backpack={profile.backpack} onTreat={(id, r) => actions.baseTreat(id, r)} onHeal={(id) => actions.baseHeal(id)} full
         note={cure ? 'Toca una parte para ver qué le pasa y curarla con lo que llevas, o arrastra una venda, una férula o una poción hasta ella.' : 'Estás entero.'}>
-        {withNeeds && <NeedsPanel needs={needsOf(profile.needs)} body={body} backpack={profile.backpack} onUse={(id) => actions.eatItem(id)} atBase note="El catre está en el Bastión, en los barracones." />}
+        {withNeeds && <NeedsPanel needs={needsOf(profile.needs)} body={body} backpack={profile.backpack} onShowFood={highlightItems} atBase note="El catre está en el Bastión, en los barracones." />}
       </BodyPanel>
     </div>
   );

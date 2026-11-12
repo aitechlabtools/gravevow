@@ -13,7 +13,7 @@ import { SUBZONES } from './subzones';
 /** Temas de la Guía (Ajustes › Partida). */
 export type TutTopic = 'combate' | 'cuerpo' | 'objetos' | 'bastion' | 'mercaderes' | 'progresion' | 'cuenta';
 export const TOPIC_NAME: Record<TutTopic, string> = {
-  combate: 'Combate', cuerpo: 'Heridas y necesidades', objetos: 'Objetos y oro', bastion: 'Bastión y Refugio',
+  combate: 'Combate', cuerpo: 'Heridas y necesidades', objetos: 'Objetos y oro', bastion: 'Bastión y estaciones',
   mercaderes: 'Mercaderes', progresion: 'Progresión', cuenta: 'Cuenta y copia',
 };
 
@@ -56,7 +56,7 @@ export interface MiniTutorial {
 
 /**
  * Receta de la primera vez en cada estación: al construirla (nivel 1), su encargado regala los materiales justos para
- * hacerla una vez. Va por personaje, porque cada uno tiene su Refugio.
+ * hacerla una vez. Va por personaje, porque cada uno reconstruye su Bastión.
  */
 export const STATION_FIRST_RECIPE: Record<CraftStation, string> = {
   kitchen: 'c_jerky', bench: 'c_strap', infirmary: 'c_bandage', forge: 'c_scrap_bar', alchemy: 'c_antidote', runic: 'c_cut_crystal',
@@ -76,10 +76,10 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
       { text: 'Este es tu **bolsillo seguro**: lo que guardes ahí **no se pierde al morir**. Caben cosas pequeñas, como llaves o saquitos. Arrastra ahí lo más valioso antes de bajar.', touch: 'Este es tu **bolsillo seguro**: lo que guardes ahí **no se pierde al morir**. Caben llaves o saquitos: toca uno y luego una casilla del bolsillo.', target: 'alijo-pocket' },
       { text: 'Pulsa **«Vaciar mochila»**: todo lo que llevas pasa al almacén, donde está a salvo.', touch: 'Toca **«Vaciar mochila»**: todo lo que llevas pasa al almacén, donde está a salvo.', target: 'empty-backpack', action: 'click' },
       { text: 'Ahora, la pestaña **Bastión**. Haz clic en ella.', touch: 'Ahora, la pestaña **Bastión**. Tócala.', target: 'tab-merchants', action: 'click' },
-      { text: 'Tiene dos puertas: los **Mercaderes** compran, venden y dan encargos; tu **Refugio** guarda las estaciones que te construyen sus encargados. Ya los irás conociendo.', target: 'bastion-merchants' },
+      { text: 'Tiene dos puertas: los **Mercaderes** compran, venden y dan encargos; el **Bastión** son las ruinas que vas reconstruyendo, estación a estación. Ya los irás conociendo.', target: 'bastion-merchants' },
       { text: 'Tu partida vive en este navegador. Haz una **copia de seguridad** de vez en cuando: está en **Ajustes › Partida** y en el menú principal.', target: 'btn-lobby-settings' },
       { text: 'Cuando quieras bajar, vuelve a **Jugar**. Haz clic en la pestaña.', touch: 'Cuando quieras bajar, vuelve a **Jugar**. Toca la pestaña.', target: 'tab-play', action: 'click' },
-      { text: 'Elige la subzona (de momento, las Afueras) y pulsa **Descender**. Suerte ahí abajo. La necesitarás.', touch: 'Elige la subzona (de momento, las Afueras) y toca **Descender**. Suerte ahí abajo. La necesitarás.', target: 'btn-enter-dungeon' },
+      { text: 'Elige la subzona (de momento, las Afueras) y pulsa **Descender**. Tendrás un tiempo para encontrar el **portal**; si caes, pierdes lo que llevas. Pasa el ratón por encima para ver qué arriesgas.', touch: 'Elige la subzona (de momento, las Afueras) y toca **Descender**. Tendrás un tiempo para encontrar el **portal**; si caes, pierdes lo que llevas. Mantén pulsado para ver qué arriesgas.', target: 'btn-enter-dungeon' },
     ],
   },
   {
@@ -128,9 +128,9 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   {
     id: 'tab.refugio', topic: 'bastion', trigger: 'bastion:refuge', narrator: 'orik', badge: 'bastion-refuge',
     steps: [
-      { text: 'Esto es tuyo. Cada **estación** la construye su encargado: tú pones el oro y los materiales.', target: 'station-grid' },
+      { text: 'El Bastión de Ceniza está en ruinas, y es tuyo. Cada **estación** se reconstruye con tu oro y tus materiales; su encargado la levanta.', target: 'station-grid' },
       { text: 'El **catre** ya está. Dormir llena el Descanso y, mejorado, te deja **preparado** para bajar.', target: 'module-cot' },
-      { text: 'Mira qué pide cada estación en **Detalles**. Empieza por la cocina.', target: 'details-kitchen', action: 'click' },
+      { text: 'Toca una estación para ver qué pide su reconstrucción. Empieza por la cocina.', target: 'module-kitchen', action: 'click' },
     ],
   },
   {
@@ -143,7 +143,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   {
     id: 'screen.select', topic: 'cuenta', trigger: 'screen:select',
     steps: [
-      { text: 'Hasta **4 personajes**. Cada uno tiene su equipo, su almacén, su Refugio y su bestiario.', target: 'screen-select' },
+      { text: 'Hasta **4 personajes**. Cada uno tiene su equipo, su almacén, su Bastión y su bestiario.', target: 'screen-select' },
       { text: 'Los **trajes**, los ajustes y la página **Compartido** del almacén son de todos.' },
     ],
   },
@@ -166,8 +166,8 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   {
     id: 'bastion.can-craft', topic: 'bastion', trigger: 'bastion:can-craft',
     steps: [
-      { text: 'Con lo que traes puedes **fabricar** algo en tus estaciones del Refugio.' },
-      { text: 'Entra en el **Bastión** y luego en el **Refugio**. Cada estación tiene un punto verde en lo que puedes hacer.', target: 'tab-merchants' },
+      { text: 'Con lo que traes puedes **fabricar** algo en tus estaciones del Bastión.' },
+      { text: 'Entra en la pestaña **Bastión** y luego en la tarjeta **Bastión**. Cada estación tiene un punto verde en lo que puedes hacer.', target: 'tab-merchants' },
     ],
   },
   {
@@ -267,7 +267,7 @@ function VENDOR_MINIS(): MiniTutorial[] {
   ];
 }
 
-// ── Uno por estación de crafteo: lo cuenta su encargado la primera vez que se usa. Al construirla regala los materiales
+// ── Uno por estación de crafteo: lo cuenta su encargado la primera vez que se usa. Al reconstruirla regala los materiales
 // de la receta de STATION_FIRST_RECIPE, así que el paso de craftear se hace de verdad. ──
 function STATION_MINIS(): MiniTutorial[] {
   const what: Record<CraftStation, string> = {
@@ -279,7 +279,7 @@ function STATION_MINIS(): MiniTutorial[] {
     runic: '**Cristales**, tinta y pergamino para el equipo mágico. Y, más adelante, runas.',
   };
   const after: Record<CraftStation, string> = {
-    kitchen: 'Va a tu almacén. Llévalo en la mochila y **cómelo** abajo cuando apriete el hambre.',
+    kitchen: 'Va a tu almacén. Llévalo en la mochila y, abajo, elígelo y pulsa **Comer** cuando apriete el hambre.',
     bench: 'Va a tu almacén. Lo usarán otras recetas: la correa sirve para torniquetes y férulas.',
     infirmary: 'Van a tu almacén. Abajo, **arrástralas** sobre la parte herida.',
     forge: 'Va a tu almacén. Con lingotes se forjan armas y placas.',
@@ -292,7 +292,7 @@ function STATION_MINIS(): MiniTutorial[] {
       { text: what[st], target: `craft-${st}` },
       { text: 'Te he dejado los materiales justos para la primera. **Elige la receta** señalada: en verde lo que tienes.', touch: 'Te he dejado los materiales justos para la primera. **Toca la receta** señalada: en verde lo que tienes.', target: `recipe-${STATION_FIRST_RECIPE[st]}`, action: 'click' },
       { text: 'Ahora haz clic en **Craftear al almacén**.', touch: 'Ahora toca **Craftear al almacén**.', target: 'craft-go', action: 'click' },
-      { text: `${after[st]} El siguiente nivel de la estación me lo pides a mí.` },
+      { text: `${after[st]} Para seguir reconstruyéndola, pulsa **▲ Mejorar** arriba.`, target: `upgrade-open-${st}` },
     ],
   }));
 }
@@ -337,7 +337,7 @@ function EXPEDITION_MINIS(): MiniTutorial[] {
     ] },
     { id: 'exp.need-low', topic: 'cuerpo', trigger: 'exp:need-low', steps: [
       { text: 'Tienes **hambre**, **sed** o **sueño**. Cada barra baja te recorta el Ímpetu o el Maná.', target: 'hud-needs' },
-      { text: 'Come o bebe desde la mochila. A cero, el hambre y la sed te hieren el tórax.', target: 'btn-inventory' },
+      { text: 'Abre la mochila, elige la comida o la bebida y pulsa **Comer** o **Beber** (o doble clic). A cero, el hambre y la sed te hieren el tórax.', touch: 'Abre la mochila, toca la comida o la bebida y luego **Comer** o **Beber** (o tócala dos veces). A cero, el hambre y la sed te hieren el tórax.', target: 'btn-inventory' },
     ] },
     { id: 'exp.merc-triangle', topic: 'combate', trigger: 'exp:merc-triangle', overModal: true, steps: [
       { text: 'Fíjate en el **triángulo**. Naranja: dudoso. Rojo: te la jugará en cuanto pueda.', target: 'risk-badge' },

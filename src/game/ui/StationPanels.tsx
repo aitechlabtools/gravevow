@@ -1,4 +1,4 @@
-// Bloque 2: estaciones del Refugio (tarjeta con encargado, coste y beneficio), el menú de crafteo común de todas las
+// Bloque 2: estaciones del Bastión (partes en ruinas que se reconstruyen; tarjeta con encargado, coste y beneficio), el menú de crafteo común de todas las
 // estaciones con recetas (fase 3: sin minijuegos) y la vista de runas. Todo se decide tocando; objetivos de 44 px.
 import { useEffect, useMemo, useState } from 'react';
 import { actions, useGame } from '../state/store';
@@ -57,7 +57,7 @@ function CostLines({ id, onGo }: { id: ModuleId; onGo?: GoTo }) {
   );
 }
 
-/** Tarjeta de una estación: bloqueada, abierta o al máximo, con su encargado y el botón para pedírsela. */
+/** Tarjeta de una estación: en ruinas, reconstruida o al máximo, con su encargado y el botón para reconstruirla o mejorarla. */
 export function StationCard({ id, onGo, onEnter }: { id: ModuleId; onGo?: GoTo; onEnter?: (id: ModuleId) => void }) {
   const profile = useGame((s) => s.profile)!;
   const m = MODULES[id];
@@ -72,7 +72,7 @@ export function StationCard({ id, onGo, onEnter }: { id: ModuleId; onGo?: GoTo; 
       <div className="flex items-center gap-2">
         <span className="text-xl" style={locked ? { filter: 'grayscale(1)', opacity: 0.6 } : undefined}>{m.icon}</span>
         <span className={`font-display tracking-[0.08em] ${locked ? 'text-stone-400' : 'text-parchment'}`}>{m.name}</span>
-        <span className="ml-auto text-[12px] text-stone-400 whitespace-nowrap" data-testid={`module-level-${id}`}>{locked ? '🔒 Bloqueada' : `Nivel ${lvl}/3`}</span>
+        <span className="ml-auto text-[12px] text-stone-400 whitespace-nowrap" data-testid={`module-level-${id}`}>{locked ? 'En ruinas' : `Nivel ${lvl}/3`}</span>
       </div>
       {!locked && <div className="flex gap-1">{[1, 2, 3].map((k) => <i key={k} className="block h-1.5 w-4" style={{ background: k <= lvl ? '#e8b33a' : '#3a3530' }} />)}</div>}
       <div className="text-sm text-stone-300">{locked ? m.purpose : <><span className="text-gold">{m.levels[lvl].name}.</span> {m.levels[lvl].effect}</>}</div>
@@ -86,10 +86,10 @@ export function StationCard({ id, onGo, onEnter }: { id: ModuleId; onGo?: GoTo; 
       {enter && <button className="btn btn-gold" style={BTN} onClick={() => { sfx('click'); onEnter!(id); }} data-testid={`enter-${id}`}>Entrar</button>}
       {next ? (
         <div className="border-t border-stone-800 pt-2 mt-auto flex flex-col gap-2">
-          <div className="text-sm"><span className="text-stone-400">{locked ? 'Desbloqueo' : `Nivel ${lvl + 1}`}: </span><span className="text-parchment">{next.name}.</span> <span className="text-stone-300">{next.effect}</span></div>
+          <div className="text-sm"><span className="text-stone-400">{locked ? 'Reconstrucción' : `Nivel ${lvl + 1}`}: </span><span className="text-parchment">{next.name}.</span> <span className="text-stone-300">{next.effect}</span></div>
           <CostLines id={id} onGo={onGo} />
           <button className="btn btn-gold" style={BTN} disabled={!!block} onClick={() => actions.upgradeModule(id)} data-testid={`upgrade-${id}`}>
-            Pedir a {by.name} que la {locked ? 'construya' : 'mejore'}
+            {locked ? 'Reconstruir' : `Mejorar · nivel ${lvl + 1}`}
           </button>
           {block && <div className="text-xs text-[#d0905a]" data-testid={`upgrade-block-${id}`}>{block}</div>}
         </div>
@@ -98,20 +98,15 @@ export function StationCard({ id, onGo, onEnter }: { id: ModuleId; onGo?: GoTo; 
   );
 }
 
-/** Lo que hace el botón principal de una estación: pedirla, dormir o usarla. */
+/** El botón único de una estación: «Reconstruir» si está en ruinas, «Usar» si ya está en pie (mejorar va dentro de Usar). */
 function useStationMain(id: ModuleId, onUse: (id: ModuleId) => void, onDetails: (id: ModuleId) => void) {
   const profile = useGame((s) => s.profile)!;
   const lvl = refugeOf(profile)[id];
-  const by = VENDORS[MODULES[id].by];
   if (lvl < 1) {
     const block = upgradeBlock(profile, id);
-    // Si ya se puede pedir, se pide; si no, el detalle dice qué falta
-    return { label: `Pedir a ${by.name.replace(/^(Hermana|Maese) /, '')}`, gold: true, disabled: false, testId: `ask-${id}`,
+    // Si ya se puede pagar, se reconstruye al momento (dorado); si no, el detalle dice qué falta (secundario)
+    return { label: 'Reconstruir', gold: !block, disabled: false, testId: `ask-${id}`,
       run: () => { sfx('click'); if (block) onDetails(id); else actions.upgradeModule(id); } };
-  }
-  if (id === 'cot') {
-    const can = needsOf(profile.needs).rest < 100 || canSleepForPrep(profile);
-    return { label: 'Usar · Dormir', gold: true, disabled: !can, testId: 'btn-cot', run: () => { actions.sleepCot(); sfx('click'); } };
   }
   return { label: 'Usar', gold: true, disabled: false, testId: `enter-${id}`, run: () => { sfx('click'); onUse(id); } };
 }
@@ -125,7 +120,7 @@ export function LevelMarks({ lvl, testId }: { lvl: number; testId?: string }) {
   );
 }
 
-/** Arte de la estación dentro del arco: oscurecida y con candado si está bloqueada; «▲ Mejora» o «!» si hay algo que hacer. */
+/** Arte de la estación dentro del arco: en ruinas (marcador con cascotes) si no está reconstruida; «▲ Mejora» o «!» si hay algo que hacer. */
 export function StationArt({ id, scale }: { id: ModuleId; scale: number }) {
   const profile = useGame((s) => s.profile)!;
   const lvl = refugeOf(profile)[id];
@@ -133,18 +128,20 @@ export function StationArt({ id, scale }: { id: ModuleId; scale: number }) {
   const locked = lvl < 1;
   return (
     <>
-      <div className="pb-2 pt-4" style={locked ? { filter: 'grayscale(1) brightness(0.4)' } : undefined}>
-        <img src={stationArtUrl(id)} className="pixelated" alt="" draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} />
+      <div className="pb-2 pt-4">
+        <img src={stationArtUrl(id, locked)} className="pixelated" alt={locked ? 'En ruinas' : ''} draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} />
       </div>
-      {locked && <span className="absolute inset-0 grid place-items-center text-2xl" aria-hidden>🔒</span>}
       {!locked && ready && <span className="st-up" data-testid={`upgrade-ready-${id}`}>▲ Mejora</span>}
-      {locked && ready && <span className="st-dot" aria-label="Ya puedes pedirla" data-testid={`ask-ready-${id}`}>!</span>}
+      {locked && ready && <span className="st-dot" aria-label="Ya puedes reconstruirla" data-testid={`ask-ready-${id}`}>!</span>}
     </>
   );
 }
 
-/** Tarjeta de estación con el formato de los mercaderes: nombre, arte, nivel, encargado, marcas, botón principal y «Detalles». */
-export function StationTile({ id, onUse, onDetails, hideDetails = false }: { id: ModuleId; onUse: (id: ModuleId) => void; onDetails: (id: ModuleId) => void; hideDetails?: boolean }) {
+/**
+ * Tarjeta de estación con el formato de los mercaderes: nombre, arte, nivel, encargado, marcas y un solo botón
+ * («Reconstruir» o «Usar»). Tocar la tarjeta hace lo mismo que el botón, salvo en ruinas, que abre lo que pide la reconstrucción.
+ */
+export function StationTile({ id, onUse, onDetails }: { id: ModuleId; onUse: (id: ModuleId) => void; onDetails: (id: ModuleId) => void }) {
   const profile = useGame((s) => s.profile)!;
   const scale = usePixelScale('vendor');
   const phone = useLayout() === 'phone';
@@ -153,23 +150,23 @@ export function StationTile({ id, onUse, onDetails, hideDetails = false }: { id:
   const by = VENDORS[m.by];
   const main = useStationMain(id, onUse, onDetails);
   return (
-    <Card title={m.name} testId={`module-${id}`} tutDot={lvl >= 1} art={<StationArt id={id} scale={scale} />}>
+    <Card title={m.name} testId={`module-${id}`} tutDot={lvl >= 1} art={<StationArt id={id} scale={scale} />} className="cursor-pointer"
+      onClick={() => { if (lvl < 1) { sfx('click'); onDetails(id); } else main.run(); }}>
       <div className={`text-center text-[11px] uppercase tracking-[0.12em] ${lvl < 1 ? 'text-stone-500' : 'text-gold'}`} data-testid={`module-level-${id}`}>
-        {lvl < 1 ? 'Bloqueada' : lvl >= 3 ? 'Nivel 3/3 · máximo' : `Nivel ${lvl}/3`}
+        {lvl < 1 ? 'En ruinas' : lvl >= 3 ? 'Nivel 3/3 · máximo' : `Nivel ${lvl}/3`}
       </div>
       <div className="text-center text-[12px]" style={{ color: by.color }}>Encargado: {by.name}</div>
       {!phone && <div className="text-center text-[12px] text-stone-400 leading-snug">{m.purpose}</div>}
       <LevelMarks lvl={lvl} />
       <div className="mt-auto flex flex-col gap-1">
         <button className={`btn w-full font-display tracking-[0.12em] uppercase ${main.gold ? 'btn-gold' : ''}`} style={{ minHeight: 'max(44px, var(--btn-h))' }}
-          disabled={main.disabled} onClick={main.run} data-testid={main.testId}>{main.label}</button>
-        {!hideDetails && <button className="btn w-full text-xs" style={BTN} onClick={() => { sfx('click'); onDetails(id); }} data-testid={`details-${id}`}>Detalles</button>}
+          disabled={main.disabled} onClick={(e) => { e.stopPropagation(); main.run(); }} data-testid={main.testId}>{main.label}</button>
       </div>
     </Card>
   );
 }
 
-/** Rejilla del Refugio: las 7 estaciones, bloqueadas hasta que las pidas, en filas de 4 como los mercaderes. */
+/** Rejilla del Bastión: las 7 estaciones, en ruinas hasta que las reconstruyas, en filas de 4 como los mercaderes. */
 export function StationTiles({ onUse, onDetails }: { onUse: (id: ModuleId) => void; onDetails: (id: ModuleId) => void }) {
   const layout = useLayout();
   const cols = layout === 'tablet' && typeof window !== 'undefined' && window.innerWidth < 1000 ? 3 : 4;
@@ -180,7 +177,7 @@ export function StationTiles({ onUse, onDetails }: { onUse: (id: ModuleId) => vo
   );
 }
 
-/** Detalle de una estación: todo lo que antes iba en la tarjeta, más los tres niveles y el retrato del encargado. */
+/** Detalle de una estación: reconstruirla o mejorarla, con los tres niveles, el coste y el retrato del encargado. */
 export function StationDetail({ id, onUse, onGo, children }: { id: ModuleId; onUse: (id: ModuleId) => void; onGo?: GoTo; children?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
   const phone = useLayout() === 'phone';
@@ -192,14 +189,14 @@ export function StationDetail({ id, onUse, onGo, children }: { id: ModuleId; onU
   const locked = lvl < 1;
   return (
     <div className="grid w-full" style={{ gridTemplateColumns: phone ? '170px minmax(0,1fr)' : '300px minmax(0,1fr)', gap: 'var(--gap)' }} data-testid={`station-detail-${id}`}>
-      <StationTile id={id} onUse={onUse} onDetails={() => {}} hideDetails />
+      <StationTile id={id} onUse={onUse} onDetails={() => {}} />
       <div className="panel p-3 flex flex-col gap-2 min-w-0">
         <div className="flex gap-3 items-center">
           <div className="ui-arch shrink-0" style={{ width: phone ? 60 : 96, height: phone ? 70 : 112 }}><div className="pb-1"><MonsterSprite sprite={by.sprite} scale={phone ? 2 : 3} /></div></div>
           <div className="min-w-0">
             <div className="font-display text-parchment">Encargado: <span style={{ color: by.color }}>{by.name}</span></div>
             <div className="text-[14px] text-stone-300 italic leading-snug">{m.purpose}</div>
-            {locked && <div className="text-[12px] text-stone-400">Mientras no la tengas: {m.fallback}</div>}
+            {locked && <div className="text-[12px] text-stone-400">Mientras siga en ruinas: {m.fallback}</div>}
           </div>
         </div>
         <div className="grid gap-2" style={{ gridTemplateColumns: phone ? '1fr' : 'repeat(3, minmax(0,1fr))' }}>
@@ -212,15 +209,48 @@ export function StationDetail({ id, onUse, onGo, children }: { id: ModuleId; onU
         </div>
         {next ? (
           <div className="flex flex-col gap-2 border-t border-stone-800 pt-2">
-            <div className="font-display text-gold text-[13px] tracking-[0.1em] uppercase">{locked ? 'Para construirla' : `Siguiente mejora · ${next.name}`}</div>
+            <div className="font-display text-gold text-[13px] tracking-[0.1em] uppercase">{locked ? 'Para reconstruirla' : `Siguiente mejora · ${next.name}`}</div>
             <CostLines id={id} onGo={onGo} />
             <button className="btn btn-gold" style={BTN} disabled={!!block} onClick={() => actions.upgradeModule(id)} data-testid={`upgrade-${id}`}>
-              Pedir a {by.name} que la {locked ? 'construya' : 'mejore'}
+              {locked ? 'Reconstruir' : `▲ Mejorar · nivel ${lvl + 1}`}
             </button>
             {block && <div className="text-xs text-[#d0905a]" data-testid={`upgrade-block-${id}`}>{block}</div>}
           </div>
         ) : <div className="text-xs text-gold" data-testid={`upgrade-max-${id}`}>Nivel 3/3 · está al máximo.</div>}
         {children}
+      </div>
+    </div>
+  );
+}
+
+/** «▲ Mejorar» dentro de una estación en uso: dorado si la mejora ya se puede pagar; no sale en el nivel 3. */
+export function UpgradeButton({ id, onOpen }: { id: ModuleId; onOpen: (id: ModuleId) => void }) {
+  const profile = useGame((s) => s.profile)!;
+  const lvl = refugeOf(profile)[id];
+  if (lvl < 1 || lvl >= 3) return <span className="text-[12px] text-gold" data-testid={`upgrade-max-${id}`}>Nivel 3/3 · máximo</span>;
+  const ready = !upgradeBlock(profile, id);
+  return <button className={`btn text-xs font-display tracking-[0.08em] ${ready ? 'btn-gold' : ''}`} style={BTN} onClick={() => { sfx('click'); onOpen(id); }} data-testid={`upgrade-open-${id}`}>▲ Mejorar</button>;
+}
+
+/** El Catre en uso: dormir y, arriba, «▲ Mejorar». */
+export function CotPanel({ onBack, extra }: { onBack: () => void; extra?: React.ReactNode }) {
+  const profile = useGame((s) => s.profile)!;
+  const lvl = refugeOf(profile).cot;
+  const rest = Math.round(needsOf(profile.needs).rest);
+  const prep = canSleepForPrep(profile);
+  return (
+    <div className="flex flex-col gap-2" data-testid="cot-panel">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-display text-parchment tracking-[0.08em]">{MODULES.cot.name} · Nivel {lvl}/3</span>
+        <span className="ml-auto" />{extra}
+        <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="cot-back">◂ Volver</button>
+      </div>
+      <div className="panel p-3 flex flex-col gap-2 max-w-xl">
+        <div className="text-sm text-stone-300"><span className="text-gold">{MODULES.cot.levels[lvl].name}.</span> {MODULES.cot.levels[lvl].effect}</div>
+        <div className="text-sm text-stone-300">Descanso: <b className="text-parchment">{rest}</b></div>
+        <button className="btn btn-gold font-display" style={{ minHeight: 52 }} disabled={rest >= 100 && !prep} onClick={() => { actions.sleepCot(); sfx('click'); }} data-testid="btn-cot">
+          {prep ? 'Dormir · bajarás descansado' : 'Dormir'}
+        </button>
       </div>
     </div>
   );
@@ -237,7 +267,7 @@ const GROUPS: { id: string; name: string; test: (r: CraftRecipe) => boolean }[] 
 ];
 const groupOf = (r: CraftRecipe) => GROUPS.find((g) => g.test(r))!.id;
 
-export function CraftPanel({ station, onBack }: { station: CraftStation; onBack?: () => void }) {
+export function CraftPanel({ station, onBack, extra }: { station: CraftStation; onBack?: () => void; extra?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
   const all = useMemo(() => stationRecipes(station).sort((a, b) => a.level - b.level || getItem(a.result).value - getItem(b.result).value), [station]);
   const [onlyCan, setOnlyCan] = useState(false);
@@ -261,7 +291,8 @@ export function CraftPanel({ station, onBack }: { station: CraftStation; onBack?
         <span className="font-display text-parchment tracking-[0.08em]">{MODULES[station].name} · Nivel {lvl}/3</span>
         <span className="text-[12px] text-stone-400">Lotes de hasta {batchLimit(profile, station)}</span>
         <button className={`btn text-xs ml-auto ${onlyCan ? 'btn-gold' : ''}`} style={BTN} onClick={() => setOnlyCan(!onlyCan)} data-testid="craft-only-can">Solo las que puedo hacer</button>
-        {onBack && <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="craft-back">◂ Refugio</button>}
+        {extra}
+        {onBack && <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="craft-back">◂ Volver</button>}
       </div>
       <div className="grid gap-2" style={{ gridTemplateColumns: 'minmax(200px, 34%) minmax(0, 1fr)' }}>
         <div className="panel p-2 overflow-y-auto scroll-thin" style={{ maxHeight: 'min(62vh, 560px)' }}>
@@ -347,7 +378,7 @@ export function CraftPanel({ station, onBack }: { station: CraftStation; onBack?
 type Target = { loc: RuneLoc; st: ItemStack };
 
 /** Elige un objeto (equipado, mochila o almacén), toca un hueco y toca la runa. */
-export function RunePanel({ onBack }: { onBack: () => void }) {
+export function RunePanel({ onBack, extra }: { onBack: () => void; extra?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
   const targets: Target[] = [
     ...Object.entries(profile.equipment).flatMap(([slot, st]) => (st && runeSlots(st) ? [{ loc: { kind: 'equip', slot } as RuneLoc, st }] : [])),
@@ -364,7 +395,8 @@ export function RunePanel({ onBack }: { onBack: () => void }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-display text-parchment tracking-[0.08em]">Grabar runas</span>
         <span className="text-[12px] text-stone-400 [@media(max-height:560px)]:hidden">Común y poco común: 1 hueco · rara y épica: 2 · legendaria: no se encanta. Una runa nueva sustituye a la del hueco.</span>
-        <button className="btn text-xs ml-auto" style={BTN} onClick={onBack} data-testid="runes-back">◂ Refugio</button>
+        <span className="ml-auto" />{extra}
+        <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="runes-back">◂ Volver</button>
       </div>
       <div className="grid gap-2" style={{ gridTemplateColumns: 'minmax(200px, 38%) minmax(0, 1fr)' }}>
         <div className="panel p-2 overflow-y-auto scroll-thin flex flex-col gap-1" style={{ maxHeight: 'min(62vh, 560px)' }}>

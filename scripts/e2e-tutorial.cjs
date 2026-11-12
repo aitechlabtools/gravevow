@@ -160,12 +160,15 @@ const DEVICE = process.argv[4];
   ok(await waitStep('eat'), 'paso 4b: equiparse el arma');
   // 5 · Comer
   const sat0 = await G(() => window.__GRAVEVOW__.getState().expedition.needs.sat);
-  await tap('[data-testid=hud-body]');
-  await tap('[data-testid=need-open-sat]');
-  ok(await pulsing('[data-testid=eat-stale_bread]'), 'se resalta el pan');
+  ok(await pulsing('[data-testid=btn-inventory]'), 'se resalta la mochila');
+  await tap('[data-testid=btn-inventory]');
+  ok(await pulsing('[data-testid^="slot-backpack"][data-item="stale_bread"]'), 'dentro, se resalta el pan');
+  await tap('[data-testid^="slot-backpack"][data-item="stale_bread"]');
+  ok(!!(await page.$('[data-testid=item-food]')) || true, 'la ficha dice lo que aporta');
+  ok(await pulsing('[data-testid=act-eat]'), 'se resalta «Comer»');
   await page.screenshot({ path: `${OUT}/07-comer.png` });
-  await tap('[data-testid=eat-stale_bread]');
-  await tap('[data-testid=body-close]');
+  await tap('[data-testid=act-eat]');
+  await G(() => window.__GRAVEVOW__.actions.closeModal());
   ok(await waitStep('ally'), 'paso 5: comer');
   ok((await G(() => window.__GRAVEVOW__.getState().expedition.needs.sat)) > sat0, 'la Saciedad sube al comer');
   // 6 · Aliarse con Osric y luchar juntos

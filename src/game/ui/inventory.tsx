@@ -3,7 +3,10 @@ import { durability, isBroken, maxDurability, wearLevel } from '../../core/durab
 import { WEAR_COLOR } from '../../config/durability';
 import { AFFIXES, stackName, stackRarity, stackStats } from '../../core/data/rarity';
 import { QUALITIES } from '../../core/data/forge';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { foodGain } from './NeedsBars';
+import { needsOf } from '../../core/needs';
+import { FOOD } from '../../config/food';
 import { createPortal } from 'react-dom';
 import { dragJustEnded, startPointerDrag, useDrag } from './pointerDrag';
 import type { EquipSlot, Equipment, Grid, ItemStack, Stats } from '../../core/types';
@@ -39,6 +42,21 @@ function statLine(k: keyof Stats, v: number) {
   return `${sign}${v} ${STAT_LABELS[k]}`;
 }
 
+/** Lo que aporta un alimento o bebida y lo que se desperdiciaría con las barras de ahora. */
+export function FoodLine({ itemId, className = 'text-xs mb-2' }: { itemId: string; className?: string }) {
+  const needs = useGame((s) => s.expedition?.needs ?? s.profile?.needs);
+  const g = foodGain(itemId, needs ? needsOf(needs) : undefined);
+  if (!g) return null;
+  const dish = !!FOOD[itemId]?.dish;
+  return (
+    <div className={className} data-testid="item-food">
+      <span className="text-heal">{g.gain}</span>
+      {dish && <span className="text-stone-300">. Plato: se come en el Bastión y prepara la siguiente incursión</span>}
+      {!dish && g.waste > 0 && <span className="text-ember"> · se desperdiciarían {g.waste} (la barra está casi llena)</span>}
+    </div>
+  );
+}
+
 export function ItemTooltip({ stack, equipment, mode }: { stack: ItemStack; equipment?: Equipment; mode?: InvMode }) {
   const def = getItem(stack.itemId);
   const who = useGame((s) => s.profile?.character);
@@ -70,6 +88,7 @@ export function ItemTooltip({ stack, equipment, mode }: { stack: ItemStack; equi
         );
       })()}
       {def.use && <div className="text-frost mb-2">Uso: {def.description}</div>}
+      {def.use?.kind === 'need' && <FoodLine itemId={def.id} />}
       <div className="font-body italic text-stone-300 leading-snug">{def.use ? '' : def.description}</div>
       {(def.slot === 'mainHand' || def.slot === 'offHand') && (
         <div className="text-xs mt-2 pt-2 border-t border-stone-700">
@@ -157,6 +176,22 @@ interface SlotProps {
 }
 
 // Último tipo de puntero usado (para no tratar «mantener pulsado» en táctil como clic derecho)
+/** Resalta unos objetos en las rejillas visibles (aviso «Tienes comida en la mochila»). Avisa también para enseñar la mochila. */
+export function highlightItems(ids: string[]) {
+  window.dispatchEvent(new CustomEvent('gv-hint-items', { detail: ids }));
+}
+function useItemHint(itemId: string | undefined): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (!itemId) return;
+    let t = 0;
+    const h = (e: Event) => { if ((e as CustomEvent<string[]>).detail.includes(itemId)) { setOn(true); window.clearTimeout(t); t = window.setTimeout(() => setOn(false), 3200); } };
+    window.addEventListener('gv-hint-items', h);
+    return () => { window.removeEventListener('gv-hint-items', h); window.clearTimeout(t); };
+  }, [itemId]);
+  return on;
+}
+
 let lastPointer = 'mouse';
 if (typeof window !== 'undefined') window.addEventListener('pointerdown', (e) => { lastPointer = e.pointerType; }, true);
 
@@ -177,11 +212,12 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
   // Ranuras de equipo: al mover un objeto (arrastrándolo o elegido), solo se ilumina la ranura donde encaja; las demás se apagan
   const moving = drag && !drag.back ? drag.itemId : movingItemId;
   const fits = loc.kind === 'equip' && !!moving ? getItem(moving).slot === loc.slot : null;
+  const hinted = useItemHint(loc.kind === 'grid' && loc.container === 'backpack' ? stack?.itemId : undefined);
   return (
     <div
       data-testid={testId}
       data-item={stack?.itemId ?? ''}
-      className={`slot ${big ? 'slot-big' : ''} ${over ? 'drag-over' : ''} ${selected && !dragging ? 'selected' : ''} ${dragging ? 'is-lifted' : ''} ${marked ? 'is-marked' : ''} ${fits === true ? 'drop-ok' : fits === false ? 'drop-dim' : ''} ${fit ? 'fit-' + fit : ''}`}
+      className={`slot ${big ? 'slot-big' : ''} ${over ? 'drag-over' : ''} ${selected && !dragging ? 'selected' : ''} ${dragging ? 'is-lifted' : ''} ${marked ? 'is-marked' : ''} ${fits === true ? 'drop-ok' : fits === false ? 'drop-dim' : ''} ${fit ? 'fit-' + fit : ''} ${hinted ? 'slot-hint' : ''}`}
       style={{
         ...(rarity ? { borderColor: rarity.color + 'aa', boxShadow: `inset 0 0 0 1px #07060a, inset 0 0 14px ${rarity.color}33` } : {}),
         ...(cell ? { gridColumn: `${cell.col} / span ${cell.w}`, gridRow: `${cell.row} / span ${cell.h}` } : {}),

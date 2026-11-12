@@ -66,8 +66,8 @@ const [,, url = 'http://localhost:5173/play/', out = 'curas', dev] = process.arg
   if (c1.bleed !== 0 || c1.bd !== bd0 - 1 || c1.log <= log0) fail('vendar en combate no funcionó: ' + JSON.stringify(c1));
   if (await p.$('[data-testid=combat-body-modal]')) fail('el panel debería cerrarse al gastar el turno');
   await myTurn();
-  await tap('[data-testid=combat-body]'); await p.waitForSelector('[data-testid=combat-body-modal]');
-  await tap('[data-testid=need-open-hyd]'); await tap('[data-testid=need-list-hyd] [data-testid=eat-water]'); await p.waitForTimeout(400);
+  // Beber en combate: desde la Mochila de la barra (ya no hay botones en el panel de necesidades)
+  await tap('[data-testid=act-bag]'); await tap('[data-testid=use-water]'); await p.waitForTimeout(400);
   const c2 = await G(() => { const s = window.__GRAVEVOW__.getState(); return { hyd: s.combat.state.combatants.find((c) => c.id === 'player').needs.hyd, w: s.expedition.backpack.filter((x) => x && x.itemId === 'water').reduce((a, x) => a + x.qty, 0) }; });
   if (c2.hyd < 55 || c2.w !== w0 - 1) fail('beber en combate no funcionó: ' + JSON.stringify(c2));
   Object.assign(r, { combate: c1, beber: c2 });

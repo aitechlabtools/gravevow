@@ -17,8 +17,8 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   if (await p.$('[data-testid=base-needs]')) fail('Jugar ya no debe enseñar las necesidades');
   await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]'); await p.waitForSelector('[data-testid=vendor-list]');
   if ((await p.$$('[data-testid^=vendor-card-]')).length !== 8) fail('el Bastión no tiene los 8 mercaderes');
-  // El catre está en el Refugio: «Usar · Dormir» en su tarjeta
-  await tap('[data-testid=merchants-back]'); await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=btn-cot]');
+  // El catre está en el Bastión: «Usar» en su tarjeta abre el catre con «Dormir»
+  await tap('[data-testid=merchants-back]'); await tap('[data-testid=btn-refuge]'); await tap('[data-testid=enter-cot]'); await p.waitForSelector('[data-testid=btn-cot]');
   const cb = await box('[data-testid=btn-cot]');
   if (dev && (!cb || cb.height < 43.5)) fail('botón del catre menor de 44 px: ' + JSON.stringify(cb));
   await p.screenshot({ path: out + '-1.png' });
@@ -34,12 +34,14 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   if (await p.$('[data-testid=screen-stash] [data-testid=need-use-hyd]')) fail('en Estado no debería haber botón de beber');
   if (!dev && !(await p.$('[data-testid=alijo-hero] [data-testid=needs-panel]'))) fail('las necesidades no están bajo el aventurero');
   await p.screenshot({ path: out + '-estado.png' });
-  // Fase 7: «Beber…» abre la lista con lo que aporta cada bebida
-  await tap('[data-testid=screen-stash] [data-testid=need-open-hyd]');
-  await p.waitForSelector('[data-testid=need-list-hyd] [data-testid=eat-water]');
-  if (!(await p.textContent('[data-testid=need-list-hyd]')).includes('+30 Hid')) fail('la lista no dice lo que aporta el agua');
+  // Sin botones de comer ni beber: se bebe desde el objeto. El aviso «Tienes bebida en la mochila» resalta el odre
+  if (await p.$('[data-testid^=need-open-]')) fail('siguen los botones «Comer…» o «Beber…»');
+  await tap('[data-testid=screen-stash] [data-testid=need-food-hyd]');
+  await p.waitForSelector('[data-testid^="slot-backpack"][data-item="water"].slot-hint');
+  await tap('[data-testid^="slot-backpack"][data-item="water"]');
+  if (!(await p.textContent('[data-testid=item-food]')).includes('+30 hidratación')) fail('la ficha no dice lo que aporta el agua');
   await p.screenshot({ path: out + '-lista.png' });
-  await tap('[data-testid=need-list-hyd] [data-testid=eat-water]'); await p.waitForTimeout(150);
+  await tap('[data-testid=act-eat]'); await p.waitForTimeout(150);
   const hyd = await G(() => window.__GRAVEVOW__.getState().profile.needs.hyd);
   if (!(hyd > 40)) fail('beber en la base no subió la hidratación: ' + hyd);
   const r = await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile;
@@ -61,17 +63,18 @@ const [,, url = 'http://localhost:5173/play/', out = 'necesidades', dev] = proce
   if (!(n1.hyd < 30 && n1.sat < 50)) fail('el pulso no gastó las necesidades: ' + JSON.stringify(n1));
   const toastTxt = await p.textContent('body');
   if (!toastTxt.includes('Sed')) fail('no avisa de la sed al cruzar 30');
-  // Panel: Beber… y elegir el odre
+  // Panel: aviso «Tienes bebida en la mochila» → abre la mochila con el odre resaltado → «Beber»
   await tap('[data-testid=hud-body]'); await p.waitForSelector('[data-testid=needs-panel]');
-  await tap('[data-testid=need-open-hyd]');
-  const wb = await box('[data-testid=need-list-hyd] [data-testid=eat-water]');
-  if (dev && (!wb || wb.height < 43.5)) fail('botón de beber menor de 44 px');
+  const wb = await box('[data-testid=need-food-hyd]');
+  if (dev && (!wb || wb.height < 43.5)) fail('aviso de bebida menor de 44 px');
+  await tap('[data-testid=need-food-hyd]');
+  await p.waitForSelector('[data-testid^="slot-backpack"][data-item="water"].slot-hint');
   await p.screenshot({ path: out + '-2.png' });
   const w0 = await G(() => window.__GRAVEVOW__.getState().expedition.backpack.filter((x) => x && x.itemId === 'water').reduce((a, x) => a + x.qty, 0));
-  await tap('[data-testid=need-list-hyd] [data-testid=eat-water]'); await p.waitForTimeout(150);
+  await tap('[data-testid^="slot-backpack"][data-item="water"]'); await tap('[data-testid=act-eat]'); await p.waitForTimeout(150);
   const st = await G(() => { const e = window.__GRAVEVOW__.getState().expedition; return { hyd: e.needs.hyd, water: e.backpack.filter((x) => x && x.itemId === 'water').reduce((a, x) => a + x.qty, 0) }; });
   if (!(st.hyd > 55 && st.water === w0 - 1)) fail('beber no funcionó: ' + JSON.stringify({ w0, ...st }));
-  await tap('[data-testid=body-close]');
+  await G(() => window.__GRAVEVOW__.actions.closeModal());
   // Combate: la ronda gasta y el jugador lleva las necesidades
   await G(() => window.__GRAVEVOW__.actions.startCombat('pve', 'e_a', 'bandit'));
   for (let k = 0; k < 40 && !(await p.$('[data-testid=act-attack]:not([disabled])')); k++) await p.waitForTimeout(150);

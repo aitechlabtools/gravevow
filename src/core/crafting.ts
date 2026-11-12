@@ -198,5 +198,5 @@ export function settlePendingJobs(p: Profile): Result {
     } catch { /* receta que ya no existe: no hay nada que entregar */ }
   }
   const out = deliver({ ...p, cooking: null, workshop: null }, items);
-  return { ok: true, profile: out.profile, note: 'Un trabajo que dejaste a medias en el Refugio ya está terminado.' };
+  return { ok: true, profile: out.profile, note: 'Un trabajo que dejaste a medias en el Bastión ya está terminado.' };
 }

@@ -16,7 +16,7 @@ import { timeLeft } from '../../core/expedition';
 import { CombatScreen } from './CombatScreen';
 import { BodyFigure, BodyPanel } from './BodyFigure';
 import { expBody } from '../state/medicalActions';
-import { Bar, EquipmentView, GridView, StatsList, ItemIcon } from './inventory';
+import { Bar, EquipmentView, GridView, StatsList, ItemIcon, highlightItems } from './inventory';
 import { PlayerSprite, MonsterSprite, Modal, formatTime, ItemActions, GoldAmount } from './common';
 import { SettingsModal } from './TitleScreen';
 import { chestType } from '../../core/data/chests';
@@ -434,7 +434,7 @@ function BodyModal() {
       <h2 className="font-display text-2xl mb-2">Heridas y necesidades</h2>
       <BodyPanel body={expBody(exp, profile)} backpack={exp.backpack} surgery={exp.surgery} onTreat={(id, r) => actions.treat(id, r)}
         note="Se muere si la cabeza o el tórax llegan a cero. Tratar fuera de combate no gasta turno; la cirugía tarda dos pulsos.">
-        <NeedsPanel needs={needsOf(exp.needs)} body={exp.body} backpack={exp.backpack} onUse={(id) => actions.eatItem(id)} />
+        <NeedsPanel needs={needsOf(exp.needs)} body={exp.body} backpack={exp.backpack} onShowFood={(ids) => { actions.openModal({ type: 'inventory' }); window.setTimeout(() => highlightItems(ids), 120); }} />
       </BodyPanel>
       <button className="btn mt-3 text-sm" onClick={() => actions.closeModal()} data-testid="body-close">Cerrar</button>
     </Modal>

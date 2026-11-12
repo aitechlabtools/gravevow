@@ -6,11 +6,9 @@ import { needLevel, pulsesToNext, resourceLoss, type Needs } from '../../core/ne
 import type { Body } from '../../core/anatomy';
 import { countItem } from '../../core/inventory';
 import type { Grid } from '../../core/types';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useIsTouch } from '../../shared/device';
 import { FOOD } from '../../config/food';
-import { getItem } from '../../core/data/items';
-import { ItemIcon } from './inventory';
 
 const SHORT: Record<Need, string> = { sat: 'Sac', hyd: 'Hid', rest: 'Des' };
 const EATS: Need[] = ['sat', 'hyd'];
@@ -21,12 +19,26 @@ export function foodsIn(backpack: Grid, need: Need): { id: string; qty: number }
   return ids.filter((id) => (need === 'hyd') === !!FOOD[id].drink).map((id) => ({ id, qty: countItem(backpack, id) }));
 }
 
-/** «+20 Sac · +3 Des» y lo que se desperdicia por pasar de 100. */
-function gainText(id: string, needs: Needs): { gain: string; waste: number } {
+const LONG: Record<Need, string> = { sat: 'saciedad', hyd: 'hidratación', rest: 'descanso' };
+
+/** «+25 saciedad, +5 hidratación» y lo que se desperdicia por pasar de 100 (ficha del objeto). */
+export function foodGain(id: string, needs?: Needs): { gain: string; waste: number } | null {
   const f = FOOD[id];
+  if (!f) return null;
   let waste = 0;
-  const parts = NEEDS.filter((k) => f[k]).map((k) => { waste += Math.max(0, needs[k] + f[k]! - 100); return `+${f[k]} ${SHORT[k]}`; });
-  return { gain: parts.join(' · '), waste: Math.round(waste) };
+  const parts = NEEDS.filter((k) => f[k]).map((k) => { if (needs) waste += Math.max(0, needs[k] + f[k]! - 100); return `+${f[k]} ${LONG[k]}`; });
+  return { gain: parts.join(', '), waste: Math.round(waste) };
+}
+
+/** Barra que se rellena con una pequeña animación cuando sube (al comer o beber). */
+function NeedBar({ v, color, big = false }: { v: number; color: string; big?: boolean }) {
+  const prev = useRef(v);
+  const [fill, setFill] = useState(false);
+  useEffect(() => {
+    if (v > prev.current + 0.5) { setFill(true); const t = window.setTimeout(() => setFill(false), 900); prev.current = v; return () => window.clearTimeout(t); }
+    prev.current = v;
+  }, [v]);
+  return <span className={`needs-bar ${big ? 'big' : ''} ${fill ? 'need-fill' : ''}`} data-fill={fill ? '1' : undefined}><span style={{ width: `${v}%`, background: color }} /></span>;
 }
 
 /** Nombre del estado de la barra: normal o el de la penalización. */
@@ -46,7 +58,7 @@ export function NeedsStrip({ needs }: { needs: Needs }) {
         return (
           <div key={k} className={`needs-cell ${l}`} title={`${needState(k, v)}: ${Math.floor(v)} / 100`} data-testid={`hud-need-${k}`}>
             <span className="needs-lbl">{SHORT[k]}{l !== 'ok' && <b>{Math.floor(v)}</b>}</span>
-            <span className="needs-bar"><span style={{ width: `${v}%`, background: NEED_COLOR[k] }} /></span>
+            <NeedBar v={v} color={NEED_COLOR[k]} />
           </div>
         );
       })}
@@ -70,44 +82,31 @@ function nextText(need: Need, n: Needs, body?: Body): string {
   return `Herida en el tórax en ~${aprox(p)}.`;
 }
 
-/** Panel de necesidades: valor, efecto, tiempo hasta el siguiente efecto y comer o beber si llevas con qué. */
-export function NeedsPanel({ needs, body, backpack, onUse, note, atBase = false }: { needs: Needs; body?: Body; backpack?: Grid; onUse?: (itemId: string) => void; note?: string; atBase?: boolean }) {
+/**
+ * Panel de necesidades: valor, efecto y tiempo hasta el siguiente efecto. No tiene botones de comer ni de beber: se come
+ * desde el objeto (seleccionarlo y «Comer»/«Beber», o doble toque). Si una barra está baja y llevas con qué, un aviso
+ * pequeño («Tienes comida en la mochila») resalta esos objetos al tocarlo (`onShowFood`); sin `onShowFood`, solo texto.
+ */
+export function NeedsPanel({ needs, body, backpack, onShowFood, note, atBase = false }: { needs: Needs; body?: Body; backpack?: Grid; onShowFood?: (ids: string[]) => void; note?: string; atBase?: boolean }) {
   const touch = useIsTouch();
-  const [open, setOpen] = useState<Need | null>(null);
   const loss = resourceLoss(needs);
   return (
     <div className="needs-panel" data-testid="needs-panel">
       {NEEDS.map((k) => {
         const v = needs[k], l = needLevel(v);
-        const list = onUse && backpack && EATS.includes(k) ? foodsIn(backpack, k) : null;
-        const verb = k === 'hyd' ? 'Beber' : 'Comer';
+        const list = backpack && EATS.includes(k) && (l !== 'ok' || v < NEED_CFG.warnAt + 15) ? foodsIn(backpack, k) : [];
+        const hint = list.length ? (k === 'hyd' ? 'Tienes bebida en la mochila' : 'Tienes comida en la mochila') : '';
         return (
-          <div key={k} className={`needs-row ${l} ${list && open === k ? "open" : ""}`} data-testid={`need-row-${k}`}>
+          <div key={k} className={`needs-row ${l}`} data-testid={`need-row-${k}`}>
             <div className="needs-row-top">
               <span className="needs-name">{needState(k, v)}</span>
               <b>{Math.floor(v)}</b>
             </div>
-            <span className="needs-bar big"><span style={{ width: `${v}%`, background: NEED_COLOR[k] }} /></span>
+            <NeedBar v={v} color={NEED_COLOR[k]} big />
             <div className="needs-hint">{atBase ? 'En el Bastión no se gasta.' : nextText(k, needs, body)}</div>
-            {list && (
-              <button className={`btn body-treat ${touch ? 'touch' : ''} ${open === k ? 'on' : ''}`} onClick={() => setOpen(open === k ? null : k)} aria-expanded={open === k} data-testid={`need-open-${k}`}>
-                {verb}… ({list.reduce((a, x) => a + x.qty, 0)})
-              </button>
-            )}
-            {list && open === k && (
-              <div className="needs-food" data-testid={`need-list-${k}`}>
-                {!list.length && <div className="needs-hint">{k === 'hyd' ? 'No llevas bebida. Garth vende odres y vino; Hermana Vesper, té.' : 'No llevas comida. Garth vende raciones; la cocina del Refugio prepara guisos.'}</div>}
-                {list.map(({ id, qty }) => {
-                  const g = gainText(id, needs);
-                  return (
-                    <button key={id} className={`needs-food-item ${touch ? 'touch' : ''}`} onClick={() => onUse!(id)} data-testid={`eat-${id}`}>
-                      <ItemIcon itemId={id} size={22} />
-                      <span className="needs-food-txt"><span>{getItem(id).name} ×{qty}</span><small>{g.gain}{g.waste ? ` · se desperdician ${g.waste}` : ''}</small></span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            {hint && (onShowFood
+              ? <button className={`needs-food-hint ${touch ? 'touch' : ''}`} onClick={() => onShowFood(list.map((x) => x.id))} data-testid={`need-food-${k}`}>{hint} ›</button>
+              : <div className="needs-food-hint static" data-testid={`need-food-${k}`}>{hint}.</div>)}
           </div>
         );
       })}

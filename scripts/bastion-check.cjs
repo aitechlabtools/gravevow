@@ -1,6 +1,6 @@
-// Bastión con entrada (Mercaderes y Refugio), Refugio con tarjetas como los mercaderes y detalle de estación (12/11).
-// Comprueba: entrada con avisos, «◂ Bastión» en las dos partes, las 7 estaciones visibles (bloqueadas hasta pedirlas), «Usar ·
-// Dormir» en el Catre, «Detalles», detalle con niveles y coste, arte a escala entera, 44 px y sin desbordes.
+// Bastión con entrada (Mercaderes y Bastión), Bastión con tarjetas como los mercaderes y detalle de estación (12/11).
+// Comprueba: entrada con avisos, «◂ Entrada» en las dos partes, las 7 estaciones visibles (en ruinas con «Reconstruir»), un
+// solo botón «Usar» al reconstruir, «▲ Mejorar» dentro de Usar, detalle con niveles y coste, arte a escala entera, 44 px y sin desbordes.
 // Uso: node scripts/bastion-check.cjs http://localhost:5173/play/ salida [dispositivo]
 const { chromium, devices } = require('playwright');
 const [,, url = 'http://localhost:5173/play/', out = 'bastion', dev] = process.argv;
@@ -31,7 +31,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'bastion', dev] = process.a
   // Entrada
   await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=screen-bastion]');
   if (!(await p.$('[data-testid=btn-merchants]')) || !(await p.$('[data-testid=btn-refuge]'))) fail('la entrada no tiene las dos tarjetas');
-  if (!/recepción 1/.test(await p.textContent('[data-testid=bastion-refuge]'))) fail('la tarjeta del Refugio no avisa de la recepción');
+  if (!/recepción 1/.test(await p.textContent('[data-testid=bastion-refuge]'))) fail('la tarjeta Bastión no avisa de la recepción');
   await check('Entrada'); await p.screenshot({ path: out + '-1-entrada.png' });
   // Mercaderes
   await tap('[data-testid=btn-merchants]'); await p.waitForSelector('[data-testid=vendor-list]');
@@ -41,28 +41,34 @@ const [,, url = 'http://localhost:5173/play/', out = 'bastion', dev] = process.a
   await tap('[data-testid=vendor-orik]');
   if (await p.$('[data-testid=vendor-view-stations]')) fail('«Encargos del Refugio» sigue dentro del mercader');
   await tap('[data-testid=vendor-back]'); await tap('[data-testid=merchants-back]'); await p.waitForSelector('[data-testid=screen-bastion]');
-  // Refugio
+  // Bastión (estaciones)
   await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=station-grid]');
   if ((await p.$$('[data-testid^=module-]:not([data-testid^=module-level-])')).length !== 7) fail('no se ven las 7 estaciones');
-  if (!(await p.$('[data-testid=ask-forge]'))) fail('la forja no está bloqueada con «Pedir a Brand»');
-  if (!/Usar · Dormir/i.test(await p.textContent('[data-testid=btn-cot]'))) fail('el Catre no dice «Usar · Dormir»');
+  if (!/^Reconstruir$/i.test((await p.textContent('[data-testid=ask-forge]') || '').trim())) fail('la forja en ruinas no dice «Reconstruir»');
+  if (!/^Usar$/i.test((await p.textContent('[data-testid=enter-cot]') || '').trim())) fail('el Catre no dice «Usar»');
+  if (await p.$('[data-testid^=details-]')) fail('sigue el botón «Detalles»');
+  if ((await p.textContent('[data-testid=station-grid]')).includes('Pedir a')) fail('sigue algún «Pedir a…»');
   if (!(await p.$('[data-testid=btn-reception]'))) fail('no hay botón de recepción');
-  await check('Refugio'); await p.screenshot({ path: out + '-3-refugio.png' });
+  await check('Bastión'); await p.screenshot({ path: out + '-3-bastion.png' });
   await tap('[data-testid=btn-reception]'); await p.waitForSelector('[data-testid=reception]'); await p.keyboard.press('Escape').catch(() => {});
   await G(() => { const m = document.querySelector('[data-testid=reception-modal]'); if (m) [...m.querySelectorAll('button')].pop().click(); });
-  // Detalle de la cocina
-  await tap('[data-testid=details-kitchen]'); await p.waitForSelector('[data-testid=station-detail-kitchen]');
+  // Detalle de la cocina: tocar la tarjeta en ruinas (fuera del botón) abre lo que pide la reconstrucción
+  await tap('[data-testid=module-kitchen] h3'); await p.waitForSelector('[data-testid=station-detail-kitchen]');
   if ((await p.$$('[data-testid^=station-level-kitchen-]')).length !== 3) fail('el detalle no enseña los tres niveles');
-  if (!(await p.$('[data-testid=upgrade-kitchen]'))) fail('el detalle no tiene el botón de pedirla');
+  if (!(await p.$('[data-testid=upgrade-kitchen]'))) fail('el detalle no tiene «Reconstruir»');
   await check('Detalle'); await p.screenshot({ path: out + '-4-detalle.png' });
   await tap('[data-testid=upgrade-kitchen]'); await p.waitForTimeout(150);
   if ((await G(() => window.__GRAVEVOW__.getState().profile.refuge?.kitchen)) !== 1) fail('no se construyó la cocina desde el detalle');
-  if (!(await p.$('[data-testid=refuge-dishes]'))) fail('la cocina no ofrece comer platos');
   await tap('[data-testid=detail-back]'); await p.waitForSelector('[data-testid=enter-kitchen]');
   await tap('[data-testid=enter-kitchen]'); await p.waitForSelector('[data-testid=craft-kitchen]');
+  if (!(await p.$('[data-testid=refuge-dishes]'))) fail('la cocina no ofrece comer platos');
+  if (!(await p.$('[data-testid=upgrade-open-kitchen]'))) fail('dentro de «Usar» no está «▲ Mejorar»');
+  await tap('[data-testid=upgrade-open-kitchen]'); await p.waitForSelector('[data-testid=station-detail-kitchen]');
+  await check('Mejorar'); await p.screenshot({ path: out + '-4b-mejorar.png' });
+  await tap('[data-testid=detail-back]'); await p.waitForSelector('[data-testid=craft-kitchen]');
   await tap('[data-testid=craft-back]'); await tap('[data-testid=refuge-back]'); await p.waitForSelector('[data-testid=screen-bastion]');
   await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=module-forge]');
-  await check('Refugio completo'); await p.screenshot({ path: out + '-5-refugio-completo.png' });
+  await check('Bastión completo'); await p.screenshot({ path: out + '-5-bastion-completo.png' });
   console.log(dev || 'escritorio', 'errores', errs.length ? errs : 'ninguno');
   if (errs.length) process.exitCode = 1;
   await b.close();

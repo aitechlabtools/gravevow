@@ -1,6 +1,6 @@
 // Bastión (antes «Mercaderes»). Fuera: los ocho mercaderes, cada uno en su lugar (cocina, enfermería, forja…), con su
 // retrato, rango, barra de reputación, misiones listas y servicios; los que aún no han llegado dicen cuándo llegan. El
-// catre y las estaciones están en el Refugio (entrada del Bastión con dos tarjetas). Al hablar: tres zonas: el mercader y sus servicios · el servicio elegido · tu mochila, tus materiales o la
+// catre y las estaciones están en el Bastión, la pantalla de estaciones (entrada del Bastión con dos tarjetas). Al hablar: tres zonas: el mercader y sus servicios · el servicio elegido · tu mochila, tus materiales o la
 // ficha del objeto que vas a vender. La forja (Maese Brand) y los contratos (Grizk) viven dentro de su mercader.
 // En móvil, la tercera zona va en un cajón por la derecha.
 import { StashPanel } from '../StashPanel';
@@ -11,7 +11,8 @@ import { vendorLockText, vendorUnlocked } from '../../../core/vendors';
 import { QUESTS } from '../../../core/data/quests';
 import { needsOf } from '../../../core/needs';
 import { readyStations, refugeOf } from '../../../core/refuge';
-import { CraftPanel, StationCard, type GoTo } from '../StationPanels';
+import { CraftPanel, type GoTo } from '../StationPanels';
+import type { ModuleId } from '../../../core/data/refuge';
 import { stationArtUrl, STATION_ART_W, STATION_ART_H } from '../stationArt';
 import type { CraftStation } from '../../../core/data/crafting';
 import { REP_RANKS, rankOf } from '../../../config/reputation';
@@ -58,7 +59,7 @@ function servicesOf(id: VendorId): VendorView[] {
 /** El servicio propio de cada mercader (se resalta en su tarjeta). */
 const SPECIAL: Partial<Record<VendorId, VendorView>> = { grizk: 'contracts', brand: 'forge', nira: 'sell', vesper: 'infirmary', orik: 'scrap', garth: 'cook', eldrin: 'alchemy' };
 
-/** Qué se ve dentro de la pestaña Bastión: la entrada con dos tarjetas, los mercaderes o el Refugio. */
+/** Qué se ve dentro de la pestaña Bastión: la entrada con dos tarjetas, los mercaderes o el Bastión (estaciones). */
 type BastionArea = 'entry' | 'merchants' | 'refuge';
 
 export function Mercaderes({ target, onConsumed }: { target: VendorTarget | null; onConsumed: () => void }) {
@@ -67,15 +68,18 @@ export function Mercaderes({ target, onConsumed }: { target: VendorTarget | null
   useEffect(() => { if (target) { setArea('merchants'); setOpen(target); onConsumed(); } }, [target]); // eslint-disable-line react-hooks/exhaustive-deps
   const profile = useGame((s) => s.profile)!;
   const goTo = (vendor: VendorId, view: VendorView) => { setArea('merchants'); setOpen({ vendor, view }); };
-  const toEntry = () => { setOpen(null); setArea('entry'); sfx('click'); };
-  if (area === 'refuge' && !open) return <RefugePanel onBack={toEntry} onGo={goTo} />;
+  const [stationAt, setStationAt] = useState<ModuleId | undefined>(undefined);
+  const toEntry = () => { setOpen(null); setStationAt(undefined); setArea('entry'); sfx('click'); };
+  // «Ir al Bastión» desde el servicio de un mercader: abre la estación en ruinas para reconstruirla
+  const toStation = (id: ModuleId) => { setOpen(null); setStationAt(id); setArea('refuge'); sfx('click'); };
+  if (area === 'refuge' && !open) return <RefugePanel key={stationAt ?? 'cards'} onBack={toEntry} onGo={goTo} initialDetail={stationAt} />;
   if (area === 'entry' && !open) return <BastionEntry onPick={(a) => { setArea(a); sfx('click'); }} />;
   return open && vendorUnlocked(profile, open.vendor)
-    ? <VendorInterior key={`${open.vendor}-${open.view}`} vendor={open.vendor} initial={open.view} onBack={() => { setOpen(null); sfx('click'); }} onGo={goTo} />
+    ? <VendorInterior key={`${open.vendor}-${open.view}`} vendor={open.vendor} initial={open.view} onBack={() => { setOpen(null); sfx('click'); }} onGo={goTo} onStation={toStation} />
     : <VendorCards onTalk={(vendor) => { setOpen({ vendor, view: 'shop' }); sfx('click'); }} onBack={toEntry} />;
 }
 
-/** Entrada del Bastión: dos tarjetas grandes (Mercaderes y Refugio) con lo pendiente de cada lado. */
+/** Entrada del Bastión: dos tarjetas grandes (Mercaderes y Bastión) con lo pendiente de cada lado. */
 function BastionEntry({ onPick }: { onPick: (a: 'merchants' | 'refuge') => void }) {
   const profile = useGame((s) => s.profile)!;
   const scale = usePixelScale('vendor');
@@ -88,15 +92,15 @@ function BastionEntry({ onPick }: { onPick: (a: 'merchants' | 'refuge') => void 
   const sides = [
     { id: 'merchants' as const, title: 'Mercaderes', art: <MonsterSprite sprite={VENDORS.garth.sprite} scale={big} />, text: 'Comercia, cumple encargos y gana su confianza.',
       badge: quests, note: quests ? `${quests} ${quests === 1 ? 'encargo listo' : 'encargos listos'} para entregar` : '', testId: 'btn-merchants' },
-    { id: 'refuge' as const, title: 'Refugio', art: <img src={stationArtUrl('refuge')} className="pixelated" alt="" draggable={false} style={{ width: STATION_ART_W * big, height: STATION_ART_H * big }} />,
-      text: 'Tu rincón del Bastión: descansa, cocina, cura y fabrica.', badge: stations + rec,
-      note: pend([stations ? `${stations} ${stations === 1 ? 'estación lista' : 'estaciones listas'} para pedir` : '', rec ? `recepción ${rec}` : '', `Descanso ${rest}`]), testId: 'btn-refuge' },
+    { id: 'refuge' as const, title: 'Bastión', art: <img src={stationArtUrl('refuge')} className="pixelated" alt="" draggable={false} style={{ width: STATION_ART_W * big, height: STATION_ART_H * big }} />,
+      text: 'Reconstruye el Bastión: descansa, cocina, cura y fabrica.', badge: stations + rec,
+      note: pend([stations ? `${stations} ${stations === 1 ? 'estación lista' : 'estaciones listas'} para reconstruir` : '', rec ? `recepción ${rec}` : '', `Descanso ${rest}`]), testId: 'btn-refuge' },
   ];
   return (
     <div className="h-full overflow-y-auto scroll-thin" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-bastion">
       <div className="min-h-full flex flex-col items-center justify-center">
         <div className="w-full max-w-[1100px] mb-2">
-          <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">El Bastión</h2>
+          <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">Entrada del Bastión</h2>
         </div>
         <div className="grid w-full max-w-[1100px]" style={{ gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 'var(--gap)' }}>
           {sides.map((x) => (
@@ -124,7 +128,7 @@ function VendorCards({ onTalk, onBack }: { onTalk: (v: VendorId) => void; onBack
       <div className="min-h-full flex flex-col items-center justify-center">
       <div className="w-full max-w-[1200px] flex flex-wrap items-center justify-between gap-2 mb-2">
         <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">Mercaderes</h2>
-        <button className="btn font-display tracking-[0.1em] uppercase" style={{ minHeight: 44 }} onClick={onBack} data-testid="merchants-back">◂ Bastión</button>
+        <button className="btn font-display tracking-[0.1em] uppercase" style={{ minHeight: 44 }} onClick={onBack} data-testid="merchants-back">◂ Entrada</button>
       </div>
       <div className="grid w-full max-w-[1200px]" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: 'var(--gap)' }} data-testid="vendor-list">
         {VENDOR_ORDER.map((id) => {
@@ -155,21 +159,28 @@ function VendorCards({ onTalk, onBack }: { onTalk: (v: VendorId) => void; onBack
   );
 }
 
-/** Servicio de fabricación de un mercader: su estación del Refugio con el menú común o, si está cerrada, la tarjeta para pedirla. */
-function VendorCraft({ station, onGo }: { station: CraftStation; onGo: GoTo }) {
+/** Lo que dice cada encargado si su estación sigue en ruinas. */
+const RUINED_LINE: Partial<Record<CraftStation, string>> = {
+  forge: 'Esta forja sigue en ruinas. Reconstrúyela en el Bastión y la haré cantar.',
+  kitchen: 'La cocina del Bastión sigue en ruinas. Reconstrúyela y volverá a oler a guiso.',
+  alchemy: 'La mesa de alquimia sigue entre escombros. Reconstrúyela en el Bastión y destilaremos juntos.',
+  infirmary: 'La enfermería sigue en ruinas. Reconstrúyela en el Bastión y podré atenderte allí.',
+};
+/** Servicio de fabricación de un mercader: su estación del Bastión con el menú común o, si sigue en ruinas, «Ir al Bastión». */
+function VendorCraft({ station, onStation }: { station: CraftStation; onGo: GoTo; onStation: (id: ModuleId) => void }) {
   const profile = useGame((s) => s.profile)!;
   if (refugeOf(profile)[station] < 1) {
     return (
       <div className="space-y-2" data-testid={`craft-locked-${station}`}>
-        <p className="font-body text-base text-stone-300">«Sin esta estación en tu Refugio no hay nada que fabricar. Pídemela y la dejo lista.»</p>
-        <div className="max-w-md"><StationCard id={station} onGo={onGo} /></div>
+        <p className="font-body text-base text-stone-300">«{RUINED_LINE[station] ?? 'Esta estación sigue en ruinas. Reconstrúyela en el Bastión.'}»</p>
+        <button className="btn btn-gold font-display tracking-[0.1em] uppercase" style={{ minHeight: 'max(44px, var(--btn-h))' }} onClick={() => onStation(station as ModuleId)} data-testid={`go-station-${station}`}>Ir al Bastión</button>
       </div>
     );
   }
   return <CraftPanel station={station} />;
 }
 
-function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; initial: VendorView; onBack: () => void; onGo: (v: VendorId, x: VendorView) => void }) {
+function VendorInterior({ vendor, initial, onBack, onGo, onStation }: { vendor: VendorId; initial: VendorView; onBack: () => void; onGo: (v: VendorId, x: VendorView) => void; onStation: (id: ModuleId) => void }) {
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
@@ -191,14 +202,14 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
   const center: ReactNode =
     view === 'shop' ? <ShopStock vid={vendor} cols={`grid gap-2 ${phone ? 'grid-cols-1' : 'grid-cols-2 2xl:grid-cols-3'}`} />
       : view === 'quests' ? <VendorQuests vendor={vendor} />
-        : view === 'forge' ? <VendorCraft station="forge" onGo={onGo} />
+        : view === 'forge' ? <VendorCraft station="forge" onGo={onGo} onStation={onStation} />
           : view === 'repair' ? <RepairPanel />
           : view === 'infirmary' ? <InfirmaryPanel />
           : view === 'contracts' ? <ContractsPanel />
-          : view === 'cook' ? <VendorCraft station="kitchen" onGo={onGo} />
+          : view === 'cook' ? <VendorCraft station="kitchen" onGo={onGo} onStation={onStation} />
           : view === 'scrap' ? <ScrapPanel />
-          : view === 'alchemy' ? <VendorCraft station="alchemy" onGo={onGo} />
-          : view === 'care' ? <VendorCraft station="infirmary" onGo={onGo} />
+          : view === 'alchemy' ? <VendorCraft station="alchemy" onGo={onGo} onStation={onStation} />
+          : view === 'care' ? <VendorCraft station="infirmary" onGo={onGo} onStation={onStation} />
             : <SellGrids sel={sel} setSel={setSel} marks={marks} setMarks={setMarks} vendor={vendor} />;
   const side: ReactNode = view === 'sell'
     ? <Panel title="A vender" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="sale-panel">

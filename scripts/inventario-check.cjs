@@ -41,6 +41,8 @@ const [,, url = 'http://localhost:5173/play/', out = 'inventario', dev] = proces
   if (g[0] !== 'iron_sword@r' || g[1] !== 'health_potion') fail('girar contra un objeto cambió algo: ' + JSON.stringify(g.slice(0, 18)));
   // Colocar tocando (alternativa al arrastre): elegir la espada y tocar una casilla vacía
   await p.keyboard.press('Escape').catch(() => {});
+  // En el Bastión, Esc abre Ajustes si no hay otra ventana: ciérralo
+  if (await p.$('[data-testid=settings]')) await p.keyboard.press('Escape').catch(() => {});
   const cur = await G(() => !!document.querySelector('[data-testid=slot-backpack-0].selected'));
   if (!cur) await tap('[data-testid=slot-backpack-0]');
   await tap('[data-testid=slot-backpack-4]'); await p.waitForTimeout(150);

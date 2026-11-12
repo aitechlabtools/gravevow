@@ -152,11 +152,27 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 - Si un control cambia, actualiza las tablas `KEYS_DUNGEON`, `KEYS_COMBAT` y `GESTURES`.
 - Prueba: `node scripts/ajustes-check.cjs <url>/play/ <carpeta> [dispositivo]`.
 
-## Bastión: entrada, Mercaderes y Refugio (12/11)
-- La pestaña «Bastión» abre una **entrada** con dos tarjetas grandes (`kit/Card`, arte a doble escala en escritorio y tableta, a escala normal en móvil): **Mercaderes** (retrato de Garth) y **Refugio** (marcador pixel art). Cada una lleva una línea de qué es, lo pendiente en verde y el número del arco (encargos listos; estaciones listas para pedir + recepción).
-- **Mercaderes:** la pantalla de siempre, sin catre ni «Tu Refugio»; «◂ Bastión» arriba a la derecha. Los mercaderes ya no tienen «Encargos del Refugio»: todo lo de las estaciones vive en el Refugio (su servicio de fabricación sigue: Cocina de Garth, Forja de Brand…).
-- **Refugio:** tarjetas de estación con el formato de los mercaderes, en filas de 4 (3 en tabletas estrechas; 4 compactas en móvil horizontal, con desplazamiento vertical). Cabecera: Preparación, «Recepción (N)» (abre un panel) y «◂ Bastión».
-- **Tarjeta de estación** (`StationTile`): nombre · arte 20 × 26 px en el arco (oscurecido y con candado si está bloqueada) · «Nivel N/3», «Nivel 3/3 · máximo» o «Bloqueada» · «Encargado: X» · para qué sirve (no en móvil) · tres marcas de nivel en el sitio de la reputación · botón principal («Pedir a X», «Usar», «Usar · Dormir» en el Catre) · «Detalles». Marcas en el arco, abajo para que el borde redondo no las corte: «▲ Mejora» (mejora posible con lo que tienes) y «!» (bloqueada que ya puedes pedir).
-- **Detalle** (`StationDetail`): la tarjeta a la izquierda; a la derecha el encargado con su retrato, para qué sirve, la alternativa mientras está bloqueada, los tres niveles con su beneficio (el actual marcado), el coste con lo que tienes y lo que falta, «Ir» a dónde conseguirlo y «Pedir a X que la construya / mejore». En la Cocina, además, comer platos para bajar preparado. «◂ Refugio» a la izquierda y «◂ Bastión» a la derecha.
-- **Estaciones visibles:** las 7 siempre. Las que no has pedido salen oscurecidas, con candado y «Pedir a X»; el «!» verde avisa cuando ya tienes lo necesario.
-- Prueba: `node scripts/bastion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+## Bastión: entrada, Mercaderes y estaciones (12/11, reconstrucción)
+- La pestaña «Bastión» abre la **Entrada del Bastión** con dos tarjetas grandes (`kit/Card`, arte a doble escala en escritorio y tableta, a escala normal en móvil): **Mercaderes** (retrato de Garth) y **Bastión** (castillo en ruinas, marcador pixel art). Cada una lleva una línea de qué es («Reconstruye el Bastión: descansa, cocina, cura y fabrica.»), lo pendiente en verde y el número del arco.
+- **Nombres y vuelta atrás:** entrada «Entrada del Bastión»; pantalla de estaciones «El Bastión»; desde Mercaderes y desde El Bastión se vuelve con «◂ Entrada»; desde una estación en uso o su detalle, «◂ Volver». Nunca «◂ Bastión» ni «Refugio» en textos visibles (los ids internos siguen siendo `refuge`).
+- **Lore:** las estaciones son partes del Bastión de Ceniza en ruinas que el jugador reconstruye; el encargado se muestra como información («Encargado: Orik») y dice su frase al reconstruir o mejorar. Ningún botón lleva su nombre.
+- **Tarjeta de estación** (`StationTile`): nombre · arte 20 × 26 px (versión en ruinas con cascotes si no está reconstruida) · «Nivel N/3», «Nivel 3/3 · máximo» o «En ruinas» · «Encargado: X» · para qué sirve (no en móvil) · marcas de nivel · **un solo botón**: «Reconstruir» (dorado si ya se puede pagar y entonces reconstruye al momento; secundario si no, y abre el detalle) o «Usar». Tocar la tarjeta: en ruinas abre el detalle; reconstruida, lo mismo que «Usar». Marcas en el arco: «▲ Mejora» (mejora pagable) y «!» (en ruinas, ya reconstruible).
+- **Dentro de «Usar»** (crafteo, Catre con «Dormir», atril y runas): cabecera con nivel, «▲ Mejorar» (dorado si se puede pagar; abre el detalle) o «Nivel 3/3 · máximo», «◂ Entrada» y «◂ Volver». La Cocina enseña debajo los platos para comer antes de bajar.
+- **Detalle** (`StationDetail`, título «Mejorar · X» si ya está en pie): la tarjeta a la izquierda; a la derecha el encargado con su retrato, para qué sirve, la alternativa mientras siga en ruinas, los tres niveles, el coste con lo que tienes y lo que falta, «Ir» a dónde conseguirlo y «Reconstruir» o «▲ Mejorar · nivel N».
+- **Servicio de un mercader con la estación en ruinas** (Forja de Brand, Cocina de Garth…): frase del encargado y «Ir al Bastión», que abre el detalle de esa estación.
+- testids: `bastion-refuge`, `btn-refuge`, `screen-refuge`, `station-grid`, `module-<id>`, `ask-<id>` (Reconstruir), `enter-<id>` (Usar), `upgrade-open-<id>`, `station-detail-<id>`, `upgrade-<id>`, `detail-back`, `refuge-back` (◂ Entrada), `craft-back`, `cot-back`, `runic-back`, `btn-cot` (Dormir), `go-station-<id>`.
+- Maquetas: `mockups/bastion-reconstruir/index.html`. Prueba: `node scripts/bastion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+
+## Jugar: menos texto y fichas (12/11)
+- La tarjeta de destino solo lleva la etiqueta «Zona · N/10», el nombre de la subzona y «Mapa de zonas». El bloque Expedición, «Expedición», la línea de zona y nivel, los avisos que cambian algo (zona cerrada, demasiado fácil, sin arma, curación) y «Descender».
+- Lo demás va en una ficha (`HoldTip` en `screens/Jugar.tsx`) que sale encima al pasar el ratón o al mantener pulsado (táctil; soltar no ejecuta el botón): en la zona, niveles, «mapa nuevo cada vez» y su lema; en la expedición, pociones, oro en riesgo, mercenario, minutos para el portal y «si caes, pierdes lo que llevas». testids: `zone-tip`, `expedition-tip`, `expedition-summary`.
+- Prueba: `node scripts/jugar-ficha-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+
+## Comer y beber desde el objeto (12/11)
+- Las cajas de Saciedad, Hidratación y Descanso (`NeedsPanel` en `NeedsBars.tsx`, en el panel de heridas de la mazmorra, en combate y en Intendencia) solo llevan nombre, barra, valor y línea de ayuda. Sin «Comer…» ni «Beber…».
+- Se come desde el objeto: elegirlo y «Comer» o «Beber» (`act-eat`, en `ItemActions`). En el Bastión, de la mochila o del almacén (también los platos); en la expedición, solo de la mochila. Doble toque o doble clic también lo consume. En combate, por la Mochila de la barra (`use-<id>`, gasta el turno).
+- La ficha y la ventanita del objeto (`FoodLine`, `item-food`) dicen lo que aporta («+25 saciedad, +5 hidratación») y si se desperdiciaría parte.
+- Al subir, la barra se rellena con una animación corta (`.need-fill`).
+- Si una barra está baja y llevas con qué, la caja enseña «Tienes comida en la mochila» (`need-food-<need>`, 44 px en táctil): resalta esos objetos (`highlightItems`, clase `.slot-hint`); en la mazmorra abre antes la mochila y en Intendencia pasa a Equipo si la mochila no se ve. En combate es solo texto.
+- Prueba: `node scripts/necesidades-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+

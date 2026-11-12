@@ -29,22 +29,21 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   // 1 · Entrada del Bastión → Refugio con tarjetas (solo las estaciones que ya tocan)
   await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=btn-refuge]');
   if (!(await p.$('[data-testid=btn-merchants]'))) fail('la entrada del Bastión no tiene Mercaderes');
-  await small('[data-testid=btn-refuge]', 'Entrar al Refugio');
+  await small('[data-testid=btn-refuge]', 'Entrar al Bastión');
   await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=screen-refuge]');
-  if (!/Bloqueada/.test(await p.textContent('[data-testid=module-level-forge]'))) fail('la forja no se ve bloqueada desde el principio');
+  if (!/En ruinas/.test(await p.textContent('[data-testid=module-level-forge]'))) fail('la forja no se ve en ruinas desde el principio');
   if (!/Nivel 1\/3/.test(await p.textContent('[data-testid=module-level-cot]'))) fail('el catre no empieza en nivel 1');
-  if (!/Bloqueada/.test(await p.textContent('[data-testid=module-level-kitchen]'))) fail('la cocina no empieza bloqueada');
-  if (!(await p.$('[data-testid=ask-ready-kitchen]'))) fail('la cocina no avisa de que ya se puede pedir');
-  await small('[data-testid=ask-kitchen]', 'Pedir la cocina');
-  await small('[data-testid=details-kitchen]', 'Detalles');
+  if (!/En ruinas/.test(await p.textContent('[data-testid=module-level-kitchen]'))) fail('la cocina no empieza en ruinas');
+  if (!(await p.$('[data-testid=ask-ready-kitchen]'))) fail('la cocina no avisa de que ya se puede reconstruir');
+  await small('[data-testid=ask-kitchen]', 'Reconstruir la cocina');
   // Arte pixel art a escala entera
   const sc = await G(() => { const i = document.querySelector('[data-testid=module-cot] img'); return i.getBoundingClientRect().width / 20; });
   if (Math.abs(sc - Math.round(sc)) > 0.01) fail('el arte de la estación no va a escala entera: ' + sc);
-  await wide('Refugio');
-  await p.screenshot({ path: out + '-refugio.png' });
+  await wide('Bastión');
+  await p.screenshot({ path: out + '-bastion.png' });
   await tap('[data-testid=ask-kitchen]'); await p.waitForTimeout(150);
   // Detalle del catre: mejora, qué falta y dónde conseguirlo
-  await tap('[data-testid=details-cot]'); await p.waitForSelector('[data-testid=station-detail-cot]');
+  await tap('[data-testid=enter-cot]'); await tap('[data-testid=upgrade-open-cot]'); await p.waitForSelector('[data-testid=station-detail-cot]');
   await small('[data-testid=upgrade-cot]', 'Mejorar el catre');
   await wide('Detalle');
   await p.screenshot({ path: out + '-detalle.png' });
@@ -53,7 +52,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   if (!ref || ref.kitchen !== 1 || ref.cot !== 2) fail('no se mejoraron cocina y catre: ' + JSON.stringify(ref));
   if (!(await p.$('[data-testid=upgrade-block-cot]'))) fail('la siguiente mejora no dice qué falta');
   if (!(await p.$('[data-testid^=source-cot-]'))) fail('no dice dónde conseguir lo que falta');
-  await tap('[data-testid=detail-back]'); await p.waitForSelector('[data-testid=station-grid]');
+  await tap('[data-testid=detail-back]'); await tap('[data-testid=cot-back]'); await p.waitForSelector('[data-testid=station-grid]');
   // Forja y atril ya construidos: se ven y se usan
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, refuge: { ...pr.refuge, forge: 1, runic: 1 } } }); });
   await p.waitForSelector('[data-testid=module-forge]');
@@ -71,9 +70,11 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   if (!(await G(() => [...window.__GRAVEVOW__.getState().profile.stash, ...Object.values(window.__GRAVEVOW__.getState().profile.equipment)].some((x) => x && (x.runes || []).includes('rune_stone'))))) fail('no se grabó la runa');
   await wide('Runas');
   await p.screenshot({ path: out + '-runas.png' });
-  await tap('[data-testid=runes-back]'); await p.waitForSelector('[data-testid=station-grid]');
-  await tap('[data-testid=btn-cot]'); await p.waitForTimeout(150);
+  await tap('[data-testid=runes-back]'); await p.waitForSelector('[data-testid=runic-menu]');
+  await tap('[data-testid=runic-back]'); await p.waitForSelector('[data-testid=station-grid]');
+  await tap('[data-testid=enter-cot]'); await tap('[data-testid=btn-cot]'); await p.waitForTimeout(150);
   if (!(await G(() => window.__GRAVEVOW__.getState().profile.prep?.cot))) fail('dormir en el jergón no deja preparado');
+  await tap('[data-testid=cot-back]');
   if (!/Descanso/.test(await p.textContent('[data-testid=prep-text]'))) fail('la preparación no se ve');
   await tap('[data-testid=refuge-back]'); await tap('[data-testid=btn-merchants]');
 
@@ -111,8 +112,8 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   if (!((await count('scrap_metal')) > scrap0)) fail('el desguace no dio chatarra');
   await tap('[data-testid=vendor-back]');
 
-  // 4 · Comer el guiso en el Refugio
-  await tap('[data-testid=merchants-back]'); await tap('[data-testid=btn-refuge]'); await tap('[data-testid=details-kitchen]'); await p.waitForSelector('[data-testid=eat-hearty_stew]');
+  // 4 · Comer el guiso en la Cocina del Bastión
+  await tap('[data-testid=merchants-back]'); await tap('[data-testid=btn-refuge]'); await tap('[data-testid=enter-kitchen]'); await p.waitForSelector('[data-testid=eat-hearty_stew]');
   await small('[data-testid=eat-hearty_stew]', 'Comer');
   await tap('[data-testid=eat-hearty_stew]'); await p.waitForTimeout(150);
   const after = await G(() => { const pr = window.__GRAVEVOW__.getState().profile; return { prep: pr.prep, sat: pr.needs.sat }; });

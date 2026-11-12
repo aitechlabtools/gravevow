@@ -12,6 +12,8 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 - **Guía**: Ajustes › Partida (y el «?» del menú). Agrupa por tema todo menos los `always`; lo no visto dice «Aún por descubrir».
 - Depuración: `?debug` los apaga; `?debug&minis` los enseña.
 
+- **Comer y beber** (12/11): se hace siempre desde el objeto (elegirlo y «Comer»/«Beber», `act-eat`, o doble toque). El paso `eat` del tutorial inicial resalta `btn-inventory`, el pan de la mochila y `act-eat`; `exp.need-low` explica lo mismo. Las cajas de necesidades no tienen botones: solo el aviso «Tienes comida/bebida en la mochila» (`need-food-<sat|hyd>`), que resalta esos objetos.
+
 ## Reglas para añadir uno
 1. Entrada en `MINI_TUTORIALS` con id, tema, disparador, de 2 a 4 pasos (texto de escritorio y, si cambia, `touch`) y quién lo cuenta.
 2. Cada `target` y `badge` es un `data-testid` que existe en `src/`. Cada disparador se lanza en algún sitio de `src/`. Lo comprueba `tests/tutorials.test.ts`.
@@ -23,19 +25,19 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 
 | Id | Tema | Disparador | Lo cuenta | «!» en | Resalta | Pasos | Notas |
 |---|---|---|---|---|---|---|---|
-| `bienvenida` | Bastión y Refugio | `lobby:welcome` | intendant | — | `lobby-nav`, `tab-stash`, `alijo-backpack`, `group-gold-backpack`, `alijo-pocket`, `empty-backpack`, `tab-merchants`, `bastion-merchants`, `btn-lobby-settings`, `tab-play`, `btn-enter-dungeon` | 11 | largo |
+| `bienvenida` | Bastión y estaciones | `lobby:welcome` | intendant | — | `lobby-nav`, `tab-stash`, `alijo-backpack`, `group-gold-backpack`, `alijo-pocket`, `empty-backpack`, `tab-merchants`, `bastion-merchants`, `btn-lobby-settings`, `tab-play`, `btn-enter-dungeon` | 11 | largo |
 | `tab.misiones` | Mercaderes | `tab:quests` | intendant | `tab-quests` | `screen-quests` | 2 | — |
 | `tab.bestiario` | Progresión | `tab:bestiary` | intendant | `tab-bestiary` | `bestiary` | 2 | — |
 | `tab.tienda` | Cuenta y copia | `tab:shop` | intendant | `tab-shop` | `shop` | 2 | — |
 | `tab.intendencia` | Heridas y necesidades | `stash:status` | intendant | — | `intendencia-status`, `body-quick` | 2 | — |
 | `tab.personaje` | Progresión | `tab:character` | intendant | `tab-character` | `character-stats`, `class-path` | 2 | — |
 | `screen.bastion-entry` | Mercaderes | `bastion:merchants` | intendant | `bastion-merchants` | `vendor-card-nira`, `vendor-nira` | 2 | — |
-| `tab.refugio` | Bastión y Refugio | `bastion:refuge` | orik | `bastion-refuge` | `station-grid`, `module-cot`, `details-kitchen` | 3 | — |
+| `tab.refugio` | Bastión y estaciones | `bastion:refuge` | orik | `bastion-refuge` | `station-grid`, `module-cot`, `module-kitchen` | 3 | — |
 | `screen.backup` | Cuenta y copia | `screen:backup` | intendant | — | `screen-backup` | 2 | — |
 | `screen.select` | Cuenta y copia | `screen:select` | intendant | — | `screen-select` | 2 | — |
-| `station.runes` | Bastión y Refugio | `station:runes` | eldrin | — | `runes` | 2 | — |
+| `station.runes` | Bastión y estaciones | `station:runes` | eldrin | — | `runes` | 2 | — |
 | `bastion.first-death` | Heridas y necesidades | `bastion:fallen` | vesper | — | `cure-btn` | 3 | — |
-| `bastion.can-craft` | Bastión y Refugio | `bastion:can-craft` | intendant | — | `tab-merchants` | 2 | — |
+| `bastion.can-craft` | Bastión y estaciones | `bastion:can-craft` | intendant | — | `tab-merchants` | 2 | — |
 | `bastion.first-sale` | Objetos y oro | `bastion:sale` | intendant | — | — | 2 | — |
 | `bastion.first-rep` | Mercaderes | `bastion:rank-up` | intendant | — | — | 2 | — |
 | `bastion.first-skin` | Cuenta y copia | `bastion:skin` | intendant | — | — | 2 | — |
@@ -72,23 +74,23 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 | `vendor.brand` | Mercaderes | `vendor:brand` | brand | `vendor-card-brand` | `vendor-view-forge`, `vendor-view-repair` | 2 | — |
 | `vendor.valerius` | Mercaderes | `vendor:valerius` | valerius | `vendor-card-valerius` | `vendor-view-shop`, `vendor-view-quests` | 2 | — |
 | `vendor.eldrin` | Mercaderes | `vendor:eldrin` | eldrin | `vendor-card-eldrin` | `vendor-view-shop`, `vendor-view-alchemy` | 2 | — |
-| `station.kitchen` | Bastión y Refugio | `station:kitchen` | garth | `module-kitchen` | `craft-kitchen`, `recipe-c_jerky`, `craft-go` | 4 | — |
-| `station.bench` | Bastión y Refugio | `station:bench` | orik | `module-bench` | `craft-bench`, `recipe-c_strap`, `craft-go` | 4 | — |
-| `station.infirmary` | Bastión y Refugio | `station:infirmary` | vesper | `module-infirmary` | `craft-infirmary`, `recipe-c_bandage`, `craft-go` | 4 | — |
-| `station.forge` | Bastión y Refugio | `station:forge` | brand | `module-forge` | `craft-forge`, `recipe-c_scrap_bar`, `craft-go` | 4 | — |
-| `station.alchemy` | Bastión y Refugio | `station:alchemy` | eldrin | `module-alchemy` | `craft-alchemy`, `recipe-c_antidote`, `craft-go` | 4 | — |
-| `station.runic` | Bastión y Refugio | `station:runic` | eldrin | `module-runic` | `craft-runic`, `recipe-c_cut_crystal`, `craft-go` | 4 | — |
-| `station.cot.lv2` | Bastión y Refugio | `station-up:cot:2` | orik | — | — | 2 | siempre |
-| `station.cot.lv3` | Bastión y Refugio | `station-up:cot:3` | orik | — | — | 2 | siempre |
-| `station.kitchen.lv2` | Bastión y Refugio | `station-up:kitchen:2` | garth | — | — | 2 | siempre |
-| `station.kitchen.lv3` | Bastión y Refugio | `station-up:kitchen:3` | garth | — | — | 2 | siempre |
-| `station.bench.lv2` | Bastión y Refugio | `station-up:bench:2` | orik | — | — | 2 | siempre |
-| `station.bench.lv3` | Bastión y Refugio | `station-up:bench:3` | orik | — | — | 2 | siempre |
-| `station.infirmary.lv2` | Bastión y Refugio | `station-up:infirmary:2` | vesper | — | — | 2 | siempre |
-| `station.infirmary.lv3` | Bastión y Refugio | `station-up:infirmary:3` | vesper | — | — | 2 | siempre |
-| `station.forge.lv2` | Bastión y Refugio | `station-up:forge:2` | brand | — | — | 2 | siempre |
-| `station.forge.lv3` | Bastión y Refugio | `station-up:forge:3` | brand | — | — | 2 | siempre |
-| `station.alchemy.lv2` | Bastión y Refugio | `station-up:alchemy:2` | eldrin | — | — | 2 | siempre |
-| `station.alchemy.lv3` | Bastión y Refugio | `station-up:alchemy:3` | eldrin | — | — | 2 | siempre |
-| `station.runic.lv2` | Bastión y Refugio | `station-up:runic:2` | eldrin | — | — | 2 | siempre |
-| `station.runic.lv3` | Bastión y Refugio | `station-up:runic:3` | eldrin | — | — | 2 | siempre |
+| `station.kitchen` | Bastión y estaciones | `station:kitchen` | garth | `module-kitchen` | `craft-kitchen`, `recipe-c_jerky`, `craft-go`, `upgrade-open-kitchen` | 4 | — |
+| `station.bench` | Bastión y estaciones | `station:bench` | orik | `module-bench` | `craft-bench`, `recipe-c_strap`, `craft-go`, `upgrade-open-bench` | 4 | — |
+| `station.infirmary` | Bastión y estaciones | `station:infirmary` | vesper | `module-infirmary` | `craft-infirmary`, `recipe-c_bandage`, `craft-go`, `upgrade-open-infirmary` | 4 | — |
+| `station.forge` | Bastión y estaciones | `station:forge` | brand | `module-forge` | `craft-forge`, `recipe-c_scrap_bar`, `craft-go`, `upgrade-open-forge` | 4 | — |
+| `station.alchemy` | Bastión y estaciones | `station:alchemy` | eldrin | `module-alchemy` | `craft-alchemy`, `recipe-c_antidote`, `craft-go`, `upgrade-open-alchemy` | 4 | — |
+| `station.runic` | Bastión y estaciones | `station:runic` | eldrin | `module-runic` | `craft-runic`, `recipe-c_cut_crystal`, `craft-go`, `upgrade-open-runic` | 4 | — |
+| `station.cot.lv2` | Bastión y estaciones | `station-up:cot:2` | orik | — | — | 2 | siempre |
+| `station.cot.lv3` | Bastión y estaciones | `station-up:cot:3` | orik | — | — | 2 | siempre |
+| `station.kitchen.lv2` | Bastión y estaciones | `station-up:kitchen:2` | garth | — | — | 2 | siempre |
+| `station.kitchen.lv3` | Bastión y estaciones | `station-up:kitchen:3` | garth | — | — | 2 | siempre |
+| `station.bench.lv2` | Bastión y estaciones | `station-up:bench:2` | orik | — | — | 2 | siempre |
+| `station.bench.lv3` | Bastión y estaciones | `station-up:bench:3` | orik | — | — | 2 | siempre |
+| `station.infirmary.lv2` | Bastión y estaciones | `station-up:infirmary:2` | vesper | — | — | 2 | siempre |
+| `station.infirmary.lv3` | Bastión y estaciones | `station-up:infirmary:3` | vesper | — | — | 2 | siempre |
+| `station.forge.lv2` | Bastión y estaciones | `station-up:forge:2` | brand | — | — | 2 | siempre |
+| `station.forge.lv3` | Bastión y estaciones | `station-up:forge:3` | brand | — | — | 2 | siempre |
+| `station.alchemy.lv2` | Bastión y estaciones | `station-up:alchemy:2` | eldrin | — | — | 2 | siempre |
+| `station.alchemy.lv3` | Bastión y estaciones | `station-up:alchemy:3` | eldrin | — | — | 2 | siempre |
+| `station.runic.lv2` | Bastión y estaciones | `station-up:runic:2` | eldrin | — | — | 2 | siempre |
+| `station.runic.lv3` | Bastión y estaciones | `station-up:runic:3` | eldrin | — | — | 2 | siempre |

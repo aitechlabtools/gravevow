@@ -36,12 +36,12 @@ Hoy son glifos dentro de un recuadro discontinuo (`TABS` en `src/game/ui/Setting
 | Engranaje de Ajustes | 16×16 (se ve a ×2, 32 px dentro de un botón de 44) | Claro sobre fondo oscuro; lleva encima un punto verde de 9 px cuando hay aviso |
 | Sonido, Pantalla, Controles, Partida, Comunidad, Información | 16×16 cada uno (se ven a ×2, 32 px) | Uno por sección; activos en dorado #e8b33a y el resto en hueso #e9e1cc (o dos versiones) |
 
-## Bastión y Refugio (provisionales, para diseñar)
-Marcadores dibujados por código en `src/game/ui/stationArt.ts`. Misma proporción que los retratos de los mercaderes (20 × 26 px de base; en escritorio se ven a ×6, 120 × 156). PNG con transparencia, apoyado en la parte de abajo. La versión bloqueada no hace falta: se oscurece por código y se pone el candado.
+## Bastión y estaciones (provisionales, para diseñar)
+Marcadores dibujados por código en `src/game/ui/stationArt.ts`. Misma proporción que los retratos de los mercaderes (20 × 26 px de base; en escritorio se ven a ×6, 120 × 156). PNG con transparencia, apoyado en la parte de abajo. Las estaciones son partes del Bastión en ruinas que el jugador reconstruye: cada una necesita también una **versión en ruinas** (`<clave>-ruina`, misma medida: piedra derrumbada, cascotes delante, sin candado). Hoy la versión en ruinas se genera por código (silueta apagada + cascotes).
 
 | Clave | Qué es | Medida |
 |---|---|---|
-| `refuge` | Refugio (tarjeta de la entrada del Bastión; se ve a doble tamaño) | 20 × 26 px; recomendable 40 × 52 px |
+| `refuge` | Bastión en ruinas (tarjeta «Bastión» de la entrada; se ve a doble tamaño): castillo de noche con luna, torres de tejado partido, muros agrietados, piedras caídas, una brecha en la muralla y una antorcha o andamio que indique que alguien lo reconstruye. Paleta oscura, en el mismo arco que los retratos | 20 × 26 px; recomendable 40 × 52 px (o 80 × 104 para verse a ×3 en escritorio) |
 | `cot` | Catre | 20 × 26 px |
 | `kitchen` | Cocina con su fogón | 20 × 26 px |
 | `bench` | Banco de trabajo | 20 × 26 px |

@@ -123,9 +123,9 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   { id: 'equip', part: 4, checkpoint: 3, freeze: true, target: { ui: 'btn-inventory' }, highlight: ['[data-testid^="slot-backpack"][data-item="{weapon}"]', '[data-testid="btn-inventory"]'],
     desktop: 'Es mejor que la tuya. Abre la mochila (**I**) y **arrástrala a tu mano**. Mira cómo cambian tus ataques.',
     touch: 'Es mejor que la tuya. Abre la mochila, **tócala y elige Equipar** (o arrástrala a tu mano). Mira cómo cambian tus ataques.' },
-  { id: 'eat', part: 5, checkpoint: 3, freeze: true, target: { ui: 'hud-body' }, highlight: ['[data-testid="eat-stale_bread"]', '[data-testid="need-open-sat"]', '[data-testid="hud-body"]'],
-    desktop: 'El camino cansa. Llevas **pan**: haz clic en la **silueta** y, en Saciedad, elige el pan. Arriba verás subir el hambre.',
-    touch: 'El camino cansa. Llevas **pan**: toca la **silueta** y, en Saciedad, toca el pan. Arriba verás subir el hambre.' },
+  { id: 'eat', part: 5, checkpoint: 3, freeze: true, target: { ui: 'btn-inventory' }, highlight: ['[data-testid="act-eat"]', '[data-testid^="slot-backpack"][data-item="stale_bread"]', '[data-testid="btn-inventory"]'],
+    desktop: 'El camino cansa. Abre la mochila (**I**), elige el **pan** y pulsa **Comer** (o haz doble clic en él). Verás subir la Saciedad.',
+    touch: 'El camino cansa. Abre la mochila, toca el **pan** y luego **Comer** (o tócalo dos veces). Verás subir la Saciedad.' },
   { id: 'ally', part: 6, checkpoint: 4, target: { tile: [rx(4) + 3, Y + 2] }, highlight: ['[data-testid="rival-ally"]'],
     desktop: 'Osric ofrece su espada a cambio de parte del botín. Habla con él (**E**) y **alíate**. El **triángulo** sobre su cabeza dice cuánto puedes fiarte.',
     touch: 'Osric ofrece su espada a cambio de parte del botín. Acércate, toca **Usar** y luego **Aliarse**. El **triángulo** sobre su cabeza dice cuánto puedes fiarte.' },
@@ -136,8 +136,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     desktop: 'Sigue hacia la brecha de la muralla. Y vigila a tu aliado…',
     touch: 'Sigue hacia la brecha de la muralla. Y vigila a tu aliado…' },
   { id: 'extract', part: 8, checkpoint: 6, target: { tile: [rx(7) + 3, Y + 2] },
-    desktop: 'Así acaban muchas alianzas aquí abajo. Llega al **portal**, actívalo con **E** y no te muevas hasta que se llene.',
-    touch: 'Así acaban muchas alianzas aquí abajo. Llega al **portal**, toca **Usar** y no te muevas hasta que se llene.' },
+    desktop: 'Así acaban muchas alianzas aquí abajo. Llega al **portal**, actívalo con **E** y no te muevas hasta que se llene. Si caes antes, pierdes lo que llevas.',
+    touch: 'Así acaban muchas alianzas aquí abajo. Llega al **portal**, toca **Usar** y no te muevas hasta que se llene. Si caes antes, pierdes lo que llevas.' },
 ];
 
 export function tutorialStepIndex(id: string): number {
