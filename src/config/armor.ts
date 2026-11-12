@@ -15,13 +15,14 @@ export const ARMOR_COVER: Record<Region, EquipSlot[]> = {
 };
 
 /**
- * Parte de los sangrados y fracturas que evita una pieza entera en la región que cubre.
- * Baja por tramos, los mismos de los avisos de desgaste: por encima del 25 % protege entera; entre el 10 % y
- * el 25 %, la mitad; por debajo del 10 % o rota, nada (la región vuelve a ser vulnerable).
+ * Parte de los sangrados y fracturas que evita una pieza entera en la región que cubre (bloque 1: baja poco a poco
+ * con la durabilidad; rota, nada). El material la ajusta según el tipo de daño (config/damage.ts).
+ * `wornFactor`, `wornAt` y `criticalAt` ya no deciden la protección: solo quedan para los avisos de desgaste.
  */
 export const ARMOR_GUARD = { full: 0.8, wornFactor: 0.5, wornAt: 0.25, criticalAt: 0.1 };
 
 /**
+ * (Antes del bloque 1) Lesiones según el efecto visual. Ya solo lo usa la ficha antigua: el combate usa DAMAGE_INJURY.
  * Lesiones según el tipo de golpe (su efecto visual): filos, garras y mordiscos hacen sangrar; los golpes
  * contundentes rompen huesos. Multiplican las probabilidades base de `ANATOMY` (bleedChance, fractureChance…).
  */
@@ -35,6 +36,15 @@ export const INJURY_BY_FX: Record<string, { bleed: number; fracture: number }> =
 
 /** El sangrado que ponen las habilidades enemigas al jugador se queda en esta parte (antes de la armadura). */
 export const SKILL_BLEED_TO_PLAYER = 0.5;
+
+/** Bloque 1: los estados que ponen las habilidades enemigas al jugador salen con esta parte de su probabilidad. */
+export const ENEMY_STATUS_CHANCE = 0.6;
+
+/** Daño por turno de algunos estados cuando los sufre el jugador (parte de su vida máxima). */
+export const PLAYER_DOT: Partial<Record<string, number>> = { poison: 0.05, burn: 0.05 };
+
+/** Turnos máximos de algunos estados en el jugador (la quemadura no se alarga sin fin). */
+export const STATUS_MAX_TURNS: Partial<Record<string, number>> = { burn: 3 };
 
 /** Nombre de cada pieza en el registro: «Tu yelmo detiene el golpe: no sangras». */
 export const PIECE_NAME: Partial<Record<EquipSlot, string>> = {

@@ -20,8 +20,8 @@ export interface StatusDef {
 }
 
 export const STATUSES: Record<StatusId, StatusDef> = {
-  poison: { id: 'poison', name: 'Veneno', description: 'Pierde un 7% de su vida máxima al final de cada turno.', color: '#7bc043', dotPct: 0.07, harmful: true },
-  burn: { id: 'burn', name: 'Quemadura', description: 'Pierde un 6% de su vida máxima al final de cada turno.', color: '#e8752b', dotPct: 0.06, harmful: true },
+  poison: { id: 'poison', name: 'Veneno', description: 'Pierde un 7% de su vida máxima al final de cada turno (un 5% si eres tú).', color: '#7bc043', dotPct: 0.07, harmful: true },
+  burn: { id: 'burn', name: 'Quemadura', description: 'Pierde un 6% de su vida máxima al final de cada turno (si eres tú, un 5% y 3 turnos como mucho).', color: '#e8752b', dotPct: 0.06, harmful: true },
   bleed: { id: 'bleed', name: 'Sangrado', description: 'Pierde un 5% de su vida máxima al final de cada turno.', color: '#c4283b', dotPct: 0.05, harmful: true },
   freeze: { id: 'freeze', name: 'Congelación', description: 'Pierde su próximo turno.', color: '#7fd4f0', skipsTurn: true, harmful: true },
   stun: { id: 'stun', name: 'Aturdimiento', description: 'Pierde su próximo turno.', color: '#e8d24a', skipsTurn: true, harmful: true },

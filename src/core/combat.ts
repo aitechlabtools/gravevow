@@ -7,8 +7,10 @@ import { getSkill } from './data/skills';
 import { getItem } from './data/items';
 import { STATUSES } from './statuses';
 import { ANATOMY } from '../config/anatomy';
-import { PIECE_NAME, SKILL_BLEED_TO_PLAYER } from '../config/armor';
-import { injuryMods, type RegionGuard } from './armor';
+import { ENEMY_STATUS_CHANCE, PIECE_NAME, PLAYER_DOT, SKILL_BLEED_TO_PLAYER, STATUS_MAX_TURNS } from '../config/armor';
+import { HEAD_STUN_BLUNT, VITAL_DAMAGE } from '../config/damage';
+import { damageTypeOf, injuryModsFor, rollHitRegion } from './damage';
+import { guardVs, type RegionGuard } from './armor';
 import type { EquipSlot } from './types';
 import { DEFEND_TELEGRAPHED, EXPOSED_MULT, DRAIN_PCT } from '../config/intents';
 import { getMove, type BossPhaseDef, type PatternDef } from './data/intents';
@@ -74,6 +76,10 @@ export interface Combatant {
   body?: Body;
   /** Los golpes normales pueden ir a la cabeza (no en S1 ni S2). */
   headHits?: boolean;
+  /** Subzona de la incursión (0 = S1): decide si los golpes alcanzan zonas vitales. */
+  depth?: number;
+  /** Tras perder un turno, no se le puede volver a aturdir ni congelar enseguida. */
+  skipImmune?: number;
   /** Sin lesiones (tutorial): los golpes quitan vida por regiones, pero no abren sangrados ni rompen huesos. */
   noInjuries?: boolean;
   /** Necesidades (Fase 5, solo el jugador): se gastan una vez por ronda. `baseMaxMp` es el máximo sin hambre ni sed. */
@@ -292,7 +298,7 @@ function gainImpetus(c: Combatant, n: number) {
   c.mp = Math.min(c.stats.maxMp, c.mp + n);
 }
 
-interface HitInfo { status?: StatusId; rng?: Rng; kind?: DamageKind; /** Tipo de golpe (decide sangrado o fractura). */ fx?: string; /** Golpe anunciado a una región. */ region?: Region; noInjury?: boolean; by?: Combatant }
+interface HitInfo { status?: StatusId; rng?: Rng; kind?: DamageKind; /** Tipo de golpe (decide sangrado o fractura). */ fx?: string; /** Golpe anunciado a una región. */ region?: Region; noInjury?: boolean; by?: Combatant; /** Habilidad del golpe (su tipo de daño). */ skillId?: string }
 
 function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boolean, source: 'hit' | 'dot' | 'doom', info: HitInfo = {}) {
   const status = info.status;
@@ -313,21 +319,32 @@ function dealDamage(s: CombatState, target: Combatant, amount: number, crit: boo
     // Anatomía: el golpe cae en una región; el daño de estados y el tributo se reparten por todo el cuerpo
     const lethal = floor === 0;
     if (source === 'hit' && info.rng) {
-      region = info.region ?? rollRegion(info.rng, !!target.headHits);
+      const depth = target.depth ?? (target.headHits ? ANATOMY.headFromDepth : 0);
+      region = info.region ?? (info.by ? rollHitRegion(info.rng, info.by, depth) : rollRegion(info.rng, !!target.headHits));
       target.lastRegion = region;
+      const type = damageTypeOf(info.kind, info.fx, info.by, info.skillId);
+      // Bloque 1: las zonas vitales encajan más daño
+      const vital = VITAL_DAMAGE[region as keyof typeof VITAL_DAMAGE];
+      if (vital && amount > 0) { const extra = Math.round(amount * (vital - 1)); if (extra > 0) amount += extra; }
       target.body = damageRegion(target.body, region, amount, { lethal }).body;
-      if (amount > 0) s.log.push(`El golpe alcanza a ${target.name} en ${regionWith(region)}.`);
+      if (amount > 0) s.log.push(`El golpe alcanza a ${target.name} en ${regionWith(region)}${vital ? ' (zona vital)' : ''}.`);
       // La pieza que cubre la región encaja el golpe (y se desgasta)
       const piece = target.armor?.[region];
       if (piece && amount > 0 && target.wear) { const sl = (target.wear.slots ??= {}); sl[piece.slot] = (sl[piece.slot] ?? 0) + 1; }
       if (info.kind === 'physical' && amount > 0 && !target.noInjuries && !info.noInjury && summaryHp(target.body) > 0) {
-        const inj = rollInjury(target.body, region, crit, info.rng, injuryMods(info.fx));
-        if (inj.injury && piece && piece.guard > 0 && info.rng.chance(piece.guard)) {
-          s.log.push(`${PIECE_NAME[piece.slot] ?? 'Tu armadura'} detiene el golpe: ${inj.injury.bleed ? 'no sangras' : 'el hueso aguanta'}.`);
+        const inj = rollInjury(target.body, region, crit, info.rng, injuryModsFor(type, info.by));
+        const guard = piece ? guardVs(piece, type) : 0;
+        if (inj.injury && piece && guard > 0 && info.rng.chance(guard)) {
+          s.log.push(`${PIECE_NAME[piece.slot] ?? 'Tu armadura'} resiste${inj.injury.bleed ? ': no sangras' : ': el hueso aguanta'}.`);
         } else {
           target.body = inj.body;
-          if (inj.injury?.bleed) s.log.push(`${REGION_NAME[region]}: sangrado ${inj.injury.bleed === 2 ? 'grave' : 'leve'}.`);
+          if (inj.injury?.bleed) s.log.push(`${REGION_NAME[region]}: sangrado ${inj.injury.bleed === 2 ? 'grave' : 'leve'}${piece ? '' : ' (no la cubre ninguna pieza)'}.`);
           if (inj.injury?.fracture) s.log.push(`${REGION_NAME[region]}: ¡fractura!`);
+        }
+        // Un golpe contundente en la cabeza puede aturdir (el yelmo lo frena)
+        if (region === 'head' && type === 'blunt' && alive(target) && info.rng.chance(HEAD_STUN_BLUNT)) {
+          if (piece && info.rng.chance(guard)) s.log.push(`${PIECE_NAME[piece.slot] ?? 'Tu yelmo'} amortigua el golpe en la cabeza.`);
+          else applyStatus(s, target, 'stun', 1, info.rng);
         }
       }
     } else {
@@ -472,7 +489,7 @@ function unleash(s: CombatState, actor: Combatant, rng: Rng) {
         if (r.miss) { s.events.push({ type: 'miss', targetId: t.id }); s.log.push(`${actor.name} usa ${mv.name}, pero ${t.name} lo esquiva.`); continue; }
         const amount = guarded ? Math.max(1, Math.round(r.amount * DEFEND_TELEGRAPHED)) : r.amount;
         s.log.push(`${actor.name} usa ${mv.name}${targets.length > 1 || (mv.hits ?? 1) > 1 ? ` contra ${t.name}` : ''}: ${amount} de daño${guarded ? ' (en guardia)' : ''}${r.crit ? ' ¡CRÍTICO!' : ''}.`);
-        dealDamage(s, t, amount, r.crit, 'hit', { rng, kind: mv.damage, fx: 'smash', region: it.region && t.id === chosen.id ? it.region : undefined, noInjury: guarded });
+        dealDamage(s, t, amount, r.crit, 'hit', { rng, kind: mv.damage, fx: 'smash', by: actor, region: it.region && t.id === chosen.id ? it.region : undefined, noInjury: guarded });
       }
     }
   }
@@ -518,8 +535,12 @@ function applyStatus(s: CombatState, target: Combatant, id: StatusId, turns: num
     s.log.push(`${target.name} sangra (${level === 2 ? 'grave' : 'leve'}) por ${regionWith(r)}.`);
     return;
   }
+  // Tras perder un turno no se encadena otro: aturdir o congelar enseguida no hace efecto
+  if (STATUSES[id].skipsTurn && target.skipImmune && target.body) { s.log.push(`${target.name} se sacude el aturdimiento: resiste.`); return; }
+  const cap = target.body ? STATUS_MAX_TURNS[id] : undefined;
+  if (cap) turns = Math.min(turns, cap);
   const ex = target.statuses.find((x) => x.id === id);
-  if (ex) ex.turns = Math.max(ex.turns, turns);
+  if (ex) ex.turns = Math.min(cap ?? Infinity, Math.max(ex.turns, turns));
   else target.statuses.push({ id, turns });
   s.events.push({ type: 'status', targetId: target.id, status: id, applied: true });
   s.log.push(`${target.name} sufre ${STATUSES[id].name.toLowerCase()}.`);
@@ -607,7 +628,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
         s.log.push(`${actor.name} usa ${atk.name}, pero ${target.name} lo esquiva.`);
       } else {
         s.log.push(`${actor.name} usa ${atk.name}${vs}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
-        dealDamage(s, target, r.amount, r.crit, 'hit', { rng, kind: atk.kind, fx: atk.fx });
+        dealDamage(s, target, r.amount, r.crit, 'hit', { rng, kind: atk.kind, fx: atk.fx, by: actor });
         gainImpetus(actor, IMPETUS_ON_HIT);
         onHitAffixes(s, actor, target, r.amount, rng, true);
       }
@@ -642,7 +663,7 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
           } else {
             landedOn.add(t);
             s.log.push(`${actor.name} usa ${sk.name}${targets.length > 1 || many ? ` contra ${t.name}` : ''}: ${r.amount} de daño${r.crit ? ' ¡CRÍTICO!' : ''}.`);
-            dealDamage(s, t, r.amount, r.crit, 'hit', { rng, kind: sk.kind, fx: sk.fx });
+            dealDamage(s, t, r.amount, r.crit, 'hit', { rng, kind: sk.kind, fx: sk.fx, by: actor, skillId: sk.id });
             onHitAffixes(s, actor, t, r.amount, rng, false);
             if (sk.lifesteal && alive(actor)) {
               const h = heal(s, actor, r.amount * sk.lifesteal);
@@ -677,7 +698,14 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
         for (const who of ap.self ? [actor] : targets) {
           if (!alive(who)) continue;
           if (!ap.self && !landedOn.has(who)) continue;
-          if (rng.chance(ap.chance)) applyStatus(s, who, ap.status, ap.turns, rng);
+          // Bloque 1: contra el jugador, los estados de habilidades salen menos; los de golpes físicos, además, los frena la armadura
+          const vsPlayer = !ap.self && !!who.body;
+          if (!rng.chance(ap.chance * (vsPlayer && ap.status !== 'bleed' ? ENEMY_STATUS_CHANCE : 1))) continue;
+          if (vsPlayer && sk.kind === 'physical' && ap.status === 'stun' && who.lastRegion) {
+            const piece = who.armor?.[who.lastRegion];
+            if (piece && rng.chance(guardVs(piece, damageTypeOf(sk.kind, sk.fx, actor, sk.id)))) { s.log.push(`${PIECE_NAME[piece.slot] ?? 'Tu armadura'} encaja el golpe: no te aturde.`); continue; }
+          }
+          applyStatus(s, who, ap.status, ap.turns, rng);
         }
       }
       return;
@@ -749,10 +777,11 @@ function executeAction(s: CombatState, actor: Combatant, action: CombatAction, r
 function endOfTurn(s: CombatState, actor: Combatant, used?: string) {
   if (!alive(actor)) return;
   tickCooldowns(actor, used);
+  if (actor.skipImmune) actor.skipImmune -= 1;
   for (const st of [...actor.statuses]) {
     const def = STATUSES[st.id];
     if (def.dotPct && alive(actor)) {
-      const amount = Math.max(1, Math.round(actor.stats.maxHp * def.dotPct));
+      const amount = Math.max(1, Math.round(actor.stats.maxHp * (actor.body ? PLAYER_DOT[st.id] ?? def.dotPct : def.dotPct)));
       s.log.push(`${actor.name} sufre ${amount} por ${def.name.toLowerCase()}.`);
       dealDamage(s, actor, amount, false, 'dot', { status: st.id });
     }
@@ -877,6 +906,7 @@ function advance(s: CombatState, rng: Rng) {
       skip.turns -= 1;
       s.events.push({ type: 'skip', actorId: actor.id, status: skip.id });
       s.log.push(`${actor.name} pierde el turno (${STATUSES[skip.id].name.toLowerCase()}).`);
+      actor.skipImmune = 2;
       if (skip.turns <= 0) s.events.push({ type: 'status', targetId: actor.id, status: skip.id, applied: false });
       endOfTurn(s, actor);
       checkOutcome(s);

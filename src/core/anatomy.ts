@@ -216,11 +216,11 @@ export function addBleed(b: Body, r: Region, level: BleedLevel): Body {
 export interface Injury { region: Region; bleed?: BleedLevel; fracture?: boolean }
 
 /** Tras un golpe físico que ha entrado: puede abrir un sangrado y, en brazos y piernas, romper un hueso. */
-export function rollInjury(b: Body, region: Region, crit: boolean, rng: Rng, mods: { bleed: number; fracture: number } = { bleed: 1, fracture: 1 }): { body: Body; injury: Injury | null } {
+export function rollInjury(b: Body, region: Region, crit: boolean, rng: Rng, mods: { bleed: number; fracture: number; heavy?: number } = { bleed: 1, fracture: 1 }): { body: Body; injury: Injury | null } {
   let out = b;
   const injury: Injury = { region };
   if (rng.chance((crit ? ANATOMY.bleedChanceCrit : ANATOMY.bleedChance) * mods.bleed)) {
-    const level: BleedLevel = crit || b.parts[region].bleed === 1 ? 2 : 1;
+    const level: BleedLevel = crit || b.parts[region].bleed === 1 || (mods.heavy ? rng.chance(mods.heavy) : false) ? 2 : 1;
     if (level > b.parts[region].bleed) { out = addBleed(out, region, level); injury.bleed = level; }
   }
   if (isLimb(region) && !b.parts[region].fracture && rng.chance((crit ? ANATOMY.fractureChanceCrit : ANATOMY.fractureChance) * mods.fracture)) {

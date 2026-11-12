@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heridas y necesidades · maqueta</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Crimson+Pro:wght@400;600&family=Grenze:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Maqueta del bloque 1. Parámetros: ?ctx=bastion|combate&st=herida|venda|comida */
+:root{--void:#07060a;--crypt:#0f0d14;--s9:#15131a;--s8:#1c1b22;--s7:#2a2830;--s6:#3a3741;--s4:#625d69;--s3:#8c8693;--bone:#d9d3c1;--parch:#e9e1cc;--gold:#e8b33a;--ember:#e8752b;--blood:#c4283b;--heal:#5fd19a;--frost:#9fe3ff;--ok:#6fae5a;--sat:#c9873a;--hyd:#4f8fc9;--rest:#8a6fc0}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--void);color:var(--bone);font:16px/1.3 Grenze,Georgia,serif}
+.app{height:100vh;display:flex;flex-direction:column;padding:12px;gap:10px}
+.top{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--s6);padding-bottom:8px}
+.top h1{font:700 22px Cinzel,serif;color:var(--parch);letter-spacing:.04em}
+.top .ctx{margin-left:auto;font-size:15px;color:var(--s3)}
+.top .x{min-width:44px;min-height:44px;border:1px solid var(--s6);background:var(--s8);color:var(--bone);font-size:20px}
+.cure{display:flex;align-items:center;gap:10px;background:#2a1d10;border:1px solid var(--gold);padding:6px 10px;font-size:15px}
+.cure b{color:var(--gold)}
+.cure button{margin-left:auto}
+.main{flex:1;min-height:0;display:grid;gap:10px;grid-template-columns:minmax(300px,34%) 1fr 300px}
+.box{background:var(--s9);border:1px solid var(--s6);padding:10px;min-height:0;display:flex;flex-direction:column}
+.box h2{font:600 17px Cinzel,serif;color:var(--parch);margin-bottom:6px}
+/* Cuerpo */
+.bodyw{flex:1;min-height:0;position:relative}
+.bodyw svg{position:absolute;inset:0;width:100%;height:100%}
+.part{position:absolute;min-width:44px;min-height:44px;border:2px solid var(--s6);background:rgba(21,19,26,.82);padding:3px 5px;font-size:13px;cursor:pointer;display:flex;flex-direction:column;gap:2px;transform:translate(-50%,-50%)}
+.part.vital{border-color:#8a6a2a;box-shadow:inset 0 0 0 1px #3a2a10}
+.part.vital .nm::before{content:"◆ ";color:var(--gold)}
+.part .nm{font-weight:600;white-space:nowrap}
+.part .bar{height:5px;background:var(--s7)}.part .bar i{display:block;height:100%}
+.part .ic{font-size:12px;white-space:nowrap}
+.part.sel{border-color:var(--parch);background:#2a2830}
+.part.can{border-color:var(--heal);box-shadow:0 0 0 3px rgba(95,209,154,.35);animation:p 1.2s ease-in-out infinite}
+.part.dim{opacity:.4}
+@keyframes p{50%{box-shadow:0 0 0 6px rgba(95,209,154,.15)}}
+.total{display:flex;justify-content:space-between;font-size:15px;border-top:1px solid var(--s7);padding-top:6px;margin-top:6px}
+.legend{font-size:13px;color:var(--s3)}
+/* Detalle */
+.wound{border:1px solid var(--s6);background:var(--s8);padding:8px;margin-bottom:8px}
+.wound .t{font-weight:600;color:var(--blood)}
+.wound .d{font-family:"Crimson Pro",serif;font-size:16px;color:var(--bone)}
+.opt{display:flex;align-items:center;gap:8px;border-top:1px dashed var(--s6);padding-top:6px;margin-top:6px}
+.slot{width:44px;height:44px;border:1px solid var(--s6);background:var(--s7);display:grid;place-items:center;font-size:20px;position:relative;flex:none}
+.slot .q{position:absolute;right:2px;bottom:0;font-size:12px}
+.opt .info{flex:1;font-size:15px}.opt .info small{display:block;color:var(--s3);font-size:13px}
+button{font:600 15px Grenze,serif;min-height:44px;min-width:44px;padding:0 14px;border:1px solid var(--s4);background:var(--s7);color:var(--parch);cursor:pointer}
+button.go{border-color:var(--heal);background:#173426;color:#c9f5df}
+button.gold{border-color:var(--gold);background:#3a2a10;color:var(--gold)}
+button:disabled{opacity:.45}
+.miss{font-size:14px;color:var(--s3)}.miss b{color:var(--ember)}
+.note{font-size:13px;color:var(--s3);margin-top:auto}
+.turn{font-size:13px;color:var(--ember)}
+/* Mochila */
+.grid{display:grid;grid-template-columns:repeat(5,44px);gap:4px}
+.grid .slot.hl{border-color:var(--heal);box-shadow:0 0 0 2px rgba(95,209,154,.4)}
+.grid .slot.off{opacity:.3}
+.grid .slot.sel{border-color:var(--parch);background:var(--s6)}
+.actbar{margin-top:8px;border:1px solid var(--s6);background:var(--s8);padding:6px;font-size:14px}
+.actbar .row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+/* Necesidades */
+.needs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.need{background:var(--s9);border:1px solid var(--s6);padding:8px 10px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;position:relative}
+.need .n{font-weight:600}.need .v{font-size:15px}
+.need .b{grid-column:1;height:8px;background:var(--s7)}.need .b i{display:block;height:100%}
+.need button{grid-row:1/3;grid-column:2}
+.need .h{grid-column:1/3;font-size:13px;color:var(--s3)}
+.need.drop{border-color:var(--heal);box-shadow:0 0 0 3px rgba(95,209,154,.3)}
+/* Lista de comida */
+.pop{position:absolute;bottom:calc(100% + 6px);left:0;width:min(420px,96vw);background:var(--crypt);border:1px solid var(--gold);padding:8px;z-index:5;box-shadow:0 8px 30px #000}
+.pop h3{font:600 16px Cinzel,serif;color:var(--parch);margin-bottom:4px}
+.food{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px solid var(--s7)}
+.food .info{flex:1;font-size:15px}.food .info small{display:block;font-size:13px;color:var(--s3)}
+.food .waste{color:var(--ember)}
+/* Tableta */
+.tab .main{grid-template-columns:44% 1fr}
+.tab .pack{grid-column:2}
+.tab .detail{grid-row:1}
+.tab .main{grid-template-rows:1fr auto}
+.tab .bodybox{grid-row:1/3}
+.tab .grid{grid-template-columns:repeat(8,44px)}
+/* Móvil horizontal */
+.mob .app{padding:6px;gap:6px}
+.mob .top{padding-bottom:4px}.mob .top h1{font-size:17px}
+.mob .main{grid-template-columns:46% 1fr;gap:6px}
+.mob .pack{display:none}
+.mob .box{padding:6px}
+.mob .box h2{font-size:15px;margin-bottom:2px}
+.mob .part{font-size:12px;padding:2px 4px}
+.mob .part .ic{font-size:11px}
+.mob .wound{padding:5px;margin-bottom:4px}.mob .wound .d{font-size:14px}
+.mob .needs{gap:6px}
+.mob .need{padding:2px 6px;grid-template-columns:auto 1fr auto}
+.mob .need .h{display:none}.mob .need .b{grid-column:2}.mob .need button{grid-column:3;grid-row:1/3}
+.mob .note,.mob .legend,.mob .total .r{display:none}
+.mob .cure{padding:3px 8px;font-size:13px}
+.mob .opt{padding-top:3px;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const ctx = q.get('ctx') || 'bastion', st = q.get('st') || 'herida';
+const w = innerWidth;
+document.documentElement.className = w < 900 ? 'mob' : w < 1300 ? 'tab' : 'desk';
+const mob = w < 900, touch = w < 1300;
+const combat = ctx === 'combate';
+// Estado de ejemplo: sangrado leve en la pierna izquierda y fractura en el brazo derecho
+const P = [
+  { id: 'head', nm: 'Cabeza', s: 'Cab', v: 1, x: 50, y: 9, hp: [14, 14] },
+  { id: 'thorax', nm: 'Tórax', s: 'Tór', v: 1, x: 50, y: 30, hp: [31, 35] },
+  { id: 'abdomen', nm: 'Abdomen', s: 'Abd', v: 1, x: 50, y: 49, hp: [21, 21] },
+  { id: 'armR', nm: 'Brazo derecho', s: 'B. der.', x: 17, y: 36, hp: [8, 14], w: ['🦴 Fractura'] },
+  { id: 'armL', nm: 'Brazo izquierdo', s: 'B. izq.', x: 83, y: 36, hp: [14, 14] },
+  { id: 'legR', nm: 'Pierna derecha', s: 'P. der.', x: 30, y: 78, hp: [21, 21] },
+  { id: 'legL', nm: 'Pierna izquierda', s: 'P. izq.', x: 70, y: 78, hp: [12, 21], w: ['🩸 Sangra'] },
+];
+const sel = st === 'venda' ? null : 'legL';
+const canBandage = new Set(['legL']);
+const col = (k) => k > .75 ? 'var(--ok)' : k > .5 ? 'var(--gold)' : k > .25 ? 'var(--ember)' : 'var(--blood)';
+const part = (p) => {
+  const k = p.hp[0] / p.hp[1];
+  const cls = ['part', p.v ? 'vital' : '', sel === p.id ? 'sel' : '', st === 'venda' ? (canBandage.has(p.id) ? 'can' : 'dim') : ''].join(' ');
+  return `<div class="${cls}" style="left:${p.x}%;top:${p.y}%"><span class="nm">${mob ? p.s : p.nm}</span><span class="bar"><i style="width:${k * 100}%;background:${col(k)}"></i></span><span class="ic">${p.hp[0]}/${p.hp[1]} ${(p.w || []).join(' ') || (mob ? '' : '· Sana')}</span></div>`;
+};
+const sil = `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><g fill="#221f28" stroke="#3a3741" stroke-width=".6">
+<circle cx="50" cy="10" r="7"/><rect x="38" y="19" width="24" height="22" rx="3"/><rect x="40" y="41" width="20" height="16" rx="2"/>
+<rect x="26" y="20" width="10" height="30" rx="4"/><rect x="64" y="20" width="10" height="30" rx="4"/>
+<rect x="40" y="57" width="9" height="36" rx="3"/><rect x="51" y="57" width="9" height="36" rx="3"/></g></svg>`;
+const verb = touch ? 'Toca' : 'Haz clic en';
+let detail;
+if (st === 'venda') {
+  detail = `<h2>Venda</h2><div class="wound"><div class="d">Corta un sangrado leve. ${verb} la parte resaltada del cuerpo para usarla${touch ? '' : ' o arrástrala hasta ella'}.</div></div>
+  <div class="miss">Sirve en: <b style="color:var(--heal)">Pierna izquierda</b> (sangra).</div>
+  <div class="opt"><button>Cancelar</button></div>${combat ? '<div class="turn">Curar gasta tu turno.</div>' : ''}`;
+} else {
+  detail = `<h2>Pierna izquierda · 12/21</h2>
+  <div class="wound"><div class="t">🩸 Sangrado leve</div><div class="d">Pierdes vida poco a poco hasta cortarlo. No se cierra solo.</div>
+    <div class="opt"><span class="slot">🩹<span class="q">2</span></span><span class="info">Venda<small>Corta el sangrado leve</small></span><button class="go">Usar</button></div>
+    <div class="opt"><span class="slot">⛓<span class="q">1</span></span><span class="info">Torniquete<small>También sirve; guárdalo para uno grave</small></span><button>Usar</button></div>
+  </div>
+  ${mob ? '' : `<div class="wound"><div class="t" style="color:var(--s3)">Otras heridas</div><div class="d">Brazo derecho: fractura. Necesitas una <b>férula</b> (no llevas): la vende Hermana Vesper.</div></div>`}
+  ${combat ? '<div class="turn">Curar gasta tu turno.</div>' : ''}
+  <div class="note">${touch ? 'Toca otra parte del cuerpo para ver sus heridas.' : 'Haz clic en otra parte del cuerpo, o arrastra una cura desde la mochila.'}</div>`;
+}
+const items = ['🩹', '⛓', '🧪', '🍞', '🥩', '💧', '🍎', '🗡', '', '', '', '', '', '', ''];
+const heal = new Set([0, 1]);
+const pack = `<div class="box pack"><h2>Mochila</h2><div class="grid">${items.map((it, i) => {
+  let c = 'slot';
+  if (st === 'herida' && it) c += heal.has(i) ? ' hl' : ' off';
+  if (st === 'venda' && i === 0) c += ' sel';
+  if (st === 'comida' && it) c += [3, 4, 5, 6].includes(i) ? ' hl' : ' off';
+  return `<span class="${c}">${it}${it && i < 7 ? `<span class="q">${[2, 1, 3, 2, 1, 2, 3][i]}</span>` : ''}</span>`;
+}).join('')}</div>
+${st === 'venda' ? `<div class="actbar">Venda ×2<div class="row"><button class="go">Usar en…</button><button>Soltar</button></div></div>` : ''}
+${st === 'herida' ? `<div class="note" style="margin-top:8px">Resaltado: lo que cura la parte elegida.</div>` : ''}</div>`;
+const food = st === 'comida' ? `<div class="pop"><h3>¿Qué comes?</h3>
+  <div class="food"><span class="slot">🍞<span class="q">3</span></span><span class="info">Pan duro<small>+20 saciedad</small></span><button class="go">Comer</button></div>
+  <div class="food"><span class="slot">🥩<span class="q">1</span></span><span class="info">Cecina salada<small>+35 saciedad · −5 hidratación</small></span><button class="go">Comer</button></div>
+  <div class="food"><span class="slot">🍎<span class="q">2</span></span><span class="info">Manzana arrugada<small>+10 saciedad · +10 hidratación</small></span><button class="go">Comer</button></div>
+  <div class="food"><span class="slot">🍖<span class="q">1</span></span><span class="info">Ración de viaje<small>+30 saciedad <span class="waste">· se desperdician 8</span></small></span><button class="go">Comer</button></div>
+  ${combat ? '<div class="turn">Comer gasta tu turno.</div>' : ''}</div>` : '';
+const need = (n, nm, v, c, btn, h, extra = '') => `<div class="need ${st === 'comida' && n === 'sat' ? 'drop' : ''}">${n === 'sat' ? food : ''}<span class="n" style="color:${c}">${nm}</span><span class="b"><i style="width:${v}%;background:${c}"></i></span><span class="v">${v}/100</span>${btn}<span class="h">${h}</span>${extra}</div>`;
+const fallen = !combat && st === 'herida';
+document.getElementById('app').innerHTML = `
+<div class="top"><h1>Heridas y necesidades</h1><span class="ctx">${combat ? 'Combate · turno 4' : 'Bastión'}</span>${combat ? '<button class="x">✕</button>' : ''}</div>
+${fallen ? `<div class="cure">Has caído en la mazmorra. <b>Hermana Vesper te cura del todo por 1 moneda</b> (gratis si no te queda ninguna).<button class="gold">Curarse · 1 de oro</button></div>` : ''}
+<div class="main">
+  <div class="box bodybox"><h2>${mob ? 'Cuerpo' : 'Cuerpo'} <span class="legend">◆ zona vital</span></h2><div class="bodyw">${sil}${P.map(part).join('')}</div>
+  <div class="total"><span>Vida 121/140</span><span class="r">2 heridas</span></div></div>
+  <div class="box detail">${detail}</div>
+  ${pack}
+</div>
+<div class="needs">
+  ${need('sat', 'Saciedad', 42, 'var(--sat)', '<button>Comer…</button>', combat ? 'Se gasta cada ronda.' : 'En el Bastión no se gasta.')}
+  ${need('hyd', 'Hidratación', 68, 'var(--hyd)', '<button>Beber…</button>', combat ? 'Se gasta cada ronda.' : 'En el Bastión no se gasta.')}
+  ${need('rest', 'Descanso', 80, 'var(--rest)', combat ? '<button disabled>Dormir</button>' : '<button>Dormir</button>', combat ? 'Solo se descansa en el catre del Bastión.' : 'Duerme en el catre de los barracones.')}
+</div>`;
+</script>
+</body>
+</html>

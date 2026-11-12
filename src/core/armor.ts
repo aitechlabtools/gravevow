@@ -1,5 +1,6 @@
 // Armadura contra lesiones (Fase 10): qué pieza cubre cada región y cuánto protege según su desgaste.
 import { ARMOR_COVER, ARMOR_GUARD, INJURY_BY_FX } from '../config/armor';
+import { GUARD_CAP, MATERIAL_OVERRIDE, MATERIAL_RESIST, type ArmorMaterial, type DamageType } from '../config/damage';
 import { REGIONS, type Region } from '../config/anatomy';
 import { getItem } from './data/items';
 import { getEnemy } from './data/enemies';
@@ -8,16 +9,29 @@ import { STATUSES } from './statuses';
 import { durability, hasDurability, maxDurability } from './durability';
 import type { EquipSlot, Equipment, ItemStack } from './types';
 
-export interface RegionGuard { slot: EquipSlot; guard: number }
+export interface RegionGuard { slot: EquipSlot; guard: number; material?: ArmorMaterial }
 
-/** Protección de una pieza según su estado: entera por encima del 25 %, la mitad hasta el 10 %, nada por debajo o rota. */
+/** Protección de una pieza según su estado (bloque 1): baja poco a poco con la durabilidad; rota, nada. */
 export function pieceGuard(st: ItemStack): number {
   const max = maxDurability(st);
   if (max <= 0) return ARMOR_GUARD.full;
-  const k = durability(st) / max;
-  if (k <= ARMOR_GUARD.criticalAt) return 0;
-  if (k <= ARMOR_GUARD.wornAt) return ARMOR_GUARD.full * ARMOR_GUARD.wornFactor;
-  return ARMOR_GUARD.full;
+  return ARMOR_GUARD.full * Math.max(0, Math.min(1, durability(st) / max));
+}
+
+/** Material de una pieza: el de la lista o el que dice su nombre. */
+export function materialOf(itemId: string): ArmorMaterial {
+  if (MATERIAL_OVERRIDE[itemId]) return MATERIAL_OVERRIDE[itemId];
+  const n = getItem(itemId).name.toLowerCase();
+  if (/malla|cota/.test(n)) return 'mail';
+  if (/placa|coraza|yelmo|guantelete|acero|hierro|escudo/.test(n) && !/madera|tablas/.test(n)) return 'plate';
+  if (/cuero|capucha|bota|madera|tablas|guante/.test(n)) return 'leather';
+  return 'cloth';
+}
+
+/** Protección contra un tipo de daño concreto (el material resiste distinto). */
+export function guardVs(g: RegionGuard, type: DamageType): number {
+  const k = g.material ? MATERIAL_RESIST[g.material][type] ?? 1 : 1;
+  return Math.min(GUARD_CAP, g.guard * k);
 }
 
 function isArmorPiece(st: ItemStack | null | undefined): st is ItemStack {
@@ -32,7 +46,7 @@ export function armorGuards(eq: Equipment): Partial<Record<Region, RegionGuard>>
   const out: Partial<Record<Region, RegionGuard>> = {};
   for (const r of REGIONS) {
     const slot = ARMOR_COVER[r].find((sl) => isArmorPiece(eq[sl]));
-    if (slot) out[r] = { slot, guard: pieceGuard(eq[slot]!) };
+    if (slot) out[r] = { slot, guard: pieceGuard(eq[slot]!), material: materialOf(eq[slot]!.itemId) };
   }
   return out;
 }

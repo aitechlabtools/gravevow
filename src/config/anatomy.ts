@@ -29,9 +29,10 @@ export const ANATOMY = {
   pulseSeconds: 6,
   /** Lesiones por golpe físico (los mágicos no hacen sangrar ni rompen huesos). */
   /** Fase 10: bajadas para que una lesión sea un riesgo y no lo normal (antes 15 %, 35 %, 6 % y 16 %). El tipo de golpe y la armadura las ajustan (config/armor.ts). */
-  bleedChance: 0.07,
+  /** Bloque 1: 4 % y 12 % (antes 7 % y 20 %). */
+  bleedChance: 0.04,
   /** Con crítico, el sangrado es grave. */
-  bleedChanceCrit: 0.2,
+  bleedChanceCrit: 0.12,
   fractureChance: 0.03,
   fractureChanceCrit: 0.08,
   /** Penalizaciones por miembro: fractura e inutilizado (a cero). */

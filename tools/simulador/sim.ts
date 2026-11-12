@@ -116,7 +116,7 @@ function playerTurn(s: CombatState, me: Combatant, potions: { n: number }, seed:
 export interface ChainOpts {
   cls: Cls; level: number; gear: Equipment; enemies: string[]; enemyLevel: number; potions: number;
   /** Probabilidad de que un segundo enemigo se sume (Fase 2). */
-  pairChance: number; fights: number; headHits: boolean;
+  pairChance: number; fights: number; headHits: boolean; depth?: number;
   /** Pulsos de exploración entre combates (el sangrado sigue corriendo). */
   pulsesBetween: number; bandages: number; noInjuries?: boolean; novice?: boolean; sub?: string;
 }
@@ -136,7 +136,7 @@ export function runChain(o: ChainOpts, seed: number): ChainResult {
   const hpAfter: number[] = [];
   let cooldowns: Record<string, number> = {};
   for (let f = 0; f < o.fights; f++) {
-    const pl = playerCombatant(ch, o.gear, summaryHp(body), mp, cooldowns, undefined, { body, headHits: o.headHits, noInjuries: o.noInjuries });
+    const pl = playerCombatant(ch, o.gear, summaryHp(body), mp, cooldowns, undefined, { body, headHits: o.headHits, depth: o.depth ?? (o.headHits ? 2 : 0), noInjuries: o.noInjuries });
     const pick = () => o.enemies[Math.floor(rnd() * o.enemies.length)];
     const foe = (id: string) => tuneEnemy(enemyCombatant(pick(), id, 'B', o.enemyLevel), o.sub ?? '');
     const list = [pl, foe('e1')];
@@ -208,7 +208,7 @@ export function allRows(runs: number): Row[] {
     SUBZONE_ORDER.forEach((id, i) => {
       const sz = SUBZONES[id];
       const lv = Math.round((sz.levels[0] + sz.levels[1]) / 2);
-      rows.push(scenario(`S${i + 1} · nv ${lv} · su zona`, { cls, sub: id, level: lv, gear: GEAR[sz.zone][cls], enemies: sz.enemies.map((e) => e.id), enemyLevel: zoneEnemyLevel(sz, lv), potions: 3, pairChance: 0.25, headHits: i >= 2, pulsesBetween: 8, bandages: 2 }, runs));
+      rows.push(scenario(`S${i + 1} · nv ${lv} · su zona`, { cls, sub: id, level: lv, gear: GEAR[sz.zone][cls], enemies: sz.enemies.map((e) => e.id), enemyLevel: zoneEnemyLevel(sz, lv), potions: 3, pairChance: 0.25, headHits: i >= 2, depth: i, pulsesBetween: 8, bandages: 2 }, runs));
     });
   }
   return rows;
@@ -220,7 +220,7 @@ export function bossRows(runs: number) {
   for (const cls of ['warrior', 'mage'] as Cls[]) SUBZONE_ORDER.forEach((id) => {
     const sz = SUBZONES[id];
     const lv = Math.round((sz.levels[0] + sz.levels[1]) / 2);
-    const one = (en: string, l: number) => { let w = 0; for (let i = 1; i <= runs; i++) if (runChain({ cls, level: lv, gear: GEAR[sz.zone][cls], enemies: [en], enemyLevel: l, potions: 3, pairChance: 0, headHits: true, pulsesBetween: 0, bandages: 0, fights: 1 }, i * 131).survived === 1) w++; return w / runs; };
+    const one = (en: string, l: number) => { let w = 0; for (let i = 1; i <= runs; i++) if (runChain({ cls, level: lv, gear: GEAR[sz.zone][cls], enemies: [en], enemyLevel: l, potions: 3, pairChance: 0, headHits: true, depth: SUBZONE_ORDER.indexOf(id), pulsesBetween: 0, bandages: 0, fights: 1 }, i * 131).survived === 1) w++; return w / runs; };
     out.push({ id, cls, level: lv, elite: one(sz.elite, lv + 2), boss: one(sz.boss, Math.min(sz.levels[1] + 3, lv + 3)) });
   });
   return out;

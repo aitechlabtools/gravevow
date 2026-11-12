@@ -1,3 +1,4 @@
+import { ENEMY_DAMAGE } from '../src/config/subzones';
 // Fase 10 (reequilibrio): la armadura protege de lesiones, el golpe decide sangrado o fractura, desgaste por pieza,
 // tutorial imposible de perder, daño de S1 y curación completa (1 moneda tras caer, gratis sin oro).
 import { describe, expect, it } from 'vitest';
@@ -38,12 +39,13 @@ function injuries(gear: Equipment, enemy = 'starving_wolf'): number {
 }
 
 describe('Fase 10: armadura y lesiones', () => {
-  it('la protección baja por tramos con el desgaste y desaparece al romperse', () => {
+  it('la protección baja poco a poco con el desgaste y desaparece al romperse', () => {
     const st = { uid: 'c', itemId: 'chainmail', qty: 1 };
     const max = maxDurability(st);
     expect(pieceGuard(st)).toBe(ARMOR_GUARD.full);
-    expect(pieceGuard(withDurability(st, Math.floor(max * 0.2)))).toBe(ARMOR_GUARD.full * ARMOR_GUARD.wornFactor);
-    expect(pieceGuard(withDurability(st, Math.floor(max * 0.05)))).toBe(0);
+    const half = withDurability(st, Math.floor(max * 0.5));
+    expect(pieceGuard(half)).toBeCloseTo(ARMOR_GUARD.full * (Math.floor(max * 0.5) / max), 5);
+    expect(pieceGuard(half)).toBeLessThan(pieceGuard(st));
     expect(pieceGuard(withDurability(st, 0))).toBe(0);
   });
 
@@ -83,9 +85,10 @@ describe('Fase 10: armadura y lesiones', () => {
 });
 
 describe('Fase 10: dificultad', () => {
-  it('las criaturas comunes de S1 pegan un 20 % menos; élites y jefes igual', () => {
+  it('las criaturas comunes de S1 pegan menos; élites y jefes igual', () => {
     const b = enemyCombatant('bandit', 'b', 'B', 1);
-    expect(b.stats.atk).toBe(Math.round(getEnemy('bandit').stats.atk * 0.8));
+    expect(b.stats.atk).toBe(Math.round(getEnemy('bandit').stats.atk * ENEMY_DAMAGE.afueras));
+    expect(ENEMY_DAMAGE.afueras).toBeLessThan(1);
     const boss = enemyCombatant(getEnemy('bandit_captain').id, 'c', 'B', 1);
     expect(boss.stats.atk).toBe(getEnemy('bandit_captain').stats.atk);
   });
