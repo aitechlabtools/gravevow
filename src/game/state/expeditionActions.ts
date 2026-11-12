@@ -12,6 +12,8 @@ import { defaultSubzone, subzoneLock, ZONES, type SubzoneId, type ZoneId } from 
 import { getSubzone, isSubzoneId, subzonesOf } from '../../core/data/subzones';
 import { getItem } from '../../core/data/items';
 import { rollLoot, adaptDrops, CHEST_TABLES, subzoneChestTable } from '../../core/loot';
+import { chestCraftDrops, subzoneTier } from '../../core/craftDrops';
+import { learnBlueprints } from '../../core/crafting';
 import { makeRng, makeUid, randomSeed } from '../../core/rng';
 import { noRival, initialRival, talk, greetLine, proposeAlliance, rejectRival, leaveAlliance, shareLoot, evaluateBetrayal, playerBetrays, playerAttacksNeutral, rollEncounter, goldShare, sharePct, demandLine, refusedLine, refuseShare } from '../../core/social';
 import { lootValue, planPayment } from '../../core/share';
@@ -236,6 +238,10 @@ export const expeditionActions = {
       profile = grantRecruitKit(profile);
       summary = { ...summary, recruitKit: true };
     }
+    // Planos (bloque 2, fase 4): los que traes se aprenden al volver y ya no se pierden
+    const bp = learnBlueprints(profile);
+    profile = bp.profile;
+    if (bp.learned.length) summary = { ...summary, blueprintsLearned: bp.learned };
     set({ profile, summary, expedition: null, screen: 'summary', combat: null, modal: null, merc: null });
     sfx(reason === 'extracted' ? 'victory' : 'defeat');
     await saveNow();
@@ -318,6 +324,7 @@ export const expeditionActions = {
       const loot = rollLoot(sub ? subzoneChestTable(base, sub.levels, subzonesOf(sub.zone).indexOf(sub), sub.id) : base, rng);
       const ct = chestType(table);
       const found = rollStacks(adaptDrops(loot.items, s.profile!.character.classId), getItem, { depth: subzoneDepth(), bonus: ct.look === 'boss' ? 2 : ct.key ? 1 : 0 }, () => rng.next());
+      if (!s.tutorial) found.push(...chestCraftDrops(subzoneTier(sub?.id), { locked: !!ct.key, boss: ct.look === 'boss' }, rng));
       gold = loot.gold;
       // El oro del cofre son monedas dentro del cofre: hay que cogerlas
       grid = addManyToGrid(emptyGrid(12), [...found, ...(gold > 0 ? [coinsStack(gold)] : [])]).grid;

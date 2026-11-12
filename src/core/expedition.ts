@@ -83,6 +83,8 @@ export interface ExpeditionSummary {
   mercNote?: string;
   /** Despedida del errante que extrae contigo (y su parte del oro). */
   wandererNote?: string;
+  /** Planos aprendidos al volver (bloque 2, fase 4). */
+  blueprintsLearned?: string[];
   /** Fin del tutorial (o tutorial repetido). */
   tutorialNote?: string;
 }

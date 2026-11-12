@@ -34,7 +34,7 @@ import { potionAmount, resourcePotionAmount } from '../../config/progression';
 import { makeUid, randomSeed } from '../../core/rng';
 import { vendorUnlocked } from '../../core/vendors';
 import { STATION_FX } from '../../config/stations';
-import { craft as craftItems, getRecipe, settlePendingJobs, storeCrafted } from '../../core/crafting';
+import { craft as craftItems, getRecipe, learnBlueprints, settlePendingJobs, storeCrafted } from '../../core/crafting';
 import { applyRune, type RuneLoc } from '../../core/runes';
 import { canSleepForPrep, cotPrepCut, refugeOf, receptionDiscard, receptionScrap, receptionSell, receptionWithdraw, RECEPTION_NOTE, scrap, upgradeModule } from '../../core/refuge';
 import type { ModuleId } from '../../core/data/refuge';
@@ -57,7 +57,9 @@ export { getState, subscribe, useGame, getSave, getActiveCharacterId, toast, con
 
 /** Carga un personaje. Un fogón, yunque o mezcla que quedó a medias (minijuegos retirados) se entrega ya terminado. */
 function compose(save: SaveData, id: string): Profile | null {
-  const p = composeProfile(save, id);
+  const c = composeProfile(save, id);
+  // Planos que quedaron sin aprender en la mochila o el almacén (partidas de antes de la fase 4)
+  const p = c ? learnBlueprints(c).profile : c;
   if (!p || (!p.cooking && !p.workshop)) return p;
   const r = settlePendingJobs(p);
   if (!r.ok) return p;
@@ -601,8 +603,10 @@ export const actions = {
     const r = buy(p, itemId, vendorId);
     if (!r.ok) return invError(r.error);
     sfx('coin');
-    set({ profile: r.profile });
-    toast(`Compras ${getItem(itemId).name}.`, 'good', getItem(itemId).icon);
+    // Un plano comprado en el Bastión se aprende al momento
+    const bp = getItem(itemId).category === 'blueprint' ? learnBlueprints(r.profile) : null;
+    set({ profile: bp ? bp.profile : r.profile });
+    toast(bp?.learned.includes(itemId) ? `Plano aprendido: ${getItem(itemId).name.replace(/^Plano: /, '')}. Ya puedes fabricarlo.` : `Compras ${getItem(itemId).name}.`, 'good', getItem(itemId).icon);
   },
 
   /** Refugio (Fase 9): mejorar un módulo. */

@@ -16,6 +16,7 @@ import { enemyCombatant, playerCombatant, rivalCombatant, enemyXp, rivalHpBack }
 import { getEnemy } from '../../core/data/enemies';
 import { getItem } from '../../core/data/items';
 import { rollLoot, adaptDrops } from '../../core/loot';
+import { enemyCraftDrops, subzoneTier } from '../../core/craftDrops';
 import { makeRng, makeUid, randomSeed } from '../../core/rng';
 import { getWanderer } from '../../core/data/wanderers';
 import { bus } from './bus';
@@ -171,6 +172,7 @@ export const combatActions = {
             const l = rollLoot(e.loot, rng);
             gold += l.gold;
             items.push(...rollStacks(adaptDrops(l.items, state.profile!.character.classId), getItem, { depth: subzoneDepth(), bonus: e.boss ? 2 : e.elite ? 1 : 0 }, () => rng.next()));
+            if (!s.tutorial) items.push(...enemyCraftDrops(e.id, subzoneTier(s.dungeon?.subzone), { elite: !!e.elite, boss: !!e.boss }, rng));
             kills[e.id] = (kills[e.id] ?? 0) + 1;
             { const pr = state.profile!; set({ profile: { ...pr, bestiary: noteKill(pr.bestiary, e.id) } }); }
           }

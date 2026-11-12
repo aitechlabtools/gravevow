@@ -42,7 +42,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
     blurb: 'La orden guarda las llaves de lo que no debe abrirse y cose a los que vuelven del fondo. Demuéstrame que puedo confiarte una.',
     stock: [
       { itemId: 'health_potion', rank: 0 }, { itemId: 'mana_potion', rank: 0 }, { itemId: 'focus_tonic', rank: 0 }, { itemId: 'antidote', rank: 0 },
-      { itemId: 'bandage', rank: 0 }, { itemId: 'tourniquet', rank: 0 }, { itemId: 'splint', rank: 0 }, { itemId: 'bitter_tea', rank: 0 }, { itemId: 'bone_amulet', rank: 0 }, { itemId: 'iron_key', rank: 0 },
+      { itemId: 'bandage', rank: 0 }, { itemId: 'tourniquet', rank: 0 }, { itemId: 'splint', rank: 0 }, { itemId: 'bitter_tea', rank: 0 }, { itemId: 'bitter_herb', rank: 0 }, { itemId: 'bone_amulet', rank: 0 }, { itemId: 'iron_key', rank: 0 },
       { itemId: 'hemostatic', rank: 1 }, { itemId: 'painkiller', rank: 1 }, { itemId: 'surgery_kit', rank: 1 }, { itemId: 'ring_of_embers', rank: 1 },
       { itemId: 'bone_key', rank: 2 }, { itemId: 'reliquary_amulet', rank: 2 },
       { itemId: 'sulfur_key', rank: 3 }, { itemId: 'relic_key', rank: 3 },
@@ -52,7 +52,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
   garth: {
     id: 'garth', name: 'Garth', role: 'Cocinero y cazador', sprite: 'vendor_garth', color: '#d9a066', place: 'cocina', buysItems: false,
     blurb: 'Abajo nadie te da de comer. Tráeme pieles y colmillos de lo que cazas y no volverás con el estómago vacío.',
-    stock: [{ itemId: 'ration', rank: 0 }, { itemId: 'water', rank: 0 }, { itemId: 'stale_bread', rank: 0 }, { itemId: 'wrinkled_apple', rank: 0 }, { itemId: 'watered_wine', rank: 0 }, { itemId: 'aged_cheese', rank: 0 }, { itemId: 'jerky', rank: 0 }, { itemId: 'salted_meat', rank: 0 }, { itemId: 'cave_mushroom', rank: 0 }],
+    stock: [{ itemId: 'ration', rank: 0 }, { itemId: 'water', rank: 0 }, { itemId: 'stale_bread', rank: 0 }, { itemId: 'wrinkled_apple', rank: 0 }, { itemId: 'watered_wine', rank: 0 }, { itemId: 'aged_cheese', rank: 0 }, { itemId: 'jerky', rank: 0 }, { itemId: 'salted_meat', rank: 0 }, { itemId: 'cave_mushroom', rank: 0 }, { itemId: 'flour', rank: 0 }, { itemId: 'goat_milk', rank: 0 }, { itemId: 'sour_wine', rank: 0 }],
   },
   nira: {
     id: 'nira', name: 'Nira', role: 'Curtidora y tendera', sprite: 'vendor_nira', color: '#e8b33a', place: 'mercado', buysItems: true,
@@ -66,6 +66,8 @@ export const VENDORS: Record<VendorId, VendorDef> = {
       { itemId: 'leather_hood', rank: 0 }, { itemId: 'padded_tunic', rank: 0 }, { itemId: 'leather_gloves', rank: 0 }, { itemId: 'worn_boots', rank: 0 }, { itemId: 'copper_ring', rank: 0 },
       // Para el oro y el campo (hasta que llegan Grizk y Orik)
       { itemId: 'gold_pouch', rank: 0 }, { itemId: 'gold_sack', rank: 0 }, { itemId: 'miner_pick', rank: 0 }, { itemId: 'repair_kit', rank: 0 },
+      // Materias para el Banco de trabajo
+      { itemId: 'old_wood', rank: 0 }, { itemId: 'ragged_cloth', rank: 0 },
       { itemId: 'shadow_robe', rank: 1 }, { itemId: 'swift_boots', rank: 1 },
       { itemId: 'mourner_hood', rank: 2 }, { itemId: 'silver_gauntlets', rank: 2 },
       { itemId: 'ash_cowl', rank: 3 },

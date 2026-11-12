@@ -49,6 +49,7 @@ export function SummaryScreen() {
         </div>
         {summary.levelsGained > 0 && <div className="panel panel-gold p-3 mt-3 text-center text-gold text-lg">¡Subes al nivel {profile.character.level}!</div>}
         {summary.mercNote && <div className="panel p-3 mt-3 text-center font-body text-lg text-parchment" data-testid="merc-note">{summary.mercNote}</div>}
+        {!!summary.blueprintsLearned?.length && <div className="panel panel-gold p-3 mt-3 text-center font-body text-lg text-parchment" data-testid="blueprints-note">Planos aprendidos: {summary.blueprintsLearned.map((b) => getItem(b).name.replace(/^Plano: /, '')).join(', ')}. Ya no se pierden.</div>}
         {summary.tutorialNote && <div className="panel panel-gold p-3 mt-3 text-center font-body text-lg text-parchment" data-testid="tutorial-note">{summary.tutorialNote}</div>}
         {summary.wandererNote && <div className="panel p-3 mt-3 text-center font-body text-lg text-parchment" data-testid="wanderer-note">{summary.wandererNote}</div>}
         {summary.recruitKit && (

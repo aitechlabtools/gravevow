@@ -1,6 +1,13 @@
 // Llegada de los mercaderes al Bastión y migración de la reputación de los antiguos (Fase 5b).
 import type { Profile } from './types';
-import type { VendorId } from './data/vendors';
+import { VENDORS, type VendorId } from './data/vendors';
+import { vendorBlueprints } from './craftDrops';
+
+// Bloque 2, fase 4: Brand, Valerius y Eldrin venden planos raros con reputación alta.
+for (const v of ['brand', 'valerius', 'eldrin'] as const) {
+  const have = new Set(VENDORS[v].stock.map((s) => s.itemId));
+  for (const b of vendorBlueprints(v)) if (!have.has(b.itemId)) VENDORS[v].stock.push(b);
+}
 
 /** ¿Está en el Bastión? Desde la parte 2.1 del bloque 2 todos los mercaderes están desde el principio. */
 export function vendorUnlocked(_p: Profile, _id: VendorId): boolean {

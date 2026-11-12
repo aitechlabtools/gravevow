@@ -241,7 +241,7 @@ Respuestas del usuario (12/11):
 1. **Datos y lógica común.** Materias nuevas (madera, tela, hierba, harina, leche y vino), intermedios, una receta para cada objeto, planos y `core/crafting.ts` (receta → comprobar → tomar → entregar). Los minijuegos pendientes se resuelven al cargar. Pruebas, incluida la de economía, que comprueba que no hay bucles.
 2. **Espacios y desbloqueo.** Seis espacios con niveles y encargos, pantalla del Bastión con candados y «Tu siguiente objetivo». Prueba en 3 tamaños.
 3. **Menú de crafteo común.** Sustituye la cocina, el yunque, la alquimia y el rincón: filtros, «Dónde conseguirlo», «Ir a su receta», destino y lotes. `crafteo-check` en 3 tamaños; se retiran `refugio-check` y `taller-check`.
-4. **Fuentes de materias y planos.** Botín, vetas y mercaderes para las materias nuevas; planos en cofres, élites, jefes y tiendas.
+4. **Fuentes de materias y planos.** Botín, vetas y mercaderes para las materias nuevas; planos en cofres, élites, jefes y tiendas. *Hecha: cifras en `config/craftDrops.ts`; la hierba sale de cofres S1–S3 y de Vesper en lugar de brotes.*
 5. **Desguace nuevo.** Seguro y posible, azar por rareza, confirmación, recluta bloqueado y selección múltiple. `desguace-check` en 3 tamaños.
 6. **Bombas en combate.** Acción, ficha, estados y simulador.
 7. **Equilibrio y cierre.** Simulador de economía y de combate con bombas, arreglo de `almacen-check` en ordenador, migración (las calidades de lo ya forjado se conservan), comprobación del ciclo en 3 tamaños y estado del proyecto.
