@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Menú de crafteo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Grenze:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<style>
+.lay{flex:1;min-height:0;display:grid;grid-template-columns:minmax(260px,34%) 1fr;gap:10px}
+.filters{flex:none;display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.chip{flex:none;min-height:44px;padding:0 10px;border:1px solid var(--s6);background:var(--s8);font-size:14px}
+.chip.on{border-color:var(--gold);color:var(--gold)}
+.toggle{display:flex;align-items:center;gap:8px;min-height:44px;font-size:14px}
+.sw{width:40px;height:22px;border-radius:11px;background:var(--s6);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--bone)}
+.sw.on{background:var(--ok)}.sw.on::after{left:21px}
+.rlist{list-style:none;display:flex;flex-direction:column;gap:4px}
+.rlist li{display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 8px;border:1px solid var(--s7);background:var(--s8)}
+.rlist li.sel{border-color:var(--parch);background:var(--s7)}
+.rlist li .dot{width:10px;height:10px;border-radius:50%;background:var(--s6);margin-left:auto;flex:none}
+.rlist li .dot.go{background:var(--ok)}
+.rlist li.lk{opacity:.55}
+.rlist li .why{margin-left:auto;font-size:12px;color:var(--s3)}
+.grp{font:600 13px Cinzel,serif;color:var(--s3);margin:6px 0 2px}
+.det{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0}
+.item{display:flex;gap:10px;align-items:flex-start}
+.item .ic{width:56px;height:56px;font-size:30px;border-color:var(--c-uncommon)}
+.item h3{font:600 19px Cinzel,serif;color:var(--parch)}
+.stats{font-size:15px;margin-top:4px;display:grid;grid-template-columns:auto auto;gap:2px 14px;width:max-content}
+.comp{list-style:none;display:flex;flex-direction:column;gap:4px}
+.comp li{border:1px solid var(--s7);background:var(--s8)}
+.comp .row{display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 8px}
+.comp .ic{width:30px;height:30px;font-size:16px}
+.comp .n{margin-left:auto;font-weight:600;white-space:nowrap}
+.comp li.miss{border-color:var(--bad)}
+.where{border-top:1px dashed var(--s6);padding:6px 8px;font-size:14px;display:flex;flex-direction:column;gap:4px;background:#1a1216}
+.where .src{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.where .src .t{flex:1 1 200px}
+.where .src .btn{margin-left:auto}
+.foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--s7);padding-top:8px;margin-top:8px}
+.qty{display:flex;align-items:center;border:1px solid var(--s6)}
+.qty b{min-width:44px;text-align:center}
+.qty .btn{border:0}
+.foot .btn.main{margin-left:auto;min-width:140px}
+.note{font-size:13px;color:var(--s3)}
+@media (max-width:1000px){.det{grid-template-columns:1fr}}
+@media (max-height:560px){
+  .lay{grid-template-columns:240px 1fr;gap:6px}
+  .filters{gap:4px;margin-bottom:4px;flex-wrap:nowrap;overflow-x:auto}
+  .chip{padding:0 8px;font-size:13px;white-space:nowrap}
+  .rlist li{min-height:44px;padding:2px 6px;font-size:14px}
+  .det{grid-template-columns:1fr;gap:6px}
+  .stats{grid-template-columns:auto auto auto auto auto auto}
+  .item .ic{width:40px;height:40px;font-size:22px}
+  .item h3{font-size:16px}
+  .stats{font-size:13px}
+  .comp .row{padding:2px 6px;font-size:14px}
+  .where{font-size:12px;padding:4px 6px}
+  .foot{padding-top:4px;margin-top:4px;gap:6px;flex-wrap:nowrap}
+  .foot .btn.main{min-width:110px}
+  .qty .btn.sm{display:none}
+  .toggle{font-size:13px;gap:5px}
+  .note{display:none}
+}
+</style></head><body>
+<div class="app">
+  <div class="top"><h1>Forja <span class="muted" style="font-size:15px">· Nv 1</span></h1><span class="ctx">Lotes de hasta 5 · <span class="gold">● 342</span></span><button class="btn" aria-label="Volver al Bastión">✕</button></div>
+  <div class="lay">
+    <div class="box">
+      <div class="filters"><button class="chip on">Todo</button><button class="chip">Armas</button><button class="chip">Protección</button><button class="chip">Componentes</button><button class="chip">Otros</button></div>
+      <div class="toggle"><span class="sw"></span>Solo las que puedo hacer</div>
+      <div class="scroll">
+        <div class="grp">Componentes</div>
+        <ul class="rlist">
+          <li><span class="ic">▬</span>Barra de chatarra<span class="dot go"></span></li>
+          <li><span class="ic">▬</span>Lingote de hierro<span class="dot go"></span></li>
+        </ul>
+        <div class="grp">Armas</div>
+        <ul class="rlist">
+          <li><span class="ic">🗡</span><span>Espada de hierro <span class="r-uncommon">·</span></span><span class="dot go"></span></li>
+          <li class="sel"><span class="ic">🪓</span><span class="r-uncommon">Hacha de batalla</span><span class="dot"></span></li>
+          <li><span class="ic">🔨</span>Maza bendita<span class="dot go"></span></li>
+          <li class="lk"><span class="ic">🗡</span><span class="r-rare">Espada del caballero</span><span class="why">🔒 Plano</span></li>
+        </ul>
+        <div class="grp">Protección</div>
+        <ul class="rlist">
+          <li><span class="ic">⛓</span><span class="r-uncommon">Cota de malla</span><span class="dot"></span></li>
+          <li><span class="ic">🛡</span><span class="r-uncommon">Escudo de hierro</span><span class="dot go"></span></li>
+          <li class="lk"><span class="ic">⛑</span><span class="r-rare">Yelmo del caballero</span><span class="why">🔒 Plano</span></li>
+          <li class="lk"><span class="ic">🛡</span><span class="r-epic">Coraza de plata</span><span class="why">🔒 Nv 2</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="box"><div class="scroll" style="flex:1">
+      <div class="det">
+        <div>
+          <div class="item"><span class="ic">🪓</span><div><h3>Hacha de batalla</h3><div class="r-uncommon" style="font-size:14px">Poco común · Guerrero · nivel 7</div>
+            <div class="stats"><span>Ataque</span><b>9</b><span>Velocidad</span><b class="bad">−1</b><span>Golpe</span><b>Tajo (cortante)</b></div>
+            <div class="note" style="margin-top:6px">Enseña: Golpe brutal, Partecráneos. Puede salir rara: 10 % (nivel de la Forja).</div></div></div>
+        </div>
+        <div>
+          <h2>Necesitas</h2>
+          <ul class="comp">
+            <li><div class="row"><span class="ic">▬</span>Barra de chatarra<span class="n ok">3 / 2</span></div></li>
+            <li class="miss"><div class="row"><span class="ic">╱</span>Asta<span class="n bad">0 / 2 · faltan 2</span></div>
+              <div class="where"><b>Dónde conseguirlo</b>
+                <div class="src"><span class="t">⚒ Se hace en el <b>Banco de trabajo</b>: 2 madera vieja → 1 asta (tienes 9 madera)</span><button class="btn sm">Ir a su receta</button></div>
+                <div class="src muted">Madera vieja: cofres y muebles rotos de S1–S6 · Nira la vende</div></div></li>
+            <li><div class="row"><span class="ic">⚙</span>Chatarra<span class="n ok">5 / 1</span></div></li>
+          </ul>
+        </div>
+      </div>
+      </div>
+      <div class="foot">
+        <div class="qty"><button class="btn">−</button><b>1</b><button class="btn">+</button><button class="btn sm">Máx.</button></div>
+        <div class="note">Al terminar eliges si va a la mochila o al almacén.</div>
+        <button class="btn main off">Craftear</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

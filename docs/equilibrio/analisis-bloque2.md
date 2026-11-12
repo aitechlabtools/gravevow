@@ -1,5 +1,7 @@
 # Bloque 2 · Entrega 2A: análisis del Bastión y la fabricación
 
+> Superado: el usuario mandó el encargo completo del bloque 2. La propuesta vigente está en `propuesta-bloque2.md`.
+
 Revisión del estado actual frente a los apartados 15 (Refugio) y 16 (Fabricación) del plan maestro. No cambia nada del juego: sirve para decidir qué entra en el bloque 2.
 
 ## 1. Qué hay hecho

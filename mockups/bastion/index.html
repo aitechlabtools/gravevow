@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maquetas del Bastión</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Grenze:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<style>
+body{overflow:auto;height:auto}
+.wrap{max-width:1200px;margin:0 auto;padding:16px}
+h1{font:700 24px Cinzel,serif;color:var(--parch);margin-bottom:6px}
+p{color:var(--s3);margin-bottom:14px}
+section{margin-bottom:26px}
+h2{font:600 19px Cinzel,serif;color:var(--parch);margin-bottom:4px}
+h2 a{color:var(--gold)}
+.shots{display:grid;grid-template-columns:1.3fr 1.1fr 1fr;gap:10px;align-items:start}
+figure{background:var(--s9);border:1px solid var(--s6);padding:6px}
+figure img{width:100%;display:block}
+figcaption{font-size:14px;color:var(--s3);margin-top:4px}
+@media (max-width:800px){.shots{grid-template-columns:1fr}}
+</style></head><body>
+<div class="wrap">
+  <h1>Bloque 2 · Maquetas del Bastión y el crafteo</h1>
+  <p>Propuesta en <code>docs/equilibrio/propuesta-bloque2.md</code>. Cada pantalla se abre en vivo (cambia el tamaño de la ventana) o se mira en las capturas: ordenador 1280×720, iPad apaisado y iPhone apaisado.</p>
+  <section><h2><a href="bastion.html">Bastión: espacios</a></h2><p>Abiertos con su nivel y lo que da el siguiente; bloqueados con candado, para qué sirven y qué falta (✓/✗). Arriba, «Tu siguiente objetivo». En móvil solo se ven los requisitos que faltan.</p>
+    <div class="shots"><figure><img src="escritorio-bastion.png" alt=""><figcaption>Ordenador</figcaption></figure><figure><img src="tableta-bastion.png" alt=""><figcaption>Tableta</figcaption></figure><figure><img src="movil-bastion.png" alt=""><figcaption>Móvil</figcaption></figure></div></section>
+  <section><h2><a href="crafteo.html">Menú de crafteo (igual en todos los espacios)</a></h2><p>Recetas con filtros a la izquierda; a la derecha el objeto, los componentes en verde o rojo, «Dónde conseguirlo» con «Ir a su receta», la cantidad y «Craftear».</p>
+    <div class="shots"><figure><img src="escritorio-crafteo.png" alt=""><figcaption>Ordenador</figcaption></figure><figure><img src="tableta-crafteo.png" alt=""><figcaption>Tableta</figcaption></figure><figure><img src="movil-crafteo.png" alt=""><figcaption>Móvil</figcaption></figure></div></section>
+  <section><h2><a href="resultado.html">Objeto fabricado</a></h2><p>Al pulsar «Craftear» sale el objeto con su ficha (y si tuvo acabado fino). Eliges «A la mochila» o «Al almacén»; si cierras sin elegir, va al almacén.</p>
+    <div class="shots"><figure><img src="escritorio-resultado.png" alt=""><figcaption>Ordenador</figcaption></figure><figure><img src="tableta-resultado.png" alt=""><figcaption>Tableta</figcaption></figure><figure><img src="movil-resultado.png" alt=""><figcaption>Móvil</figcaption></figure></div></section>
+  <section><h2><a href="desguace.html">Desguace con selección múltiple</a></h2><p>Se marcan varios objetos como en la venta; el resumen separa lo seguro de lo posible con su probabilidad. Lo de recluta, equipado o de misión sale con candado.</p>
+    <div class="shots"><figure><img src="escritorio-desguace.png" alt=""><figcaption>Ordenador</figcaption></figure><figure><img src="tableta-desguace.png" alt=""><figcaption>Tableta</figcaption></figure><figure><img src="movil-desguace.png" alt=""><figcaption>Móvil</figcaption></figure></div></section>
+</div>
+</body></html>

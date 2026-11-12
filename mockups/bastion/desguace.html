@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Desguace</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Grenze:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<style>
+.lay{flex:1;min-height:0;display:grid;grid-template-columns:1fr minmax(300px,38%);gap:10px}
+.tabs{display:flex;gap:6px;margin-bottom:6px}
+.tab{min-height:44px;padding:0 14px;border:1px solid var(--s6);background:var(--s8)}
+.tab.on{border-color:var(--parch);background:var(--s7);color:var(--parch)}
+.inv{display:grid;grid-template-columns:repeat(8,52px);grid-auto-rows:52px;gap:3px}
+.cell{border:1px solid var(--s7);background:var(--s8);display:grid;place-items:center;font-size:24px;position:relative}
+.cell.w2{grid-column:span 2}.cell.h2{grid-row:span 2}
+.cell.c{border-color:var(--c-common)}.cell.u{border-color:var(--c-uncommon)}.cell.r{border-color:var(--c-rare)}.cell.e{border-color:var(--c-epic)}
+.cell.on{outline:3px solid var(--gold);outline-offset:-3px;background:#2a1d10}
+.cell.on::after{content:"✓";position:absolute;top:1px;right:3px;font-size:13px;color:var(--gold)}
+.cell.no{opacity:.35}
+.cell.no::after{content:"🔒";position:absolute;bottom:1px;right:2px;font-size:11px}
+.hint{font-size:13px;color:var(--s3);margin-top:6px}
+.sel{list-style:none;display:flex;flex-direction:column;gap:3px;font-size:15px}
+.sel li{display:flex;gap:6px;align-items:center}
+.sel li .x{margin-left:auto}
+.res{border-top:1px solid var(--s7);margin-top:8px;padding-top:6px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.res h3{font:600 14px Cinzel,serif;color:var(--parch)}
+.res .chips{display:flex;flex-wrap:wrap;gap:4px}
+.res .chips span{border:1px solid var(--s6);background:var(--s8);padding:2px 6px;font-size:14px}
+.res .chips.maybe span{border-style:dashed}
+.warn{background:#2a1216;border:1px solid var(--blood);padding:6px 8px;font-size:14px}
+.foot{display:flex;gap:8px;margin-top:auto;padding-top:8px}
+.foot .main{flex:1}
+@media (max-height:560px){
+  .lay{grid-template-columns:1fr 300px;gap:6px}
+  .inv{grid-template-columns:repeat(8,44px);grid-auto-rows:44px;gap:2px}
+  .cell{font-size:19px}
+  .tabs{margin-bottom:4px}.hint{display:none}
+  .sel{font-size:13px}
+  .res{font-size:13px;margin-top:4px;padding-top:4px;gap:3px}
+  .res .chips span{font-size:12px;padding:1px 4px}
+  .warn{font-size:12px;padding:3px 6px}
+  .foot{padding-top:4px}
+}
+</style></head><body>
+<div class="app">
+  <div class="top"><h1>Desguace</h1><span class="ctx">Banco de trabajo nv 1 · +25 % en lo posible</span><button class="btn" aria-label="Volver">✕</button></div>
+  <div class="lay">
+    <div class="box">
+      <div class="tabs"><button class="tab on">Almacén</button><button class="tab">Mochila</button><button class="btn sm" style="margin-left:auto">Marcar todo lo común</button></div>
+      <div class="scroll"><div class="inv">
+        <div class="cell u on w2">🪓</div><div class="cell c on">🗡</div><div class="cell r on w2 h2">⛑</div><div class="cell c">🧤</div><div class="cell c">🥾</div><div class="cell c">💍</div>
+        <div class="cell c no w2">🗡</div><div class="cell u">🛡</div><div class="cell c">⚙</div><div class="cell c">⚙</div><div class="cell">·</div>
+        <div class="cell u on">📖</div><div class="cell c">🔦</div><div class="cell">·</div><div class="cell">·</div><div class="cell">·</div><div class="cell">·</div><div class="cell">·</div><div class="cell">·</div>
+        <div class="cell">·</div><div class="cell">·</div><div class="cell">·</div><div class="cell">·</div><div class="cell">·</div><div class="cell">·</div><div class="cell">·</div><div class="cell">·</div>
+      </div>
+      <div class="hint">Toca para marcar o desmarcar · mantén pulsado para ver la ficha · 🔒 equipo de recluta, equipado o de misión: no se desguaza.</div></div>
+    </div>
+    <div class="box"><div class="scroll" style="flex:1">
+      <h2>4 seleccionados</h2>
+      <div class="short-only muted" style="font-size:13px">Hacha de batalla · Espada oxidada (rota) · Yelmo del caballero · Tomo arcano</div>
+      <ul class="sel tall-only">
+        <li>🪓 <span class="r-uncommon">Hacha de batalla</span><button class="btn sm x" aria-label="Quitar">✕</button></li>
+        <li>🗡 <span class="r-common">Espada oxidada</span> <span class="muted">(rota)</span><button class="btn sm x" aria-label="Quitar">✕</button></li>
+        <li>⛑ <span class="r-rare">Yelmo del caballero</span><button class="btn sm x" aria-label="Quitar">✕</button></li>
+        <li>📖 <span class="r-uncommon">Tomo arcano</span><button class="btn sm x" aria-label="Quitar">✕</button></li>
+      </ul>
+      <div class="res">
+        <h3>Seguro</h3><div class="chips"><span>⚙ 4 Chatarra</span><span>✦ 1 Esquirla arcana</span></div>
+        <h3>Posible</h3><div class="chips maybe"><span>▬ hasta 2 Barras · 31 %</span><span>╱ hasta 2 Astas · 31 %</span><span>▬ hasta 2 Lingotes de hierro · 38 %</span><span>▤ hasta 3 Cueros curtidos · 38 %</span><span>📜 1 Pergamino · 31 %</span><span>✒ 1 Tinta · 31 %</span></div>
+        <div class="muted tall-only" style="font-size:13px">Lo roto rinde menos en lo posible (×0,35).</div>
+        <div class="warn">⚠ Hay un objeto <span class="r-rare">raro</span> en la selección: se pedirá confirmación.</div>
+      </div>
+      </div>
+      <div class="foot"><button class="btn">Vaciar</button><button class="btn main">Desguazar 4</button></div>
+    </div>
+  </div>
+</div>
+</body></html>
