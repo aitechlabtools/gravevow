@@ -39,6 +39,7 @@ import { applyRune, type RuneLoc } from '../../core/runes';
 import { canSleepForPrep, cotPrepCut, refugeOf, receptionDiscard, receptionSell, receptionWithdraw, RECEPTION_NOTE, upgradeModule } from '../../core/refuge';
 import { receptionSalvage, salvage, type SalvageRef } from '../../core/salvage';
 import type { ModuleId } from '../../core/data/refuge';
+import { currentMini, enqueueTrigger, markSeen, type TutorialsSave } from '../../core/tutorials';
 import { bus } from './bus';
 import { buySkin, equipSkin } from '../../core/skins';
 import { getSkin } from '../../core/data/skins';
@@ -66,6 +67,13 @@ function compose(save: SaveData, id: string): Profile | null {
   if (!r.ok) return p;
   if (r.note) toast(r.note, 'good');
   return r.profile;
+}
+
+/** Guarda en la cuenta lo visto de los mini tutoriales. */
+function saveTutorials(tutorials: TutorialsSave) {
+  if (!ss.save) return;
+  ss.save = { ...ss.save, account: { ...ss.save.account, tutorials } };
+  void saveSave(ss.save);
 }
 
 export const actions = {
@@ -225,6 +233,39 @@ export const actions = {
     setAudio(patch);
     if (!p) return;
     set({ profile: { ...p, settings: { ...p.settings, ...patch } } });
+  },
+
+  // ── Mini tutoriales (data/tutorials.ts) ──
+  /** Algo ha pasado (abrir una pestaña, desbloquear algo…): pone en cola los mini tutoriales de ese disparador. */
+  tutorialEvent(trigger: string) {
+    if (dev.skipMinis || !ss.save) return;
+    const q = enqueueTrigger(state.miniQueue, state.tutorials, trigger);
+    if (q !== state.miniQueue) set({ miniQueue: q, miniStep: state.miniQueue.length ? state.miniStep : 0 });
+  },
+  /** Siguiente paso del mini tutorial que se ve; tras el último, queda visto. */
+  miniNext() {
+    const m = currentMini(state.miniQueue);
+    if (!m) return;
+    if (state.miniStep + 1 < m.steps.length) { set({ miniStep: state.miniStep + 1 }); return; }
+    actions.miniDone(m.id);
+  },
+  /** Da por visto un mini tutorial (al terminarlo o al saltarlo) y pasa al siguiente de la cola. */
+  miniDone(id: string) {
+    const tutorials = markSeen(state.tutorials, id);
+    set({ tutorials, miniQueue: state.miniQueue.filter((x) => x !== id), miniStep: 0 });
+    saveTutorials(tutorials);
+  },
+  /** Ajustes: vuelve a enseñar todos los mini tutoriales. */
+  resetMinis() {
+    const tutorials = { ...state.tutorials, seen: [] };
+    set({ tutorials, miniQueue: [], miniStep: 0 });
+    saveTutorials(tutorials);
+  },
+  /** Ajustes: desactivar (o volver a activar) los mini tutoriales. */
+  setMinisDisabled(disabled: boolean) {
+    const tutorials = { ...state.tutorials, disabled };
+    set({ tutorials, miniQueue: disabled ? [] : state.miniQueue, miniStep: disabled ? 0 : state.miniStep });
+    saveTutorials(tutorials);
   },
 
   markTutorial(which: 'lobby' | 'dungeon') {

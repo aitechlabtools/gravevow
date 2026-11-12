@@ -654,3 +654,11 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 /* Refugio: marcas sobre el arte de la estación (dentro del arco, abajo, para que el borde redondo no las corte) */
 .st-up{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--font-body,Grenze),serif;letter-spacing:.08em;text-transform:uppercase;color:#07060a;background:#7fd65a;padding:2px 6px}
 .st-dot{position:absolute;bottom:8px;right:10px;min-width:22px;height:22px;line-height:22px;text-align:center;background:#7fd65a;color:#000;font-weight:700}
+
+/* Mini tutoriales: «!» dorado de novedad por ver (arriba a la derecha; a la izquierda si ya hay número verde) y hueco resaltado */
+.tut-dot{position:absolute;top:-6px;right:-6px;width:16px;height:16px;line-height:16px;text-align:center;font:700 12px var(--font-pixel),monospace;
+  background:var(--color-gold);color:#120f0a;box-shadow:0 0 0 2px #07060a;pointer-events:none;z-index:1}
+.tut-dot.left{right:auto;left:-6px}
+.mini-hole{outline:2px solid var(--color-gold);box-shadow:0 0 0 4px #e8b33a33;animation:mini-pulse 1.4s ease-in-out infinite}
+@keyframes mini-pulse{50%{box-shadow:0 0 0 8px #e8b33a22}}
+@media (prefers-reduced-motion:reduce){ .mini-hole{animation:none} }

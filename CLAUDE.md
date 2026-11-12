@@ -96,6 +96,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Runas: `node scripts/simular-runas.mjs 200`.
   - Bombas: `node scripts/simular-bombas.mjs 150` y `node scripts/bombas-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Economía del crafteo: `node scripts/simular-economia.mjs` (escribe `docs/equilibrio/simulador-economia.md`).
+  - Mini tutoriales (cola, «!», cartel, guardado en la cuenta): `node scripts/minis-check.cjs <url>/play/ <carpeta> [dispositivo]`. Con `?debug` los mini tutoriales no salen; con `?debug&minis`, sí.
   - Bastión (entrada, Mercaderes, Refugio con tarjetas y detalle de estación): `node scripts/bastion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Refugio, estaciones, crafteo, runas, desguace y cocina: `node scripts/refugio-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Desguace (seguro y posible, recluta fuera, confirmación y varios a la vez): `node scripts/desguace-check.cjs <url>/play/ <carpeta> [dispositivo]`.

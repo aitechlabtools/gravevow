@@ -2,6 +2,7 @@
 // El juego sigue trabajando con un `Profile` (el personaje activo con los datos de la cuenta encima):
 // `composeProfile` lo monta y `applyProfile` lo vuelve a repartir antes de guardar.
 // Preparado para un futuro guardado en la nube: la cuenta tiene un identificador propio y fechas de cambio.
+import { emptyTutorials, sanitizeTutorials, type TutorialsSave } from './tutorials';
 import type { Grid, Profile, Settings } from './types';
 import { sanitizeProfile } from './profile';
 import { makeUid } from './rng';
@@ -38,6 +39,8 @@ export interface AccountData {
   backup: { lastAt: number | null; expeditionsSince: number; remindedAt: number | null; expeditionsAt?: number };
   /** Versión de la que se migró la partida (para avisos de una sola vez). */
   migratedFrom?: number;
+  /** Mini tutoriales vistos y si están desactivados (son de la cuenta, no de cada personaje). */
+  tutorials: TutorialsSave;
   /** Avisos pendientes de enseñar una vez (p. ej., el oro devuelto por las ampliaciones del almacén antiguo). */
   notes: string[];
 }
@@ -68,7 +71,7 @@ export function emptySave(now = Date.now()): SaveData {
     account: {
       id: makeUid('acc'), createdAt: now, updatedAt: now, skinsOwned: [], tutorialDone: false,
       settings: { ...DEFAULT_SETTINGS }, shared: { owned: false, grid: [] }, lastCharacterId: null,
-      backup: { lastAt: null, expeditionsSince: 0, remindedAt: null }, notes: [],
+      backup: { lastAt: null, expeditionsSince: 0, remindedAt: null }, notes: [], tutorials: emptyTutorials(),
     },
     characters: [],
   };
@@ -208,6 +211,7 @@ export function sanitizeSave(raw: unknown, now = Date.now()): SaveData | null {
       expeditionsAt: num(a.backup?.expeditionsAt, 0),
     },
     notes: Array.isArray(a.notes) ? a.notes.filter((x) => typeof x === 'string') : [],
+    tutorials: sanitizeTutorials(a.tutorials),
     ...(a.migratedFrom ? { migratedFrom: a.migratedFrom } : {}),
   };
   if (account.shared.owned) account.shared.grid = padTo(account.shared.grid, STASH_PAGE_SIZE);

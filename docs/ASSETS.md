@@ -51,3 +51,8 @@ Marcadores dibujados por código en `src/game/ui/stationArt.ts`. Misma proporci�
 | `runic` | Atril rúnico | 20 × 26 px |
 
 La tarjeta «Mercaderes» de la entrada usa el retrato de Garth.
+
+## Intendente del Bastión (tutoriales)
+
+- Retrato del intendente que cuenta la bienvenida al Bastión: 20 × 26 px, igual que los retratos de los mercaderes. Se muestra a escala entera.
+- Mientras no exista, se usa un marcador provisional dibujado por código (`intendant` en `src/game/ui/stationArt.ts`).

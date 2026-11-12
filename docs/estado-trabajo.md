@@ -4,9 +4,14 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 12/11: tutoriales (bloque 3), fase 1 hecha
+- Plan y respuestas: docs/plan-tutoriales.md (herida de la rata, intendente nuevo, migración opción a, regalo por personaje, avisos de nivel fuera de «desactivar», «Saltar el tutorial» marcado).
+- Fase 1: `core/data/tutorials.ts` (datos), `core/tutorials.ts` (lógica), `ui/MiniTutorial.tsx` (capa, `TutDot`, `useTutBadge`), acciones en el store, `account.tutorials`. Para enseñar algo nuevo: entrada en el archivo de datos + `actions.tutorialEvent('<disparador>')`.
+- Siguiente: fase 2, tutorial inicial de expedición.
+
 ## Novedades del 12/11: Bastión con entrada (Mercaderes y Refugio)
-- Plan: docs/plan-bastion-refugio.md; maquetas: mockups/bastion-refugio. Respuestas: recepción en panel y platos en la Cocina; botón «Detalles»; estaciones ocultas hasta que llega su encargado; Garth en la tarjeta de Mercaderes; fuera «Encargos del Refugio» de los mercaderes.
-- Código: `screens/Mercaderes.tsx` (BastionEntry, áreas entry/merchants/refuge), `RefugePanels.tsx` (RefugePanel nuevo, Dishes), `StationPanels.tsx` (StationTile, StationTiles, StationDetail, LevelMarks, StationArt), `stationArt.ts` (marcadores 20 × 26), `core/refuge.ts` (`stationVisible`, `visibleStations`; `readyStations` solo cuenta las visibles).
+- Plan: docs/plan-bastion-refugio.md; maquetas: mockups/bastion-refugio. Respuestas: recepción en panel y platos en la Cocina; botón «Detalles»; las 7 estaciones visibles y bloqueadas hasta pedirlas; Garth en la tarjeta de Mercaderes; fuera «Encargos del Refugio» de los mercaderes.
+- Código: `screens/Mercaderes.tsx` (BastionEntry, áreas entry/merchants/refuge), `RefugePanels.tsx` (RefugePanel nuevo, Dishes), `StationPanels.tsx` (StationTile, StationTiles, StationDetail, LevelMarks, StationArt), `stationArt.ts` (marcadores 20 × 26).
 - testids: `btn-merchants`, `btn-refuge` (Entrar), `merchants-back`, `refuge-back`, `module-<id>`, `ask-<id>`, `enter-<id>`, `btn-cot`, `details-<id>`, `station-detail-<id>`, `upgrade-<id>`, `detail-back`, `btn-reception`, `refuge-dishes`.
 
 ## Novedades del 5/11: varios personajes, almacén por páginas y copia de seguridad (en curso)

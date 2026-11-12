@@ -2,9 +2,9 @@
 // estaciones con recetas (fase 3: sin minijuegos) y la vista de runas. Todo se decide tocando; objetivos de 44 px.
 import { useMemo, useState } from 'react';
 import { actions, useGame } from '../state/store';
-import { MODULES, type ModuleId } from '../../core/data/refuge';
+import { MODULES, MODULE_ORDER, type ModuleId } from '../../core/data/refuge';
 import { needsOf } from '../../core/needs';
-import { canSleepForPrep, missingFor, nextCost, ownedQty, refugeOf, upgradeBlock, visibleStations } from '../../core/refuge';
+import { canSleepForPrep, missingFor, nextCost, ownedQty, refugeOf, upgradeBlock } from '../../core/refuge';
 import { Card, usePixelScale } from './kit';
 import { useLayout } from '../../config/ui';
 import { MonsterSprite } from './common';
@@ -169,14 +169,13 @@ export function StationTile({ id, onUse, onDetails, hideDetails = false }: { id:
   );
 }
 
-/** Rejilla del Refugio: solo las estaciones que ya tocan, en filas de 4 como los mercaderes. */
+/** Rejilla del Refugio: las 7 estaciones, bloqueadas hasta que las pidas, en filas de 4 como los mercaderes. */
 export function StationTiles({ onUse, onDetails }: { onUse: (id: ModuleId) => void; onDetails: (id: ModuleId) => void }) {
-  const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const cols = layout === 'tablet' && typeof window !== 'undefined' && window.innerWidth < 1000 ? 3 : 4;
   return (
     <div className="grid w-full" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: 'var(--gap)' }} data-testid="station-grid">
-      {visibleStations(profile).map((id) => <StationTile key={id} id={id} onUse={onUse} onDetails={onDetails} />)}
+      {MODULE_ORDER.map((id) => <StationTile key={id} id={id} onUse={onUse} onDetails={onDetails} />)}
     </div>
   );
 }

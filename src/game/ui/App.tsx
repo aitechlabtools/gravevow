@@ -10,6 +10,7 @@ import { SummaryScreen } from './SummaryScreen';
 import { ElegirPersonaje } from './screens/ElegirPersonaje';
 import { CopiaSeguridad } from './screens/CopiaSeguridad';
 import { Toasts } from './common';
+import { MiniTutorialLayer } from './MiniTutorial';
 import { exposeDebug } from '../state/store';
 import { stopMusic } from '../audio';
 
@@ -47,6 +48,7 @@ export function App() {
       {screen === 'dungeon' && <DungeonScreen />}
       {screen === 'summary' && <SummaryScreen />}
       <Toasts />
+      <MiniTutorialLayer />
       <DragLayer />
       <RotateNotice onChange={actions.setSuspended} />
     </div>

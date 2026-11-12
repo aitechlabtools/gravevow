@@ -3,13 +3,15 @@
 // guardan en caché; siempre se muestran a escala entera y sin suavizado (clase `pixelated`).
 import type { ModuleId } from '../../core/data/refuge';
 
-export type StationArtId = ModuleId | 'refuge';
+/** 'intendant': retrato provisional del intendente que cuenta los mini tutoriales y la bienvenida. */
+export type StationArtId = ModuleId | 'refuge' | 'intendant';
 export const STATION_ART_W = 20;
 export const STATION_ART_H = 26;
 
 type Rect = [number, number, number, number, string];
 const W = '#5a3a1e', W2 = '#7a5230', ST = '#5d5a66', ST2 = '#8a8794', FI = '#f2a23a', FI2 = '#ffe08a', DK = '#3a2a18';
 const ART: Record<StationArtId, Rect[]> = {
+  intendant: [[5, 2, 10, 9, '#3a3346'], [6, 4, 8, 7, '#d8b48a'], [7, 6, 2, 1, '#2a1a0e'], [11, 6, 2, 1, '#2a1a0e'], [8, 9, 4, 1, '#8a5a3a'], [4, 11, 12, 13, '#3a3346'], [5, 12, 10, 11, '#4a4258'], [9, 12, 2, 11, '#e8b33a'], [2, 15, 6, 6, '#7a5230'], [3, 16, 4, 4, '#e9e1cc'], [6, 24, 3, 2, '#2a2420'], [11, 24, 3, 2, '#2a2420']],
   refuge: [[2, 12, 16, 12, W], [3, 13, 14, 10, W2], [1, 10, 18, 3, DK], [4, 7, 12, 3, DK], [7, 4, 6, 3, DK], [8, 17, 4, 7, '#2a1a0e'], [13, 15, 3, 3, FI], [14, 16, 1, 1, FI2], [15, 1, 2, 6, ST], [15, 0, 2, 1, '#8c8693']],
   cot: [[1, 18, 18, 2, W], [1, 20, 2, 4, W], [17, 20, 2, 4, W], [2, 14, 16, 4, '#c9b27a'], [2, 13, 5, 3, '#e9e1cc'], [8, 14, 10, 3, '#6b4a8a']],
   kitchen: [[3, 18, 14, 6, ST], [4, 19, 12, 4, ST2], [6, 15, 8, 4, '#2a2830'], [5, 14, 10, 2, '#3a3741'], [7, 19, 6, 3, FI], [8, 20, 4, 1, FI2], [8, 10, 1, 3, '#cfcfd8'], [11, 8, 1, 4, '#cfcfd8']],

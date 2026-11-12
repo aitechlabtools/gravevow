@@ -399,6 +399,14 @@ La Guía:
 
 ## 7. Preguntas
 
+**Respuestas (12/11):**
+1. La herida la hace la rata del paso 2. No hay pinchos y el tutorial tiene un paso menos.
+2. La bienvenida la cuenta un intendente nuevo del Bastión, con un retrato provisional hasta que esté el definitivo (apuntado en ASSETS.md).
+3. Opción a): se marcan como vistos los mini tutoriales de lo que el jugador ya ha usado.
+4. El regalo de materiales es por personaje.
+5. «Desactivar mini tutoriales» no oculta los avisos de subida de nivel.
+6. «Saltar el tutorial» sigue marcada por defecto.
+
 1. **Paso 3 (heridas).** ¿Te parece bien que la herida la hagan unos pinchos al entrar en el Cobertizo, antes del cofre? La alternativa es que la haga la rata del paso 2, que es más natural pero menos controlable.
 2. **¿Quién cuenta la bienvenida al Bastión?** Hoy no existe ningún «intendente» con retrato.
    - a) Un intendente nuevo, con un retrato provisional apuntado en ASSETS.md.

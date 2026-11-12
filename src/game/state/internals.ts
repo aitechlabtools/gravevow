@@ -1,5 +1,6 @@
 // Estado interno compartido por store.ts y sus acciones de expedición y combate.
 // La interfaz importa siempre desde store.ts.
+import { emptyTutorials, type TutorialsSave } from '../../core/tutorials';
 import { newClock, type GameClock } from '../../core/clock';
 import { resizeBody, summaryHp } from '../../core/anatomy';
 import { useSyncExternalStore } from 'react';
@@ -152,6 +153,11 @@ export interface GameState {
   undoAt: number | null;
   /** El navegador conserva los datos de forma persistente (true), no lo garantiza (false) o no se sabe (null). */
   persisted: boolean | null;
+  /** Mini tutoriales de la cuenta (copia de `save.account.tutorials` para la interfaz). */
+  tutorials: TutorialsSave;
+  /** Cola de mini tutoriales por enseñar (uno a la vez) y paso del primero. */
+  miniQueue: string[];
+  miniStep: number;
 }
 
 export const initial: GameState = {
@@ -184,6 +190,9 @@ export const initial: GameState = {
   noticeTitle: null,
   backup: null,
   activeVendor: null,
+  tutorials: emptyTutorials(),
+  miniQueue: [],
+  miniStep: 0,
   buyback: [],
   backupFocus: null,
   undoAt: null,
@@ -236,12 +245,12 @@ export function rosterOf(sv: SaveData | null): RosterEntry[] {
 }
 /** Pone al día la lista de personajes que ve la interfaz. */
 export function refreshRoster() {
-  set({ roster: rosterOf(ss.save), activeId: ss.activeId, accountTutorialDone: !!ss.save?.account.tutorialDone, backup: ss.save && ss.save.characters.length ? backupStatus(ss.save) : null });
+  set({ roster: rosterOf(ss.save), activeId: ss.activeId, accountTutorialDone: !!ss.save?.account.tutorialDone, tutorials: ss.save?.account.tutorials ?? emptyTutorials(), backup: ss.save && ss.save.characters.length ? backupStatus(ss.save) : null });
 }
 
 /** Lo que se conserva al cambiar de personaje o de partida (no depende del personaje). */
 export function kept(): Partial<GameState> {
-  return { undoAt: state.undoAt, persisted: state.persisted, toasts: state.toasts };
+  return { undoAt: state.undoAt, persisted: state.persisted, toasts: state.toasts, tutorials: state.tutorials };
 }
 
 /** Pide al navegador que no borre los datos del juego por su cuenta (si lo permite). */
@@ -376,7 +385,7 @@ export function subzoneDepth(): number {
 }
 
 export const dev: {
-  forceKael: boolean; forceWanderer: string | null; forceHostile: boolean; forceBetrayal: boolean; skipTutorial: boolean;
+  forceKael: boolean; forceWanderer: string | null; forceHostile: boolean; forceBetrayal: boolean; skipTutorial: boolean; skipMinis: boolean;
   /** Te da cualquier objeto con la rareza y los atributos que quieras (a la mochila de la expedición o del perfil). */
   give: (itemId: string, rarity?: Rarity, affixes?: string[], qty?: number) => string;
   /** Pone a tu personaje en el nivel que digas (1–100). */
@@ -415,6 +424,8 @@ export const dev: {
     return 'Recargas a cero';
   },
   // Con ?debug las pruebas automáticas se saltan el tutorial; con ?debug&tutorial se juega
+  // Con ?debug los mini tutoriales no salen (las pruebas no tropiezan con ellos); con ?debug&minis, sí
+  skipMinis: typeof window !== 'undefined' && /[?&]debug/.test(window.location.search) && !/[?&]minis/.test(window.location.search),
   skipTutorial: typeof window !== 'undefined' && /[?&]debug/.test(window.location.search) && !/[?&]tutorial/.test(window.location.search),
 };
 

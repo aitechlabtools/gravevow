@@ -17,8 +17,6 @@ import { VENDORS, type VendorId } from './data/vendors';
 import { STATION_FX } from '../config/stations';
 import { CRAFT_CFG } from '../config/crafting';
 import { makeUid } from './rng';
-import { subzoneLock } from './data/zones';
-import { getSubzone } from './data/subzones';
 
 export type Result = { ok: true; profile: Profile; note?: string } | { ok: false; error: string };
 
@@ -153,21 +151,9 @@ export function upgradeBlock(p: Profile, id: ModuleId): string | null {
   if (p.gold < cost.gold) return `Oro insuficiente: necesitas ${cost.gold}.`;
   return null;
 }
-/**
- * Estaciones que se ven en el Refugio: el Catre siempre; las demás, cuando ya están construidas o cuando el personaje
- * ha abierto la subzona en la que llega su encargado (`unlockAt` de data/vendors.ts). Hasta entonces, ni se ven ni avisan.
- */
-export function stationVisible(p: Profile, id: ModuleId): boolean {
-  if (id === 'cot' || refugeOf(p)[id] >= 1) return true;
-  const at = VENDORS[MODULES[id].by].unlockAt;
-  return !at || !subzoneLock(getSubzone(at), p.character.level, p.bossesDefeated ?? []);
-}
-export function visibleStations(p: Profile): ModuleId[] {
-  return MODULE_ORDER.filter((id) => stationVisible(p, id));
-}
-/** Estaciones que se pueden construir o mejorar ya con lo que tienes (para los avisos). Solo las que se ven. */
+/** Estaciones que se pueden construir o mejorar ya con lo que tienes (para los avisos). */
 export function readyStations(p: Profile, by?: VendorId): ModuleId[] {
-  return MODULE_ORDER.filter((id) => (!by || MODULES[id].by === by) && stationVisible(p, id) && !upgradeBlock(p, id));
+  return MODULE_ORDER.filter((id) => (!by || MODULES[id].by === by) && !upgradeBlock(p, id));
 }
 
 /** Pedir al encargado que construya (nivel 1) o mejore la estación: cobra materiales y oro y la deja lista al momento. */

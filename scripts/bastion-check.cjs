@@ -1,5 +1,5 @@
 // Bastión con entrada (Mercaderes y Refugio), Refugio con tarjetas como los mercaderes y detalle de estación (12/11).
-// Comprueba: entrada con avisos, «◂ Bastión» en las dos partes, estaciones ocultas hasta que llega su encargado, «Usar ·
+// Comprueba: entrada con avisos, «◂ Bastión» en las dos partes, las 7 estaciones visibles (bloqueadas hasta pedirlas), «Usar ·
 // Dormir» en el Catre, «Detalles», detalle con niveles y coste, arte a escala entera, 44 px y sin desbordes.
 // Uso: node scripts/bastion-check.cjs http://localhost:5173/play/ salida [dispositivo]
 const { chromium, devices } = require('playwright');
@@ -43,7 +43,8 @@ const [,, url = 'http://localhost:5173/play/', out = 'bastion', dev] = process.a
   await tap('[data-testid=vendor-back]'); await tap('[data-testid=merchants-back]'); await p.waitForSelector('[data-testid=screen-bastion]');
   // Refugio
   await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=station-grid]');
-  for (const id of ['forge', 'alchemy', 'runic']) if (await p.$(`[data-testid=module-${id}]`)) fail(`${id} se ve antes de que llegue su encargado`);
+  if ((await p.$$('[data-testid^=module-]:not([data-testid^=module-level-])')).length !== 7) fail('no se ven las 7 estaciones');
+  if (!(await p.$('[data-testid=ask-forge]'))) fail('la forja no está bloqueada con «Pedir a Brand»');
   if (!/Usar · Dormir/i.test(await p.textContent('[data-testid=btn-cot]'))) fail('el Catre no dice «Usar · Dormir»');
   if (!(await p.$('[data-testid=btn-reception]'))) fail('no hay botón de recepción');
   await check('Refugio'); await p.screenshot({ path: out + '-3-refugio.png' });
@@ -60,10 +61,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'bastion', dev] = process.a
   await tap('[data-testid=detail-back]'); await p.waitForSelector('[data-testid=enter-kitchen]');
   await tap('[data-testid=enter-kitchen]'); await p.waitForSelector('[data-testid=craft-kitchen]');
   await tap('[data-testid=craft-back]'); await tap('[data-testid=refuge-back]'); await p.waitForSelector('[data-testid=screen-bastion]');
-  // Con Brand ya llegado (subzona abierta), la forja aparece
-  await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, character: { ...pr.character, level: 95 }, bossesDefeated: ['ossuary_lord', 'veiled_queen'] } }); });
-  if (await p.waitForSelector('[data-testid=btn-class-unlock-later]', { timeout: 800 }).catch(() => null)) await tap('[data-testid=btn-class-unlock-later]');
-  await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=module-forge]').catch(() => fail('la forja no aparece al llegar Brand'));
+  await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=module-forge]');
   await check('Refugio completo'); await p.screenshot({ path: out + '-5-refugio-completo.png' });
   console.log(dev || 'escritorio', 'errores', errs.length ? errs : 'ninguno');
   if (errs.length) process.exitCode = 1;

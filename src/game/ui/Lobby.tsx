@@ -1,7 +1,8 @@
 import { Tienda } from './screens/Atuendos';
 import { BestiaryTab } from './BestiaryTab';
 import { useEffect, useState, type ReactNode } from 'react';
-import { actions, useGame } from '../state/store';
+import { actions, dev, useGame } from '../state/store';
+import { pendingBadges } from '../../core/tutorials';
 import { CLASSES } from '../../core/data/classes';
 import { readyQuestCount } from '../../core/quests';
 import { readyStations } from '../../core/refuge';
@@ -47,11 +48,13 @@ export function Lobby() {
   const cls = CLASSES[ch.classId];
   const questsReady = readyQuestCount(profile);
   const stationsReady = readyStations(profile).length;
-  const tabs: PillTab<LobbyTab>[] = [
+  const tutBadges = pendingBadges(useGame((s) => s.tutorials));
+  const tabs: PillTab<LobbyTab>[] = ([
     { id: 'play', label: 'Jugar' }, { id: 'character', label: 'Personaje' }, { id: 'stash', label: 'Intendencia' }, { id: 'merchants', label: 'Bastión', badge: stationsReady },
     { id: 'quests', label: 'Misiones', badge: questsReady }, { id: 'bestiary', label: 'Bestiario' }, { id: 'shop', label: 'Tienda' },
-  ];
-  const go = (t: LobbyTab) => { setTab(t); sfx('click'); };
+  ] as PillTab<LobbyTab>[]).map((t) => ({ ...t, dot: !dev.skipMinis && tutBadges.has(`tab-${t.id}`) }));
+  // Cada pestaña lanza su disparador de mini tutorial («tab:<id>»): solo sale la primera vez
+  const go = (t: LobbyTab) => { setTab(t); sfx('click'); actions.tutorialEvent(`tab:${t}`); };
   const xpPct = Math.round((ch.xp / xpForNextLevel(ch.level)) * 100);
 
   return (

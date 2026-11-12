@@ -31,8 +31,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   if (!(await p.$('[data-testid=btn-merchants]'))) fail('la entrada del Bastión no tiene Mercaderes');
   await small('[data-testid=btn-refuge]', 'Entrar al Refugio');
   await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=screen-refuge]');
-  if (await p.$('[data-testid=module-forge]')) fail('la forja se ve antes de que llegue Brand');
-  if (await p.$('[data-testid=module-runic]')) fail('el atril se ve antes de que llegue Eldrin');
+  if (!/Bloqueada/.test(await p.textContent('[data-testid=module-level-forge]'))) fail('la forja no se ve bloqueada desde el principio');
   if (!/Nivel 1\/3/.test(await p.textContent('[data-testid=module-level-cot]'))) fail('el catre no empieza en nivel 1');
   if (!/Bloqueada/.test(await p.textContent('[data-testid=module-level-kitchen]'))) fail('la cocina no empieza bloqueada');
   if (!(await p.$('[data-testid=ask-ready-kitchen]'))) fail('la cocina no avisa de que ya se puede pedir');
