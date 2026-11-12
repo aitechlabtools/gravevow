@@ -34,12 +34,10 @@ import { potionAmount, resourcePotionAmount } from '../../config/progression';
 import { makeUid, randomSeed } from '../../core/rng';
 import { vendorUnlocked } from '../../core/vendors';
 import { STATION_FX } from '../../config/stations';
-import { craft as craftItems, getRecipe, storeCrafted } from '../../core/crafting';
+import { craft as craftItems, getRecipe, settlePendingJobs, storeCrafted } from '../../core/crafting';
 import { applyRune, type RuneLoc } from '../../core/runes';
-import { canSleepForPrep, cotPrepCut, refugeOf, cookBatch, cookStep, receptionDiscard, receptionScrap, receptionSell, receptionWithdraw, RECEPTION_NOTE, scrap, startCooking, upgradeModule } from '../../core/refuge';
-import { alchemyBatch, prepareCare, quickForge, startAlchemy, startForging, workshopStep } from '../../core/workshop';
-import type { Move } from '../../core/data/workshop';
-import type { Heat, ModuleId } from '../../core/data/refuge';
+import { canSleepForPrep, cotPrepCut, refugeOf, receptionDiscard, receptionScrap, receptionSell, receptionWithdraw, RECEPTION_NOTE, scrap, upgradeModule } from '../../core/refuge';
+import type { ModuleId } from '../../core/data/refuge';
 import { bus } from './bus';
 import { buySkin, equipSkin } from '../../core/skins';
 import { getSkin } from '../../core/data/skins';
@@ -57,13 +55,23 @@ import type { Bag, GameState, Screen } from './internals';
 export type { Screen, RosterEntry, Toast, CombatKind, CombatSession, LootSession, Modal, Bag, DungeonHud, TutorialRun, GameState } from './internals';
 export { getState, subscribe, useGame, getSave, getActiveCharacterId, toast, containersFor, tutorialFrozen, dev, tutorialDoneOnDevice } from './internals';
 
+/** Carga un personaje. Un fogón, yunque o mezcla que quedó a medias (minijuegos retirados) se entrega ya terminado. */
+function compose(save: SaveData, id: string): Profile | null {
+  const p = composeProfile(save, id);
+  if (!p || (!p.cooking && !p.workshop)) return p;
+  const r = settlePendingJobs(p);
+  if (!r.ok) return p;
+  if (r.note) toast(r.note, 'good');
+  return r.profile;
+}
+
 export const actions = {
   async boot() {
     ss.save = await loadSave();
     void requestPersist();
     void loadUndo().then((u) => set({ undoAt: u?.at ?? null }));
     ss.activeId = ss.save ? currentCharacterId(ss.save) : null;
-    const p = ss.save && ss.activeId ? composeProfile(ss.save, ss.activeId) : null;
+    const p = ss.save && ss.activeId ? compose(ss.save, ss.activeId) : null;
     if (ss.save) setVolume(ss.save.account.settings.volume);
     // Avisos de una sola vez (p. ej., el oro devuelto al pasar el almacén a páginas)
     const notes = ss.save?.account.notes ?? [];
@@ -119,7 +127,7 @@ export const actions = {
     if (ss.save && ss.save.characters.length) { await saveUndo(ss.save); set({ undoAt: Date.now() }); }
     ss.save = next;
     ss.activeId = currentCharacterId(ss.save);
-    let p = ss.activeId ? composeProfile(ss.save, ss.activeId) : null;
+    let p = ss.activeId ? compose(ss.save, ss.activeId) : null;
     if (p?.activeExpedition) p = abandonInterruptedExpedition(p);
     await saveSave(ss.save);
     set({ ...initial, ...kept(), profile: p, screen: 'backup', undoAt: state.undoAt, persisted: state.persisted, toasts: state.toasts });
@@ -134,7 +142,7 @@ export const actions = {
     if (!u) return;
     ss.save = u.save;
     ss.activeId = currentCharacterId(ss.save);
-    const p = ss.activeId ? composeProfile(ss.save, ss.activeId) : null;
+    const p = ss.activeId ? compose(ss.save, ss.activeId) : null;
     await saveSave(ss.save);
     await clearUndo();
     set({ ...initial, ...kept(), profile: p, screen: 'backup', undoAt: null, persisted: state.persisted, toasts: state.toasts });
@@ -176,7 +184,7 @@ export const actions = {
   async selectCharacter(id: string) {
     if (!ss.save || !ss.save.characters.some((c) => c.id === id)) return;
     await saveNow();
-    let p = composeProfile(ss.save, id);
+    let p = compose(ss.save, id);
     if (!p) return;
     if (p.activeExpedition) p = abandonInterruptedExpedition(p);
     if (needsRecruitKit(p)) p = grantRecruitKit(p);
@@ -197,7 +205,7 @@ export const actions = {
     if (wasActive) ss.activeId = currentCharacterId(ss.save);
     await saveSave(ss.save);
     if (wasActive) {
-      const p = ss.activeId ? composeProfile(ss.save, ss.activeId) : null;
+      const p = ss.activeId ? compose(ss.save, ss.activeId) : null;
       set({ ...initial, ...kept(), profile: p, screen: state.screen === 'select' ? 'select' : 'title', toasts: state.toasts });
     }
     refreshRoster();
@@ -620,8 +628,7 @@ export const actions = {
     toast(`Orik desguaza: ${r.note}`, 'good');
   },
 
-  /** Cocina: empezar una receta en el fogón (gasta los ingredientes). */
-  /** Crafteo común (Forja y Atril rúnico por ahora): fabrica n y lo coloca en la mochila o el almacén. */
+  /** Crafteo común (todas las estaciones): fabrica n y lo coloca en la mochila o el almacén. */
   craft(recipeId: string, n: number, fine: boolean, dest: 'backpack' | 'stash') {
     const p = state.profile;
     if (!p || state.expedition) return;
@@ -643,103 +650,6 @@ export const actions = {
     set({ profile: r.profile });
     sfx('equip');
     toast(r.note ?? 'Runa grabada.', 'good');
-  },
-
-  startCooking(recipeId: string) {
-    const p = state.profile;
-    if (!p || state.expedition) return;
-    const r = startCooking(p, recipeId, randomSeed());
-    if (!r.ok) return invError(r.error);
-    sfx('click');
-    set({ profile: r.profile });
-  },
-
-  /** Cocina: fuego del paso actual. */
-  cookStep(heat: Heat) {
-    const p = state.profile;
-    if (!p) return;
-    const r = cookStep(p, heat);
-    if (!r.ok) return invError(r.error);
-    set({ profile: r.profile });
-    if (r.done) { sfx('heal'); toast(`Garth prueba el plato: ${r.note}`, r.perfect ? 'loot' : 'good'); }
-    else sfx('click');
-  },
-
-  /** Cocina: producción normal por lotes (calidad estándar). */
-  cookBatch(recipeId: string, qty: number) {
-    const p = state.profile;
-    if (!p || state.expedition) return;
-    const r = cookBatch(p, recipeId, qty);
-    if (!r.ok) return invError(r.error);
-    sfx('heal');
-    set({ profile: r.profile });
-    toast(`Cocinas: ${r.note}`, 'good');
-  },
-
-  /** Taller: empezar en el yunque de Brand (paga materiales y trabajo; las temperaturas quedan fijadas). */
-  startForging(recipeId: string) {
-    const p = state.profile;
-    if (!p || state.expedition) return;
-    const r = startForging(p, recipeId, randomSeed());
-    if (!r.ok) return invError(r.error);
-    sfx('equip');
-    set({ profile: r.profile });
-  },
-
-  /** Taller: forja rápida (tosca), tras haberla hecho una vez en el yunque. */
-  quickForge(recipeId: string) {
-    const p = state.profile;
-    if (!p || state.expedition) return;
-    const r = quickForge(p, recipeId);
-    if (!r.ok) return invError(r.error);
-    sfx('equip');
-    set({ profile: r.profile });
-    toast(`Maese Brand forja: ${r.note}`, 'good');
-  },
-
-  /** Taller: empezar una mezcla en la mesa de alquimia (gasta los reactivos). */
-  startAlchemy(recipeId: string) {
-    const p = state.profile;
-    if (!p || state.expedition) return;
-    const r = startAlchemy(p, recipeId, randomSeed());
-    if (!r.ok) return invError(r.error);
-    sfx('click');
-    set({ profile: r.profile });
-  },
-
-  /** Taller: alquimia por lotes (calidad estándar). */
-  alchemyBatch(recipeId: string, qty: number) {
-    const p = state.profile;
-    if (!p || state.expedition) return;
-    const r = alchemyBatch(p, recipeId, qty);
-    if (!r.ok) return invError(r.error);
-    sfx('heal');
-    set({ profile: r.profile });
-    toast(`Destilas: ${r.note}`, 'good');
-  },
-
-  /** Taller: decisión del paso actual (yunque o mesa). */
-  workshopStep(move: Move) {
-    const p = state.profile;
-    if (!p) return;
-    const station = p.workshop?.station;
-    const r = workshopStep(p, move);
-    if (!r.ok) return invError(r.error);
-    set({ profile: r.profile });
-    if (!r.done) { sfx(station === 'forge' ? 'hit' : 'click'); return; }
-    sfx(station === 'forge' ? 'equip' : 'heal');
-    toast(station === 'forge' ? `Maese Brand templa la pieza: ${r.note}` : `Eldrin huele la redoma: ${r.note}`, r.quality === 2 || r.perfect ? 'loot' : 'good');
-  },
-
-  /** Rincón de cura: preparar suministros por lotes. */
-  prepareCare(id: string, qty: number) {
-    const p = state.profile;
-    if (!p || state.expedition) return;
-    const r = prepareCare(p, id, qty);
-    if (!r.ok) return invError(r.error);
-    sfx('heal');
-    set({ profile: r.profile });
-    toast(`Preparas: ${r.note}`, 'good');
   },
 
   /** Recepción de excedentes: retirar, vender, desguazar o descartar. */

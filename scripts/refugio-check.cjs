@@ -67,31 +67,20 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   if (!/Descanso/.test(await p.textContent('[data-testid=prep-text]'))) fail('la preparación no se ve');
   await tap('[data-testid=refuge-back]');
 
-  // 2 · Cocina de Garth
+  // 2 · Cocina de Garth: el menú de crafteo común, sin fogón ni primera vez
+  await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, refuge: { ...pr.refuge, kitchen: 2 } } }); });
   await p.waitForSelector('[data-testid=vendor-garth]'); await tap('[data-testid=vendor-garth]');
-  await tap('[data-testid=vendor-view-cook]'); await p.waitForSelector('[data-testid=cook]');
-  await small('[data-testid=cook-start-stew]', 'Al fogón');
-  await tap('[data-testid=cook-start-stew]'); await p.waitForSelector('[data-testid=cook-stove]');
-  if ((await count('salted_meat')) !== 2) fail('los ingredientes no se gastaron al empezar');
-  await small('[data-testid=heat-low]', 'botón de fuego');
-  await wide('Fogón');
-  await p.screenshot({ path: out + '-fogon.png' });
-  // Recargar no cambia lo que pasa en el fogón
-  const ev = await G(() => JSON.stringify(window.__GRAVEVOW__.getState().profile.cooking.events));
-  // Acertar los tres pasos leyendo el suceso
-  const heatFor = { 'El fondo empieza a pegarse.': 'low', 'El caldo apenas tiembla.': 'high', 'Hierve a borbotones y salpica.': 'low', 'La carne aún suelta sangre.': 'high', 'Burbujea despacio, como debe.': 'mid', 'El aroma sube, pero el centro sigue frío.': 'mid' };
-  for (let i = 0; i < 3; i++) {
-    const t = (await p.textContent('[data-testid=cook-event]')).trim();
-    if (!heatFor[t]) fail('suceso desconocido: ' + t);
-    await tap(`[data-testid=heat-${heatFor[t] || 'mid'}]`); await p.waitForTimeout(120);
-  }
-  if (await G(() => !!window.__GRAVEVOW__.getState().profile.cooking)) fail('el fogón no se liberó');
-  if ((await count('hearty_stew')) !== 1) fail('no salió el guiso');
-  if ((await count('cave_mushroom')) !== 4) fail('el plato esmerado no devolvió la seta');
-  if (!ev) fail('sin sucesos');
-  await p.waitForSelector('[data-testid=cook-batch-stew]');
-  await tap('[data-testid=cook-batch-stew]'); await p.waitForTimeout(150);
-  if ((await count('hearty_stew')) !== 2) fail('el lote no cocinó');
+  await tap('[data-testid=vendor-view-cook]'); await p.waitForSelector('[data-testid=craft-kitchen]');
+  if (await p.$('[data-testid^=heat-]')) fail('sigue el minijuego del fogón');
+  await tap('[data-testid=recipe-c_hearty_stew]'); await tap('[data-testid=craft-more]');
+  if ((await p.textContent('[data-testid=craft-qty]')).trim() !== '2') fail('la cantidad no sube');
+  await small('[data-testid=craft-go]', 'Craftear');
+  await small('[data-testid=craft-more]', 'Más');
+  await wide('Cocina');
+  await p.screenshot({ path: out + '-cocina.png' });
+  await tap('[data-testid=craft-go]'); await p.waitForTimeout(150);
+  if ((await count('hearty_stew')) !== 2) fail('la cocina no hizo los dos guisos');
+  if ((await count('salted_meat')) !== 1) fail('no se gastó la carne');
   await tap('[data-testid=vendor-back]');
 
   // 3 · Encargos del Refugio y desguace de Orik

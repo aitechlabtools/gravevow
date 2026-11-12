@@ -3,14 +3,13 @@
 //  · Estaciones: 3 niveles; las construye y mejora su encargado al momento, con materiales y oro (config/stations.ts).
 //  · Desguace (taller de Orik): un objeto de equipo se convierte en materiales según tipo, rareza y estado, una sola vez.
 //    Nunca rinde (a precio de venta) más de lo que cuesta comprarlo: no hay bucle de comprar, desguazar y vender.
-//  · Cocina: la receta se compromete al empezar (los ingredientes se gastan una vez) y se guarda en el perfil; cada paso
-//    se elige a la vista de lo que pasa en el fogón. Fallar da el plato estándar; acertar todo devuelve un ingrediente.
+//  · Cocina: los platos se cocinan con el menú de crafteo común (core/crafting.ts); aquí solo se comen y preparan.
 //  · Preparación: el catre mejorado y los platos recortan el consumo de necesidades en la siguiente incursión.
 // ════════════════════════════════════════════════════════════════════
 import type { Grid, ItemStack, Profile } from './types';
 import type { Need } from '../config/needs';
 import { REFUGE_CFG } from '../config/refuge';
-import { MODULES, MODULE_ORDER, COOK_EVENTS, DISHES, getDish, dishOfItem, type Heat, type ModuleId, type DishRecipe } from './data/refuge';
+import { MODULES, MODULE_ORDER, DISHES, dishOfItem, type ModuleId } from './data/refuge';
 import { getItem } from './data/items';
 import { addToGrid, anchorIndex, cloneGrid, countItem, isCover, LAYOUTS, removeAt, removeItem } from './inventory';
 import { durability, hasDurability, maxDurability } from './durability';
@@ -20,7 +19,7 @@ import { earnGoldSafe, spendGold } from './wallet';
 import { VENDORS, type VendorId } from './data/vendors';
 import { STATION_FX } from '../config/stations';
 import { CRAFT_CFG } from '../config/crafting';
-import { makeRng, makeUid } from './rng';
+import { makeUid } from './rng';
 
 export type Result = { ok: true; profile: Profile; note?: string } | { ok: false; error: string };
 
@@ -238,66 +237,4 @@ export function scrap(p: Profile, container: 'backpack' | 'stash', index: number
   removeAt(removed, a);
   const d = deliver({ ...p, [container]: removed }, [y]);
   return { ok: true, profile: d.profile, note: `${getItem(y.itemId).name} ×${y.qty}${d.toReception ? '.' + RECEPTION_NOTE : ''}` };
-}
-
-// ── Cocina ──────────────────────────────────────────────────────────
-/** Receta en el fogón: ingredientes ya gastados; los sucesos de cada paso se fijan al empezar (recargar no los cambia). */
-export interface CookingJob { recipe: string; events: number[]; picks: Heat[] }
-
-export function knownDishes(p: Profile): DishRecipe[] {
-  const k = refugeOf(p).kitchen;
-  return DISHES.filter((d) => d.kitchen <= k);
-}
-
-export function cookBlock(p: Profile, recipeId: string, qty = 1): string | null {
-  const d = getDish(recipeId);
-  if (refugeOf(p).kitchen < d.kitchen) return 'Tu cocina aún no tiene lo necesario para esta receta.';
-  if (p.cooking) return 'Ya tienes algo en el fogón.';
-  for (const m of d.ingredients) if (ownedQty(p, m.itemId) < m.qty * qty) return `Te falta ${getItem(m.itemId).name.toLowerCase()} (${ownedQty(p, m.itemId)}/${m.qty * qty}).`;
-  return null;
-}
-
-/** Empieza a cocinar (minijuego): se gastan los ingredientes y se fijan los sucesos de los pasos. */
-export function startCooking(p: Profile, recipeId: string, seed: number): Result {
-  const block = cookBlock(p, recipeId);
-  if (block) return { ok: false, error: block };
-  const d = getDish(recipeId);
-  const taken = takeItems(p, d.ingredients);
-  if (!taken) return { ok: false, error: 'Te faltan ingredientes.' };
-  const rng = makeRng(seed);
-  const events: number[] = [];
-  for (let i = 0; i < d.steps; i++) events.push(Math.floor(rng.next() * COOK_EVENTS.length));
-  return { ok: true, profile: { ...taken, cooking: { recipe: recipeId, events, picks: [] } } };
-}
-
-/** Elige el fuego del paso actual. Al terminar el último paso, entrega el plato (una sola vez) y libera el fogón. */
-export function cookStep(p: Profile, heat: Heat): Result & { done?: boolean; perfect?: boolean } {
-  const job = p.cooking;
-  if (!job) return { ok: false, error: 'No hay nada en el fogón.' };
-  const d = getDish(job.recipe);
-  const picks = [...job.picks, heat];
-  if (picks.length < d.steps) return { ok: true, profile: { ...p, cooking: { ...job, picks } } };
-  const perfect = picks.every((h, i) => COOK_EVENTS[job.events[i]].heat === h);
-  const out = [{ itemId: d.result, qty: 1 }];
-  if (perfect && REFUGE_CFG.perfectRefund) out.push({ itemId: cheapestIngredient(d), qty: 1 });
-  const dl = deliver({ ...p, cooking: null }, out);
-  const given = dl.profile;
-  const cooked = [...new Set([...(p.cooked ?? []), d.id])];
-  return { ok: true, done: true, perfect, profile: { ...given, cooked }, note: (perfect ? `${getItem(d.result).name}, esmerado. Te queda de más: ${getItem(cheapestIngredient(d)).name.toLowerCase()}.` : `${getItem(d.result).name}.`) + (dl.toReception ? RECEPTION_NOTE : '') };
-}
-export function cheapestIngredient(d: { ingredients: { itemId: string; qty: number }[] }): string {
-  return [...d.ingredients].sort((a, b) => getItem(a.itemId).value - getItem(b.itemId).value)[0].itemId;
-}
-
-/** Producción normal (sin minijuego, calidad estándar, por lotes): solo después de haberla cocinado una vez. */
-export function cookBatch(p: Profile, recipeId: string, qty: number): Result {
-  const d = getDish(recipeId);
-  if (!(p.cooked ?? []).includes(d.id)) return { ok: false, error: 'Primero cocínala una vez en el fogón.' };
-  const n = Math.max(1, Math.min(stationBatch(p, 'kitchen'), Math.floor(qty)));
-  const block = cookBlock(p, recipeId, n);
-  if (block) return { ok: false, error: block };
-  const taken = takeItems(p, d.ingredients.map((m) => ({ itemId: m.itemId, qty: m.qty * n })));
-  if (!taken) return { ok: false, error: 'Te faltan ingredientes.' };
-  const dl = deliver(taken, [{ itemId: d.result, qty: n }]);
-  return { ok: true, profile: dl.profile, note: `${getItem(d.result).name} ×${n}.${dl.toReception ? RECEPTION_NOTE : ''}` };
 }

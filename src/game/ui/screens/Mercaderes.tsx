@@ -10,9 +10,10 @@ import { PLACES, VENDORS, VENDOR_ORDER, type VendorId } from '../../../core/data
 import { vendorLockText, vendorUnlocked } from '../../../core/vendors';
 import { QUESTS } from '../../../core/data/quests';
 import { needsOf } from '../../../core/needs';
-import { canSleepForPrep, readyStations } from '../../../core/refuge';
+import { canSleepForPrep, readyStations, refugeOf } from '../../../core/refuge';
 import { MODULES, MODULE_ORDER } from '../../../core/data/refuge';
-import { StationGrid } from '../StationPanels';
+import { CraftPanel, StationCard, StationGrid, type GoTo } from '../StationPanels';
+import type { CraftStation } from '../../../core/data/crafting';
 import { REP_RANKS, rankOf } from '../../../config/reputation';
 import { readyQuestCount } from '../../../core/quests';
 import { getItem } from '../../../core/data/items';
@@ -29,12 +30,10 @@ import { stackRarity } from '../../../core/data/rarity';
 import { RARITY_INFO } from '../../../core/data/items';
 import type { ItemStack } from '../../../core/types';
 import { RepBar, ShopStock, VendorQuests, type VendorTarget, type VendorView } from '../VendorsTab';
-import { ForgePanel } from '../ForgePanel';
 import { RepairPanel } from '../RepairPanel';
 import { InfirmaryPanel } from '../InfirmaryPanel';
 import { ContractsPanel } from '../ContractsPanel';
-import { CookPanel, RefugePanel, ScrapPanel } from '../RefugePanels';
-import { AlchemyPanel, CarePanel } from '../WorkshopPanels';
+import { RefugePanel, ScrapPanel } from '../RefugePanels';
 import { ItemCard } from './ItemCard';
 import { Card, Drawer, Panel, SubHead, usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
@@ -117,6 +116,20 @@ function VendorCards({ onTalk, onRefuge }: { onTalk: (v: VendorId) => void; onRe
   );
 }
 
+/** Servicio de fabricación de un mercader: su estación del Refugio con el menú común o, si está cerrada, la tarjeta para pedirla. */
+function VendorCraft({ station, onGo }: { station: CraftStation; onGo: GoTo }) {
+  const profile = useGame((s) => s.profile)!;
+  if (refugeOf(profile)[station] < 1) {
+    return (
+      <div className="space-y-2" data-testid={`craft-locked-${station}`}>
+        <p className="font-body text-base text-stone-300">«Sin esta estación en tu Refugio no hay nada que fabricar. Pídemela y la dejo lista.»</p>
+        <div className="max-w-md"><StationCard id={station} onGo={onGo} /></div>
+      </div>
+    );
+  }
+  return <CraftPanel station={station} />;
+}
+
 function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; initial: VendorView; onBack: () => void; onGo: (v: VendorId, x: VendorView) => void }) {
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
@@ -138,14 +151,14 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
   const center: ReactNode =
     view === 'shop' ? <ShopStock vid={vendor} cols={`grid gap-2 ${phone ? 'grid-cols-1' : 'grid-cols-2 2xl:grid-cols-3'}`} />
       : view === 'quests' ? <VendorQuests vendor={vendor} />
-        : view === 'forge' ? <ForgePanel />
+        : view === 'forge' ? <VendorCraft station="forge" onGo={onGo} />
           : view === 'repair' ? <RepairPanel />
           : view === 'infirmary' ? <InfirmaryPanel />
           : view === 'contracts' ? <ContractsPanel />
-          : view === 'cook' ? <CookPanel />
+          : view === 'cook' ? <VendorCraft station="kitchen" onGo={onGo} />
           : view === 'scrap' ? <ScrapPanel />
-          : view === 'alchemy' ? <AlchemyPanel />
-          : view === 'care' ? <CarePanel />
+          : view === 'alchemy' ? <VendorCraft station="alchemy" onGo={onGo} />
+          : view === 'care' ? <VendorCraft station="infirmary" onGo={onGo} />
           : view === 'stations' ? <div className="space-y-2"><p className="font-body text-base text-stone-300">Lo que {v.name} puede construir o mejorar en tu Refugio. Cobra los materiales y el oro y lo deja listo al momento.</p><StationGrid by={vendor} onGo={onGo} /></div>
             : <SellGrids sel={sel} setSel={setSel} marks={marks} setMarks={setMarks} vendor={vendor} />;
   const side: ReactNode = view === 'sell'

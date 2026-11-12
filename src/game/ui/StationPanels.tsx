@@ -1,5 +1,5 @@
-// Bloque 2, parte 2.1: estaciones del Refugio (tarjeta con encargado, coste y beneficio), el menú de crafteo común
-// (Forja y Atril rúnico) y la vista de runas. Todo se decide tocando; objetivos de 44 px.
+// Bloque 2: estaciones del Refugio (tarjeta con encargado, coste y beneficio), el menú de crafteo común de todas las
+// estaciones con recetas (fase 3: sin minijuegos) y la vista de runas. Todo se decide tocando; objetivos de 44 px.
 import { useMemo, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { MODULES, MODULE_ORDER, type ModuleId } from '../../core/data/refuge';
@@ -62,7 +62,7 @@ export function StationCard({ id, onGo, onEnter }: { id: ModuleId; onGo?: GoTo; 
   const block = next ? upgradeBlock(profile, id) : null;
   const by = VENDORS[m.by];
   const locked = lvl < 1;
-  const enter = onEnter && !locked && (id === 'forge' || id === 'runic');
+  const enter = onEnter && !locked && id !== 'cot';
   return (
     <div className={`panel p-3 flex flex-col gap-2 ${locked ? 'border-dashed' : ''}`} style={locked ? { background: 'repeating-linear-gradient(135deg,#121016 0 8px,#15131a 8px 16px)' } : undefined} data-testid={`module-${id}`}>
       <div className="flex items-center gap-2">
@@ -110,11 +110,12 @@ const GROUPS: { id: string; name: string; test: (r: CraftRecipe) => boolean }[] 
   { id: 'runes', name: 'Runas', test: (r) => !!RUNES[r.result] },
   { id: 'weapons', name: 'Armas y equipo de mano', test: (r) => ['mainHand', 'offHand'].includes(getItem(r.result).slot ?? '') },
   { id: 'armor', name: 'Protección', test: (r) => ['helmet', 'armor', 'gloves', 'boots'].includes(getItem(r.result).slot ?? '') },
+  { id: 'use', name: 'Consumibles', test: (r) => getItem(r.result).category === 'potion' },
   { id: 'other', name: 'Otros', test: () => true },
 ];
 const groupOf = (r: CraftRecipe) => GROUPS.find((g) => g.test(r))!.id;
 
-export function CraftPanel({ station, onBack }: { station: CraftStation; onBack: () => void }) {
+export function CraftPanel({ station, onBack }: { station: CraftStation; onBack?: () => void }) {
   const profile = useGame((s) => s.profile)!;
   const all = useMemo(() => stationRecipes(station).sort((a, b) => a.level - b.level || getItem(a.result).value - getItem(b.result).value), [station]);
   const [onlyCan, setOnlyCan] = useState(false);
@@ -136,7 +137,7 @@ export function CraftPanel({ station, onBack }: { station: CraftStation; onBack:
         <span className="font-display text-parchment tracking-[0.08em]">{MODULES[station].name} · Nivel {lvl}/3</span>
         <span className="text-[12px] text-stone-400">Lotes de hasta {batchLimit(profile, station)}</span>
         <button className={`btn text-xs ml-auto ${onlyCan ? 'btn-gold' : ''}`} style={BTN} onClick={() => setOnlyCan(!onlyCan)} data-testid="craft-only-can">Solo las que puedo hacer</button>
-        <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="craft-back">◂ Refugio</button>
+        {onBack && <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="craft-back">◂ Refugio</button>}
       </div>
       <div className="grid gap-2" style={{ gridTemplateColumns: 'minmax(200px, 34%) minmax(0, 1fr)' }}>
         <div className="panel p-2 overflow-y-auto scroll-thin" style={{ maxHeight: 'min(62vh, 560px)' }}>
@@ -204,7 +205,7 @@ export function CraftPanel({ station, onBack }: { station: CraftStation; onBack:
               <div className="flex items-center border border-stone-700">
                 <button className="btn w-11" style={BTN} onClick={() => setQty(Math.max(1, n - 1))} disabled={n <= 1} aria-label="Menos">−</button>
                 <b className="w-11 text-center" data-testid="craft-qty">{n}</b>
-                <button className="btn w-11" style={BTN} onClick={() => setQty(n + 1)} disabled={n >= batchLimit(profile, station)} aria-label="Más">+</button>
+                <button className="btn w-11" style={BTN} onClick={() => setQty(n + 1)} disabled={n >= batchLimit(profile, station)} aria-label="Más" data-testid="craft-more">+</button>
                 <button className="btn text-xs" style={BTN} onClick={() => setQty(Math.max(1, max))} disabled={max < 1}>Máx.</button>
               </div>
               <button className="btn" style={BTN} disabled={!!block} onClick={() => actions.craft(r.id, n, fine, 'backpack')} data-testid="craft-to-backpack">A la mochila</button>

@@ -1,9 +1,8 @@
-// Fase 9: el Refugio (módulos, catre y platos), el desguace de Orik y la cocina de Garth (fogón por pasos y lotes).
+// El Refugio (estaciones, catre y platos) y el desguace de Orik. Lo que se fabrica va por el menú de crafteo común.
 // Todo se decide tocando: nada depende del hover ni de reflejos.
 import { useState } from 'react';
 import { actions, useGame } from '../state/store';
-import { MODULES, COOK_EVENTS, DISHES, HEAT_NAME, getDish, type Heat } from '../../core/data/refuge';
-import { knownDishes, ownedQty, prepText, refugeOf, scrapYield, cookBlock, stationBatch } from '../../core/refuge';
+import { prepText, refugeOf, scrapYield } from '../../core/refuge';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { stackRarity } from '../../core/data/rarity';
 import { durability, hasDurability, maxDurability, wearLevel } from '../../core/durability';
@@ -11,24 +10,12 @@ import { WEAR_COLOR } from '../../config/durability';
 import { isCover } from '../../core/inventory';
 import { ItemIcon } from './inventory';
 import { ReceptionSection } from './WorkshopPanels';
+import type { CraftStation } from '../../core/data/crafting';
 import { CraftPanel, RunePanel, StationGrid, type GoTo } from './StationPanels';
 import { sfx } from '../audio';
 import type { ItemStack } from '../../core/types';
 
 const BTN = { minHeight: 44 } as const;
-
-function Cost({ items, gold }: { items: { itemId: string; qty: number }[]; gold: number }) {
-  const profile = useGame((s) => s.profile)!;
-  return (
-    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-      {items.map((m) => {
-        const have = ownedQty(profile, m.itemId);
-        return <span key={m.itemId} className="inline-flex items-center gap-1" style={{ color: have >= m.qty ? '#c9c2ae' : '#d0605a' }}><ItemIcon itemId={m.itemId} size={18} />{getItem(m.itemId).name} {have}/{m.qty}</span>;
-      })}
-      {gold > 0 && <span style={{ color: profile.gold >= gold ? '#e8b33a' : '#d0605a' }}>{gold} oro</span>}
-    </div>
-  );
-}
 
 /** El Refugio: módulos, catre y lo que te prepara para la siguiente bajada. */
 export function RefugePanel({ onBack, onGo }: { onBack: () => void; onGo?: GoTo }) {
@@ -37,7 +24,7 @@ export function RefugePanel({ onBack, onGo }: { onBack: () => void; onGo?: GoTo 
   const [inside, setInside] = useState<string | null>(null);
   const back = () => { setInside(null); sfx('click'); };
   const wrap = (node: React.ReactNode) => <div className="h-full overflow-y-auto scroll-thin" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-refuge"><div className="w-full max-w-[1200px] mx-auto">{node}</div></div>;
-  if (inside === 'forge' || inside === 'runic') return wrap(<CraftPanel station={inside} onBack={back} />);
+  if (inside && inside !== 'runes' && inside !== 'runic-menu') return wrap(<CraftPanel station={inside as CraftStation} onBack={back} />);
   if (inside === 'runes') return wrap(<RunePanel onBack={back} />);
   if (inside === 'runic-menu') return wrap(
     <div className="flex flex-wrap gap-2 pt-2" data-testid="runic-menu">
@@ -121,74 +108,6 @@ export function ScrapPanel() {
         </div>
       )}
       <p className="font-body text-sm text-stone-400 italic">Nunca sacarás más de lo que cuesta comprarlo: aquí no se hace oro de la nada.</p>
-    </div>
-  );
-}
-
-/** Cocina de Garth: recetas que tu fogón permite, el fogón paso a paso y la producción por lotes. */
-export function CookPanel() {
-  const profile = useGame((s) => s.profile)!;
-  const job = profile.cooking;
-  const kitchen = refugeOf(profile).kitchen;
-  const [qty, setQty] = useState<Record<string, number>>({});
-  if (job) {
-    const d = getDish(job.recipe);
-    const step = job.picks.length;
-    const ev = COOK_EVENTS[job.events[step]];
-    return (
-      <div className="space-y-3" data-testid="cook-stove">
-        <div className="flex items-center gap-2"><ItemIcon itemId={d.result} size={28} /><span className="font-display text-parchment">{d.name}</span><span className="text-xs text-stone-400">Paso {step + 1} de {d.steps}</span></div>
-        <p className="font-body text-lg text-parchment" data-testid="cook-event">{ev.text}</p>
-        <p className="text-xs text-stone-400">Elige el fuego. Si aciertas todos los pasos, el plato sale esmerado y te sobra un ingrediente; si no, sale normal. Nunca se pierde el plato.</p>
-        <div className="grid grid-cols-3 gap-2 max-w-xl">
-          {(['low', 'mid', 'high'] as Heat[]).map((h) => (
-            <button key={h} className="btn font-display" style={{ minHeight: 52 }} onClick={() => actions.cookStep(h)} data-testid={`heat-${h}`}>{HEAT_NAME[h]}</button>
-          ))}
-        </div>
-        <p className="text-xs text-stone-500 italic">Los ingredientes ya están en la olla: si te vas, el guiso te espera.</p>
-      </div>
-    );
-  }
-  if (kitchen < 1) {
-    return (
-      <div className="space-y-2" data-testid="cook-locked">
-        <p className="font-body text-base text-stone-300">«Sin fogón propio no hay receta que valga. Monta uno en tu Refugio y te enseño lo que sé.»</p>
-        <p className="text-sm text-stone-400">Refugio → Cocina → {MODULES.kitchen.levels[1].name}.</p>
-      </div>
-    );
-  }
-  const known = knownDishes(profile);
-  return (
-    <div className="space-y-3" data-testid="cook">
-      <p className="font-body text-base text-stone-300 max-w-2xl">Un plato caliente antes de bajar te hace gastar menos en la siguiente incursión. La primera vez se cocina al fogón; después, por lotes.</p>
-      <div className="grid md:grid-cols-2 gap-2">
-        {DISHES.map((d) => {
-          const knows = known.includes(d);
-          const done = (profile.cooked ?? []).includes(d.id);
-          const n = Math.max(1, Math.min(stationBatch(profile, 'kitchen'), qty[d.id] ?? 1));
-          const block = knows ? cookBlock(profile, d.id) : null;
-          const blockN = knows ? cookBlock(profile, d.id, n) : null;
-          return (
-            <div key={d.id} className={`panel p-3 flex flex-col gap-2 ${knows ? '' : 'opacity-60'}`} data-testid={`dish-${d.id}`}>
-              <div className="flex items-center gap-2"><ItemIcon itemId={d.result} size={28} /><span className="font-display text-parchment">{d.name}</span></div>
-              <div className="text-sm text-stone-300">{getItem(d.result).description}</div>
-              <Cost items={d.ingredients} gold={0} />
-              {!knows ? <div className="text-xs text-stone-400">Necesitas en tu Refugio: {MODULES.kitchen.levels[d.kitchen].name}.</div> : <>
-                <button className="btn btn-gold" style={BTN} disabled={!!block} onClick={() => actions.startCooking(d.id)} data-testid={`cook-start-${d.id}`}>Al fogón</button>
-                {done ? (
-                  <div className="flex items-center gap-2">
-                    <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [d.id]: n - 1 })} disabled={n <= 1} aria-label="Menos">−</button>
-                    <span className="w-6 text-center text-parchment" data-testid={`batch-qty-${d.id}`}>{n}</span>
-                    <button className="btn w-11" style={BTN} onClick={() => setQty({ ...qty, [d.id]: n + 1 })} disabled={n >= stationBatch(profile, 'kitchen')} aria-label="Más">+</button>
-                    <button className="btn flex-1" style={BTN} disabled={!!blockN} onClick={() => actions.cookBatch(d.id, n)} data-testid={`cook-batch-${d.id}`}>Cocinar {n}</button>
-                  </div>
-                ) : <div className="text-xs text-stone-400">Cocínala una vez al fogón para poder hacerla por lotes.</div>}
-                {block && <div className="text-xs text-[#d0905a]">{block}</div>}
-              </>}
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }

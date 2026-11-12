@@ -94,7 +94,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Exploración: `node scripts/exploracion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Runas: `node scripts/simular-runas.mjs 200`.
   - Refugio, estaciones, crafteo, runas, desguace y cocina: `node scripts/refugio-check.cjs <url>/play/ <carpeta> [dispositivo]`.
-  - Forja, alquimia, rincón de cura y recepción: `node scripts/taller-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Forja, mesa y rincón por el menú común (sin minijuegos) y recepción: `node scripts/taller-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Ataques anunciados y jefes: `node scripts/intenciones-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Ciclo completo en S1 (sección 33; curación tras caer y curar partes en Estado): `node scripts/ciclo-check.cjs <url>/play/ <carpeta> <warrior|mage> <nueva|migrada> [dispositivo]`.
 - Equilibrio: `node scripts/simular.mjs 300 actual` (escribe `docs/equilibrio/simulador-actual.md`); cualquier cambio de daño, estados o curación se comprueba con él.

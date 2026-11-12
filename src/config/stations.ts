@@ -85,10 +85,10 @@ export const STATIONS: Record<StationId, StationDef> = {
   forge: {
     id: 'forge', name: 'Forja', icon: '⚒', by: 'brand',
     purpose: 'Lingotes, armas y armaduras de metal, escudos, anillos y llaves.',
-    fallback: 'Las armas se compran o se forjan en el yunque de Brand.',
+    fallback: 'Las armas y armaduras de metal se compran en la tienda de Brand.',
     lines: ['«Un yunque viejo y un fuelle que respira. Suficiente para empezar.»', '«Ahora el fuego aguanta el hierro bueno.»', '«Esta forja ya no me da vergüenza. Haz algo digno con ella.»'],
     levels: [
-      { name: 'Sin forja', effect: 'Se compra o se forja en el yunque de Brand.' },
+      { name: 'Sin forja', effect: 'Lo de metal se compra en la tienda de Brand.' },
       { name: 'Forja', effect: 'Recetas de forja de nivel 1. Lotes de hasta 5.', cost: c(20, ['scrap_metal', 5], ['bone_dust', 1]) },
       { name: 'Forja con fuelle doble', effect: 'Recetas de nivel 2, lotes de 10 y 10 % de acabado fino.', cost: c(150, ['iron_ore', 6], ['scrap_metal', 10], ['bone_dust', 4]) },
       { name: 'Gran forja', effect: 'Recetas de nivel 3, lotes de 20 y 20 % de acabado fino.', cost: c(320, ['silver_ore', 6], ['iron_ore', 6]) },

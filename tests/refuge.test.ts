@@ -7,8 +7,9 @@ import { ITEMS, getItem } from '../src/core/data/items';
 import { VENDORS } from '../src/core/data/vendors';
 import { buyPrice, sellPrice } from '../src/core/economy';
 import { withDurability, maxDurability } from '../src/core/durability';
-import { COOK_EVENTS, DISHES, MODULES, MODULE_ORDER } from '../src/core/data/refuge';
-import { cookBatch, cookStep, prepMods, refugeOf, scrap, scrapMaterial, scrapYield, startCooking, upgradeBlock, upgradeModule } from '../src/core/refuge';
+import { DISHES, MODULES, MODULE_ORDER } from '../src/core/data/refuge';
+import { prepMods, refugeOf, scrap, scrapMaterial, scrapYield, upgradeBlock, upgradeModule } from '../src/core/refuge';
+import { craft, craftBlock } from '../src/core/crafting';
 import { consumptionMult, tickNeeds, FULL_NEEDS } from '../src/core/needs';
 import { startExpedition } from '../src/core/expedition';
 import { fromWounds } from '../src/core/anatomy';
@@ -151,48 +152,18 @@ describe('desguace', () => {
 });
 
 describe('cocina', () => {
-  const cookReady = () => give(give(give({ ...base(), refuge: { cot: 0, kitchen: 2, bench: 0 } }, 'salted_meat', 5), 'cave_mushroom', 10), 'water', 5);
+  const cookReady = () => { const p = give(give(give(base(), 'salted_meat', 5), 'cave_mushroom', 10), 'water', 5); return { ...p, refuge: { ...refugeOf(p), kitchen: 2 } }; };
 
-  it('hace falta el nivel de cocina de la receta', () => {
-    const p = give(give(give(base(), 'salted_meat', 1), 'cave_mushroom', 1), 'water', 1);
-    expect(startCooking(p, 'stew', 1).ok).toBe(false);
-  });
-
-  it('los ingredientes se gastan al empezar y los sucesos quedan fijados', () => {
-    const p0 = cookReady();
-    const r = startCooking(p0, 'stew', 42);
+  it('sin cocina no se cocina; con ella, el plato sale del menú común sin minijuego ni primera vez', () => {
+    const raw = give(give(give(base(), 'salted_meat', 5), 'cave_mushroom', 10), 'water', 5);
+    expect(craftBlock({ ...raw, refuge: { ...refugeOf(raw), kitchen: 0 } }, 'c_hearty_stew')).toMatch(/cerrada/);
+    expect(craftBlock({ ...raw, refuge: { ...refugeOf(raw), kitchen: 1 } }, 'c_hearty_stew')).toMatch(/nivel 2/);
+    const r = craft(cookReady(), 'c_hearty_stew', 3, false, 1);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(total(r.profile, 'salted_meat')).toBe(total(p0, 'salted_meat') - 1);
-    expect(r.profile.cooking!.events).toHaveLength(3);
-    expect(startCooking(r.profile, 'stew', 43).ok).toBe(false);
-  });
-
-  it('acertar todos los pasos da el plato y devuelve un ingrediente; fallar da el plato estándar', () => {
-    let r = startCooking(cookReady(), 'stew', 7);
-    if (!r.ok) throw new Error();
-    let p = r.profile;
-    const shroom0 = total(p, 'cave_mushroom');
-    for (const e of p.cooking!.events) { const s = cookStep(p, COOK_EVENTS[e].heat); if (!s.ok) throw new Error(s.error); p = s.profile; }
-    expect(p.cooking).toBeNull();
-    expect(total(p, 'hearty_stew')).toBe(1);
-    expect(total(p, 'cave_mushroom')).toBe(shroom0 + 1);
-    expect(p.cooked).toContain('stew');
-
-    r = startCooking(p, 'stew', 8);
-    if (!r.ok) throw new Error();
-    p = r.profile;
-    const wrong = (h: string) => (h === 'low' ? 'high' : 'low');
-    for (const e of p.cooking!.events) { const s = cookStep(p, wrong(COOK_EVENTS[e].heat)); if (!s.ok) throw new Error(); p = s.profile; }
-    expect(total(p, 'hearty_stew')).toBe(2);
-  });
-
-  it('la producción por lotes pide haberla cocinado antes y no supera el lote máximo', () => {
-    const p = cookReady();
-    expect(cookBatch(p, 'stew', 2).ok).toBe(false);
-    const r = cookBatch({ ...p, cooked: ['stew'] }, 'stew', 3);
-    expect(r.ok).toBe(true);
-    if (r.ok) expect(total(r.profile, 'hearty_stew')).toBe(3);
+    expect(r.crafted.made.reduce((t, m) => t + m.qty, 0)).toBe(3);
+    expect(total(r.crafted.profile, 'salted_meat')).toBe(2);
+    expect(r.crafted.profile.cooking ?? null).toBeNull();
   });
 
   it('sin arbitraje: un plato vale menos que sus ingredientes comprados', () => {
