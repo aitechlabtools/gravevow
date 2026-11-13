@@ -76,6 +76,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 13/11: **El «?» abre solo la Guía** (antes abría Ajustes › Partida). Arreglado un error de la música (nota en tiempo negativo al arrancar).
 - 13/11: **Pantalla completa en todos los dispositivos.** Botón según el navegador (no el dispositivo) en todas las pantallas, también combate; tecla F; detecta F11 y salidas por fuera; Ajustes y controles actualizados.
 - 13/11: **Música generativa que reacciona.** 6 pistas por código con variación por subzona, ambiente, pausas de 10–30 s, combate y jefe, capa de peligro, fanfarrias, volumen de ambiente y música en combate en Ajustes. Pruebas en `/play/?debug&musica`. Brief para la música definitiva en `docs/musica.md`.
 - 13/11: **Destruir con Orik, cuerpo del aliado, resultados sin ficha y dividir al repartir.** Destruir solo en el taller de Orik (recluta un toque, montones con cantidad, lo valioso manteniendo pulsado). El aliado caído deja «Cuerpo de …» con lo compartido, sin duplicados. Selector de cantidad común (`kit/QtyPicker`). Detalle en `docs/estado-trabajo.md`.

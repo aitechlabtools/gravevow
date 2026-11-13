@@ -46,10 +46,10 @@ const DEVICE = process.argv[4];
   ok(!(await mini()), 'el mini de Ajustes termina');
   await tap('[data-testid=settings-close]');
 
-  // 3) El «?» abre Partida con la Guía
+  // 3) El «?» abre solo la Guía
   await tap('[data-testid=btn-lobby-guide]');
   await page.waitForSelector('[data-testid=settings-guide]');
-  ok(!!(await page.$('[data-testid=settings-section-game]')), 'el «?» abre Ajustes › Partida');
+  ok(!!(await page.$('[data-testid=settings-section-guide]')) && !(await page.$('[data-testid=settings-nav]')), 'el «?» abre solo la Guía (sin las secciones de Ajustes)');
   ok(!(await mini()), 'el «?» no repite el mini de Ajustes');
   await shot('02-guia');
   ok(await size44('[data-testid=guide-topic-bastion]'), 'los temas miden 44 px');

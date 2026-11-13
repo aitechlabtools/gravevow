@@ -105,7 +105,7 @@ export function Lobby() {
         </div>
       </main>
       {switcher && <CharacterSwitcher onClose={() => setSwitcher(false)} />}
-      {settings && <SettingsModal onClose={() => setSettings(false)} onExit={() => actions.goto('title')} initialTab={settings === 'guide' ? 'game' : undefined} />}
+      {settings && <SettingsModal onClose={() => setSettings(false)} onExit={() => actions.goto('title')} guideOnly={settings === 'guide'} />}
       {profile.tutorialSeen.lobby && <ClassUnlockNotice />}
     </div>
   );

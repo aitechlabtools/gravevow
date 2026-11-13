@@ -4,6 +4,11 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 13/11: el «?» abre solo la Guía
+- **Antes:** el «?» del lobby abría Ajustes en la sección Partida (copia, personajes y, al final, la Guía): parecía abrir las opciones.
+- **Ahora:** abre una ventana «Guía» con solo los temas y los textos para releer (`SettingsModal guideOnly`). En Ajustes › Partida sigue estando también.
+- Corregido además un error de la música: una nota de adorno al empezar podía programarse en un tiempo negativo (el navegador lo rechazaba). Ahora ninguna nota se programa en el pasado.
+
 ## Novedades del 13/11: pantalla completa en todos los dispositivos
 - **Antes:** el botón solo salía en táctil (`if (!touch) return null`): no había en escritorio ni en tabletas con ratón o teclado (al mover el ratón desaparecía), ni en combate. F11 se confundía con la app instalada (el botón se ocultaba) y el icono no se enteraba de F11. En iPad sin pantalla completa la ayuda hablaba del iPhone.
 - **Ahora** (`shared/fullscreen.ts`, `FullscreenButton.tsx`):

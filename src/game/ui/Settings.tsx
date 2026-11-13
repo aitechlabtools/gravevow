@@ -33,7 +33,7 @@ const isTab = (t: unknown): t is SettingsTab => TABS.some((x) => x.id === t);
 /** Sección recordada mientras no haya cuenta (pantalla de título sin partida). */
 let lastTabNoProfile: SettingsTab = 'sound';
 
-export function SettingsModal({ onClose, onExit, initialTab }: { onClose: () => void; onExit?: () => void; /** El «?» del menú abre directamente Partida › Guía. */ initialTab?: SettingsTab }) {
+export function SettingsModal({ onClose, onExit, initialTab, guideOnly = false }: { onClose: () => void; onExit?: () => void; initialTab?: SettingsTab; /** El «?» abre solo la Guía, sin las secciones de Ajustes (13/11). */ guideOnly?: boolean }) {
   const profile = useGame((s) => s.profile);
   const backup = useGame((s) => s.backup);
   const layout = useLayout();
@@ -41,7 +41,7 @@ export function SettingsModal({ onClose, onExit, initialTab }: { onClose: () => 
   const saved = profile?.settings.settingsTab;
   const [tab, setTabState] = useState<SettingsTab>(initialTab ?? (isTab(saved) ? saved : lastTabNoProfile));
   // Primera vez que se abre con una partida: el mini tutorial de Ajustes (sale encima de esta ventana)
-  useEffect(() => { if (profile && !initialTab) actions.tutorialEvent('screen:settings'); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (profile && !initialTab && !guideOnly) actions.tutorialEvent('screen:settings'); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const setTab = (t: SettingsTab) => {
     sfx('click'); setTabState(t); lastTabNoProfile = t;
     if (profile) actions.setSettings({ settingsTab: t });
@@ -58,12 +58,17 @@ export function SettingsModal({ onClose, onExit, initialTab }: { onClose: () => 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 fade-in set-scrim" data-modal data-testid="settings"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={`panel panel-gold set-panel ${phone ? 'is-phone' : ''}`} role="dialog" aria-label="Ajustes">
+      <div className={`panel panel-gold set-panel ${phone ? 'is-phone' : ''}`} role="dialog" aria-label={guideOnly ? 'Guía' : 'Ajustes'}>
         <div className="set-head">
-          <h2 className="panel-title text-xl">Ajustes</h2>
-          {phone && <span className="set-cur" data-testid="settings-current">· {cur.label}</span>}
+          <h2 className="panel-title text-xl">{guideOnly ? 'Guía' : 'Ajustes'}</h2>
+          {phone && !guideOnly && <span className="set-cur" data-testid="settings-current">· {cur.label}</span>}
           <button className="btn icon-btn ml-auto" onClick={onClose} aria-label="Cerrar ajustes" data-testid="settings-x">✕</button>
         </div>
+        {guideOnly ? (
+          <div className="set-body" style={{ gridTemplateColumns: 'minmax(0, 1fr)', display: 'grid' }}>
+            <div className="set-content scroll-thin" style={{ gridColumn: '1 / -1' }} data-testid="settings-section-guide"><GuideBlock onClose={onClose} scrollTo={false} /></div>
+          </div>
+        ) : (
         <div className="set-body">
           <nav className="set-nav scroll-thin" aria-label="Secciones de Ajustes" data-testid="settings-nav">
             {TABS.map((t) => (
@@ -84,9 +89,10 @@ export function SettingsModal({ onClose, onExit, initialTab }: { onClose: () => 
             {tab === 'info' && <InfoSection />}
           </div>
         </div>
+        )}
         <div className="set-foot">
           <button className="btn" onClick={onClose} data-testid="settings-close">Cerrar</button>
-          {onExit && <button className="btn" onClick={() => { onClose(); onExit(); }} data-testid="btn-exit-title">Salir al título</button>}
+          {onExit && !guideOnly && <button className="btn" onClick={() => { onClose(); onExit(); }} data-testid="btn-exit-title">Salir al título</button>}
         </div>
       </div>
     </div>

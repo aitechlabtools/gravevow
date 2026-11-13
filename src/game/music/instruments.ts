@@ -40,6 +40,8 @@ function noiseSrc(c: AudioContext, t: number, end: number, out: AudioNode) {
 
 /** Toca una nota. `f` en Hz (null en percusión), `t` y `dur` en segundos. */
 export function playNote(c: AudioContext, out: AudioNode, voice: Voice, f: number | null, t: number, dur: number, gain: number) {
+  // Nunca en el pasado (una nota de adorno al principio caería antes de 0): el navegador lo rechazaría
+  t = Math.max(t, c.currentTime + 0.005);
   const g = c.createGain(); g.connect(out);
   const hz = f ?? 100;
   switch (voice) {
