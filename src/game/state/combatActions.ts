@@ -7,6 +7,7 @@ import type { ItemStack } from '../../core/types';
 import { rollStacks } from '../../core/data/rarity';
 import { addManyToGrid, countItem, emptyGrid, removeItem, isCover } from '../../core/inventory';
 import { coins as coinsStack } from '../../core/gold';
+import { allyBodyStacks, bodyLabel } from '../../core/allyBody';
 import { bossMemory, restoreBoss, createCombat, distinctNames, performAction, runAITurn, currentActor, getCombatant, type CombatAction, type CombatState } from '../../core/combat';
 import { knowledge, noteKill, noteSeen } from '../../core/bestiary';
 import { ZONES } from '../../core/data/zones';
@@ -206,9 +207,9 @@ export const combatActions = {
           {
             xp += 60;
             const rivalCoins = rival.gold;
-            rival = { ...rival, disposition: 'dead' };
-            // El cuerpo del errante deja una bolsa con sus pertenencias (y lo que te robó o le diste)
-            const bagGrid = addManyToGrid(emptyGrid(12), [...rival.bagItemIds.map((id) => ({ uid: makeUid(), itemId: id, qty: 1 })), ...(rivalCoins > 0 ? [coinsStack(rivalCoins)] : [])]).grid;
+            // El cuerpo del errante deja una bolsa con sus pertenencias (y lo que te robó o le diste). Él queda vacío: nada se coge dos veces
+            const bagGrid = addManyToGrid(emptyGrid(12), allyBodyStacks(rival.bagItemIds, rivalCoins, 0)).grid;
+            rival = { ...rival, disposition: 'dead', bagItemIds: [], gold: 0 };
             const [x, y] = s.hud.playerTile;
             rivalBag = { id: makeUid('bag'), x, y, grid: bagGrid, label: `Pertenencias de ${getWanderer(rival.who).name.split(' ')[0]}` };
           }
@@ -250,13 +251,27 @@ export const combatActions = {
       } else if (next.outcome === 'defeat') {
         sfx('defeat');
       }
+      // Cuerpo del aliado caído (13/11): bolsa en el sitio del combate con lo que compartisteis. Solo al pasar de vivo a muerto,
+      // y el aliado queda vacío, así que no puede soltarla dos veces ni duplicar nada.
+      const bodies: Bag[] = [];
+      const [bx, by] = s.hud.playerTile;
+      const alive = next.outcome !== 'defeat';
       if (mc && merc && mc.hp <= 0 && merc.alive) {
-        merc = { ...merc, alive: false, ...(mc.side === 'B' ? { left: 'betrayed' as const } : {}) };
+        const stacks = allyBodyStacks([], 0, merc.potions);
+        if (alive && stacks.length) bodies.push({ id: makeUid('bag'), x: bx, y: by, grid: addManyToGrid(emptyGrid(12), stacks).grid, label: bodyLabel(getMerc(merc.id).name) });
+        merc = { ...merc, alive: false, potions: 0, ...(mc.side === 'B' ? { left: 'betrayed' as const } : {}) };
         toast(mc.side === 'B' ? `${getMerc(merc.id).name} cae. No lo vio venir.` : `${getMerc(merc.id).name} ha caído en combate.${merc.rescued ? '' : ' El contrato se rompe.'}`, 'danger');
       }
-      if (rc && rc.side === 'A' && rc.hp <= 0) {
-        rival = { ...rival, disposition: 'dead' };
+      if (rc && rc.side === 'A' && rc.hp <= 0 && rival.disposition !== 'dead') {
+        const stacks = allyBodyStacks(rival.bagItemIds, rival.gold, rival.potions);
+        if (alive && stacks.length) bodies.push({ id: makeUid('bag'), x: bx, y: by, grid: addManyToGrid(emptyGrid(Math.max(12, stacks.length)), stacks).grid, label: bodyLabel(getWanderer(rival.who).name) });
+        rival = { ...rival, disposition: 'dead', bagItemIds: [], gold: 0, potions: 0 };
         toast(`${getWanderer(rival.who).name} ha caído en combate.`, 'danger');
+      }
+      if (bodies.length) {
+        set((st) => ({ bags: { ...st.bags, ...Object.fromEntries(bodies.map((b) => [b.id, b])) } }));
+        bus.emit('bags-changed');
+        actions.tutorialEvent('ally:body');
       }
     }
     set({ combat: { ...s.combat, state: next, rewards }, expedition: exp, rival, merc });

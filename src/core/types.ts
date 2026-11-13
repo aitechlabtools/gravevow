@@ -213,6 +213,10 @@ export interface Settings {
   /** Volumen de la música y de los efectos (0..1), bajo el general. */
   musicVolume: number;
   sfxVolume: number;
+  /** Volumen del ambiente de la mazmorra (goteo, viento, lava…), 0..1. */
+  ambientVolume?: number;
+  /** Música durante el combate: normal, baja o sin música. */
+  combatMusic?: 'normal' | 'low' | 'off';
   /** Última sección abierta del panel de Ajustes. */
   settingsTab?: string;
 }

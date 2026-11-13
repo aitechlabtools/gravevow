@@ -5,6 +5,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { actions, useGame } from '../state/store';
 import { sfx } from '../audio';
+import { Segmented } from './kit';
 import { useLayout } from '../../config/ui';
 import { useIsTouch } from '../../shared/device';
 import { canFullscreen, enterFullscreen, exitFullscreen, isIOS, isStandalone, useFullscreen } from '../../shared/fullscreen';
@@ -119,12 +120,18 @@ function SoundSection() {
         <Slider label="General" value={s.volume} onChange={(v) => actions.setSettings({ volume: v })} testId="vol-master" />
         <Slider label="Música" value={s.musicVolume ?? 1} onChange={(v) => actions.setSettings({ musicVolume: v })} testId="vol-music" />
         <Slider label="Efectos" value={s.sfxVolume ?? 1} onChange={(v) => { actions.setSettings({ sfxVolume: v }); sfx('click'); }} testId="vol-sfx" />
+        <Slider label="Ambiente" value={s.ambientVolume ?? 1} onChange={(v) => actions.setSettings({ ambientVolume: v })} testId="vol-ambient" />
       </Block>
       <Block title="Música">
         <label className="set-toggle">
           <input type="checkbox" checked={s.music} onChange={(e) => actions.setSettings({ music: e.target.checked })} className="accent-[#e8b33a] w-5 h-5" data-testid="music-toggle" />
-          <span>Música ambiental</span>
+          <span>Música</span>
         </label>
+        <div className="flex items-center gap-3 flex-wrap mt-2" role="group" aria-label="Música en combate">
+          <span>Música en combate</span>
+          <Segmented options={[{ id: 'normal', label: 'Normal' }, { id: 'low', label: 'Baja' }, { id: 'off', label: 'Sin música' }]} value={s.combatMusic ?? 'normal'}
+            onChange={(v) => actions.setSettings({ combatMusic: v as 'normal' | 'low' | 'off' })} testId="combat-music" />
+        </div>
         <p className="set-note">Los cambios se oyen al momento y valen para todos tus personajes.</p>
       </Block>
     </>

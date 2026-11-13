@@ -83,7 +83,7 @@ export function Toasts() {
 export function ItemActions({ loc, mode, onClear, lootId, buttonsOnly = false }: { loc: Loc | null; mode: InvMode; onClear: () => void; lootId?: string; buttonsOnly?: boolean }) {
   const s = useGame((x) => x);
   const touch = useIsTouch();
-  const [picker, setPicker] = useState<'withdraw' | 'split' | null>(null);
+  const [picker, setPicker] = useState<'withdraw' | 'split' | 'stack' | null>(null);
   useHotkey('r', () => { if (loc && loc.kind === 'grid') actions.rotate(loc); }, !!loc && loc.kind === 'grid' && loc.container !== 'loot' && loc.container !== 'pocket');
   if (!loc) return <div className="text-stone-400 text-sm italic font-body">{touch ? 'Toca un objeto para ver sus acciones.' : 'Selecciona un objeto para ver sus acciones. Doble clic: acción rápida · Clic derecho: mover · Arrastra para colocar.'}</div>;
   const c = containersFor(s, lootId);
@@ -110,7 +110,7 @@ export function ItemActions({ loc, mode, onClear, lootId, buttonsOnly = false }:
   // Oro físico: sacar monedas de un saco y dividir un montón
   if (inGrid && loc.container !== 'loot' && capacityOf(st) > 0 && (st.gold ?? 0) > 0 && mode !== 'merchant') btns.push(b('Sacar monedas', () => setPicker('withdraw'), 'btn-gold', 'act-withdraw'));
   if (inGrid && loc.container !== 'loot' && isCoins(st) && st.qty > 1 && mode !== 'merchant') btns.push(b('Dividir', () => setPicker('split'), '', 'act-split'));
-  if (inGrid && loc.container !== 'loot' && !isCoins(st) && st.qty > 1 && mode !== 'merchant') btns.push(b('Dividir', () => actions.splitStack(loc), '', 'act-split-stack'));
+  if (inGrid && loc.container !== 'loot' && !isCoins(st) && st.qty > 1 && mode !== 'merchant') btns.push(b('Dividir', () => setPicker('stack'), '', 'act-split-stack'));
   const unsellable = isCoins(st) || (st.gold ?? 0) > 0;
   if (mode === 'merchant' && inGrid && unsellable && (loc.container === 'backpack' || loc.container === 'stash')) btns.push(<span key="nosell" className="text-xs text-stone-400 self-center">{isCoins(st) ? 'Las monedas ya son oro.' : 'Vacía el saco para venderlo.'}</span>);
   if (mode === 'merchant' && inGrid && !unsellable && (loc.container === 'backpack' || loc.container === 'stash')) {
@@ -127,6 +127,11 @@ export function ItemActions({ loc, mode, onClear, lootId, buttonsOnly = false }:
         from={<><ItemIcon itemId={st.itemId} size={36} /><span className="font-body text-lg">{def.name} · <b className="text-gold">{st.gold ?? 0}</b>/{capacityOf(st)}</span></>}
         confirm={(n) => `Sacar ${n}`} note="Las monedas que saques irán a una casilla libre de este mismo sitio (de 10 en 10)."
         onConfirm={(n) => actions.withdrawGold(loc, n)} />
+    : picker === 'stack'
+    ? <GoldAmountPicker title="Dividir montón" max={st.qty - 1} initial={Math.floor(st.qty / 2)} onClose={() => setPicker(null)}
+        from={<><ItemIcon itemId={st.itemId} size={36} /><span className="font-body text-lg">{def.name} · <b className="text-gold">{st.qty}</b></span></>}
+        confirm={(n) => `Separar ${n}`} note="Los que separes irán a la casilla libre más cercana."
+        onConfirm={(n) => actions.splitStack(loc, n)} />
     : <GoldAmountPicker title="Dividir montón" max={st.qty - 1} initial={Math.floor(st.qty / 2)} onClose={() => setPicker(null)}
         from={<span className="font-body text-lg">Monedas de oro · <b className="text-gold">{st.qty}</b></span>}
         confirm={(n) => `Separar ${n}`} note="Las que separes irán a la casilla libre más cercana."

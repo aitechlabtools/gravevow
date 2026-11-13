@@ -7,3 +7,4 @@ export { Card } from './Card';
 export { usePixelScale, type ScaleKey } from './Pixel';
 // Casillas e inventario (ya existían): la casilla mide var(--slot).
 export { ItemSlot, GridView, ItemIcon, Bar } from '../inventory';
+export { QtyPicker } from './QtyPicker';

@@ -1,13 +1,13 @@
 // Audio sintetizado con WebAudio: sin archivos externos. Placeholder hasta tener SFX y música definitivos.
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
-let musicGain: GainNode | null = null;
-let musicNodes: AudioNode[] = [];
 let sfxBus: GainNode | null = null;
 let musicBus: GainNode | null = null;
+let ambientBus: GainNode | null = null;
 let volume = 0.6;
 let musicVolume = 1;
 let sfxVolume = 1;
+let ambientVolume = 1;
 
 function ac(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -21,6 +21,7 @@ function ac(): AudioContext | null {
     // Dos buses bajo el general: efectos y música, cada uno con su volumen (Ajustes › Sonido)
     sfxBus = ctx.createGain(); sfxBus.gain.value = sfxVolume; sfxBus.connect(master);
     musicBus = ctx.createGain(); musicBus.gain.value = musicVolume; musicBus.connect(master);
+    ambientBus = ctx.createGain(); ambientBus.gain.value = ambientVolume; ambientBus.connect(master);
   }
   if (ctx.state === 'suspended') void ctx.resume();
   return ctx;
@@ -31,8 +32,15 @@ export function setVolume(v: number) {
   if (master) master.gain.value = v;
 }
 
-/** Aplica los tres volúmenes de Ajustes (0..1). Los que no vengan se quedan como están. */
-export function setAudio(o: { volume?: number; musicVolume?: number; sfxVolume?: number }) {
+/** Contexto de audio y buses para el motor de música (src/game/music). null si el navegador no tiene audio. */
+export function audioGraph(): { c: AudioContext; music: GainNode; ambient: GainNode } | null {
+  const c = ac();
+  return c && musicBus && ambientBus ? { c, music: musicBus, ambient: ambientBus } : null;
+}
+
+/** Aplica los volúmenes de Ajustes (0..1). Los que no vengan se quedan como están. */
+export function setAudio(o: { volume?: number; musicVolume?: number; sfxVolume?: number; ambientVolume?: number }) {
+  if (o.ambientVolume !== undefined) { ambientVolume = o.ambientVolume; if (ambientBus) ambientBus.gain.value = ambientVolume; }
   if (o.volume !== undefined) setVolume(o.volume);
   if (o.musicVolume !== undefined) { musicVolume = o.musicVolume; if (musicBus) musicBus.gain.value = musicVolume; }
   if (o.sfxVolume !== undefined) { sfxVolume = o.sfxVolume; if (sfxBus) sfxBus.gain.value = sfxVolume; }
@@ -104,50 +112,4 @@ export function sfx(name: Sfx) {
   }
 }
 
-/** Música ambiental: drones graves con un filtro que respira. */
-export function startMusic(mood: 'lobby' | 'dungeon') {
-  stopMusic();
-  const c = ac();
-  if (!c || !master) return;
-  musicGain = c.createGain();
-  musicGain.gain.value = 0;
-  musicGain.gain.linearRampToValueAtTime(mood === 'dungeon' ? 0.16 : 0.12, c.currentTime + 3);
-  musicGain.connect(musicBus!);
-  const filt = c.createBiquadFilter();
-  filt.type = 'lowpass';
-  filt.frequency.value = 500;
-  filt.connect(musicGain);
-  const lfo = c.createOscillator();
-  const lfoGain = c.createGain();
-  lfo.frequency.value = 0.07;
-  lfoGain.gain.value = 300;
-  lfo.connect(lfoGain).connect(filt.frequency);
-  lfo.start();
-  const notes = mood === 'dungeon' ? [55, 82.4, 103.8] : [65.4, 98, 130.8];
-  const oscs = notes.map((f, i) => {
-    const o = c.createOscillator();
-    o.type = i === 0 ? 'sawtooth' : 'triangle';
-    o.frequency.value = f;
-    o.detune.value = (i - 1) * 6;
-    const g = c.createGain();
-    g.gain.value = i === 0 ? 0.5 : 0.3;
-    o.connect(g).connect(filt);
-    o.start();
-    return o;
-  });
-  musicNodes = [lfo, ...oscs];
-}
-
-export function stopMusic() {
-  const c = ctx;
-  if (c && musicGain) {
-    const g = musicGain;
-    g.gain.cancelScheduledValues(c.currentTime);
-    g.gain.setValueAtTime(g.gain.value, c.currentTime);
-    g.gain.linearRampToValueAtTime(0, c.currentTime + 0.6);
-    const nodes = musicNodes;
-    setTimeout(() => nodes.forEach((n) => { try { (n as OscillatorNode).stop(); } catch { /* ya parado */ } }), 700);
-  }
-  musicNodes = [];
-  musicGain = null;
-}
+// La música vive en src/game/music (motor generativo y director que reacciona a la partida).

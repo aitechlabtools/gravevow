@@ -12,13 +12,18 @@ import { CopiaSeguridad } from './screens/CopiaSeguridad';
 import { Toasts } from './common';
 import { MiniTutorialLayer } from './MiniTutorial';
 import { exposeDebug } from '../state/store';
-import { stopMusic } from '../audio';
+import { initMusicDirector, stopMusic } from '../music/director';
+import { MusicLab } from './MusicLab';
+
+// Pantalla de pruebas de música: /play/?debug&musica (solo desarrollo)
+const MUSIC_LAB = typeof window !== 'undefined' && /[?&]debug\b/.test(window.location.search) && /[?&]musica\b/.test(window.location.search);
 
 export function App() {
   const screen = useGame((s) => s.screen);
   const music = useGame((s) => s.profile?.settings.music);
   useEffect(() => {
     exposeDebug();
+    initMusicDirector();
     void actions.boot();
   }, []);
   useEffect(() => {
@@ -51,6 +56,7 @@ export function App() {
       <MiniTutorialLayer />
       <DragLayer />
       <RotateNotice onChange={actions.setSuspended} />
+      {MUSIC_LAB && <MusicLab />}
     </div>
   );
 }

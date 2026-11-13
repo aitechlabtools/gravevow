@@ -37,7 +37,7 @@ import { STATION_FX } from '../../config/stations';
 import { craft as craftItems, getRecipe, learnBlueprints, settlePendingJobs, storeCrafted } from '../../core/crafting';
 import { applyRune, type RuneLoc } from '../../core/runes';
 import { canSleepForPrep, cotPrepCut, giveItems, refugeOf, receptionDiscard, receptionSell, receptionWithdraw, RECEPTION_NOTE, upgradeModule } from '../../core/refuge';
-import { receptionSalvage, salvage, type SalvageRef } from '../../core/salvage';
+import { destroyItems, receptionSalvage, salvage, type DestroyRef, type SalvageRef } from '../../core/salvage';
 import type { ModuleId } from '../../core/data/refuge';
 import type { CraftStation } from '../../core/data/crafting';
 import { TUTORIAL_BLOCK } from '../../core/data/tutorial';
@@ -435,10 +435,10 @@ export const actions = {
     applyContainers({ ...c, [loc.container]: r.grid });
   },
   /** Divide una pila (no de monedas) en dos mitades: la nueva va a la casilla libre más cercana. */
-  splitStack(loc: Loc) {
+  splitStack(loc: Loc, n?: number) {
     const c = containersFor(state);
     if (!c || loc.kind !== 'grid') return;
-    const r = splitStack(c[loc.container], loc.index);
+    const r = splitStack(c[loc.container], loc.index, n);
     if (!r.ok) return invError(r.error);
     sfx('click');
     applyContainers({ ...c, [loc.container]: r.grid });
@@ -686,6 +686,19 @@ export const actions = {
     sfx('equip');
     set({ profile: r.profile });
     toast(`Orik desguaza ${refs.length > 1 ? `${refs.length} objetos` : 'el objeto'}: ${r.note}.`, 'good');
+  },
+
+  /** Destruir en el taller de Orik (13/11): uno o varios objetos, o parte de un montón. Desaparecen para siempre. */
+  destroy(refs: DestroyRef[]) {
+    const p = state.profile;
+    if (!p || state.expedition) return;
+    if (state.tutorial) return invError(TUTORIAL_BLOCK.item);
+    if (!vendorUnlocked(p, 'orik')) return invError('Orik aún no ha llegado al Bastión.');
+    const r = destroyItems(p, refs);
+    if (!r.ok) return invError(r.error);
+    sfx('click');
+    set({ profile: r.profile });
+    toast(`Orik lo echa a la fragua: ${r.count === 1 ? 'un objeto destruido' : `${r.count} objetos destruidos`}.`, 'info');
   },
 
   /** Crafteo común (todas las estaciones): fabrica n y lo coloca en la mochila o el almacén. */

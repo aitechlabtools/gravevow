@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { prepText, refugeOf } from '../../core/refuge';
-import { needsConfirm, salvageInfo, sumItems } from '../../core/salvage';
+import { destroyBlock, destroyNeedsHold, needsConfirm, salvageInfo, sumItems } from '../../core/salvage';
+import { QtyPicker } from './kit/QtyPicker';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { stackRarity } from '../../core/data/rarity';
 import { durability, hasDurability, maxDurability, wearLevel } from '../../core/durability';
@@ -130,8 +131,22 @@ function Dishes() {
   );
 }
 
-/** Desguace en el taller de Orik: se tocan los objetos para marcarlos y se desguazan juntos. Antes se ve lo seguro y lo posible. */
+/** Taller de Orik: Desguazar (da material) o Destruir (13/11: quita para siempre lo que estorba, como el equipo de recluta). */
 export function ScrapPanel() {
+  const [mode, setMode] = useState<'scrap' | 'destroy'>('scrap');
+  const tab = (id: 'scrap' | 'destroy', label: string) => (
+    <button type="button" className={`btn py-1 px-4 ${mode === id ? 'btn-gold' : ''}`} style={BTN} aria-pressed={mode === id} onClick={() => { setMode(id); sfx('click'); }} data-testid={`orik-mode-${id}`}>{label}</button>
+  );
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2" role="group" aria-label="Qué hace Orik">{tab('scrap', 'Desguazar')}{tab('destroy', 'Destruir')}</div>
+      {mode === 'scrap' ? <SalvageList /> : <DestroyPanel />}
+    </div>
+  );
+}
+
+/** Desguace en el taller de Orik: se tocan los objetos para marcarlos y se desguazan juntos. Antes se ve lo seguro y lo posible. */
+function SalvageList() {
   const profile = useGame((s) => s.profile)!;
   const bench = refugeOf(profile).bench;
   const [marks, setMarks] = useState<string[]>([]);
@@ -202,6 +217,98 @@ export function ScrapPanel() {
         </div>
       )}
       <p className="font-body text-sm text-stone-400 italic">Desguazar no da oro: da material. Fabricar y desguazar siempre pierde algo.</p>
+    </div>
+  );
+}
+
+/** Botón que se mantiene pulsado (1 s) para confirmar algo que no tiene vuelta atrás. Ratón, dedo y teclado (Intro o Espacio). */
+export function HoldButton({ label, onDone, testId, ms = 1000 }: { label: string; onDone: () => void; testId?: string; ms?: number }) {
+  const [t0, setT0] = useState<number | null>(null);
+  const [pct, setPct] = useState(0);
+  useEffect(() => {
+    if (t0 === null) return;
+    let raf = 0;
+    const tick = () => {
+      const k = Math.min(1, (performance.now() - t0) / ms);
+      setPct(k);
+      if (k >= 1) { setT0(null); setPct(0); onDone(); return; }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [t0, ms, onDone]);
+  const start = () => { if (t0 === null) setT0(performance.now()); };
+  const stop = () => { setT0(null); setPct(0); };
+  return (
+    <button type="button" className="btn btn-danger relative overflow-hidden py-1 px-3" style={{ ...BTN, touchAction: 'none' }} data-testid={testId}
+      onPointerDown={start} onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop} onContextMenu={(e) => e.preventDefault()}
+      onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); start(); } }}
+      onKeyUp={(e) => { if (e.key === 'Enter' || e.key === ' ') stop(); }}>
+      <span className="absolute inset-y-0 left-0 bg-[#c4283b]/50" style={{ width: `${pct * 100}%` }} aria-hidden />
+      <span className="relative">{label}</span>
+    </button>
+  );
+}
+
+/** Destruir en el taller de Orik: se marcan objetos (mochila, almacén y página compartida) y, en los montones, cuántos. */
+function DestroyPanel() {
+  const profile = useGame((s) => s.profile)!;
+  const [marks, setMarks] = useState<Record<string, number>>({});
+  const [confirm, setConfirm] = useState(false);
+  const places = [['backpack', 'Mochila'], ['stash', 'Almacén'], ['shared', 'Compartido']] as const;
+  const rows = places.flatMap(([container, where]) => (profile[container] ?? []).map((st, index) => {
+    if (!st || destroyBlock(st)) return null;
+    return { container, where, index, st };
+  })).filter((x): x is NonNullable<typeof x> => !!x);
+  const chosen = rows.filter((r) => marks[r.st.uid] !== undefined);
+  const hold = chosen.some((r) => destroyNeedsHold(profile, r.st));
+  const allRecruit = chosen.length > 0 && chosen.every((r) => getItem(r.st.itemId).recruit);
+  const total = chosen.reduce((n, r) => n + (marks[r.st.uid] ?? r.st.qty), 0);
+  const toggle = (st: ItemStack) => { setConfirm(false); sfx('click'); setMarks((m) => { const c = { ...m }; if (c[st.uid] !== undefined) delete c[st.uid]; else c[st.uid] = st.qty; return c; }); };
+  const go = () => {
+    if (!chosen.length) return;
+    actions.destroy(chosen.map((r) => ({ container: r.container, index: r.index, qty: marks[r.st.uid] })));
+    setMarks({}); setConfirm(false);
+  };
+  return (
+    <div className="space-y-3" data-testid="destroy">
+      <p className="font-body text-base text-stone-300 max-w-2xl">«¿Esto? A la fragua, y no vuelve.» Destruir no da nada: el objeto desaparece para siempre. Sirve para el equipo de recluta y lo que ya no quieres. Toca los objetos para marcarlos; en los montones eliges cuántos.</p>
+      {rows.length === 0 ? <p className="font-body italic text-stone-400">No hay nada que destruir en la mochila ni en el almacén.</p> : (
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
+          {rows.map(({ container, where, index, st }) => {
+            const def = getItem(st.itemId);
+            const rar = stackRarity(st, def);
+            const on = marks[st.uid] !== undefined;
+            return (
+              <div key={`${container}-${index}`} className={`bg-black/30 border p-2 ${on ? 'border-[#c4283b] bg-[#c4283b]/10' : 'border-stone-800'}`}>
+                <button type="button" aria-pressed={on} onClick={() => toggle(st)} data-testid={`destroy-${container}-${index}`} className="w-full text-left flex items-center gap-2" style={BTN}>
+                  <div className="slot shrink-0" style={{ borderColor: RARITY_INFO[rar].color + 'aa' }}><ItemIcon itemId={def.id} /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate" style={{ color: RARITY_INFO[rar].color }}>{on ? '✖ ' : ''}{def.name}{st.qty > 1 ? ` ×${st.qty}` : ''}</div>
+                    <div className="text-xs text-stone-400 truncate">{where}{def.recruit ? ' · equipo de recluta' : ''}{destroyNeedsHold(profile, st) ? ' · valioso' : ''}</div>
+                  </div>
+                </button>
+                {on && st.qty > 1 && <div className="mt-2"><QtyPicker compact value={marks[st.uid]} max={st.qty} onChange={(n) => { setConfirm(false); setMarks((m) => ({ ...m, [st.uid]: n })); }} testId={`destroy-qty-${container}-${index}`} /></div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {rows.length > 0 && (
+        <div className="sticky bottom-0 bg-[#0d0b09]/95 border border-stone-700 p-2 flex flex-wrap items-center gap-2" data-testid="destroy-summary">
+          <div className="min-w-0 flex-1 text-sm">
+            {chosen.length ? <>
+              <div className="text-parchment">Se destruyen: {chosen.map((r) => `${getItem(r.st.itemId).name}${(marks[r.st.uid] ?? 1) > 1 ? ` ×${marks[r.st.uid]}` : ''}`).join(', ')}</div>
+              {hold && <div className="text-[#ff8a7a]">Hay objetos raros o mejores que lo que llevas. Mantén pulsado para destruirlos.</div>}
+            </> : <span className="text-stone-400 italic">Nada marcado.</span>}
+          </div>
+          {chosen.length > 0 && <button className="btn py-1 px-3" style={BTN} onClick={() => { setMarks({}); setConfirm(false); sfx('click'); }} data-testid="destroy-clear">Quitar marcas</button>}
+          {!chosen.length ? <button className="btn py-1 px-3" style={BTN} disabled data-testid="destroy-go">Destruir</button>
+            : hold ? <HoldButton label={`Mantén pulsado: destruir ${total}`} onDone={go} testId="destroy-hold" />
+            : allRecruit || confirm ? <button className="btn btn-danger py-1 px-3" style={BTN} onClick={go} data-testid="destroy-go">{confirm ? `¿Seguro? Destruir ${total}` : `Destruir ${total}`}</button>
+            : <button className="btn py-1 px-3" style={BTN} onClick={() => { setConfirm(true); sfx('click'); }} data-testid="destroy-go">Destruir {total}</button>}
+        </div>
+      )}
     </div>
   );
 }

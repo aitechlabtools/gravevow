@@ -19,7 +19,8 @@ import { iconUrl } from '../../../shared/art';
 import { usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
 import { DISCORD_HINT, DISCORD_URL, DiscordIcon, EXTERNAL, HeartIcon, SUPPORT_HINT, SUPPORT_URL } from '../../../shared/community';
-import { sfx, startMusic } from '../../audio';
+import { sfx } from '../../audio';
+import { startMusic } from '../../music/director';
 import { CureButton, useCure } from '../CureOffer';
 import { useLongPress } from '../combatActions';
 

@@ -48,8 +48,9 @@ const ok = (c, m) => { if (!c) { console.error('FALLO:', m); process.exitCode = 
   const kit = await G(() => window.__GRAVEVOW__.getState().profile.equipment.mainHand?.itemId);
   ok(!loot.includes(kit), 'no sale el equipo con el que bajaste');
   ok(/17/.test(await p.textContent('[data-testid=summary-gold]')), 'oro conseguido: solo el de más');
-  await p.click('[data-testid=summary-loot] [data-item=dread_blade]');
-  ok(await p.isVisible('[data-testid=summary-item-card]'), 'tocar un objeto enseña su ficha');
+  await p.click('[data-testid=summary-loot] [data-item=dread_blade]', { force: true });
+  await p.hover('[data-testid=summary-loot] [data-item=iron_ore]', { force: true }).catch(() => {});
+  ok(!(await p.$('[data-testid=summary-item-card]')) && !(await p.$('[data-testid=tooltip-carry]')), 'tocar o pasar por encima no abre ninguna ficha');
   await p.screenshot({ path: path.join(out, `resultados-${tag}-2.png`) });
   await tap('[data-testid=summary-prev]'); ok(await page() === 1, '◂ Atrás vuelve');
   await tap('[data-testid=summary-skip]'); await p.waitForTimeout(150);

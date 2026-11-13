@@ -18,6 +18,7 @@ import { CombatScreen } from './CombatScreen';
 import { BodyFigure, BodyPanel } from './BodyFigure';
 import { expBody } from '../state/medicalActions';
 import { Bar, EquipmentView, GridView, StatsList, ItemIcon, highlightItems } from './inventory';
+import { GoldAmountPicker } from './GoldAmountPicker';
 import { PlayerSprite, MonsterSprite, Modal, formatTime, ItemActions, GoldAmount } from './common';
 import { SettingsModal } from './TitleScreen';
 import { chestType } from '../../core/data/chests';
@@ -354,6 +355,7 @@ function ShareMeter({ given, total, single, name }: { given: number; total: numb
 function LootModal() {
   const s = useGame((x) => x);
   const [sel, setSel] = useState<Loc | null>(null);
+  const [splitGive, setSplitGive] = useState(false);
   useClearOnDrop(useCallback(() => setSel(null), []));
   if (s.modal?.type !== 'loot' || !s.expedition) return null;
   const session = s.modal.session;
@@ -389,8 +391,15 @@ function LootModal() {
             <div className="flex gap-2 mt-3 items-center flex-wrap">
               <span style={{ color: RARITY_INFO[getItem(selStack.itemId).rarity].color }}>{getItem(selStack.itemId).name}</span>
               <button className="btn btn-gold text-sm" onClick={() => { actions.quickMove(sel!, 'backpack', session.id); setSel(null); }}>Coger</button>
-              {share && <button className="btn text-sm" onClick={() => { actions.giveToRival(session.id, (sel as { index: number }).index); setSel(null); }} data-testid="btn-give">Dar a {getWanderer(s.rival.who).name.split(' ')[0]}</button>}
+              {share && <button className="btn text-sm" onClick={() => { actions.giveToRival(session.id, (sel as { index: number }).index); setSel(null); }} data-testid="btn-give">Dar a {getWanderer(s.rival.who).name.split(' ')[0]}{selStack.qty > 1 ? ' (todo)' : ''}</button>}
+              {share && selStack.qty > 1 && !selStack.gold && <button className="btn text-sm" onClick={() => setSplitGive(true)} data-testid="btn-give-split">Dividir…</button>}
             </div>
+          )}
+          {splitGive && selStack && sel?.kind === 'grid' && (
+            <GoldAmountPicker title={`Dar a ${getWanderer(s.rival.who).name.split(' ')[0]}`} max={selStack.qty} initial={Math.max(1, Math.floor(selStack.qty / 2))} onClose={() => setSplitGive(false)}
+              from={<><ItemIcon itemId={selStack.itemId} size={36} /><span className="font-body text-lg">{getItem(selStack.itemId).name} · <b className="text-gold">{selStack.qty}</b></span></>}
+              confirm={(n) => `Dar ${n}`} note="El resto se queda en el cofre."
+              onConfirm={(n) => { actions.giveToRival(session.id, sel.index, n); setSel(null); }} />
           )}
         </div>
         <div>

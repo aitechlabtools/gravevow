@@ -351,6 +351,10 @@ function EXPEDITION_MINIS(): MiniTutorial[] {
       { text: 'Solo cabe **un aliado**. Ya te acompaña alguien: aquí decides.', target: 'ally-current' },
       { text: '**Quedarte** con el tuyo, **separar caminos** (se despide y te unes al nuevo) o **traicionarle**: combate a muerte, y el nuevo no lo olvidará.', target: 'ally-choice' },
     ] },
+    { id: 'exp.ally-body', topic: 'combate', trigger: 'ally:body', steps: [
+      { text: '**Su cuerpo aún guarda lo que compartisteis.** Lo que le diste, su parte del oro y sus pociones.' },
+      { text: 'Acércate y recógelo antes de salir de esta zona: después se pierde.' },
+    ] },
     { id: 'exp.kael-trust', topic: 'combate', trigger: 'kael:trust-down', steps: [
       { text: '**Kael no olvida.** Cada traición le hace fiarse menos: su triángulo pasa a naranja y es más fácil que te la juegue.' },
       { text: 'Extraed juntos y págale su parte para que recupere la confianza. Tres traiciones y será **hostil** para siempre.' },

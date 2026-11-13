@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { MonsterSprite, Modal } from './common';
-import { sfx, startMusic } from '../audio';
+import { sfx } from '../audio';
+import { startMusic } from '../music/director';
 import { isTouch } from '../../shared/device';
 import { canFullscreen, enterFullscreen, isFullscreen } from '../../shared/fullscreen';
 import { FullscreenButton } from './FullscreenButton';

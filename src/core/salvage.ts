@@ -133,3 +133,49 @@ export function receptionSalvage(p: Profile, i: number, seed: number): Result {
 export function salvageNote(got: { itemId: string; qty: number }[]): string {
   return got.length ? got.map((g) => `${getItem(g.itemId).name} ×${g.qty}`).join(', ') : 'nada aprovechable esta vez';
 }
+
+// ── Destruir (13/11): también en el taller de Orik, para que no se destruya nada por error desde el inventario ──
+export type DestroyRef = { container: 'backpack' | 'stash' | 'shared'; index: number; qty?: number };
+
+/** Por qué no se puede destruir (null si se puede). El oro no se destruye: son monedas. */
+export function destroyBlock(stack: ItemStack): string | null {
+  if (isCover(stack)) return 'Ahí no hay nada.';
+  if (getItem(stack.itemId).id === 'gold_coins' || (stack.gold ?? 0) > 0) return 'El oro no se destruye: guárdalo o gástalo.';
+  return null;
+}
+
+/** Destruir pide la confirmación fuerte (mantener pulsado): raro o mejor, o mejor que lo que llevas en ese hueco. El equipo de recluta, nunca. */
+export function destroyNeedsHold(p: Profile, stack: ItemStack): boolean {
+  const def = getItem(stack.itemId);
+  if (def.recruit) return false;
+  const rank = RARITY_ORDER.indexOf(stackRarity(stack, def));
+  if (rank >= RARITY_ORDER.indexOf(SALVAGE_CFG.confirmFrom)) return true;
+  if (!def.slot) return false;
+  const worn = p.equipment[def.slot as keyof Profile['equipment']] as ItemStack | null | undefined;
+  if (!worn) return true;
+  const wd = getItem(worn.itemId);
+  return rank > RARITY_ORDER.indexOf(stackRarity(worn, wd)) || (def.levelReq ?? 0) > (wd.levelReq ?? 0);
+}
+
+/** Destruye uno o varios objetos (o parte de un montón). Cada casilla cuenta una sola vez: nada se duplica ni se pierde de más. */
+export function destroyItems(p: Profile, refs: DestroyRef[]): Result & { count?: number } {
+  const grids = { backpack: cloneGrid(p.backpack), stash: cloneGrid(p.stash), shared: p.shared ? cloneGrid(p.shared) : null };
+  const seen = new Set<string>();
+  let count = 0;
+  for (const ref of refs) {
+    const g = grids[ref.container];
+    if (!g) continue;
+    const a = anchorIndex(g, ref.index);
+    const st = a >= 0 ? g[a] : null;
+    if (!st || seen.has(`${ref.container}-${a}`)) continue;
+    const block = destroyBlock(st);
+    if (block) return { ok: false, error: block };
+    seen.add(`${ref.container}-${a}`);
+    const n = ref.qty === undefined ? st.qty : Math.max(1, Math.min(st.qty, Math.floor(ref.qty)));
+    if (n < st.qty) g[a] = { ...st, qty: st.qty - n };
+    else removeAt(g, a);
+    count += n;
+  }
+  if (!count) return { ok: false, error: 'No hay nada que destruir ahí.' };
+  return { ok: true, profile: { ...p, backpack: grids.backpack, stash: grids.stash, shared: grids.shared }, count };
+}

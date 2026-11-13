@@ -4,6 +4,27 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 13/11: música generativa que reacciona
+- **Antes:** un acorde grave fijo en bucle (dos «pistas», `lobby` y `dungeon`), igual en todas las subzonas y en combate; sin ambiente. Por eso cansaba.
+- **Ahora** (`src/game/music/`: `instruments.ts`, `engine.ts`, `director.ts`; datos en `src/config/music.ts`):
+  - 6 pistas generadas con Web Audio: Menú, Bastión, Mazmorra, Cripta, Infierno y Combate (élites y jefes: la misma, más intensa y más rápida). Cada una por frases que cambian de orden, capas que entran y salen y adornos al azar.
+  - Variación por subzona (`SUBZONE_MUSIC`): transposición, tempo, filtro, intensidad y disonancia; más oscuro al bajar. Ambiente propio por subzona (viento, hoguera, goteo, cadenas, huesos, agua, eco, latido, viento caliente, lava, retumbos).
+  - Pausas de 10 a 30 s con solo ambiente cada 2–4 frases (respuesta del usuario: 10–30 s).
+  - Director: menú → Bastión → tema de la zona → combate (fundido) → vuelta; capa de peligro con vida < 25 % o < 2 min para el portal; fanfarrias en el resumen (extracción o muerte, nivel, legendario) con la música atenuada.
+  - Solo suena tras la primera interacción. Limitador suave, sin agudos por encima de ~7 kHz, sin chasquidos (comprobado en grabaciones: picos ≤ 0,7, 0 saltos bruscos).
+  - Ajustes › Sonido: volumen de Ambiente nuevo y «Música en combate: Normal / Baja / Sin música» (por defecto Normal). El interruptor «Música» quita la música; el ambiente sigue con su volumen.
+  - Sustituir una pista por un archivo: `file: { ogg, mp3 }` en `config/music.ts` (carga diferida). Brief y prompts en `docs/musica.md`.
+  - Modo ligero (sin reverberación, máx. 3 capas) en la pantalla de pruebas; si algún móvil va justo, se puede activar por defecto.
+- **Probar:** `/play/?debug&musica` (pantalla de pruebas: pistas, 10 subzonas, combate, jefe, peligro, modo ligero y fanfarrias). `node scripts/musica-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+
+## Novedades del 13/11: destruir con Orik, cuerpo del aliado, resultados sin ficha y dividir al repartir
+- **Decisión del usuario:** destruir solo en el taller de Orik (pestaña «Destruir» junto a «Desguazar»), nunca desde el inventario, para que no se destruya nada por error. En la mazmorra sigue «Soltar» (bolsa en el suelo, se puede recoger).
+- **Destruir** (`destroyItems`, `destroyNeedsHold` y `destroyBlock` en `core/salvage.ts`; `actions.destroy`; `DestroyPanel` y `HoldButton` en `RefugePanels.tsx`): mochila, almacén y página compartida; varios a la vez; en montones se elige cuántos. Recluta: un toque. Normal: dos toques («¿Seguro?»). Raro o mejor, o mejor que lo que llevas: mantener pulsado 1 s (ratón, dedo o Intro/Espacio). El oro no se destruye. Bloqueado en el tutorial. Cada casilla cuenta una vez: no se pierde de más.
+- **Cuerpo del aliado** (`core/allyBody.ts`, `combatActions.ts`): al caer Kael, un errante, un prisionero liberado o un contratado, queda una bolsa «Cuerpo de …» en el sitio con lo que le diste, su oro y sus pociones (sin su equipo: no lleva objetos reales). Dura como las demás bolsas (hasta salir de la zona o extraer). Solo se crea al pasar de vivo a muerto y el aliado queda vacío: no se duplica nada (también si te traicionó; esa bolsa ya existía y ahora también lo vacía). Sin consecuencias con Grizk. Mini tutorial `exp.ally-body`.
+- **Resultados:** la página «Botín conseguido» ya no abre fichas: icono, cantidad y borde de rareza; se mantiene el brillo.
+- **Selector de cantidad común** (`kit/QtyPicker.tsx`): −10/−1/+1/+10, barra, «Mitad» y «Todo», flechas del teclado. Lo usan dividir montones (antes partía por la mitad sin preguntar), sacar y dividir monedas, destruir y el nuevo «Dividir…» al dar al aliado (`giveToRival(lootId, index, n)`: resta del montón y solo esa parte cuenta como dada).
+- **Cómo probar:** `node scripts/destruir-check.cjs <url>/play/ <carpeta> [dispositivo]` (dividir, destruir recluta/montón/legendario, dar 2 de 4 y cuerpo de Kael); `node scripts/resultados-check.cjs` (sin ficha); tests en `tests/destruir-cuerpo.test.ts`.
+
 ## Novedades del 13/11: landing v4, banner de Discord, capturas y tráiler de 30 s
 - **Respuestas del usuario:** la portada (diorama) se queda tal cual; la versión vertical del tráiler, más adelante; el tráiler puede enseñar un momento de la Intendencia (mochila y almacén).
 - **Landing** (`src/landing`):

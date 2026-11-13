@@ -415,13 +415,19 @@ export const expeditionActions = {
   },
 
   /** Da un objeto del cofre a Kael como parte del reparto. */
-  giveToRival(lootId: string, index: number) {
+  /** Da al aliado un objeto del cofre o bolsa abierto; con `n`, solo esa parte del montón (el resto se queda donde estaba). */
+  giveToRival(lootId: string, index: number, n?: number) {
     const s = state;
     const m = s.modal;
     if (m?.type !== 'loot') return;
     const bag = s.bags[lootId];
     const grid = cloneGrid(s.chests[lootId] ?? bag?.grid ?? []);
-    const { stack: it } = removeAt(grid, index);
+    const cur = grid[index];
+    if (!cur || isCover(cur)) return;
+    let it: ItemStack | null;
+    // Parte de un montón: se resta del montón y solo esa parte cuenta como dada (sin copiar nada)
+    if (n !== undefined && n >= 1 && n < cur.qty && !cur.gold) { grid[index] = { ...cur, qty: cur.qty - n }; it = { ...cur, uid: makeUid(), qty: n }; }
+    else it = removeAt(grid, index).stack;
     if (!it) return;
     sfx('pickup');
     const coinsGiven = isCoins(it) ? it.qty : 0;

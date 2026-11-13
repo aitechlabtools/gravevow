@@ -18,13 +18,12 @@ import { bodyHp, REGIONS, REGION_NAME } from '../../core/anatomy';
 import { needsOf } from '../../core/needs';
 import { baseBody } from '../state/medicalActions';
 import { g } from '../../core/gender';
-import type { ItemStack } from '../../core/types';
-import { ItemIcon, ItemTooltip } from './inventory';
+import { ItemIcon } from './inventory';
 import { BodyFigure, regionWord } from './BodyFigure';
 import { PlayerSprite, GoldAmount, formatTime } from './common';
 import { monsterUrl } from '../../shared/art';
 import { useLayout } from '../../config/ui';
-import { startMusic } from '../audio';
+import { startMusic } from '../music/director';
 
 const EFFECT: Record<string, string> = {
   bleed: 'Pierde vida poco a poco hasta cortarlo.',
@@ -159,8 +158,7 @@ function PageRun({ phone, title, ok }: { phone: boolean; title: string; ok: bool
 function PageLoot({ phone, ok }: { phone: boolean; ok: boolean }) {
   const summary = useGame((s) => s.summary)!;
   const items = ok ? summary.gained ?? [] : summary.lost.filter((s) => s.itemId !== COIN_ID); // el oro va aparte
-  const [sel, setSel] = useState<ItemStack | null>(null);
-  const shown = sel ?? null;
+  // Solo icono, cantidad y borde de rareza: sin ficha (13/11)
   return (
     <div className="min-h-full flex flex-col items-center justify-center gap-3 py-2 text-center">
       <h2 className={`font-display ${phone ? 'text-2xl' : 'text-4xl'} ${ok ? 'text-gold' : 'text-blood'}`}>{ok ? 'Botín conseguido' : 'Lo que se queda abajo'}</h2>
@@ -178,18 +176,16 @@ function PageLoot({ phone, ok }: { phone: boolean; ok: boolean }) {
             const r = stackRarity(s, getItem(s.itemId));
             const shine = ok && (r === 'legendary' || r === 'epic');
             return (
-              <button key={s.uid} className={`slot ${phone ? '' : 'slot-big'} relative ${shine ? 'loot-shine' : ''} ${ok ? '' : 'opacity-80'} ${shown === s ? 'selected' : ''}`}
-                style={{ borderColor: RARITY_INFO[r].color, animationDelay: `${i * 70}ms` }} data-item={s.itemId} aria-label={getItem(s.itemId).name}
-                onClick={() => setSel(shown === s ? null : s)} onMouseEnter={() => setSel(s)}>
+              <div key={s.uid} className={`slot ${phone ? '' : 'slot-big'} relative ${shine ? 'loot-shine' : ''} ${ok ? '' : 'opacity-80'}`}
+                style={{ borderColor: RARITY_INFO[r].color, animationDelay: `${i * 70}ms` }} data-item={s.itemId} role="img" aria-label={getItem(s.itemId).name}>
                 <ItemIcon itemId={s.itemId} size={phone ? 32 : 48} />{s.qty > 1 && <span className="qty">{s.qty}</span>}
-              </button>
+              </div>
             );
           })}
         </div>
       ) : (
         <p className="font-body italic text-stone-300 text-xl" data-testid="summary-empty">{ok ? 'Vuelves con las manos vacías, pero vuelves.' : 'No llevabas nada. Al menos eso.'}</p>
       )}
-      {shown && <div className="max-w-md text-left" data-testid="summary-item-card"><ItemTooltip stack={shown} /></div>}
       {!!summary.blueprintsLearned?.length && (
         <div className="panel panel-gold px-3 py-2 font-body text-parchment" data-testid="blueprints-note">
           Planos aprendidos: {summary.blueprintsLearned.map((b) => getItem(b).name.replace(/^Plano: /, '')).join(', ')}. Ya no se pierden.
