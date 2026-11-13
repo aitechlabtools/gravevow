@@ -120,6 +120,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Forja, mesa y rincón por el menú común (sin minijuegos) y recepción: `node scripts/taller-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Ataques anunciados y jefes: `node scripts/intenciones-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Ciclo completo en S1 (sección 33; curación tras caer y curar partes en Estado): `node scripts/ciclo-check.cjs <url>/play/ <carpeta> <warrior|mage> <nueva|migrada> [dispositivo]`.
+- Landing: `node scripts/landing-check.cjs <url>/`. Capturas: `node scripts/landing4-shots.cjs <url>/play/` y `python3 scripts/landing4-post.py`. Tráiler (30 s): `npm run trailer` (no toques `src/` mientras graba).
 - Equilibrio: `node scripts/simular.mjs 300 actual` (escribe `docs/equilibrio/simulador-actual.md`); cualquier cambio de daño, estados o curación se comprueba con él.
 - Pasa solo las pruebas relacionadas con lo que has tocado, pero no te saltes ninguna necesaria.
 

@@ -9,8 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "trailer": "node scripts/trailer5-capture.cjs http://localhost:5173/play/ /tmp/claude-0/t5 && npm run trailer:render",
-    "trailer:render": "node trailer/v5/make.cjs && python3 trailer/v5/render.py && python3 trailer/v5/music.py && python3 trailer/v5/render.py --mux"
+    "trailer": "node scripts/trailer6-capture.cjs http://localhost:5173/play/ /tmp/claude-0/t6 && npm run trailer:render",
+    "trailer:render": "node trailer/v6/make.cjs && python3 trailer/v6/render.py && python3 trailer/v6/music.py && python3 trailer/v6/render.py --mux"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.3.0",

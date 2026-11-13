@@ -76,6 +76,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 13/11: **Landing v4.** Cinco ganchos con captura real, banner de Discord, hoja de ruta de 7 puntos, capturas nuevas reproducibles (`scripts/landing4-shots.cjs` + `landing4-post.py`) y tráiler v6 de 30 s (`npm run trailer`). Detalle en `docs/estado-trabajo.md`.
 - 13/11: **Un solo aliado y confianza de Kael.**
   - **Causa del error:** había dos huecos de compañero (`merc` y `rival`). Liberar un prisionero solo miraba el primero y aliarse con un errante no miraba nada, así que con un contrato de Grizk se podía ir con Kael (o con un prisionero) y llegar a tres; en combate solo entraba uno.
   - **La regla:** ahora solo cabe un aliado. `rivalPropose` y `freeCaptive` lo impiden y avisan («Solo cabe un aliado»).

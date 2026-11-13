@@ -4,6 +4,20 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 13/11: landing v4, banner de Discord, capturas y tráiler de 30 s
+- **Respuestas del usuario:** la portada (diorama) se queda tal cual; la versión vertical del tráiler, más adelante; el tráiler puede enseñar un momento de la Intendencia (mochila y almacén).
+- **Landing** (`src/landing`):
+  - Orden: Portada · Tráiler · VarkHollow (sin cambios) · Mecánicas (5 ganchos) · Galería · Discord · Hoja de ruta · Cierre.
+  - Ganchos (`hooks.tsx`): «Baja. Saquea. Vuelve vivo.», «Cada golpe deja marca.», «No te fíes de nadie.», «Lo mejor está al fondo.» y «Levanta las ruinas.», cada uno con su captura. El descenso ya lo cuenta VarkHollow y «gratis en el navegador y en el móvil» va en la portada y en cada botón.
+  - Fuera: la rejilla de mecánicas, «Elige quién baja», el bloque largo de aliados y «Tu partida es tuya» (resumido en una línea del cierre). `mechanics.tsx` se queda sin usar, por si se recupera algo.
+  - Hoja de ruta: «Ya en el juego» pasa de 18 a 7 puntos.
+  - Banner de Discord (`discord.tsx`), después de la galería; el pie conserva su enlace. El enlace de Discord es ahora `https://discord.gg/yw2R4nwJQa` (`shared/community.tsx`).
+  - SEO: descripción nueva e imagen para compartir del portal (`compartir.png`, 1200×630).
+- **Capturas** (`public/screenshots/landing`, `g-*` y `h-*`, WebP con PNG de respaldo): `node scripts/landing4-shots.cjs <url>/play/` y luego `python3 scripts/landing4-post.py` (aclara las de mazmorra, recorta las de los ganchos y crea `compartir.png`). Las antiguas (`combate`, `especial`, `alijo`, `forja`, `tienda`, etc.) ya no se usan: se pueden borrar a mano.
+- **Tráiler v6** (30 s, `trailer/v6`): `npm run trailer` (con el servidor en marcha) graba con `scripts/trailer6-capture.cjs` y monta con `npm run trailer:render`. Guion en `trailer/v6/guion.json`. Planos: descenso por 5 subzonas, duelo, cofre legendario, Intendencia, Kael y su traición, portal y cierre «Juega la alpha gratis · gravevow.com». Música y golpes sintetizados. Salida: `public/trailer/gravevow-trailer.mp4/.webm`, `poster.jpg` y el clip corto.
+- **Ojo:** no edites `src/` mientras se graba: Vite recarga la página y la grabación falla.
+- **Assets para diseñar (usuario):** icono de Discord en pixel art (72×72 y 22×22), arte del banner de Discord (dos figuras de 120×160, fondo 1200×420), cinco marcos o iconos de gancho (48×48) y una imagen para compartir definitiva (1200×630).
+
 ## Novedades del 13/11: un solo aliado y confianza de Kael
 - **Respuestas del usuario:**
   - 3 traiciones para hostil, y hostil es permanente;

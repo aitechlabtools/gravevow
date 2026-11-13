@@ -246,3 +246,24 @@ a:focus-visible, button:focus-visible, span[aria-disabled]:focus-visible { outli
 .share-how li::before { content: ""; position: absolute; left: 3px; top: .55em; width: 8px; height: 8px; transform: rotate(45deg); background: #6b4a12; }
 .share-how b { color: var(--color-bone); font-weight: 600; }
 
+
+/* ── Landing v4: ganchos ─────────────────────────────────────────────── */
+.hooks { display: grid; gap: 4.5rem; list-style: none; padding: 0; }
+.hook { display: grid; gap: 1.5rem; align-items: center; }
+@media (min-width: 900px) { .hook { grid-template-columns: 1.25fr 1fr; gap: 3rem; } .hook.is-flip .hook-shot { order: 2; } }
+.hook-shot { margin: 0; border: 2px solid #2a2630; box-shadow: 0 0 0 4px #07060a, 0 0 0 6px color-mix(in srgb, var(--hook) 45%, transparent), 0 20px 50px rgba(0,0,0,.6); background: #000; }
+.hook-kicker { font-family: var(--font-display); font-size: .8rem; letter-spacing: .3em; text-transform: uppercase; color: var(--hook); }
+.hook-text h3::after { content: ''; display: block; width: 72px; height: 3px; margin-top: .8rem; background: linear-gradient(90deg, var(--hook), transparent); }
+
+/* ── Landing v4: banner de Discord ───────────────────────────────────── */
+.discord-banner { position: relative; padding: 5rem 0; background: radial-gradient(ellipse at 50% 40%, rgba(88,101,242,.16), transparent 60%), #07060a; border-top: 1px solid #292524; }
+.discord-frame { position: relative; text-align: center; padding: 3rem 1.25rem 2.75rem; border: 2px solid #3a3741; background: linear-gradient(180deg, #121018, #0b0a0f);
+  box-shadow: inset 0 0 0 4px #07060a, inset 0 0 0 6px rgba(88,101,242,.35), 0 0 60px rgba(88,101,242,.15); }
+.discord-frame::before, .discord-frame::after { content: ''; position: absolute; top: -8px; width: 14px; height: 14px; transform: rotate(45deg); border: 2px solid #5865f2; background: #07060a; }
+.discord-frame::before { left: calc(50% - 7px); }
+.discord-frame::after { top: auto; bottom: -8px; left: calc(50% - 7px); }
+.discord-badge { display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px; color: #c9cdfb; background: rgba(88,101,242,.22); border: 2px solid #5865f2; box-shadow: 0 0 24px rgba(88,101,242,.45); }
+.discord-cta { margin-top: 2rem; padding: .9rem 1.6rem; min-height: 48px; font-size: 1.1rem; }
+.discord-art { position: absolute; bottom: 0; image-rendering: pixelated; opacity: .9; filter: drop-shadow(0 0 12px rgba(0,0,0,.8)); }
+.discord-art-l { left: 4%; } .discord-art-r { right: 4%; }
+@media (max-width: 899px) { .discord-art { display: none; } }

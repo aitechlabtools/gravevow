@@ -111,7 +111,7 @@ export function VarkHollowSection() {
 /** `src` sin extensión: se sirve la .webp y, si el navegador no la entiende, la .png. */
 export interface Shot { src: string; alt: string; caption: string }
 
-function Pic({ src, alt, eager = false, className = '', w = 1920, h = 1080 }: { src: string; alt: string; eager?: boolean; className?: string; w?: number; h?: number }) {
+export function Pic({ src, alt, eager = false, className = '', w = 1920, h = 1080 }: { src: string; alt: string; eager?: boolean; className?: string; w?: number; h?: number }) {
   return (
     <picture>
       <source srcSet={`${src}.webp`} type="image/webp" />
