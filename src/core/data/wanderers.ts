@@ -3,6 +3,7 @@
 // No son los de Garra Roja (esos se contratan en el refugio y nunca traicionan). Todo editable.
 // El aspecto provisional está en shared/art.ts → MONSTER_SPECS con la clave de `sprite`.
 // ════════════════════════════════════════════════════════════════════
+import { g } from '../gender';
 import type { Stats } from '../types';
 import type { BasicAttack } from '../combat';
 import type { ZoneId } from './zones/types';
@@ -64,7 +65,7 @@ export const WANDERERS: Record<string, WandererDef> = {
       greet: [
         'Kael: «Baja la voz. Lo que vive aquí oye mejor que tú.»',
         'Kael: «Otra vez tú. Empiezo a pensar que me sigues.»',
-        'Kael: «Mira quién sigue vivo. Me alegro, de verdad.»',
+        'Kael: «Mira quién sigue viv{o|a}. Me alegro, de verdad.»',
       ],
       talk: [
         'Kael: «Vendí mi espada a la orden del Bastión antes de que cayera. Desde entonces bajo solo.»',
@@ -73,12 +74,12 @@ export const WANDERERS: Record<string, WandererDef> = {
         'Kael: «Si muero, mi linterna es tuya. No la apagues.»',
       ],
       join: 'Kael: «Vamos juntos. Repartimos a partes iguales. Y si no, también: lo que no quieras, me lo quedo.»',
-      fair: 'Kael: «Justo y honrado. Así da gusto.»',
+      fair: 'Kael: «{Justo y honrado|Justa y honrada}. Así da gusto.»',
       greedy: 'Kael: «Ya veo cómo funciona esto…» Kael te mira en silencio.',
       stingy: 'Kael: «¿Esto es mi mitad? Tienes un concepto curioso de «a partes iguales».»',
       demand: 'Kael: «Antes de cruzar, lo mío. {n} monedas, como acordamos.»',
       refused: 'Kael: «Llevo demasiados años en esto para que un crío me tome el pelo.»',
-      warn: 'Kael: «He tenido una mala racha, chico…» Su mano descansa sobre la daga.',
+      warn: 'Kael: «He tenido una mala racha, {chico|chica}…» Su mano descansa sobre la daga.',
       betray: 'Kael: «Nada personal. Es que tu mochila pesa demasiado para ti.»',
       leave: 'Kael: «Así que aquí se separan nuestros caminos. Que la cripta te sea leve.»',
       farewell: 'Kael: «Hasta la próxima bajada. Y no te fíes de nadie más.»',
@@ -103,7 +104,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     stats: s(88, 16, 7, 3, 7, 16, 16, 14), skills: ['backstab', 'dirty_cut'], resourceName: 'Energía',
     basicAttack: { name: 'Estilete', kind: 'physical', power: 1, fx: 'slash' },
     lines: {
-      greet: ['Sela: «Tranquilo, solo estaba mirando. ¿Ese cofre es tuyo? Qué pena.»'],
+      greet: ['Sela: «Tranquil{o|a}, solo estaba mirando. ¿Ese cofre es tuyo? Qué pena.»'],
       talk: ['Sela: «Abro cualquier cerradura. Las de las personas también.»', 'Sela: «No me mires así. Hoy he venido a trabajar honradamente.»'],
       join: 'Sela: «Me apunto. Tú pegas, yo abro. Y repartimos, palabra.»',
       fair: 'Sela: «Vaya, un caballero. Quedan pocos.»', greedy: 'Sela: «Muy bien. Lo recordaré cuando no mires.»',
@@ -118,7 +119,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     stats: s(100, 8, 8, 18, 14, 10, 8, 6), skills: ['holy_light', 'prayer'], resourceName: 'Fe',
     basicAttack: { name: 'Bastón bendito', kind: 'magical', power: 1, fx: 'dark' },
     lines: {
-      greet: ['Hermano Odo: «Que la luz te guarde, viajero. Aquí abajo la necesitamos los dos.»'],
+      greet: ['Hermano Odo: «Que la luz te guarde, {viajero|viajera}. Aquí abajo la necesitamos los dos.»'],
       talk: ['Hermano Odo: «Los muertos de Umbravel eran mis hermanos. Vengo a darles descanso.»', 'Hermano Odo: «La plata bendita les quema. Llévala si puedes.»'],
       join: 'Hermano Odo: «Caminaré a tu lado. Lo que encontremos servirá a la orden… y a ti.»',
       fair: 'Hermano Odo: «Tu generosidad no pasará inadvertida.»', greedy: 'Hermano Odo: «La codicia también es una cripta.»',
@@ -146,7 +147,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     stats: s(130, 20, 12, 4, 9, 9, 10, 4), skills: ['hell_cleave', 'block'], resourceName: 'Furia',
     basicAttack: { name: 'Espada negra', kind: 'physical', power: 1, fx: 'slash' },
     lines: {
-      greet: ['Malek: «¿Vivo? ¿Aquí? Entonces o eres valiente o eres idiota. Me sirven los dos.»'],
+      greet: ['Malek: «¿Viv{o|a}? ¿Aquí? Entonces o eres valiente o eres idiota. Me sirven los dos.»'],
       talk: ['Malek: «Belzar me encadenó. Las rompí. Ahora busco la salida, como tú.»', 'Malek: «El calor no mata. Lo que vive en el calor, sí.»'],
       join: 'Malek: «Juntos, entonces. Hasta el portal.»',
       fair: 'Malek: «Bien. Hay honor hasta en el Infierno.»', greedy: 'Malek: «El Infierno enseña a cobrarse las deudas.»',
@@ -163,7 +164,7 @@ export const WANDERERS: Record<string, WandererDef> = {
       greet: ['Iskra: «El fuego de aquí abajo canta. ¿No lo oyes? Ya lo oirás.»'],
       talk: ['Iskra: «Vine a robarle una llama a Belzar. Todavía no la he encontrado.»', 'Iskra: «El azufre se enciende con mirarlo. Ni lo mires.»'],
       join: 'Iskra: «Me vienes bien. Los demonios atacan primero a quien va delante.»',
-      fair: 'Iskra: «Mmm. Generoso. Qué raro.»', greedy: 'Iskra: «Arde por dentro, ¿eh? Como yo.»',
+      fair: 'Iskra: «Mmm. Generos{o|a}. Qué raro.»', greedy: 'Iskra: «Arde por dentro, ¿eh? Como yo.»',
       warn: 'Iskra juega con una llama entre los dedos y te mira de reojo.', betray: 'Iskra: «Lo siento. El fuego quiere lo que quiere.»',
       rob: 'Iskra te arranca algo de la mochila y huye entre las llamas hacia el portal.',
       leave: 'Iskra: «Allá tú. Arderás igual.»', farewell: 'Iskra: «Sobrevivir sienta bien. Repítelo.»',
@@ -187,8 +188,11 @@ export const WANDERERS: Record<string, WandererDef> = {
   },
 };
 
+/** El errante, con sus frases ya concordadas con el género del personaje ({o|a}, ver core/gender.ts). */
 export function getWanderer(id: string): WandererDef {
-  return WANDERERS[id] ?? WANDERERS.kael;
+  const w = WANDERERS[id] ?? WANDERERS.kael;
+  const lines = Object.fromEntries(Object.entries(w.lines).map(([k, v]) => [k, Array.isArray(v) ? v.map((x) => g(x)) : typeof v === 'string' ? g(v) : v]));
+  return { ...w, lines: lines as WandererDef['lines'] };
 }
 
 /** Errantes que pueden salir en una zona (sin Kael, que tiene su propia regla, ni el del tutorial). */

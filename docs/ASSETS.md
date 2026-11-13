@@ -15,6 +15,21 @@ Todo el arte y el audio de la v0.1 se **genera por código**: es original, no ti
 
 Para sustituir un sprite basta con cargar la imagen en `src/game/engine/textures.ts` con la **misma clave** de textura (p. ej. `hero0`…`hero3`, `wall0`, `chest_common_open`).
 
+## Aspecto del personaje (provisionales por código, para diseñar · 13/11)
+Todo sobre el lienzo del cuerpo, de 20 × 26 px, alineado con él. Pelo, barba y capa se pintan en grises (base `#808080`, luz `#A0A0A0`, sombra `#5A5A5A`) y el juego los recolorea. La piel de la cara va en `#FF00FF` (luz) y `#B000B0` (sombra), como en los atuendos. Cada pieza es una hoja de 140 × 26 con 7 fotogramas de 20 × 26: frente (paso 0–3 y ataque) y espalda (reposo y ataque). La pose «herido» la tiñe el código. Hoy se dibujan en `src/shared/art.ts` (`frontHair`, `backHair`, `drawBeard` y la capa de frente en `drawHumanoid`).
+
+| Asset | Variantes | Medidas |
+|---|---|---|
+| Peinados | Corto, Largo, Recogido y Rapado × Hombre y Mujer = 8 hojas, comunes a todas las clases | 140 × 26 cada una |
+| Pelo bajo el sombrero de mago | Largo y Recogido × Hombre y Mujer = 4 hojas | 140 × 26 |
+| Barbas | Corta y Larga = 2 hojas (valen para los dos géneros) | 140 × 26 |
+| Caras | Hombre y Mujer = 2 hojas (ojos, nariz, pestañas y labios; piel en magenta) | 140 × 26 |
+| Capa de frente | 1 hoja (hombros, cuello, bordes bajo las manos y broche), común a todas las clases | 140 × 26 |
+| Icono de dado (Aleatorio) | 1 | 12 × 12 (se ve ×2) |
+| Icono de pluma (nombre al azar) | 1 | 12 × 12 (se ve ×2) |
+
+Las miniaturas de Género, Peinado y Barba no hay que dibujarlas: son el mismo sprite recortado a la cabeza.
+
 ## Oro físico y mochilas (provisionales, para diseñar)
 
 Se dibujan hoy en `src/shared/art.ts` (tabla `ICONS` y sprites de mercader). Sustituir por iconos de 32×32 con la **misma clave**:

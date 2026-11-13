@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { g, className } from '../../core/gender';
 import { actions, useGame } from '../state/store';
 import { bombPreview, cooldownLeft, currentActor, fleeChance, intentDamage, opponents, readIntents, type Combatant, type CombatEvent } from '../../core/combat';
 import { getMove } from '../../core/data/intents';
@@ -142,7 +143,7 @@ export function CombatScreen() {
   });
   const ready = specials.filter((x) => !x.disabled).length;
   const waiting = specials.filter((x) => x.cd > 0).length;
-  const classSlot = player.skills.includes(kit.classSkill) ? skillSlot(kit.classSkill, '3', 'class', CLASSES[profile.character.classId].name, player, () => doSkill(kit.classSkill)) : null;
+  const classSlot = player.skills.includes(kit.classSkill) ? skillSlot(kit.classSkill, '3', 'class', className(profile.character.classId, profile.character.appearance.sex), player, () => doSkill(kit.classSkill)) : null;
   const classCd = classSlot ? cooldownLeft(player, kit.classSkill) : 0;
   const bagEntries: Slot[] = usableItems.map((id) => ({
     id, key: '', name: getItem(id).name, fx: 'bag', source: 'basic' as const, sourceLabel: `x${countItem(expedition!.backpack, id)}`, cost: 0, disabled: false,
@@ -307,7 +308,7 @@ export function CombatScreen() {
                 <EntryInfo e={focused} res={res} />
               ) : (
                 <>
-                  {lastLines.map((l, i) => <div key={cs.log.length - 2 + i} className={i === lastLines.length - 1 ? 'text-parchment' : 'text-stone-400'}>{l}</div>)}
+                  {lastLines.map((l, i) => <div key={cs.log.length - 2 + i} className={i === lastLines.length - 1 ? 'text-parchment' : 'text-stone-400'}>{g(l)}</div>)}
                   {playerTurn ? <div className="text-gold">¿Qué hará {player.name}?<span className="caret">▼</span></div> : <div className="text-stone-400 italic">{actor ? `${actor.name} está actuando…` : '…'}</div>}
                 </>
               )}

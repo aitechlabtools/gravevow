@@ -168,9 +168,18 @@ export interface AttackDef {
   fx: SkillDef['fx'];
 }
 
+/** Género del personaje: decide la cara y la concordancia de los textos (ver core/gender.ts). */
+export type Sex = 'm' | 'f';
+
+/** Aspecto elegido al crear el personaje (índices de src/core/data/appearance.ts). Los campos opcionales
+ *  no existen en partidas antiguas: se leen con los valores por defecto de la clase (`fullLook`). */
 export interface Appearance {
   cloak: number;
   skin: number;
+  sex?: Sex;
+  hair?: number;
+  style?: number;
+  beard?: number;
 }
 
 export interface CharacterData {

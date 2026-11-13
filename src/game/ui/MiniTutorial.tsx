@@ -1,6 +1,7 @@
 // Capa común de los mini tutoriales: atenúa la pantalla, deja un hueco sobre el elemento que hay que mirar o tocar y
 // enseña un cartel con el retrato de quien lo cuenta. Uno a la vez (cola en el store); espera si hay combate, otra
 // ventana o el tutorial inicial. Los datos están en core/data/tutorials.ts.
+import { g } from '../../core/gender';
 import { useEffect, useState, type ReactNode } from 'react';
 import { actions, dev, useGame } from '../state/store';
 import { canShowNow, currentMini, pendingBadges } from '../../core/tutorials';
@@ -29,7 +30,7 @@ function rectOf(testId: string | undefined): Box | null {
 
 /** «**negrita**» → dorado. */
 export function rich(text: string): ReactNode[] {
-  return text.split(/\*\*(.+?)\*\*/g).map((part, i) => (i % 2 ? <b key={i} className="text-gold font-semibold">{part}</b> : part));
+  return g(text).split(/\*\*(.+?)\*\*/g).map((part, i) => (i % 2 ? <b key={i} className="text-gold font-semibold">{part}</b> : part));
 }
 
 export function narratorName(n: Narrator): string {

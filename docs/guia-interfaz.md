@@ -187,3 +187,10 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 - Tableta: una columna, como antes, con casillas a 46 px para que la mochila no se corte. Móvil: sin cambios (vistas separadas).
 - Maquetas y capturas: `mockups/intendencia/index.html` (`node mockups/intendencia/capturar.cjs <url>/play/`).
 
+
+## Crear personaje: giro, aspecto y género (13/11)
+- **Panel izquierdo** con `Segmented` Clase | Aspecto. Aspecto: Género (con Aleatorio en la misma fila), Capa, Piel, Pelo, Peinado y Barba. Muestras de 44 × 44: cuadros de color y miniaturas de cabeza (el sprite real recortado). En escritorio y tableta cabe sin scroll; en el móvil, Aspecto se desplaza.
+- **Centro:** el personaje a la mayor escala entera, con flechas ◂ ▸ de 44 × 56 a los lados. Arrastrar ≥ 30 px también gira, y la marca «Frente · Espalda» va debajo. El giro es un estrechamiento en X en 3 pasos. Al cambiar la capa de frente, enseña la espalda 1,3 s y vuelve. Sin giro automático.
+- **Nombre:** campo con el botón de pluma al lado (`name-random`, del alto del campo). El nombre sale según el género.
+- **Opciones nuevas:** se añaden en `src/core/data/appearance.ts`. Un color nuevo es solo un dato; un peinado nuevo es un dato más su dibujo en `art.ts`.
+- **Textos sobre el jugador:** se escriben con `{masculino|femenino}` (por ejemplo «cansad{o|a}») y se resuelven con `g()` de `src/core/gender.ts`. Avisos, registro de combate, errantes y tutoriales ya lo aplican solos; en un texto nuevo de la interfaz, envuélvelo con `g()`. Para el nombre de la clase del jugador usa `className(classId, sex)`, no `CLASSES[..].name`.

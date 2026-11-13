@@ -893,7 +893,7 @@ function tickCombatNeeds(s: CombatState, c: Combatant) {
 /** Texto del registro o del aviso cuando una necesidad cruza un umbral. */
 export function needLog(need: Need, level: NeedLevel): string {
   const what = NEED_NAME[need].toLowerCase();
-  if (level === 'empty') return need === 'rest' ? 'Estás agotado: tu iniciativa cae.' : need === 'hyd' ? 'La sed te quema: pronto empezará a herirte.' : 'El hambre te roe: pronto empezará a herirte.';
+  if (level === 'empty') return need === 'rest' ? 'Estás agotad{o|a}: tu iniciativa cae.' : need === 'hyd' ? 'La sed te quema: pronto empezará a herirte.' : 'El hambre te roe: pronto empezará a herirte.';
   if (level === 'critical') return `${NEED_LOW[need]} grave (${what} 10 o menos): tu Ímpetu o Maná máximo cae un 20 %.`;
   return `${NEED_LOW[need]}: ${what} en 30 o menos; tu Ímpetu o Maná máximo cae un 10 %.`;
 }

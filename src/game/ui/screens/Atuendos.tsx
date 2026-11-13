@@ -1,5 +1,6 @@
 // Atuendos: la ranura «Atuendo» del Alijo, el selector para ponérselos y la Tienda donde se compran con oro.
 // Un atuendo es un traje completo y solo estético; el arma y la secundaria se siguen viendo encima.
+import { g } from '../../../core/gender';
 import { useState } from 'react';
 import { actions, useGame } from '../../state/store';
 import { SKINS, SKIN_ORDER, type SkinDef } from '../../../core/data/skins';
@@ -81,7 +82,7 @@ export function Tienda() {
     <div className="h-full overflow-y-auto scroll-thin" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="shop">
       <div className="min-h-full flex flex-col items-center justify-center">
         <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em]">Atuendos de VarkHollow</h2>
-        {!phone && <p className="font-body text-stone-300 text-center -mt-2 mb-3">Trajes completos para tu aventurero. Solo cambian cómo te ven: nunca dan ventaja.</p>}
+        {!phone && <p className="font-body text-stone-300 text-center -mt-2 mb-3">{g('Trajes completos para {tu aventurero|tu aventurera}.')} Solo cambian cómo te ven: nunca dan ventaja.</p>}
         <div className="grid w-full max-w-[1200px]" style={{ gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 'var(--gap)' }}>
           {SKIN_ORDER.map((id) => {
             const s = SKINS[id];

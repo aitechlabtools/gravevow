@@ -198,7 +198,7 @@ export const medicalActions = {
     if (price) { const paid = spendGold(p, price); if (!paid.ok) return invError(paid.error); next = paid.profile; }
     set({ profile: { ...next, wounds: null, fallen: false } });
     sfx('heal');
-    toast(free ? 'Hermana Vesper no te cobra: «Ya pagarás cuando vuelvas con algo.» Quedas entero.' : `Hermana Vesper cose y entablilla. Quedas entero por ${price} de oro.`, 'good');
+    toast(free ? 'Hermana Vesper no te cobra: «Ya pagarás cuando vuelvas con algo.» Quedas enter{o|a}.' : `Hermana Vesper cose y entablilla. Quedas enter{o|a} por ${price} de oro.`, 'good');
   },
 };
 

@@ -1,6 +1,7 @@
 // Estado interno compartido por store.ts y sus acciones de expedición y combate.
 // La interfaz importa siempre desde store.ts.
 import { emptyTutorials, type TutorialsSave } from '../../core/tutorials';
+import { g, setTextSex } from '../../core/gender';
 import { newClock, type GameClock } from '../../core/clock';
 import { resizeBody, summaryHp } from '../../core/anatomy';
 import { useSyncExternalStore } from 'react';
@@ -216,6 +217,7 @@ export function set(patch: Partial<GameState> | ((s: GameState) => Partial<GameS
   state = { ...state, ...p };
   if (state.profile && state.profile !== prevProfile) state = { ...state, profile: syncGold(state.profile) };
   if (state.profile && state.profile !== prevProfile) scheduleSave();
+  if (state.profile !== prevProfile) setTextSex(state.profile?.character.appearance.sex);
   listeners.forEach((l) => l());
 }
 
@@ -285,7 +287,7 @@ export async function saveNow() {
 let toastId = 0;
 export function toast(text: string, kind: Toast['kind'] = 'info', icon?: string) {
   const id = ++toastId;
-  set((s) => ({ toasts: [...s.toasts.slice(-4), { id, text, kind, icon }] }));
+  set((s) => ({ toasts: [...s.toasts.slice(-4), { id, text: g(text), kind, icon }] }));
   setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 4200);
 }
 

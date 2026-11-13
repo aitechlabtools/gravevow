@@ -3,6 +3,8 @@ import type { ClassId, ResourceKind, Stats } from '../types';
 export interface ClassDef {
   id: ClassId;
   name: string;
+  /** Nombre en femenino (Guerrera, Maga…). */
+  nameF: string;
   tagline: string;
   description: string;
   playable: boolean;
@@ -27,7 +29,7 @@ export interface ClassDef {
 
 export const CLASSES: Record<ClassId, ClassDef> = {
   warrior: {
-    id: 'warrior', name: 'Guerrero', tagline: 'Acero, cicatrices y paciencia.',
+    id: 'warrior', name: 'Guerrero', nameF: 'Guerrera', tagline: 'Acero, cicatrices y paciencia.',
     description: 'Vida y defensa elevadas. Aguanta en primera línea y castiga con golpes que hacen sangrar.',
     playable: true, resourceName: 'Ímpetu', resource: 'impetus', resourceRegen: 0,
     base: { maxHp: 120, maxMp: 20, atk: 16, def: 12, mag: 4, res: 8, spd: 9, crit: 5, eva: 3 },
@@ -39,7 +41,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
     color: '#c0563b',
   },
   mage: {
-    id: 'mage', name: 'Mago', tagline: 'El conocimiento quema.',
+    id: 'mage', name: 'Mago', nameF: 'Maga', tagline: 'El conocimiento quema.',
     description: 'Daño elemental devastador a cambio de poca resistencia. Gestiona bien tu maná o caerás.',
     playable: true, resourceName: 'Maná', resource: 'mana', resourceRegen: 1,
     base: { maxHp: 92, maxMp: 45, atk: 6, def: 7, mag: 21, res: 12, spd: 11, crit: 6, eva: 5 },
@@ -51,7 +53,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
     color: '#7b5ae0',
   },
   rogue: {
-    id: 'rogue', name: 'Pícaro', tagline: 'Nadie le oye llegar.',
+    id: 'rogue', name: 'Pícaro', nameF: 'Pícara', tagline: 'Nadie le oye llegar.',
     description: 'Velocidad, evasión y críticos. Envenena y desaparece antes de la respuesta.',
     playable: false, resourceName: 'Ímpetu', resource: 'impetus', resourceRegen: 0,
     base: { maxHp: 90, maxMp: 30, atk: 14, def: 8, mag: 5, res: 8, spd: 16, crit: 15, eva: 12 },
@@ -61,7 +63,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
     color: '#4fa36b',
   },
   cleric: {
-    id: 'cleric', name: 'Clérigo', tagline: 'La luz también corta.',
+    id: 'cleric', name: 'Clérigo', nameF: 'Clériga', tagline: 'La luz también corta.',
     description: 'Curación, protección y castigo sagrado contra las criaturas de la oscuridad.',
     playable: false, resourceName: 'Maná', resource: 'mana', resourceRegen: 1,
     base: { maxHp: 100, maxMp: 40, atk: 10, def: 11, mag: 15, res: 15, spd: 8, crit: 4, eva: 3 },

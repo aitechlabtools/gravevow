@@ -582,7 +582,7 @@ export const actions = {
       const fed = feed(needsOf(s.profile.needs), { sat: def.use.sat, hyd: def.use.hyd, rest: def.use.rest }) ?? needsOf(s.profile.needs);
       set((s2) => ({ profile: s2.profile ? { ...s2.profile, needs: toSaved(fed), prep: { ...(s2.profile.prep ?? {}), dish: st.itemId, dishCut: STATION_FX.dishPrep[refugeOf(s2.profile).kitchen] } } : s2.profile }));
       sfx('heal');
-      toast(`Comes: ${def.name.toLowerCase()}. Bajarás preparado.`, 'good', def.icon);
+      toast(`Comes: ${def.name.toLowerCase()}. Bajarás preparad{o|a}.`, 'good', def.icon);
       return;
     }
     const cur = needsOf(inDungeon ? s.expedition!.needs : s.profile.needs);
@@ -612,7 +612,7 @@ export const actions = {
     if (!p || state.expedition) return;
     const n = needsOf(p.needs);
     const prep = canSleepForPrep(p);
-    if (n.rest >= 100 && !prep) return invError('Ya estás descansado.');
+    if (n.rest >= 100 && !prep) return invError('Ya estás descansad{o|a}.');
     const cut = cotPrepCut(p);
     set({ profile: { ...p, needs: toSaved(sleep(n)), ...(prep ? { prep: { ...(p.prep ?? {}), cot: cut } } : {}) } });
     sfx('heal');

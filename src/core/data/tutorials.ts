@@ -129,7 +129,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     id: 'tab.refugio', topic: 'bastion', trigger: 'bastion:refuge', narrator: 'orik', badge: 'bastion-refuge',
     steps: [
       { text: 'El Bastión de Ceniza está en ruinas, y es tuyo. Cada **estación** se reconstruye con tu oro y tus materiales; su encargado la levanta.', target: 'station-grid' },
-      { text: 'El **catre** ya está. Dormir llena el Descanso y, mejorado, te deja **preparado** para bajar.', target: 'module-cot' },
+      { text: 'El **catre** ya está. Dormir llena el Descanso y, mejorado, te deja **a punto** para bajar.', target: 'module-cot' },
       { text: 'Toca una estación para ver qué pide su reconstrucción. Empieza por la cocina.', target: 'module-kitchen', action: 'click' },
     ],
   },
@@ -232,17 +232,17 @@ function VENDOR_MINIS(): MiniTutorial[] {
   const v = (id: VendorId, steps: TutStep[]): MiniTutorial => ({ id: `vendor.${id}`, topic: 'mercaderes', trigger: `vendor:${id}`, narrator: id, badge: `vendor-card-${id}`, steps });
   return [
     v('nira', [
-      { text: 'Cuero, comida, saquitos para tu oro. Lo que necesites para no morir de tonto.', target: 'vendor-view-shop' },
+      { text: 'Cuero, comida, saquitos para tu oro. Lo que necesites para no morir de tont{o|a}.', target: 'vendor-view-shop' },
       { text: 'Y si traes chatarra, la compro: **márcala y pulsa Vender**.', touch: 'Y si traes chatarra, la compro: **márcala y toca Vender**.', target: 'vendor-view-sell' },
       { text: 'Te iré pidiendo cosas. Cúmplelas y subirá tu **reputación** conmigo.', target: 'vendor-view-quests' },
     ]),
     v('vesper', [
       { text: 'Vendas, pociones y remedios. Lo justo para volver de una pieza.', target: 'vendor-view-shop' },
-      { text: 'Si vuelves roto, en la **Enfermería** te recompongo. Cobro, claro. La fe no da de comer.', target: 'vendor-view-infirmary' },
+      { text: 'Si vuelves rot{o|a}, en la **Enfermería** te recompongo. Cobro, claro. La fe no da de comer.', target: 'vendor-view-infirmary' },
     ]),
     v('garth', [
       { text: 'Comida y agua. Ahí abajo el hambre mata tan bien como un esqueleto.', target: 'vendor-view-shop' },
-      { text: 'En mi **Cocina** te enseño a guisar. Un buen plato te deja **preparado** para bajar.', target: 'vendor-view-cook' },
+      { text: 'En mi **Cocina** te enseño a guisar. Un buen plato te deja **preparad{o|a}** para bajar.', target: 'vendor-view-cook' },
     ]),
     v('orik', [
       { text: 'Herramientas y cachivaches. Y te arreglo lo que traigas abollado.', target: 'vendor-view-repair' },

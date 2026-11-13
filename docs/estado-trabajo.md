@@ -4,6 +4,27 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 13/11: creación de personaje (giro, capa, aspecto y género)
+- Aprobado por el usuario: solo frente y espalda; peinados comunes a todas las clases; rasgos de mujer sutiles (pestañas y labios, sin cambiar el mentón); etiqueta «Género»; nombre de clase con género en todas partes; barba «Ninguna» por defecto; sin giro automático ni color de acento.
+- Fases hechas:
+  1. Vista que gira: `CrearPersonaje.tsx` (`create-stage` con `data-view`, `turn-left`/`turn-right`, arrastre ≥ 30 px, la capa enseña la espalda).
+  2. Capa visible de frente: `capeFront` en `drawHumanoid`.
+  3. Pelo y barba: `HAIR_COLORS`, `BEARDS`, `drawBeard`.
+  4. Peinados: `HAIR_STYLES`, `frontHair` y `backHair`.
+  5. Aleatorio y nombre: `look-random`, `name-random`, `randomName(sex)` con `NAME_PARTS`.
+  6. Género: `look-sex-0/1`, `female` en el sprite y concordancia de textos (`core/gender.ts`).
+- Cómo probar: crear personaje › pestaña Aspecto; girar con las flechas o arrastrando; tocar una capa (gira y vuelve); Género Mujer cambia el título a «Guerrera»; Aleatorio y la pluma del nombre. Script: `node scripts/creacion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+- Textos adaptados con `{o|a}` o rehechos neutros:
+  - Kael: «Mira quién sigue viv{o|a}», «{Justo y honrado|Justa y honrada}», «mala racha, {chico|chica}».
+  - Sela: «Tranquil{o|a}». Hermano Odo: «{viajero|viajera}». Malek: «¿Viv{o|a}?». Iskra: «Generos{o|a}».
+  - Registro y avisos: «Estás agotad{o|a}», «Bajarás preparad{o|a}», «Ya estás descansad{o|a}», «Quedas enter{o|a}» (dos frases de Vesper).
+  - Curación: «Vuelves herid{o|a}… dejarte enter{o|a}», «Los portadores… dejarte enter{o|a}», «Vas herid{o|a}» (Jugar), «Estás enter{o|a}» (Intendencia › Estado y Enfermería).
+  - Tutoriales: Cocina «preparad{o|a}», Enfermería «rot{o|a}», tienda «de tont{o|a}»; el Catre pasa a «a punto».
+  - Estaciones: el Catre «te deja a punto» (tres frases).
+  - Atuendos: «para {tu aventurero|tu aventurera}». Intendencia: panel «{Aventurero|Aventurera}».
+  - Nombres de clase: `className()` en creación, lobby, selección, mazmorra, Intendencia, combate (etiqueta de la habilidad de clase) y aviso de hito.
+- No necesitan cambio: «Has caído», «Has muerto», «Has escapado» (participio invariable) y los textos en segunda persona sin adjetivo. No hay logros en el juego.
+
 ## Novedades del 12/11: tutoriales (bloque 3), fase 1 hecha
 - Plan y respuestas: docs/plan-tutoriales.md (herida de la rata, intendente nuevo, migración opción a, regalo por personaje, avisos de nivel fuera de «desactivar», «Saltar el tutorial» marcado).
 - Fase 1: `core/data/tutorials.ts` (datos), `core/tutorials.ts` (lógica), `ui/MiniTutorial.tsx` (capa, `TutDot`, `useTutBadge`), acciones en el store, `account.tutorials`. Para enseñar algo nuevo: entrada en el archivo de datos + `actions.tutorialEvent('<disparador>')`.

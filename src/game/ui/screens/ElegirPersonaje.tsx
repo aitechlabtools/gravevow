@@ -1,8 +1,8 @@
 // Elige quién baja: los 4 huecos de personaje. Tocar uno entra al refugio con él; los vacíos crean uno nuevo.
 // Borrar pide escribir el nombre (doble confirmación) y avisa de que se pierde todo lo suyo, salvo la página «Compartido».
+import { className } from '../../../core/gender';
 import { useEffect, useState } from 'react';
 import { actions, useGame, type RosterEntry } from '../../state/store';
-import { CLASSES } from '../../../core/data/classes';
 import { MAX_CHARACTERS } from '../../../core/save';
 import { GoldAmount, HeroSprite, Modal } from '../common';
 import { useLayout } from '../../../config/ui';
@@ -62,7 +62,7 @@ function HeroCard({ r, active, onDelete }: { r: RosterEntry; active: boolean; on
           <div className="pb-2"><HeroSprite classId={r.classId} appearance={r.appearance} equipment={r.equipment} skin={r.skin} scale={sc} animate={false} /></div>
         </div>
         <div className="font-display text-parchment mt-2 truncate max-w-full" style={{ fontSize: layout === 'phone' ? 14 : 18 }}>{r.name}</div>
-        <div className="text-xs md:text-sm text-stone-300">{CLASSES[r.classId].name} · Nv {r.level}</div>
+        <div className="text-xs md:text-sm text-stone-300">{className(r.classId, r.appearance.sex)} · Nv {r.level}</div>
         <div className="mt-1 text-xs md:text-sm"><GoldAmount value={r.gold} /></div>
         <div className="text-[11px] text-stone-400 mt-0.5">{lastPlayedLabel(r.lastPlayedAt)}</div>
       </button>

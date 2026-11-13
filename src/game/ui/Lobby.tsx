@@ -1,10 +1,10 @@
 import { Tienda } from './screens/Atuendos';
+import { className } from '../../core/gender';
 import { BestiaryTab } from './BestiaryTab';
 import { useEffect, useState, type ReactNode } from 'react';
 import { actions, dev, useGame } from '../state/store';
 import { pendingBadges } from '../../core/tutorials';
 import { canCraftSomething } from '../../core/crafting';
-import { CLASSES } from '../../core/data/classes';
 import { readyQuestCount } from '../../core/quests';
 import { readyStations } from '../../core/refuge';
 import { xpForNextLevel } from '../../core/stats';
@@ -46,7 +46,6 @@ export function Lobby() {
   const [vendorTarget, setVendorTarget] = useState<VendorTarget | null>(null);
   const layout = useLayout();
   const ch = profile.character;
-  const cls = CLASSES[ch.classId];
   const questsReady = readyQuestCount(profile);
   const stationsReady = readyStations(profile).length;
   const tutBadges = pendingBadges(useGame((s) => s.tutorials));
@@ -76,7 +75,7 @@ export function Lobby() {
           <div className={`${layout === 'phone' ? 'w-8 h-8' : 'w-10 h-10'} flex items-end justify-center overflow-hidden bg-[#0d0c11] border-2 ${switcher ? 'border-gold' : 'border-stone-700'}`}><PlayerSprite scale={layout === 'phone' ? 1 : 2} animate={false} /></div>
           <div className={`min-w-0 ${layout === 'phone' ? 'w-[74px]' : 'w-28'} leading-tight`}>
             <div className={`font-display truncate ${layout === 'phone' ? 'text-xs' : 'text-sm'}`}><span data-testid="hero-name">{ch.name}</span> <span className="text-gold">▾</span></div>
-            <div className="text-[11px] text-stone-300 truncate">{layout === 'phone' ? 'Nv' : `${cls.name} · Nv`} <span data-testid="hero-level">{ch.level}</span></div>
+            <div className="text-[11px] text-stone-300 truncate">{layout === 'phone' ? 'Nv' : `${className(ch.classId, ch.appearance.sex)} · Nv`} <span data-testid="hero-level">{ch.level}</span></div>
             <div className="h-1 bg-stone-800 mt-1"><div className="h-full bg-arcane" style={{ width: `${xpPct}%` }} /></div>
           </div>
         </button>
@@ -131,7 +130,7 @@ function CharacterSwitcher({ onClose }: { onClose: () => void }) {
           <button key={r.id} className={`flex items-center gap-2 px-2 text-left ${r.id === activeId ? 'bg-[#2a2216]' : 'hover:bg-[#1c1920]'}`} style={{ minHeight: 48 }}
             onClick={() => { onClose(); if (r.id !== activeId) { sfx('click'); void actions.selectCharacter(r.id); } }} data-testid={`switch-char-${r.slot}`}>
             <div className="w-9 h-9 flex items-end justify-center overflow-hidden bg-[#0d0c11] border border-stone-700"><HeroSprite classId={r.classId} appearance={r.appearance} equipment={r.equipment} skin={r.skin} scale={1} animate={false} /></div>
-            <div className="flex-1 min-w-0 leading-tight"><div className="font-display text-sm truncate">{r.name}</div><div className="text-[11px] text-stone-300">{CLASSES[r.classId].name} · Nv {r.level}</div></div>
+            <div className="flex-1 min-w-0 leading-tight"><div className="font-display text-sm truncate">{r.name}</div><div className="text-[11px] text-stone-300">{className(r.classId, r.appearance.sex)} · Nv {r.level}</div></div>
             {r.id === activeId ? <span className="text-[11px] text-gold">ahora</span> : <span className="text-stone-400">›</span>}
           </button>
         ))}

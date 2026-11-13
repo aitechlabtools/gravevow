@@ -23,6 +23,8 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 
 ## Mapa de mini tutoriales
 
+> Creación de personaje (13/11): sin mini tutorial. En la primera creación todavía no hay cuenta donde guardar que se ha visto, y los controles se explican solos (flechas «Girar», etiqueta «Frente · Espalda», «Aleatorio» con texto y la pluma con su título).
+
 | Id | Tema | Disparador | Lo cuenta | «!» en | Resalta | Pasos | Notas |
 |---|---|---|---|---|---|---|---|
 | `bienvenida` | Bastión y estaciones | `lobby:welcome` | intendant | — | `lobby-nav`, `tab-stash`, `alijo-backpack`, `group-gold-backpack`, `alijo-pocket`, `empty-backpack`, `tab-merchants`, `bastion-merchants`, `btn-lobby-settings`, `tab-play`, `btn-enter-dungeon` | 11 | largo |

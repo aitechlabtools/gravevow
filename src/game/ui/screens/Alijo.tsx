@@ -2,6 +2,7 @@
 // Vista «Estado»: heridas y necesidades con la mochila al lado; curarte con tus objetos sin pagar a Vesper.
 // Mover objetos: arrastrar (ordenador), o tocar un objeto (se abre su ficha) y después tocar una casilla libre.
 // En móvil no caben las tres columnas: segmentos «Equipo», «Almacén» y «Estado».
+import { className, g } from '../../../core/gender';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { actions, useGame } from '../../state/store';
 import { CLASSES } from '../../../core/data/classes';
@@ -183,7 +184,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
       <div className="h-full flex flex-col" data-testid="screen-stash" style={padX}>
         {deskSeg}
         <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: `${side}px minmax(0,1fr) ${layout === 'tablet' ? 300 : 360}px`, gap: 'var(--gap)' }}>
-          <Panel title="Aventurero" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero"><HeroColumn onDetails={onDetails} needs /></Panel>
+          <Panel title={g("{Aventurero|Aventurera}")} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero"><HeroColumn onDetails={onDetails} needs /></Panel>
           <Panel title="Heridas" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">{status}</Panel>
           <Panel title="Mochila" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}{sel && <div className="panel p-3 mt-3">{card}</div>}</Panel>
         </div>
@@ -196,7 +197,7 @@ export function Alijo({ onDetails, onShop }: { onDetails: () => void; onShop?: (
     {deskSeg}
     <div className="flex-1 min-h-0 grid"
       style={{ gridTemplateColumns: `${side}px minmax(0,1fr) auto`, gap: 'var(--gap)' }}>
-      <Panel title="Aventurero" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero">
+      <Panel title={g("{Aventurero|Aventurera}")} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero">
         <HeroColumn onDetails={onDetails} />
       </Panel>
       <Panel title="Equipo" className="min-h-0" bodyClassName="min-h-0 flex flex-col">
@@ -260,7 +261,7 @@ function HeroColumn({ onDetails, needs }: { onDetails: () => void; needs?: boole
   return (
     <>
       <div className="ui-arch mx-auto w-full shrink-0" style={{ height: 26 * scale + 40 }}><div className="pb-3"><PlayerSprite scale={scale} /></div></div>
-      <div className="text-center font-display text-gold mt-3">◆ {cls.name} ◆</div>
+      <div className="text-center font-display text-gold mt-3">◆ {className(profile.character.classId, profile.character.appearance.sex)} ◆</div>
       {/* En «Estado» no van las estadísticas: así las necesidades suben y se ven sin desplazar */}
       {!needs && <div className="mt-2"><StatsColumn stats={stats} base={baseStats(ch.classId, ch.level)} resourceName={cls.resourceName} /></div>}
       {needs && <div className="needs-side mt-3"><NeedsPanel needs={needsOf(profile.needs)} backpack={profile.backpack} onShowFood={highlightItems} atBase note="El catre está en el Bastión, en los barracones." /></div>}
@@ -317,7 +318,7 @@ function StatusView({ withNeeds }: { withNeeds?: boolean }) {
     <div className="flex-1 min-h-0 flex flex-col status-wrap" data-testid="intendencia-status">
       {cure && <div className="mb-3 status-center"><CureOffer /></div>}
       <BodyPanel body={body} backpack={profile.backpack} onTreat={(id, r) => actions.baseTreat(id, r)} onHeal={(id) => actions.baseHeal(id)} full
-        note={cure ? 'Toca una parte para ver qué le pasa y curarla con lo que llevas, o arrastra una venda, una férula o una poción hasta ella.' : 'Estás entero.'}>
+        note={cure ? 'Toca una parte para ver qué le pasa y curarla con lo que llevas, o arrastra una venda, una férula o una poción hasta ella.' : g('Estás enter{o|a}.')}>
         {withNeeds && <NeedsPanel needs={needsOf(profile.needs)} body={body} backpack={profile.backpack} onShowFood={highlightItems} atBase note="El catre está en el Bastión, en los barracones." />}
       </BodyPanel>
     </div>

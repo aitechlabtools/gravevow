@@ -1,5 +1,6 @@
 // Pantalla «Jugar» (opción D): héroe grande en el centro bajo un haz de luz, tarjeta de zona arriba a la izquierda,
 // panel de expedición con «Descender» abajo a la izquierda y nivel + accesos rápidos abajo a la derecha.
+import { g } from '../../../core/gender';
 import { useEffect, useState } from 'react';
 import { actions, useGame } from '../../state/store';
 import { ZONES, ZONE_ORDER, defaultSubzone, subzoneLock, zoneLock, type ZoneId } from '../../../core/data/zones';
@@ -119,7 +120,7 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
           {!profile.equipment.mainHand && <div className="text-xs text-ember mt-1">Vas sin arma. Revisa tu equipo en la Intendencia.</div>}
           {cure && (
             <div className="flex items-center gap-2 mt-2" data-testid="jugar-cure">
-              <span className="text-xs text-blood flex-1">{cure.fallen ? 'Caíste en la última incursión.' : 'Vas herido.'} Vesper puede dejarte entero.</span>
+              <span className="text-xs text-blood flex-1">{cure.fallen ? 'Caíste en la última incursión.' : g('Vas herid{o|a}.')} {g('Vesper puede dejarte enter{o|a}.')}</span>
               <CureButton className="shrink-0 text-sm" />
             </div>
           )}

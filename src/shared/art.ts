@@ -8,6 +8,7 @@ import { PAL, shade, CLOAK_COLORS, SKIN_COLORS } from './palette';
 import type { Appearance, ClassId, Equipment } from '../core/types';
 import { EQUIP_SLOTS } from '../core/types';
 import { lookOf, lookSignature, starterEquipment } from './gearLook';
+import { HAIR_COLORS, HAIR_STYLES, BEARDS, fullLook, type HairStyle, type Beard } from '../core/data/appearance';
 import { SKINS, anchorFor, LAYER_ORDER, type View } from '../core/data/skins';
 
 export type Canvas = HTMLCanvasElement;
@@ -93,6 +94,14 @@ export interface HumanoidSpec {
   /** Colgante visible en el pecho. */
   amulet?: string;
   ribs?: boolean;
+  /** Peinado (con la cabeza al aire, o asomando bajo el sombrero de mago). */
+  hairStyle?: HairStyle;
+  /** Barba: se ve siempre que la pieza de cabeza deje la cara al aire. */
+  beard?: Beard;
+  /** Rasgos de mujer: pestañas y labios. Mismo cuerpo y silueta, así sirve todo el equipo. */
+  female?: boolean;
+  /** Héroe: la capa asoma de frente por hombros, cuello y bordes. */
+  capeFront?: boolean;
   eye?: string;
   /** Atuendo con sprites ya cargados: el cuerpo sale de su hoja (ver loadSkinSheets) en vez de dibujarse por código. */
   sheet?: string;
@@ -238,6 +247,14 @@ export function drawHumanoid(s: HumanoidSpec, frame = 0, pose: 'idle' | 'attack'
   const hand = s.hands ?? s.skin;
   p.px(5, 17 + y0 - armSwing, hand);
   p.px(14, 17 + y0 + armSwing + attackLift, hand);
+  // Capa de frente: cae sobre los hombros, sube por el cuello y asoma por los bordes bajo las manos
+  if (s.cape && s.capeFront) {
+    const c = s.cape, cd = shade(s.cape, -0.3);
+    p.rect(5, 11 + y0, 2, 1, c); p.rect(13, 11 + y0, 2, 1, cd);
+    p.px(6, 10 + y0, c); p.px(13, 10 + y0, cd);
+    p.rect(5, 18 + y0 - armSwing, 1, 3 + armSwing, c); p.rect(14, 18 + y0 + armSwing, 1, 3 - armSwing, cd);
+    p.px(7, 11 + y0, PAL.gold2);
+  }
   if (s.hands) {
     p.px(5, 16 + y0 - armSwing, shade(s.hands, -0.2));
     p.px(14, 16 + y0 + armSwing + attackLift, shade(s.hands, -0.2));
@@ -259,14 +276,15 @@ export function drawHumanoid(s: HumanoidSpec, frame = 0, pose: 'idle' | 'attack'
     p.px(8, hy + 3, eye);
     p.px(11, hy + 3, eye);
     p.px(10, hy + 4, skinShade);
+    if (s.female) {
+      p.px(7, hy + 2, shade(s.skin, -0.55)); p.px(12, hy + 2, shade(s.skin, -0.55)); // pestañas, suaves
+      p.rect(9, hy + 5, 2, 1, mix(s.skin, '#8e2a3a', 0.3)); // labios
+    }
   }
   const hc = s.headColor ?? s.hair ?? PAL.earth1;
   switch (s.head) {
     case 'hair':
-      p.rect(7, hy - 1, 6, 2, hc);
-      p.px(7, hy + 1, hc);
-      p.px(12, hy + 1, hc);
-      p.rect(6, hy, 1, 4, hc);
+      frontHair(p, s.hairStyle ?? 'short', hc, hy);
       break;
     case 'helmet':
       p.rect(6, hy - 2, 8, 4, hc);
@@ -308,6 +326,12 @@ export function drawHumanoid(s: HumanoidSpec, frame = 0, pose: 'idle' | 'attack'
     case 'skull':
       break;
   }
+  // Pelo que asoma bajo el sombrero de mago (largo y recogido)
+  if (s.head === 'wizard' && (s.hairStyle === 'long' || s.hairStyle === 'tied')) {
+    const hcol = s.hair ?? PAL.bone1, n = s.hairStyle === 'long' ? 7 : 3;
+    p.rect(6, hy + 1, 1, n, hcol); p.rect(13, hy + 1, 1, n, shade(hcol, -0.3));
+  }
+  if (s.beard && s.beard !== 'none' && s.head !== 'skull' && s.head !== 'hoodskull' && s.head !== 'crown') drawBeard(p, s.beard, s.hair ?? hc, hy);
     },
     weapon: () => {
   // Arma (mano derecha, x≈15)
@@ -457,8 +481,10 @@ export function drawHumanoidBack(s: HumanoidSpec, pose: 'idle' | 'attack' | 'hur
       p.rect(7, hy, 6, 5, s.skin); p.rect(7, hy - 2, 6, 2, PAL.gold2); p.px(7, hy - 3, PAL.gold2); p.px(12, hy - 3, PAL.gold2);
       break;
     default: // pelo
-      p.rect(6, hy - 1, 8, 6, hc); p.rect(7, hy - 1, 5, 1, shade(hc, 0.25)); p.rect(13, hy, 1, 5, shade(hc, -0.3)); p.rect(8, hy + 5, 4, 1, hc);
+      backHair(p, s.hairStyle ?? 'short', hc, hy);
   }
+  if (s.head === 'wizard' && s.hairStyle === 'long') { const hcol = s.hair ?? PAL.bone1; p.rect(7, hy + 5, 6, 3, hcol); p.rect(12, hy + 5, 1, 3, shade(hcol, -0.3)); }
+  if (s.beard === 'long' && s.head !== 'skull' && s.head !== 'crown' && s.head !== 'hoodskull') { const b = s.hair ?? hc; p.px(6, hy + 5, b); p.px(13, hy + 5, shade(b, -0.3)); }
     },
     offhand: () => {
   // Escudo o tomo por detrás (en la mano izquierda)
@@ -487,7 +513,6 @@ export function drawHumanoidBack(s: HumanoidSpec, pose: 'idle' | 'attack' | 'hur
   return p.c;
 }
 
-const CLASS_HAIR: Record<ClassId, string> = { warrior: PAL.earth1, mage: PAL.bone1, rogue: PAL.earth0, cleric: PAL.gold1 };
 
 /**
  * Aspecto del héroe a partir de lo que lleva equipado.
@@ -498,9 +523,12 @@ export function heroSpec(classId: ClassId, ap: Appearance, equipment?: Equipment
   const eq = equipment ?? starterEquipment(classId);
   const cloak = CLOAK_COLORS[ap.cloak % CLOAK_COLORS.length];
   const skin = SKIN_COLORS[ap.skin % SKIN_COLORS.length];
+  const lk = fullLook(classId, ap);
+  const hairCol = HAIR_COLORS[lk.hair % HAIR_COLORS.length].color!;
   const spec: HumanoidSpec = {
-    skin, hair: CLASS_HAIR[classId], torso: '#8a7d68', trim: '#5c5244', legs: PAL.earth1, boots: '#3a2a1e',
-    cape: cloak, head: 'hair', headColor: CLASS_HAIR[classId], weapon: 'none', offhand: 'none', torsoStyle: 'shirt',
+    capeFront: true, female: lk.sex === 'f', hairStyle: HAIR_STYLES[lk.style % HAIR_STYLES.length].id, beard: BEARDS[lk.beard % BEARDS.length].id,
+    skin, hair: hairCol, torso: '#8a7d68', trim: '#5c5244', legs: PAL.earth1, boots: '#3a2a1e',
+    cape: cloak, head: 'hair', headColor: hairCol, weapon: 'none', offhand: 'none', torsoStyle: 'shirt',
   };
   for (const slot of EQUIP_SLOTS) {
     const it = eq[slot];
@@ -543,7 +571,9 @@ export function heroSpec(classId: ClassId, ap: Appearance, equipment?: Equipment
   const sk = outfit ? SKINS[outfit] : null;
   if (sk) {
     const b = sk.body;
-    Object.assign(spec, { torso: b.torso, trim: b.trim, legs: b.legs, boots: b.boots, cape: b.cape, head: b.head, headColor: b.headColor, hatTrim: b.hatTrim, torsoStyle: b.torsoStyle, hands: b.hands, amulet: b.amulet, eye: b.eye });
+    // El atuendo respeta cara, piel, pelo y barba; su capa sustituye a la tuya solo si trae una
+    const bare = b.head === 'hair';
+    Object.assign(spec, { torso: b.torso, trim: b.trim, legs: b.legs, boots: b.boots, cape: b.cape ?? spec.cape, head: b.head, headColor: bare ? spec.headColor : b.headColor, hatTrim: b.hatTrim, torsoStyle: b.torsoStyle, hands: b.hands, amulet: b.amulet, eye: b.eye });
     if (SHEETS.has(sk.id)) spec.sheet = sk.id;
   }
   return spec;
@@ -1355,13 +1385,13 @@ export function iconUrl(icon: string, scale = 3): string {
 
 export function heroUrl(classId: ClassId, ap: Appearance, scale = 4, frame = 0, pose: 'idle' | 'attack' | 'hurt' = 'idle', equipment?: Equipment, skin?: string | null): string {
   const eq = equipment ?? starterEquipment(classId);
-  return cachedUrl(`hero:${classId}:${ap.cloak}:${ap.skin}:${lookSignature(eq)}:${skin ?? ''}:${SHEETS.size}:${frame}:${pose}`, () => drawHumanoid(heroSpec(classId, ap, eq, skin), frame, pose), scale);
+  return cachedUrl(`hero:${classId}:${lookKey(ap)}:${lookSignature(eq)}:${skin ?? ''}:${SHEETS.size}:${frame}:${pose}`, () => drawHumanoid(heroSpec(classId, ap, eq, skin), frame, pose), scale);
 }
 
 /** Héroe de espaldas (combate). */
 export function heroBackUrl(classId: ClassId, ap: Appearance, scale = 4, pose: 'idle' | 'attack' | 'hurt' = 'idle', equipment?: Equipment, skin?: string | null): string {
   const eq = equipment ?? starterEquipment(classId);
-  return cachedUrl(`heroback:${classId}:${ap.cloak}:${ap.skin}:${lookSignature(eq)}:${skin ?? ''}:${SHEETS.size}:${pose}`, () => drawHumanoidBack(heroSpec(classId, ap, eq, skin), pose), scale);
+  return cachedUrl(`heroback:${classId}:${lookKey(ap)}:${lookSignature(eq)}:${skin ?? ''}:${SHEETS.size}:${pose}`, () => drawHumanoidBack(heroSpec(classId, ap, eq, skin), pose), scale);
 }
 
 /** Kael de espaldas, cuando lucha a tu lado. */
@@ -1600,4 +1630,59 @@ export function drawTutorialArrow(): Canvas {
   p.rect(5, 0, 1, 6, PAL.gold3);
   p.outline();
   return p.c;
+}
+
+/** Clave de caché del aspecto (incluye los campos nuevos). */
+function lookKey(ap: Appearance): string {
+  return [ap.cloak, ap.skin, ap.sex ?? '', ap.hair ?? '', ap.style ?? '', ap.beard ?? ''].join(',');
+}
+
+function mix(a: string, b: string, t: number): string {
+  const x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16);
+  const c = (sh: number) => Math.round(((x >> sh) & 255) * (1 - t) + ((y >> sh) & 255) * t);
+  return '#' + ((1 << 24) | (c(16) << 16) | (c(8) << 8) | c(0)).toString(16).slice(1);
+}
+
+// ── Pelo y barba del héroe (provisionales: ver docs/ASSETS.md) ─────────
+function frontHair(p: Pix, st: HairStyle, hc: string, hy: number) {
+  const hl = shade(hc, 0.22), dk = shade(hc, -0.3);
+  switch (st) {
+    case 'short':
+      p.rect(7, hy - 1, 6, 2, hc); p.rect(8, hy - 1, 3, 1, hl); p.px(7, hy + 1, hc); p.px(12, hy + 1, dk); p.rect(6, hy, 1, 4, hc);
+      break;
+    case 'long':
+      p.rect(7, hy - 1, 6, 2, hc); p.rect(8, hy - 1, 3, 1, hl); p.px(7, hy + 1, hc); p.px(12, hy + 1, dk);
+      p.rect(6, hy, 1, 8, hc); p.rect(13, hy, 1, 8, dk); p.px(7, hy + 6, hc); p.px(12, hy + 6, dk);
+      break;
+    case 'tied':
+      p.rect(7, hy - 1, 6, 2, hc); p.rect(8, hy - 1, 4, 1, hl); p.px(12, hy + 1, dk); p.px(6, hy, hc); p.px(6, hy + 1, hc);
+      p.rect(9, hy - 3, 2, 2, hc); p.px(9, hy - 3, hl); // moño
+      break;
+    case 'shaved':
+      p.rect(7, hy, 6, 1, dk); p.px(8, hy, hc); p.px(10, hy, hc); p.px(6, hy + 1, dk);
+      break;
+  }
+}
+function backHair(p: Pix, st: HairStyle, hc: string, hy: number) {
+  const hl = shade(hc, 0.25), dk = shade(hc, -0.3);
+  switch (st) {
+    case 'short':
+      p.rect(6, hy - 1, 8, 6, hc); p.rect(7, hy - 1, 5, 1, hl); p.rect(13, hy, 1, 5, dk); p.rect(8, hy + 5, 4, 1, hc);
+      break;
+    case 'long':
+      p.rect(6, hy - 1, 8, 9, hc); p.rect(7, hy - 1, 5, 1, hl); p.rect(13, hy, 1, 8, dk); p.rect(9, hy + 1, 1, 6, dk);
+      break;
+    case 'tied':
+      p.rect(6, hy - 1, 8, 5, hc); p.rect(7, hy - 1, 5, 1, hl); p.rect(13, hy, 1, 4, dk);
+      p.rect(9, hy - 3, 2, 2, hc); p.rect(9, hy + 4, 2, 4, hc); p.px(10, hy + 7, dk); // moño y coleta
+      break;
+    case 'shaved':
+      p.rect(7, hy, 6, 2, dk); p.px(8, hy, hc); p.px(11, hy, hc);
+      break;
+  }
+}
+function drawBeard(p: Pix, b: Beard, hc: string, hy: number) {
+  const dk = shade(hc, -0.3);
+  if (b === 'short') { p.rect(7, hy + 4, 1, 2, hc); p.rect(12, hy + 4, 1, 2, dk); p.rect(8, hy + 5, 4, 1, hc); }
+  if (b === 'long') { p.rect(7, hy + 4, 1, 2, hc); p.rect(12, hy + 4, 1, 2, dk); p.rect(8, hy + 5, 4, 2, hc); p.rect(9, hy + 7, 2, 1, hc); p.px(11, hy + 6, dk); }
 }

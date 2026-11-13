@@ -36,14 +36,14 @@ const c = (gold: number, ...items: [string, number][]) => ({ gold, items: items.
 export const STATIONS: Record<StationId, StationDef> = {
   cot: {
     id: 'cot', name: 'Catre', icon: '🛏', by: 'orik',
-    purpose: 'Dormir llena el Descanso y, mejorado, te deja preparado para bajar.',
+    purpose: 'Dormir llena el Descanso y, mejorado, te deja a punto para bajar.',
     fallback: 'Paja en el suelo.',
     lines: ['«Entre estos muros caídos aún queda un rincón seco. Paja limpia; no preguntes de dónde.»', '«Un jergón como Dios manda. Casi.»', '«Mantas de lana y un somier que no chirría. Dormirás como un muerto. Uno contento.»'],
     levels: [
       { name: 'Sin catre', effect: 'Paja en el suelo.' },
       { name: 'Catre de paja', effect: 'Dormir recupera todo el Descanso, gratis.' },
-      { name: 'Catre con jergón', effect: 'Dormir te deja preparado: −10 % de Descanso en la siguiente incursión.', cost: c(80, ['scrap_metal', 6], ['leather_scrap', 6]) },
-      { name: 'Cama de lana', effect: 'Dormir te deja preparado: −15 % de Descanso en la siguiente incursión.', cost: c(250, ['iron_ore', 4], ['silver_ore', 2], ['leather_scrap', 10]) },
+      { name: 'Catre con jergón', effect: 'Dormir te deja a punto: −10 % de Descanso en la siguiente incursión.', cost: c(80, ['scrap_metal', 6], ['leather_scrap', 6]) },
+      { name: 'Cama de lana', effect: 'Dormir te deja a punto: −15 % de Descanso en la siguiente incursión.', cost: c(250, ['iron_ore', 4], ['silver_ore', 2], ['leather_scrap', 10]) },
     ],
   },
   kitchen: {

@@ -1,6 +1,7 @@
 // Cartel del tutorial inicial de expedición: «Paso N de 8», la indicación (de ratón o de toque) y «Saltar» con
 // confirmación. Resalta lo que hay que tocar (`tut-pulse`); la flecha sobre el mapa la pone la escena.
 // Datos y guion: core/data/tutorial.ts.
+import { g } from '../../core/gender';
 import { useEffect, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { TUTORIAL_PARTS, TUTORIAL_STEPS, TUTORIAL_WEAPON, type TutorialStep } from '../../core/data/tutorial';
@@ -49,7 +50,7 @@ export function TutorialGuide() {
   // Combate: solo sus propios pasos (y no en la pantalla de resultado). Al canalizar el portal se aparta.
   if (combatOpen && !(inCombat && IN_COMBAT.has(step.id))) return null;
   if (channel > 0) return null;
-  const text = touch ? step.touch : step.desktop;
+  const text = g(touch ? step.touch : step.desktop);
   return (
     <div className={`tut-guide panel panel-gold ${inCombat ? 'in-combat' : ''}`} role="status" aria-live="polite" data-testid="tutorial-guide" data-step={step.id}>
       <div className="flex items-center justify-between gap-3">

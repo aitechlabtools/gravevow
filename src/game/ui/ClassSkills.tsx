@@ -1,5 +1,6 @@
 // Aviso que sale en el pueblo cuando hay un desbloqueo de clase pendiente (niveles 20, 40, 60 y 80).
 // La lista completa y el camino de hitos están en screens/Personaje.tsx (pestaña «Habilidad de clase»).
+import { className } from '../../core/gender';
 import { useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { CLASSES } from '../../core/data/classes';
@@ -37,7 +38,7 @@ export function ClassUnlockNotice() {
   return (
     <Modal onClose={close} testId="class-unlock">
       <h2 className="panel-title text-xl mb-1">Nuevo desbloqueo de clase</h2>
-      <p className="font-body text-stone-300 mb-3">Has llegado al nivel {profile.character.level}. Elige qué habilidad de {cls.name.toLowerCase()} aprendes; las demás seguirán esperando a tus próximos desbloqueos.</p>
+      <p className="font-body text-stone-300 mb-3">Has llegado al nivel {profile.character.level}. Elige qué habilidad de {className(profile.character.classId, profile.character.appearance.sex).toLowerCase()} aprendes; las demás seguirán esperando a tus próximos desbloqueos.</p>
       <div className="grid gap-2 max-h-[55vh] overflow-y-auto scroll-thin">
         {options.map((id) => {
           const sk = getSkill(id);
