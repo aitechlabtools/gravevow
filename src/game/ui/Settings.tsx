@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { actions, useGame } from '../state/store';
 import { sfx } from '../audio';
 import { Segmented } from './kit';
+import { musicaActivada } from '../../config/music';
 import { useLayout } from '../../config/ui';
 import { useIsTouch } from '../../shared/device';
 import { canFullscreen, isIOS, isIPad, isStandalone, useFullscreen } from '../../shared/fullscreen';
@@ -108,15 +109,18 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Slider({ label, value, onChange, testId }: { label: string; value: number; onChange: (v: number) => void; testId: string }) {
+function Slider({ label, value, onChange, testId, soon = false }: { label: string; value: number; onChange: (v: number) => void; testId: string; soon?: boolean }) {
   return (
-    <label className="set-row">
-      <span>{label}</span>
-      <input type="range" min={0} max={1} step={0.05} value={value} onChange={(e) => onChange(+e.target.value)} className="accent-[#e8b33a]" data-testid={testId} />
-      <span className="set-val">{Math.round(value * 100)} %</span>
+    <label className={`set-row ${soon ? 'opacity-50' : ''}`}>
+      <span>{label}{soon && <span className="block text-[11px] text-stone-400" data-testid={`${testId}-soon`}>(Próximamente)</span>}</span>
+      <input type="range" min={0} max={1} step={0.05} value={value} onChange={(e) => onChange(+e.target.value)} disabled={soon} className={soon ? 'grayscale cursor-not-allowed' : 'accent-[#e8b33a]'} data-testid={testId} />
+      <span className="set-val">{soon ? '—' : `${Math.round(value * 100)} %`}</span>
     </label>
   );
 }
+
+// Música apagada mientras se prepara la banda sonora (config/music.ts → musicaActivada). Los valores guardados se conservan.
+const SOUND_MUSIC_SOON = !musicaActivada;
 
 function SoundSection() {
   const s = useGame((st) => st.profile?.settings);
@@ -125,22 +129,28 @@ function SoundSection() {
     <>
       <Block title="Volumen">
         <Slider label="General" value={s.volume} onChange={(v) => actions.setSettings({ volume: v })} testId="vol-master" />
-        <Slider label="Música" value={s.musicVolume ?? 1} onChange={(v) => actions.setSettings({ musicVolume: v })} testId="vol-music" />
+        <Slider label="Música" value={s.musicVolume ?? 1} onChange={(v) => actions.setSettings({ musicVolume: v })} testId="vol-music" soon={SOUND_MUSIC_SOON} />
         <Slider label="Efectos" value={s.sfxVolume ?? 1} onChange={(v) => { actions.setSettings({ sfxVolume: v }); sfx('click'); }} testId="vol-sfx" />
         <Slider label="Ambiente" value={s.ambientVolume ?? 1} onChange={(v) => actions.setSettings({ ambientVolume: v })} testId="vol-ambient" />
       </Block>
+      {SOUND_MUSIC_SOON ? (
+        <Block title="Música">
+          <p className="set-note" data-testid="music-soon">Música: próximamente. Estamos preparando la banda sonora de Gravevow.</p>
+        </Block>
+      ) : (
       <Block title="Música">
-        <label className="set-toggle">
-          <input type="checkbox" checked={s.music} onChange={(e) => actions.setSettings({ music: e.target.checked })} className="accent-[#e8b33a] w-5 h-5" data-testid="music-toggle" />
-          <span>Música</span>
-        </label>
-        <div className="flex items-center gap-3 flex-wrap mt-2" role="group" aria-label="Música en combate">
-          <span>Música en combate</span>
-          <Segmented options={[{ id: 'normal', label: 'Normal' }, { id: 'low', label: 'Baja' }, { id: 'off', label: 'Sin música' }]} value={s.combatMusic ?? 'normal'}
-            onChange={(v) => actions.setSettings({ combatMusic: v as 'normal' | 'low' | 'off' })} testId="combat-music" />
-        </div>
-        <p className="set-note">Los cambios se oyen al momento y valen para todos tus personajes.</p>
-      </Block>
+          <label className="set-toggle">
+            <input type="checkbox" checked={s.music} onChange={(e) => actions.setSettings({ music: e.target.checked })} className="accent-[#e8b33a] w-5 h-5" data-testid="music-toggle" />
+            <span>Música</span>
+          </label>
+          <div className="flex items-center gap-3 flex-wrap mt-2" role="group" aria-label="Música en combate">
+            <span>Música en combate</span>
+            <Segmented options={[{ id: 'normal', label: 'Normal' }, { id: 'low', label: 'Baja' }, { id: 'off', label: 'Sin música' }]} value={s.combatMusic ?? 'normal'}
+              onChange={(v) => actions.setSettings({ combatMusic: v as 'normal' | 'low' | 'off' })} testId="combat-music" />
+          </div>
+          <p className="set-note">Los cambios se oyen al momento y valen para todos tus personajes.</p>
+        </Block>
+      )}
     </>
   );
 }

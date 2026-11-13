@@ -7,7 +7,7 @@ import { getState, subscribe } from '../state/store';
 import { getEnemy } from '../../core/data/enemies';
 import { getItem } from '../../core/data/items';
 import { timeLeft } from '../../core/expedition';
-import { DEFAULT_VARIATION, MUSIC_CFG, SUBZONE_MUSIC, type AmbientId, type FanfareId, type SubzoneVariation, type TrackId } from '../../config/music';
+import { DEFAULT_VARIATION, MUSIC_CFG, musicaActivada, SUBZONE_MUSIC, type AmbientId, type FanfareId, type SubzoneVariation, type TrackId } from '../../config/music';
 import { MusicEngine } from './engine';
 
 let engine: MusicEngine | null = null;
@@ -82,6 +82,8 @@ function sync() {
   const m = musicEngine(); if (!m) return;
   const s = getState();
   const w = want();
+  // Música apagada (config/music.ts): solo queda el ambiente
+  if (!musicaActivada) { w.track = null; w.key = `muted:${w.ambient?.join() ?? ''}`; }
   if (w.key !== lastKey) {
     const wasCombat = lastKey.startsWith('combat');
     const fade = w.combat || wasCombat ? MUSIC_CFG.combatFade : MUSIC_CFG.crossfade;
@@ -91,8 +93,8 @@ function sync() {
   }
   const lvl = MUSIC_CFG.combatLevel[s.profile?.settings.combatMusic ?? 'normal'];
   m.setCombatLevel(w.combat ? lvl : 1);
-  m.setDanger(s.profile?.settings.music !== false && inDanger());
-  fanfares();
+  m.setDanger(musicaActivada && s.profile?.settings.music !== false && inDanger());
+  if (musicaActivada) fanfares();
 }
 
 /** Se llama una vez al arrancar la aplicación. */
@@ -109,7 +111,7 @@ export function initMusicDirector() {
   subscribe(sync);
   // Con ?debug, para las pruebas: qué suena y por qué
   if (/[?&]debug\b/.test(window.location.search)) (window as unknown as Record<string, unknown>).__MUSIC__ = { current: () => engine?.current ?? null, key: () => lastKey, ambient: () => engine?.ambientIds ?? [], danger: () => inDanger() };
-  window.setInterval(() => { if (unlocked && !labOverride) { const m = musicEngine(); m?.setDanger(getState().profile?.settings.music !== false && inDanger()); } }, 1000);
+  window.setInterval(() => { if (unlocked && !labOverride) { const m = musicEngine(); m?.setDanger(musicaActivada && getState().profile?.settings.music !== false && inDanger()); } }, 1000);
 }
 
 /** Compatibilidad: antes cada pantalla arrancaba su música. Ahora decide el director. */

@@ -14,6 +14,24 @@ const [,, url = 'http://localhost:5173/play/', out = 'musica', dev] = process.ar
   const G = (fn, a) => p.evaluate(fn, a);
 
   await p.goto(url + '?debug'); await p.waitForTimeout(800);
+  // Música apagada en config/music.ts (musicaActivada = false): no suena ninguna pista ni fanfarria; el ambiente sí. Con la música activada: MUSICA_APAGADA=0
+  if (process.env.MUSICA_APAGADA !== '0') {
+    await tap('[data-testid=btn-play]'); await p.waitForTimeout(400);
+    ok(!(await M()).cur, 'menú: sin música');
+    await p.fill('[data-testid=name-input]', 'Aldric'); await tap('[data-testid=btn-create]'); await p.waitForTimeout(600);
+    let m0 = await M(); ok(!m0.cur && m0.amb.includes('refugio'), `Bastión: sin música, con ambiente (${m0.key})`);
+    await p.evaluate(async () => { const D = window.__GRAVEVOW__; const pr = D.getState().profile; D.setState({ profile: { ...pr, stats: { ...pr.stats, expeditions: 5 }, character: { ...pr.character, level: 95 }, bossesDefeated: ['ossuary_lord', 'veiled_queen'] } }); await D.actions.enterDungeon('rios'); }); await p.waitForTimeout(1500);
+    m0 = await M(); ok(!m0.cur && m0.amb.includes('lava'), `Ríos de Fuego: sin música, con ambiente de lava (${m0.amb})`);
+    await p.evaluate(() => window.__GRAVEVOW__.actions.startCombat('pve', 'e_b', 'ignaroth')); await p.waitForTimeout(600);
+    m0 = await M(); ok(!m0.cur, 'combate de jefe: sin música');
+    await p.evaluate(() => { const D = window.__GRAVEVOW__; D.setState({ combat: null }); const e = D.getState().expedition; D.setState({ expedition: { ...e, hp: 1 } }); }); await p.waitForTimeout(1300);
+    ok(!(await M()).cur, 'con poca vida: sin capa de peligro ni música');
+    await p.evaluate(() => window.__GRAVEVOW__.actions.finishExpedition('extracted')); await p.waitForTimeout(1500);
+    ok(!(await M()).cur, 'extracción: sin fanfarria ni música');
+    ok(!errs.length, 'sin errores: ' + errs.join(' | '));
+    console.log(bad ? `${bad} fallos` : 'Todo bien');
+    await b.close(); return;
+  }
   ok(!(await M()).cur, 'no suena nada antes de la primera interacción');
   await tap('[data-testid=btn-play]'); await p.waitForTimeout(400);
   ok((await M()).cur?.id === 'menu', `menú y creación: tema de presentación (${(await M()).key})`);

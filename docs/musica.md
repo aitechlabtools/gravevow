@@ -1,5 +1,7 @@
 # Gravevow · Música: brief para la versión definitiva
 
+**Ahora mismo la música está apagada** (`musicaActivada = false` en `src/config/music.ts`); el ambiente y los efectos suenan. Ponlo a `true` al integrar la música definitiva.
+
 Hoy las 6 pistas y las fanfarrias se generan por código (`src/game/music`), con los datos en `src/config/music.ts`.
 Para cambiar una por un archivo definitivo:
 

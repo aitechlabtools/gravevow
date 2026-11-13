@@ -4,6 +4,12 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 13/11 (noche): música apagada hasta la banda sonora definitiva
+- Interruptor único `musicaActivada = false` en `src/config/music.ts`. El director (`src/game/music/director.ts`) no toca ninguna pista, ni la capa de peligro, ni las fanfarrias (decisión: se quitan junto con la música). El ambiente de cada subzona y los efectos siguen sonando.
+- Ajustes › Sonido: la barra de Música, gris y desactivada con «(Próximamente)»; el bloque Música sustituido por «Música: próximamente. Estamos preparando la banda sonora de Gravevow.» General, Efectos y Ambiente funcionan igual. Los valores guardados de música (volumen, interruptor, música en combate) no se tocan.
+- La pantalla de pruebas (`/play/?debug&musica`) sigue tocando las pistas para trabajar con ellas.
+- **Volver a activarla:** `musicaActivada = true` en `src/config/music.ts`. Ajustes vuelve solo a mostrar la barra y las opciones (`SOUND_MUSIC_SOON` sale de ese interruptor). Prueba: `MUSICA_APAGADA=0 node scripts/musica-check.cjs …` para la música activada; sin la variable comprueba que no suena nada.
+
 ## Novedades del 13/11: el «?» abre solo la Guía
 - **Antes:** el «?» del lobby abría Ajustes en la sección Partida (copia, personajes y, al final, la Guía): parecía abrir las opciones.
 - **Ahora:** abre una ventana «Guía» con solo los temas y los textos para releer (`SettingsModal guideOnly`). En Ajustes › Partida sigue estando también.

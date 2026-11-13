@@ -150,6 +150,11 @@ export const SUBZONE_MUSIC: Record<string, SubzoneVariation> = {
 };
 export const DEFAULT_VARIATION: SubzoneVariation = { transpose: 0, tempo: 1, cutoff: 1, intensity: 0.4, dissonance: 0, ambient: ['viento'] };
 
+/** Interruptor general (13/11): la música está apagada mientras se prepara la banda sonora definitiva.
+ *  Con false no suena ninguna pista, ni la capa de peligro, ni las fanfarrias; el ambiente y los efectos siguen.
+ *  Para volver a activarla: pon true (y quita «Próximamente» en Ajustes › Sonido: SOUND_MUSIC_SOON en Settings.tsx). */
+export const musicaActivada = false;
+
 export const MUSIC_CFG = {
   /** Volumen relativo de cada parte bajo el general (los de Ajustes multiplican). */
   mix: { music: 0.55, ambient: 0.4, fanfare: 0.7 },
