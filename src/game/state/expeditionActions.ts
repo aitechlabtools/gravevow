@@ -15,15 +15,18 @@ import { rollLoot, adaptDrops, CHEST_TABLES, subzoneChestTable } from '../../cor
 import { chestCraftDrops, subzoneTier } from '../../core/craftDrops';
 import { learnBlueprints } from '../../core/crafting';
 import { makeRng, makeUid, randomSeed } from '../../core/rng';
-import { noRival, initialRival, talk, greetLine, proposeAlliance, rejectRival, leaveAlliance, shareLoot, evaluateBetrayal, playerBetrays, playerAttacksNeutral, rollEncounter, goldShare, sharePct, demandLine, refusedLine, refuseShare } from '../../core/social';
+import { noRival, initialRival, talk, greetLine, proposeAlliance, rejectRival, leaveAlliance, shareLoot, evaluateBetrayal, playerBetrays, playerAttacksNeutral, rollEncounter, goldShare, sharePct, demandLine, refusedLine, refuseShare, kaelTrustAfter, witnessBetrayal, partWays } from '../../core/social';
+import type { RiskLevel } from '../../config/wanderers';
+import type { Profile as P } from '../../core/types';
 import { lootValue, planPayment } from '../../core/share';
 import { getWanderer } from '../../core/data/wanderers';
 import { TUTORIAL_BETRAYAL_DELAY_MS, TUTORIAL_MAP, TUTORIAL_REWARD, TUTORIAL_START_SAT, TUTORIAL_STEPS, TUTORIAL_SUPPLIES, TUTORIAL_WEAPON, TUTORIAL_WEAPON_TILE, TUTORIAL_WOUND, tutorialRoomCenter, tutorialRoomOf } from '../../core/data/tutorial';
-import { ROB_ITEMS, SHARE_SINGLE_MIN_RARITY } from '../../config/wanderers';
+import { ROB_ITEMS, SHARE_SINGLE_MIN_RARITY, GRIZK_REP, KAEL_TRUST_LEVEL, kaelTrust } from '../../config/wanderers';
 const rarityRank = (r: string) => RARITY_ORDER.indexOf(r as (typeof RARITY_ORDER)[number]);
 import { bus } from './bus';
 import { bestPick, mineYield, wearPick, type VeinId } from '../../core/mining';
-import { captiveCandidate, mercForExpedition, settleMerc } from '../../core/mercenaries';
+import { captiveCandidate, mercBaseStats, mercForExpedition, rescuedMerc, settleMerc } from '../../core/mercenaries';
+import { getMerc } from '../../core/data/mercenaries';
 import { CAPTIVE_CHANCE } from '../../config/contracts';
 import { CRYPTS_OF_UMBRAVEL } from '../../core/dungeon';
 import { generateDungeon } from '../../core/dungeonGen';
@@ -44,6 +47,7 @@ export const expeditionActions = {
   // ── Expedición ──
   /** Bajar a una subzona concreta, o a una zona (entonces, a la subzona más honda abierta para tu nivel). */
   async enterDungeon(target: ZoneId | SubzoneId = 'mazmorra') {
+    if (dev.kaelTrustOnEnter !== null && state.profile) { dev.kaelTrust(dev.kaelTrustOnEnter); dev.kaelTrustOnEnter = null; }
     const p = state.profile;
     if (!p) return;
     const sub = isSubzoneId(target) ? getSubzone(target) : defaultSubzone(target in ZONES ? (target as ZoneId) : 'mazmorra', p.character.level, p.bossesDefeated);
@@ -54,7 +58,7 @@ export const expeditionActions = {
     if (full) return invError(full);
     // La primera expedición usa la cripta diseñada a mano (sirve de tutorial); después, mapas procedurales de la zona elegida.
     const seed = randomSeed();
-    const captive = makeRng(seed ^ 0x51ed).chance(CAPTIVE_CHANCE) ? captiveCandidate(p, zoneId) : null;
+    const captive = dev.forceCaptive ?? (makeRng(seed ^ 0x51ed).chance(CAPTIVE_CHANCE) ? captiveCandidate(p, zoneId) : null);
     // Primera expedición de una partida nueva: el tutorial guiado (salvo si se saltó)
     if (p.stats.expeditions === 0 && !p.tutorialDone && !dev.skipTutorial) return actions.startTutorial(null);
     // Mercenario errante: Kael (solo en la Mazmorra, 1 de cada 3 con garantía) u otro de la zona
@@ -71,7 +75,7 @@ export const expeditionActions = {
     const expedition = { ...started.expedition, zone: dungeon.zone ?? 'mazmorra', subzone: dungeon.subzone, chestsOpened: {}, veinsMined: 0, firstVisit };
     set({
       profile, expedition, dungeon, screen: 'dungeon', summary: null, combat: null, modal: null,
-      rival: enc.who ? initialRival(enc.who, enc.who === 'kael' && !enc.hostile && (p.kael.grudge ?? 0) > 0 ? 'mid' : enc.risk, enc.hostile) : noRival(), rivalLine: null, merc: mercForExpedition(p), chests: {}, mined: {}, bags: {},
+      rival: enc.who ? kaelAware(enc.who, enc.risk, enc.hostile, p) : noRival(), rivalLine: null, merc: dev.forceContract ? { ...rescuedMerc(dev.forceContract), rescued: false, hp: mercBaseStats(getMerc(dev.forceContract)).maxHp } : mercForExpedition(p), chests: {}, mined: {}, bags: {},
       hud: { room: '', prompt: null, channel: 0, playerTile: [0, 0] }, clock: newClock(),
     });
     await saveNow();
@@ -254,11 +258,24 @@ export const expeditionActions = {
       const w = getWanderer(s.rival.who);
       const share = s.rival.paid ?? 0;
       summary = { ...summary, wandererNote: `${w.lines.farewell}${share ? ` Le pagaste su parte en el portal: ${share} de oro.` : ''}` };
-      // Kael recuerda que cumpliste: se le pasa el enfado
-      if (s.rival.who === 'kael' && (profile.kael.grudge ?? 0) > 0) profile = { ...profile, kael: { ...profile.kael, grudge: (profile.kael.grudge ?? 0) - 1 } };
     }
-    // Kael no olvida que le negaste su parte o le atacaste
-    if (s.rival.who === 'kael' && s.rival.betrayedBy === 'player') profile = { ...profile, kael: { ...profile.kael, grudge: (profile.kael.grudge ?? 0) + 1 } };
+    // Confianza de Kael: baja si le traicionas, le atacas o le niegas su parte; se recupera extrayendo juntos y pagándole
+    if (s.rival.who === 'kael') {
+      const before = profile.kael.trust ?? 0;
+      const after = kaelTrustAfter(before, s.rival, reason === 'extracted');
+      if (after !== before) profile = { ...profile, kael: { ...profile.kael, trust: after } };
+      const lv0 = kaelTrust(before), lv1 = kaelTrust(after);
+      if (lv1 !== lv0 && after > before) {
+        summary = { ...summary, wandererNote: `${summary.wandererNote ? summary.wandererNote + ' ' : ''}Kael no olvida: su confianza contigo pasa a «${KAEL_TRUST_LEVEL[lv1].label.replace('Confianza ', '')}».` };
+        actions.tutorialEvent('kael:trust-down');
+      }
+    }
+    // Grizk se entera de lo que haces con sus mercenarios y prisioneros
+    if (s.expedition.grizkRep) {
+      profile = { ...profile, reputation: { ...profile.reputation, grizk: Math.max(0, (profile.reputation.grizk ?? 0) + s.expedition.grizkRep) } };
+      const n = s.expedition.grizkRep;
+      summary = { ...summary, mercNote: `${summary.mercNote ? summary.mercNote + ' ' : ''}${s.expedition.grizkNote ?? ''} (${n > 0 ? '+' : ''}${n} de reputación con Grizk).`.trim() };
+    }
     profile = { ...profile, playMs: (profile.playMs ?? 0) + s.clock.ms };
     const mo = settleMerc(profile, s.merc, reason === 'extracted');
     profile = mo.profile;
@@ -464,8 +481,91 @@ export const expeditionActions = {
     if (s.rival.greeted || !s.profile) { set({ modal: { type: 'rival' }, rivalLine: null }); return; }
     // Primer encuentro: su presentación (Kael recuerda cuántas veces os habéis visto)
     const met = s.rival.who === 'kael' ? s.profile.kael.met ?? 0 : 0;
-    set({ modal: { type: 'rival' }, rivalLine: greetLine(s.rival, met), rival: { ...s.rival, greeted: true } });
+    const low = s.rival.who === 'kael' && kaelTrust(s.profile.kael.trust) === 'low';
+    // Con otro aliado ya contigo, se presenta con su frase de rivalidad (solo cabe uno)
+    const line = !low && s.merc?.alive && getWanderer(s.rival.who).lines.rivalry ? getWanderer(s.rival.who).lines.rivalry! : greetLine(s.rival, met, low);
+    set({ modal: { type: 'rival' }, rivalLine: line, rival: { ...s.rival, greeted: true } });
+    if (s.merc?.alive) actions.tutorialEvent('ally:conflict');
     if (s.rival.who === 'kael') set({ profile: { ...s.profile, kael: { ...s.profile.kael, met: met + 1 } } });
+  },
+
+  // ── Un solo aliado (13/11): la decisión cuando ya te acompaña alguien ──
+  /** Te quedas con tu aliado: el errante se queda donde estaba (neutral) y el prisionero, encadenado. */
+  allyKeep() {
+    const s = state;
+    if (s.modal?.type === 'rival') toast(`${getWanderer(s.rival.who).name.split(' ')[0]} se queda donde estaba.`, 'social');
+    set({ modal: null, rivalLine: null });
+  },
+
+  /** Rompes las cadenas del prisionero sin que se una a ti: huye por su cuenta y se lo cuenta a Grizk. */
+  releaseCaptive(mercId: string) {
+    const s = state;
+    if (!s.expedition) return;
+    const m = getMerc(mercId);
+    set({
+      modal: null,
+      expedition: { ...s.expedition, released: [...(s.expedition.released ?? []), mercId], grizkRep: (s.expedition.grizkRep ?? 0) + GRIZK_REP.releaseCaptive, grizkNote: s.expedition.grizkNote ?? `Grizk: «Me han dicho que soltaste a ${m.name.split(' ')[0]}. Eso no se olvida.»` },
+    });
+    sfx('equip');
+    toast(`${m.name} se frota las muñecas y huye hacia la oscuridad. Se lo contará a Grizk.`, 'social');
+    bus.emit('captive-released', mercId);
+  },
+
+  /** Separas caminos con tu aliado actual y te quedas con el nuevo (errante o prisionero). */
+  allyPart() {
+    const s = state;
+    if (!s.expedition || s.tutorial) return;
+    const modal = s.modal;
+    if (s.merc?.alive) {
+      const m = getMerc(s.merc.id);
+      set({ merc: { ...s.merc, alive: false, left: 'parted' } });
+      toast(s.merc.rescued ? `${m.name} te da las gracias y sigue su propio camino.` : `${m.name} se encoge de hombros y vuelve al Bastión.`, 'social');
+      bus.emit('merc-changed');
+    } else if (s.rival.disposition === 'allied') {
+      // Se lleva ya su parte del oro encontrado desde que os aliasteis (lo que haya si no llega)
+      const goldNow = gridGold(s.expedition.backpack) + gridGold(s.expedition.pocket);
+      const amount = goldShare(s.rival, goldNow);
+      const pay = amount > 0 ? planPayment(s.expedition.backpack, s.expedition.pocket, amount) : null;
+      const exp = pay ? { ...s.expedition, backpack: pay.backpack, pocket: pay.pocket } : s.expedition;
+      set({ expedition: exp, rival: { ...partWays(s.rival), gold: s.rival.gold + (pay?.gold ?? 0) } });
+      toast(`${getWanderer(s.rival.who).lines.leave}${pay?.gold ? ` Se lleva su parte: ${pay.gold} de oro.` : ''}`, 'social');
+      bus.emit('rival-changed');
+    }
+    if (modal?.type === 'rival') { set({ modal: { type: 'rival' } }); actions.rivalPropose(); }
+    else if (modal?.type === 'captive') actions.freeCaptive(modal.mercId);
+  },
+
+  /** Traicionas a tu aliado actual para quedarte con el nuevo: combate a muerte, sin huida (empieza aturdido). */
+  allyBetray() {
+    const s = state;
+    if (!s.expedition || s.tutorial) return;
+    const modal = s.modal;
+    if (s.merc?.alive) {
+      const m = getMerc(s.merc.id);
+      const rep = s.merc.rescued ? GRIZK_REP.betrayRescued : GRIZK_REP.betrayContract;
+      const note = s.merc.rescued ? `Grizk: «Liberar a alguien para clavarle un cuchillo… Eso corre rápido.»` : `Grizk: «Me han contado lo de ${m.name.split(' ')[0]}. Mis chicos no son carne de cebo.»`;
+      set({ expedition: { ...s.expedition, grizkRep: (s.expedition.grizkRep ?? 0) + rep, grizkNote: note } });
+      let thenFree: string | undefined;
+      if (modal?.type === 'rival') {
+        // El errante se une ya y lucha a tu lado, pero te ha visto: se fiará menos
+        const r = proposeAlliance(s.rival, makeRng(randomSeed()), Date.now(), gridGold(s.expedition.backpack) + gridGold(s.expedition.pocket));
+        const witnessed = witnessBetrayal(r.rival, makeRng(randomSeed()));
+        set({ rival: witnessed, rivalLine: null });
+        toast(getWanderer(witnessed.who).lines.witness ?? `${getWanderer(witnessed.who).name.split(' ')[0]}: «Ya he visto lo que haces con quien te sigue.»`, 'social');
+        bus.emit('rival-changed');
+      } else if (modal?.type === 'captive') thenFree = modal.mercId;
+      set({ modal: null });
+      sfx('betray');
+      actions.startCombat('betray-merc', null);
+      if (thenFree && state.combat) set({ combat: { ...state.combat, thenFree } });
+      return;
+    }
+    if (s.rival.disposition === 'allied' && modal?.type === 'captive') {
+      // Rompes las cadenas y el prisionero lucha contigo contra tu antiguo aliado
+      set({ merc: rescuedMerc(modal.mercId), modal: null });
+      bus.emit('merc-changed');
+      actions.confirmBetray();
+    }
   },
 
   rivalTalk() {
@@ -474,6 +574,8 @@ export const expeditionActions = {
   },
 
   rivalPropose() {
+    // Solo cabe un aliado: con un mercenario contigo se decide en la conversación (allyPart / allyBetray)
+    if (state.merc?.alive) return invError('Solo cabe un aliado.');
     const r = proposeAlliance(state.rival, makeRng(randomSeed()), Date.now(), gridGold(state.expedition?.backpack ?? []) + gridGold(state.expedition?.pocket ?? []));
     if (dev.forceBetrayal) r.rival.traitor = true;
     set({ rival: r.rival, rivalLine: r.line });
@@ -612,3 +714,11 @@ export const expeditionActions = {
     bus.emit('rival-changed');
   },
 };
+
+/** El errante de la expedición; Kael sale según su confianza contigo (alta, baja u hostil). */
+function kaelAware(who: string, risk: RiskLevel, hostile: boolean, p: P) {
+  if (who !== 'kael') return initialRival(who, risk, hostile);
+  const lv = kaelTrust(p.kael.trust);
+  if (lv === 'hostile') return initialRival('kael', 'hostile', true);
+  return initialRival('kael', hostile ? risk : KAEL_TRUST_LEVEL[lv].risk, hostile);
+}

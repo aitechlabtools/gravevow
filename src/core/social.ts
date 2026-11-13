@@ -5,7 +5,7 @@ import { GOLD_SCALE } from '../config/gold';
 // solo actúa en un momento de debilidad, nunca en el primer minuto, y siempre avisa antes. El reparto de cofres
 // cambia el riesgo y vuelve a tirar el dado. Valores en config/wanderers.ts.
 // ════════════════════════════════════════════════════════════════════
-import { BETRAY_MIN_ALLIED_MS, ENCOUNTER_CHANCE, HOSTILE_CHANCE, HOSTILE_FROM_SUBZONE, KAEL_CHANCE, KAEL_GUARANTEE_AFTER, RISK, ROB_CHANCE, GOLD_SHARE, GOLD_SHARE_FAIR, GOLD_SHARE_GREEDY, SHARE_FAIR_DELTA, SHARE_FAIR_RATIO, SHARE_GREEDY_DELTA, ZONE_RISK, type RiskLevel } from '../config/wanderers';
+import { BETRAY_MIN_ALLIED_MS, ENCOUNTER_CHANCE, HOSTILE_CHANCE, HOSTILE_FROM_SUBZONE, KAEL_CHANCE, KAEL_GUARANTEE_AFTER, RISK, ROB_CHANCE, GOLD_SHARE, GOLD_SHARE_FAIR, GOLD_SHARE_GREEDY, SHARE_FAIR_DELTA, SHARE_FAIR_RATIO, SHARE_GREEDY_DELTA, ZONE_RISK, WITNESS_DISTRUST, KAEL_TRUST, type RiskLevel } from '../config/wanderers';
 import { getWanderer, wanderersOf } from './data/wanderers';
 import type { SubzoneDef } from './data/subzones';
 import type { Rng } from './rng';
@@ -40,6 +40,10 @@ export interface RivalState {
   shareScore?: number;
   /** Oro que le pagaste en el portal (para el resumen). */
   paid?: number;
+  /** Te negaste a pagarle su parte en el portal (traición menos grave para la confianza de Kael). */
+  refused?: boolean;
+  /** Te vio traicionar a tu aliado anterior para quedarse con él: se fía menos (👁). */
+  witnessed?: boolean;
 }
 
 export function noRival(): RivalState {
@@ -79,8 +83,10 @@ export function rollEncounter(rng: Rng, sub: SubzoneDef, kaelStreak: number): En
   return { who: w.id, risk: ZONE_RISK[sub.zone], hostile, kaelStreak };
 }
 
-export function greetLine(r: RivalState, timesMet = 0): string {
-  const g = getWanderer(r.who).lines.greet;
+export function greetLine(r: RivalState, timesMet = 0, lowTrust = false): string {
+  const lines = getWanderer(r.who).lines;
+  if (lowTrust && lines.greetLow?.length) return lines.greetLow[timesMet % lines.greetLow.length];
+  const g = lines.greet;
   return g[Math.min(timesMet, g.length - 1)];
 }
 
@@ -171,7 +177,19 @@ export function playerBetrays(r: RivalState): RivalState {
 }
 
 export function playerAttacksNeutral(r: RivalState): RivalState {
-  return { ...r, disposition: 'hostile' };
+  return { ...r, disposition: 'hostile', betrayedBy: 'player' };
+}
+
+/** Te ha visto traicionar a tu aliado anterior para quedarte con él: sube su riesgo y se vuelve a tirar el dado. */
+export function witnessBetrayal(r: RivalState, rng: Rng): RivalState {
+  if (r.witnessed) return r;
+  const chance = Math.min(1, r.chance + WITNESS_DISTRUST);
+  return { ...r, witnessed: true, chance, traitor: r.traitor || (r.disposition === 'allied' && rng.chance(WITNESS_DISTRUST)) };
+}
+
+/** Separar caminos con el errante aliado: se lleva ya su parte del oro encontrado desde que os aliasteis. */
+export function partWays(r: RivalState): RivalState {
+  return { ...r, disposition: 'departed' };
 }
 
 /** Parte del oro que pide un errante al llegar juntos al portal (del oro ganado desde que os aliasteis). */
@@ -196,5 +214,18 @@ export function refusedLine(r: RivalState): string {
 
 /** Te niegas a pagarle en el portal: se vuelve hostil (y cuenta como traición tuya). */
 export function refuseShare(r: RivalState): RivalState {
-  return { ...r, disposition: 'hostile', betrayed: true, betrayedBy: 'player' };
+  return { ...r, disposition: 'hostile', betrayed: true, betrayedBy: 'player', refused: true };
+}
+
+/**
+ * Confianza de Kael al acabar la expedición (puntos de traición, `Profile.kael.trust`):
+ * traicionarle o atacarle suma más que negarle su parte en el portal; extraer juntos pagándole la recupera.
+ * La hostilidad es permanente.
+ */
+export function kaelTrustAfter(points: number, r: RivalState, extracted: boolean): number {
+  if (r.who !== 'kael') return points;
+  if (points >= KAEL_TRUST.hostile) return points;
+  if (r.betrayedBy === 'player') return Math.min(KAEL_TRUST.hostile, points + (r.refused ? KAEL_TRUST.refuse : KAEL_TRUST.betray));
+  if (extracted && r.disposition === 'allied' && r.hp > 0 && r.paid !== undefined) return Math.max(0, points - KAEL_TRUST.recover);
+  return points;
 }

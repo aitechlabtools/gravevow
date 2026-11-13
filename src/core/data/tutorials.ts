@@ -347,6 +347,14 @@ function EXPEDITION_MINIS(): MiniTutorial[] {
       { text: '**Kael**. No es un errante cualquiera: lleva años bajando solo y casi nunca traiciona.', target: 'risk-badge' },
       { text: 'Si te alías con él, reparte a partes iguales. Lo que no quieras, se lo queda.' },
     ] },
+    { id: 'exp.ally-conflict', topic: 'combate', trigger: 'ally:conflict', overModal: true, steps: [
+      { text: 'Solo cabe **un aliado**. Ya te acompaña alguien: aquí decides.', target: 'ally-current' },
+      { text: '**Quedarte** con el tuyo, **separar caminos** (se despide y te unes al nuevo) o **traicionarle**: combate a muerte, y el nuevo no lo olvidará.', target: 'ally-choice' },
+    ] },
+    { id: 'exp.kael-trust', topic: 'combate', trigger: 'kael:trust-down', steps: [
+      { text: '**Kael no olvida.** Cada traición le hace fiarse menos: su triángulo pasa a naranja y es más fácil que te la juegue.' },
+      { text: 'Extraed juntos y págale su parte para que recupere la confianza. Tres traiciones y será **hostil** para siempre.' },
+    ] },
     { id: 'exp.elite', topic: 'combate', trigger: 'exp:elite', inCombat: true, steps: [
       { text: '**Élite**. Más vida, golpes más duros y mejor botín. No te dejes nada en la recámara.' },
       { text: 'Cuando anuncie un golpe fuerte, ponte en **Guardia**: lo encajas mucho mejor y queda expuesto después.' },

@@ -9,6 +9,8 @@ export interface BusEvents {
   /** Tutorial: el jugador cae y vuelve al último punto seguro. */
   'tutorial-revive': { x: number; y: number };
   'merc-changed': undefined;
+  /** Rompiste las cadenas de un prisionero sin que se uniera a ti: se marcha del mapa. */
+  'captive-released': string;
   'bags-changed': undefined;
   'cancel-channel': undefined;
 }

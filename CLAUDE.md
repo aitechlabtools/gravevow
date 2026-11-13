@@ -36,6 +36,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Inventario espacial: `inventory.ts` (objetos de varias casillas con marcas `cover`, giro `rot`, `splitStack`) y peso en `carry.ts` (carga por clase, tramos y tope del 150 %); cifras en `config/carry.ts`.
   - Expedición: `expedition.ts`, `dungeonGen.ts` y `dungeon.ts`.
   - Exploración: `exploration.ts` (salas secreta y cerrada, atajo y altar como desvíos opcionales con `DoorLock`; `checkExploration` garantiza que nada obligatorio queda detrás); pactos en `data/altars.ts`; cifras en `config/exploration.ts`.
+  - Aliados: solo cabe uno (contrato de Grizk, prisionero liberado o errante). Con alguien ya contigo se decide en la conversación (`allyKeep`, `allyPart`, `allyBetray`, `releaseCaptive`). Confianza de Kael por puntos en `Profile.kael.trust` (`KAEL_TRUST` en `config/wanderers.ts`, `kaelTrustAfter` en `social.ts`).
   - Aspecto y género: `data/appearance.ts` (géneros, colores de pelo, peinados, barbas, valores por clase, `fullLook` para partidas antiguas y nombres al azar) y `gender.ts` (textos `{o|a}` con `g()`, `className()`; el estado fija el género del personaje en juego con `setTextSex`). Los textos que hablan del jugador llevan siempre su variante femenina.
   - Partida: `save.ts` (formato 4, con cuenta y hasta 4 personajes; migra los formatos anteriores), `profile.ts` y `backup.ts` (copias firmadas con código `GV1.`; se aceptan las antiguas `CR1.`).
 - `src/config`: valores de equilibrio y medidas (`touch.ts`, `ui.ts`, `stash.ts`, `subzones.ts`…).
@@ -94,6 +95,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Mini tutoriales del Bastión y de las estaciones (regalo, crafteo, aviso de nivel, venta): `node scripts/e2e-bastion-minis.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Personajes y guardado: `node scripts/personajes-check.cjs`.
   - Creación de personaje (giro, aspecto, género, Aleatorio y nombre al azar): `node scripts/creacion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Aliados (uno solo: mantener, separarse, traicionar, soltar prisionero, testigo, Grizk y confianza de Kael): `node scripts/aliados-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Resultados en páginas (botín conseguido, cuerpo, saltar, curar, muerte): `node scripts/resultados-check.cjs <url>/play/ <carpeta> [dispositivo]`. Para salir del resumen en otros guiones: `scripts/lib/summary.cjs` (`leaveSummary`, `summaryPage`).
   - Almacén: `node scripts/almacen-check.cjs`.
   - Copias de seguridad: `node scripts/copia-check.cjs`.

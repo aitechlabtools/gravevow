@@ -4,6 +4,21 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 13/11: un solo aliado y confianza de Kael
+- **Respuestas del usuario:**
+  - 3 traiciones para hostil, y hostil es permanente;
+  - negarle su parte cuenta, pero menos (1 punto frente a 2);
+  - cifras aprobadas: +15 % de traición del testigo, −150 y −50 con Grizk, +25 por soltar un prisionero;
+  - el errante rechazado se queda donde estaba;
+  - la confianza suma y resta: las bajadas leales restan puntos, así que dos traiciones y luego buen comportamiento no llevan a hostil a la tercera.
+- **Cómo probar** (con `npx vite --port 5173`):
+  - Abre `/play/?debug&ally=bram&captive=tobias&kael=0`, crea un personaje (tutorial saltado) y baja a Afueras. Entras con Bram y aparecen Kael y el prisionero Tobías.
+  - Habla con Kael: salen las tres opciones. Habla con Tobías: cuatro opciones (con «Romper sus cadenas y dejarle marchar»).
+  - Traiciona a Bram: combate con Kael a tu lado. Al ganar, Kael lleva el 👁 y al volver Grizk te lo dice (−150).
+  - Confianza: `__GRAVEVOW__.dev.kaelTrust(2)` (baja) o `(6)` (hostil) y vuelve a bajar. También `?debug&kael=2`.
+  - Script: `node scripts/aliados-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+- **Tutorial:** Osric sigue sin poder ser sustituido ni traicionado (las opciones no salen con `state.tutorial`). `e2e-tutorial` pasa.
+
 ## Novedades del 13/11: resultados en tres páginas
 - **Antes:** «Botín encontrado» apuntaba lo cogido sin restar lo soltado o gastado, con las monedas como objetos. «Conservas» listaba todo lo que llevabas, también el equipo con el que bajaste. El oro y el valor contaban lo que ya llevabas.
 - **Ahora:**

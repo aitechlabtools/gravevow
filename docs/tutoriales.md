@@ -56,6 +56,8 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 | `exp.need-low` | Heridas y necesidades | `exp:need-low` | intendant | — | `hud-needs`, `btn-inventory` | 2 | — |
 | `exp.merc-triangle` | Combate | `exp:merc-triangle` | intendant | — | `risk-badge` | 2 | sobre ventana |
 | `exp.kael` | Combate | `exp:kael` | intendant | — | `risk-badge` | 2 | sobre ventana |
+| `exp.ally-conflict` | Combate | `ally:conflict` | intendant | — | `ally-current`, `ally-choice` | 2 | sobre ventana; al hablar con un errante o un prisionero teniendo ya aliado |
+| `exp.kael-trust` | Combate | `kael:trust-down` | intendant | — | — | 2 | al volver, la primera vez que baja la confianza de Kael |
 | `exp.elite` | Combate | `exp:elite` | intendant | — | — | 2 | en combate |
 | `exp.boss` | Combate | `exp:boss` | intendant | — | — | 2 | en combate |
 | `combat.class-skill` | Combate | `combat:class-skill` | intendant | — | `act-class` | 2 | en combate |

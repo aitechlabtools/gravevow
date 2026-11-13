@@ -1,4 +1,5 @@
 import { migrateReputation } from './vendors';
+import { KAEL_TRUST } from '../config/wanderers';
 import { BAG_SIZES, STARTING_BAG, STARTING_COINS } from '../config/gold';
 import { coins } from './gold';
 import { adaptDrops } from './loot';
@@ -100,8 +101,9 @@ export function sanitizeProfile(raw: unknown): Profile | null {
   if (typeof p.tutorialDone !== 'boolean') p.tutorialDone = (p.stats?.expeditions ?? 0) > 0;
   const streak = Number((p.kael as { missStreak?: unknown } | undefined)?.missStreak);
   const met = Number((p.kael as { met?: unknown } | undefined)?.met);
-  const grudge = Number((p.kael as { grudge?: unknown } | undefined)?.grudge);
-  p.kael = { missStreak: Number.isFinite(streak) && streak > 0 ? Math.floor(streak) : 0, met: Number.isFinite(met) && met > 0 ? Math.floor(met) : 0, grudge: Number.isFinite(grudge) && grudge > 0 ? Math.min(3, Math.floor(grudge)) : 0 };
+  // Confianza de Kael (13/11): los personajes de antes empiezan en confianza alta (el antiguo rencor no cuenta)
+  const trust = Number((p.kael as { trust?: unknown } | undefined)?.trust);
+  p.kael = { missStreak: Number.isFinite(streak) && streak > 0 ? Math.floor(streak) : 0, met: Number.isFinite(met) && met > 0 ? Math.floor(met) : 0, trust: Number.isFinite(trust) && trust > 0 ? Math.min(KAEL_TRUST.hostile, Math.floor(trust)) : 0 };
   p.classSkills = sanitizeClassSkills(p);
   p.lastSubzone = isSubzoneId(p.lastSubzone) ? p.lastSubzone : null;
   p.settings = Object.assign({ volume: 0.6, music: true, musicVolume: 1, sfxVolume: 1 }, p.settings ?? {});

@@ -38,7 +38,7 @@ export interface RosterEntry {
 
 export interface Toast { id: number; text: string; kind: 'loot' | 'info' | 'danger' | 'social' | 'good'; icon?: string }
 
-export type CombatKind = 'pve' | 'hostile' | 'betrayal-by-player' | 'betrayal-by-rival';
+export type CombatKind = 'pve' | 'hostile' | 'betrayal-by-player' | 'betrayal-by-rival' | 'betray-merc';
 
 export interface CombatSession {
   state: CombatState;
@@ -47,6 +47,8 @@ export interface CombatSession {
   /** Enemigos del mapa que entraron en el combate (hasta dos). */
   entityIds?: string[];
   title: string;
+  /** Al ganar, liberar a este prisionero (traicionaste a tu aliado para quedarte con él). */
+  thenFree?: string;
   rewards: { xp: number; gold: number; items: ItemStack[]; overflow: boolean; /** Saco del suelo con el botín. */ bagId?: string | null } | null;
 }
 
@@ -397,6 +399,10 @@ export function subzoneDepth(): number {
 
 export const dev: {
   forceKael: boolean; forceWanderer: string | null; forceHostile: boolean; forceBetrayal: boolean; skipTutorial: boolean; skipMinis: boolean;
+  /** Pone este prisionero en el mapa y entra con este mercenario contratado (aliados, 13/11). */
+  forceCaptive: string | null; forceContract: string | null;
+  /** Fija la confianza de Kael (puntos de traición: 0 alta, 2 baja, 6 hostil). Con `?debug&kael=N`, al entrar en la mazmorra. */
+  kaelTrust: (points: number) => string; kaelTrustOnEnter: number | null;
   /** Te da cualquier objeto con la rareza y los atributos que quieras (a la mochila de la expedición o del perfil). */
   give: (itemId: string, rarity?: Rarity, affixes?: string[], qty?: number) => string;
   /** Pone a tu personaje en el nivel que digas (1–100). */
@@ -404,7 +410,13 @@ export const dev: {
   /** Deja todas tus acciones listas (también en el combate en curso). */
   resetCooldowns: () => string;
 } = {
-  forceKael: false, forceWanderer: null, forceHostile: false, forceBetrayal: false,
+  forceKael: false, forceWanderer: null, forceHostile: false, forceBetrayal: false, forceCaptive: null, forceContract: null, kaelTrustOnEnter: null,
+  kaelTrust(points) {
+    const p = state.profile;
+    if (!p) return 'No hay personaje.';
+    set({ profile: { ...p, kael: { ...p.kael, trust: Math.max(0, Math.floor(points)) } } });
+    return `Confianza de Kael: ${points} puntos de traición.`;
+  },
   give(itemId, rarity, affixes, qty = 1) {
     const def = getItem(itemId);
     if (rarity && !RARITY_RULES[rarity]) return `Rareza desconocida: ${rarity}`;

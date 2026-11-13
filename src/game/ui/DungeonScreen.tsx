@@ -31,7 +31,7 @@ import { mercBaseStats, STANCE_DESC, STANCE_NAME } from '../../core/mercenaries'
 import { getWanderer } from '../../core/data/wanderers';
 import { TutorialGuide } from './TutorialGuide';
 import { ExpeditionMinis } from './ExpeditionMinis';
-import { RISK, GOLD_SHARE, SHARE_FAIR_RATIO, type RiskLevel } from '../../config/wanderers';
+import { RISK, GOLD_SHARE, SHARE_FAIR_RATIO, GRIZK_REP, type RiskLevel } from '../../config/wanderers';
 import { shareVerdict } from '../../core/social';
 import { pinnedQuests, questDef, questProgress } from '../../core/quests';
 import { planPayment } from '../../core/share';
@@ -222,17 +222,31 @@ function Companions({ width }: { width: string }) {
   return (
     <>
       <PinnedQuestsHud width={width} />
+      {/* Un solo aliado: errante (con su triángulo) o mercenario (contrato o rescatado) */}
       {rival.disposition === 'allied' && (
-        <button className={`panel p-2 ${width} border-heal text-left`} onClick={() => actions.interactRival()} data-testid="hud-ally">
-          <div className="text-xs text-heal mb-1 flex items-center gap-1.5"><RiskBadge risk={rival.risk} size={14} /><span className="truncate">Aliado · {getWanderer(rival.who).name}</span></div>
+        <button className={`panel p-2 ${width} border-heal text-left`} onClick={() => actions.interactRival()} data-testid="hud-ally" style={{ minHeight: 44 }}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-9 h-9 bg-black/40 border border-stone-700 overflow-hidden flex items-end justify-center shrink-0"><MonsterSprite sprite={getWanderer(rival.who).sprite} scale={2} /></span>
+            <span className="min-w-0">
+              <span className="text-xs text-heal block truncate">Aliado · {getWanderer(rival.who).name}</span>
+              <span className="text-[11px] flex items-center gap-1" style={{ color: RISK[rival.risk].color }}><RiskBadge risk={rival.risk} size={14} />{rival.who === 'kael' && rival.risk === 'mid' ? 'Confianza baja' : RISK[rival.risk].label}
+                {rival.witnessed && <span className="text-blood ml-1" title="Te vio traicionar a tu aliado anterior: se fía menos" data-testid="hud-ally-witness">👁</span>}</span>
+            </span>
+          </div>
           <Bar value={rival.hp} max={getWanderer(rival.who).stats.maxHp} color="#5fd19a" />
         </button>
       )}
       {merc?.alive && (() => {
         const m = getMerc(merc.id);
         return (
-          <button className={`panel p-2 ${width} border-heal text-left`} onClick={() => actions.interactMerc()} data-testid="hud-merc">
-            <div className="text-xs text-heal mb-1 flex justify-between gap-1"><span className="truncate">{merc.rescued ? 'Rescatado' : 'Mercenario'} · {m.name}</span><span className="text-stone-400 shrink-0">{STANCE_NAME[merc.stance]}</span></div>
+          <button className={`panel p-2 ${width} border-heal text-left`} onClick={() => actions.interactMerc()} data-testid="hud-merc" style={{ minHeight: 44 }}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-9 h-9 bg-black/40 border border-stone-700 overflow-hidden flex items-end justify-center shrink-0"><MonsterSprite sprite={m.sprite} scale={2} /></span>
+              <span className="min-w-0">
+                <span className="text-xs text-heal block truncate">Aliado · {m.name}</span>
+                <span className="text-[11px] text-stone-400">⛨ {merc.rescued ? 'Rescatado' : 'Contrato de Grizk'} · {STANCE_NAME[merc.stance]}</span>
+              </span>
+            </div>
             <Bar value={merc.hp} max={mercBaseStats(m).maxHp} color="#5fd19a" />
           </button>
         );
@@ -404,7 +418,8 @@ export function RiskBadge({ risk, size = 22 }: { risk: RiskLevel; size?: number 
 
 function CaptiveModal({ mercId }: { mercId: string }) {
   const m = getMerc(mercId);
-  const busy = useGame((s) => !!s.merc?.alive);
+  const busy = useGame((s) => !!s.merc?.alive || s.rival.disposition === 'allied');
+  const kael = useGame((s) => s.rival.who === 'kael' && s.rival.disposition === 'allied');
   return (
     <Modal onClose={() => actions.closeModal()} testId="captive-modal">
       <div className="flex gap-4">
@@ -413,15 +428,16 @@ function CaptiveModal({ mercId }: { mercId: string }) {
           <h2 className="font-display text-2xl">{m.name}</h2>
           <div className="text-sm text-gold">Prisionero · {m.title}</div>
           <p className="font-body text-lg mt-2 leading-snug">{m.blurb}</p>
-          <p className="font-body text-lg mt-2 leading-snug text-parchment">{m.rescueLine}</p>
+          <p className="font-body text-lg mt-2 leading-snug text-parchment">{m.rescueLine}{kael && ' Kael lo mira de reojo: «Dos bocas más que alimentar. Tú decides.»'}</p>
         </div>
       </div>
+      {busy ? <AllyChoice target={{ kind: 'captive', name: m.name, mercId }} /> : <>
       <p className="font-body text-base text-stone-300 mt-3">Si rompes sus cadenas, luchará a tu lado gratis en esta expedición. <b className="text-heal">Si extraéis con vida</b>, llegará al refugio y podrás contratar sus servicios con Garra Roja (el primer contrato, a mitad de precio). Si cae en combate o mueres tú, se pierde.</p>
       <div className="flex flex-wrap gap-2 mt-4">
         <button className="btn btn-gold" disabled={busy} onClick={() => actions.freeCaptive(mercId)} data-testid="captive-free">Romper las cadenas</button>
         <button className="btn" onClick={() => actions.closeModal()}>Dejarlo para luego</button>
       </div>
-      {busy && <p className="text-sm text-blood mt-2">Ya te acompaña un mercenario: solo puedes llevar uno.</p>}
+      </>}
     </Modal>
   );
 }
@@ -479,6 +495,8 @@ function RivalModal() {
   // En el tutorial, con Osric solo cabe aliarse; ya aliados, no se le puede dejar ni traicionar
   const tut = useGame((s) => !!s.tutorial);
   const onlyAlly = tut && !allied;
+  // Ya te acompaña un mercenario y este errante aún no es tu aliado: solo cabe uno
+  const conflict = useGame((s) => !!s.merc?.alive) && !allied && !tut && rival.disposition === 'neutral';
   const w = getWanderer(rival.who);
   const r = RISK[rival.risk];
   const first = w.name.split(' ')[0];
@@ -500,6 +518,7 @@ function RivalModal() {
           </p>
         </div>
       </div>
+      {conflict ? <AllyChoice target={{ kind: 'rival', name: w.name, risk: rival.risk }} /> : <>
       <div className={`grid gap-2 mt-4 ${onlyAlly ? '' : 'sm:grid-cols-2'}`}>
         {!onlyAlly && <button className="btn" onClick={() => actions.rivalTalk()} data-testid="rival-talk">Hablar</button>}
         {!allied && <button className="btn btn-gold" onClick={() => actions.rivalPropose()} data-testid="rival-ally">Aliarse</button>}
@@ -512,6 +531,7 @@ function RivalModal() {
         {allied ? `Lucha a tu lado. Quiere su parte de cada cofre y de cada saco de combate, y al llegar al portal te pedirá el ${Math.round(GOLD_SHARE * 100)} % del oro (menos si repartes bien, más si no).` : `Si os aliáis, lucha a tu lado a cambio de su parte del botín y, en el portal, del ${Math.round(GOLD_SHARE * 100)} % del oro. El triángulo indica cuánto puedes fiarte.`}
         {' '}Una traición es a muerte y sin huida.
       </p>
+      </>}
       {!onlyAlly && <button className="btn mt-3 text-sm" onClick={() => actions.closeModal()}>Cerrar</button>}
     </Modal>
   );
@@ -641,3 +661,50 @@ function InteractMenu({ options }: { options: string[] }) {
   );
 }
 
+
+/**
+ * Solo cabe un aliado (13/11): con alguien ya contigo, el nuevo (errante o prisionero) se decide aquí.
+ * Quedarte con el tuyo, separar caminos o traicionarle; cada opción con su consecuencia en una línea.
+ */
+function AllyChoice({ target }: { target: { kind: 'rival'; name: string; risk: RiskLevel } | { kind: 'captive'; name: string; mercId: string } }) {
+  const merc = useGame((s) => s.merc);
+  const rival = useGame((s) => s.rival);
+  const curMerc = merc?.alive ? getMerc(merc.id) : null;
+  const cur = curMerc ? { name: curMerc.name, sprite: curMerc.sprite, tag: merc!.rescued ? 'Rescatado' : 'Contrato de Grizk' } : { name: getWanderer(rival.who).name, sprite: getWanderer(rival.who).sprite, tag: getWanderer(rival.who).title };
+  const first = (n: string) => n.split(' ')[0];
+  const newFirst = first(target.name), curFirst = first(cur.name);
+  const red = target.kind === 'rival' && (target.risk === 'high' || target.risk === 'hostile');
+  const partLine = curMerc
+    ? (merc!.rescued ? `${curFirst} sigue su propio camino y no llegará al Bastión.` : `${curFirst} vuelve al Bastión sano. Esta bajada del contrato se pierde, sin enfadar a Grizk.`)
+    : `${curFirst} se lleva ya su parte del oro encontrado y se va sin rencor.`;
+  const betrayLine = curMerc
+    ? `Combate a muerte contra ${curFirst}${target.kind === 'rival' ? `, con ${newFirst} a tu lado` : ''}. Grizk lo sabrá: ${merc!.rescued ? GRIZK_REP.betrayRescued : GRIZK_REP.betrayContract} de reputación.${target.kind === 'rival' ? ` ${newFirst} se fiará menos de ti.` : ''}`
+    : `Combate contra ${curFirst} (empieza aturdido) con ${newFirst} a tu lado. Si ganas, te quedas con lo que lleva.${rival.who === 'kael' ? ' La confianza de Kael baja.' : ''}`;
+  const opts = [
+    { id: 'keep', icon: '⛨', cls: 'btn', label: target.kind === 'captive' ? 'Dejarlo encadenado' : `Quedarte con ${curFirst}`, line: target.kind === 'captive' ? 'Sigue aquí. Si el hueco queda libre, puedes volver a por él.' : `${newFirst} se queda donde estaba. Si ${curFirst} cae, puedes volver a buscarlo.`, run: () => actions.allyKeep() },
+    { id: 'part', icon: '⇋', cls: 'btn btn-gold', label: target.kind === 'captive' ? `Despedir a ${curFirst} y liberar a ${newFirst}` : `Despedir a ${curFirst} y aliarte con ${newFirst}`, line: partLine, run: () => actions.allyPart() },
+    { id: 'betray', icon: '✕', cls: 'btn btn-danger', label: `Traicionar a ${curFirst}`, line: betrayLine, run: () => actions.allyBetray() },
+    ...(target.kind === 'captive' ? [{ id: 'release', icon: '⛓', cls: 'btn', label: 'Romper sus cadenas y dejarle marchar', line: `No se une a ti y huye por su cuenta. Se lo contará a Grizk: +${GRIZK_REP.releaseCaptive} de reputación.`, run: () => actions.releaseCaptive(target.mercId) }] : []),
+  ];
+  return (
+    <div data-testid="ally-choice">
+      {red && <div className="panel border-blood text-blood px-3 py-2 mt-3 text-sm font-body">☠ Riesgo muy alto: es muy probable que {newFirst} te traicione.</div>}
+      <div className="flex items-center gap-2 mt-3 panel px-3 py-1.5 flex-wrap" data-testid="ally-current">
+        <span className="text-xs tracking-[0.2em] uppercase text-stone-400">Ya te acompaña</span>
+        <MonsterSprite sprite={cur.sprite} scale={2} />
+        <b className="text-heal">{cur.name}</b>
+        <span className="text-stone-400 text-sm">· {cur.tag}</span>
+        {!curMerc && <RiskBadge risk={rival.risk} size={16} />}
+        <span className="text-stone-500 text-xs ml-auto">Solo cabe un aliado</span>
+      </div>
+      <div className="grid gap-2 mt-3 sm:grid-cols-3">
+        {opts.map((o) => (
+          <button key={o.id} className={`${o.cls} text-left px-3 py-2 flex flex-col gap-1`} style={{ minHeight: 44 }} onClick={o.run} data-testid={`ally-${o.id}`}>
+            <span className="font-display text-sm flex items-center gap-2"><span aria-hidden className="text-lg">{o.icon}</span>{o.label}</span>
+            <span className="font-body text-xs leading-snug opacity-80">{o.line}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

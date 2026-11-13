@@ -64,6 +64,14 @@ export const combatActions = {
       title = e.boss ? `¡${e.name}!` : e2 ? (e2.id === e.id ? `Dos: ${e.name}` : `${e.name} y ${e2.name}`) : e.name;
       // Fase 8: también se puede uno retirar de un jefe (con la huida de siempre); conserva sus heridas en esta incursión
       canFlee = true;
+    } else if (kind === 'betray-merc' && s.merc) {
+      // Traicionas a tu mercenario para quedarte con otro: él empieza aturdido; el errante nuevo, si lo hay, lucha contigo
+      if (s.rival.disposition === 'allied') list.push(rivalCombatant(s.rival.who, s.rival.hp, 'A', s.rival.potions, combatLevel()));
+      const mc = mercCombatant(s.merc, 'B', combatLevel());
+      mc.statuses.push({ id: 'stun', turns: 1 });
+      list.push(mc);
+      title = `Traición: atacas a ${getMerc(s.merc.id).name} por sorpresa`;
+      canFlee = false;
     } else {
       const rc = rivalCombatant(s.rival.who, s.rival.hp, 'B', s.rival.potions, combatLevel());
       const name = getWanderer(s.rival.who).name;
@@ -167,7 +175,7 @@ export const combatActions = {
         if (h.healed > 0) { exp.body = h.body; exp.hp = summaryHp(h.body); toast(`Recobras el aliento: +${h.healed} de vida.`, 'info'); }
       }
       // Si huyes después de abatir a uno de los dos, su botín también cae al suelo
-      const killedFoe = next.outcome === 'fled' && next.combatants.some((c) => c.side === 'B' && c.hp <= 0 && c.ref && c.ref !== 'rival');
+      const killedFoe = next.outcome === 'fled' && next.combatants.some((c) => c.side === 'B' && c.hp <= 0 && c.ref && c.ref !== 'rival' && c.ref !== 'merc');
       if (next.outcome === 'victory' || killedFoe) {
         const rng = makeRng(randomSeed());
         let xp = 0, gold = 0;
@@ -175,6 +183,8 @@ export const combatActions = {
         const kills = { ...exp.kills };
         for (const c of next.combatants.filter((x) => x.side === 'B' && (next.outcome === 'victory' || x.hp <= 0))) {
           // El auxiliar de un jefe no da premio propio: el premio es el del jefe
+          // Tu antiguo mercenario, traicionado: deja sus pociones
+          if (c.ref === 'merc') { xp += 40; if (c.potions > 0) items.push({ uid: makeUid(), itemId: 'health_potion', qty: c.potions }); continue; }
           if (c.ref && c.ref !== 'rival' && !c.summoned) {
             const e = getEnemy(c.ref);
             xp += enemyXp(e.xp, enemyLevel(c.id));
@@ -217,7 +227,7 @@ export const combatActions = {
         exp.kills = kills;
         let bagId: string | null = null;
         // Si el único enemigo era el errante, todo cae en UNA bolsa: la de sus pertenencias (antes salían dos sacos)
-        const foeOnly = !next.combatants.some((c) => c.side === 'B' && c.ref && c.ref !== 'rival');
+        const foeOnly = !next.combatants.some((c) => c.side === 'B' && c.ref && c.ref !== 'rival' && c.ref !== 'merc');
         if (rivalBag) {
           if (dropped.length && foeOnly) rivalBag = { ...rivalBag, grid: addManyToGrid(emptyGrid(Math.max(12, rivalBag.grid.length + dropped.length)), [...rivalBag.grid.filter((x): x is ItemStack => !!x && !isCover(x)), ...dropped]).grid };
           const rb = rivalBag;
@@ -227,7 +237,7 @@ export const combatActions = {
         }
         if (dropped.length && !(rivalBag && foeOnly)) {
           const [x, y] = s.hud.playerTile;
-          const foe = next.combatants.filter((c) => c.side === 'B' && c.ref && c.ref !== 'rival' && c.hp <= 0);
+          const foe = next.combatants.filter((c) => c.side === 'B' && c.ref && c.ref !== 'rival' && c.ref !== 'merc' && c.hp <= 0);
           const bag: Bag = { id: makeUid('bag'), x, y, grid: addManyToGrid(emptyGrid(Math.max(12, dropped.length)), dropped).grid, label: foe.length === 1 ? `Saco de ${getEnemy(foe[0].ref!).name}` : 'Saco del combate', allyShare: state.rival.disposition === 'allied' && next.combatants.some((c) => c.id === 'rival' && c.side === 'A' && c.hp > 0) };
           bagId = bag.id;
           set((st) => ({ bags: { ...st.bags, [bag.id]: bag } }));
@@ -241,8 +251,8 @@ export const combatActions = {
         sfx('defeat');
       }
       if (mc && merc && mc.hp <= 0 && merc.alive) {
-        merc = { ...merc, alive: false };
-        toast(`${getMerc(merc.id).name} ha caído en combate.${merc.rescued ? '' : ' El contrato se rompe.'}`, 'danger');
+        merc = { ...merc, alive: false, ...(mc.side === 'B' ? { left: 'betrayed' as const } : {}) };
+        toast(mc.side === 'B' ? `${getMerc(merc.id).name} cae. No lo vio venir.` : `${getMerc(merc.id).name} ha caído en combate.${merc.rescued ? '' : ' El contrato se rompe.'}`, 'danger');
       }
       if (rc && rc.side === 'A' && rc.hp <= 0) {
         rival = { ...rival, disposition: 'dead' };
@@ -264,11 +274,13 @@ export const combatActions = {
       return;
     }
     const lootBag = s.combat.rewards?.bagId ?? null;
+    const thenFree = outcome === 'victory' ? s.combat.thenFree : undefined;
     const killed = s.combat.state.combatants.filter((c) => c.side === 'B' && c.hp <= 0).map((c) => c.id);
     const entityIds = s.combat.entityIds ?? (entityId ? [entityId] : []);
     set({ combat: null });
     bus.emit('combat-ended', { entityId, entityIds, killed, outcome, kind });
     // El saco del botín se abre solo: coges lo que quieras y el resto se queda en el suelo
+    if (thenFree) actions.freeCaptive(thenFree);
     if (lootBag && state.bags[lootBag]) actions.openBag(lootBag);
     bus.emit('rival-changed');
     bus.emit('merc-changed');

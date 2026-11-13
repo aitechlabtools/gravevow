@@ -76,6 +76,21 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 13/11: **Un solo aliado y confianza de Kael.**
+  - **Causa del error:** había dos huecos de compañero (`merc` y `rival`). Liberar un prisionero solo miraba el primero y aliarse con un errante no miraba nada, así que con un contrato de Grizk se podía ir con Kael (o con un prisionero) y llegar a tres; en combate solo entraba uno.
+  - **La regla:** ahora solo cabe un aliado. `rivalPropose` y `freeCaptive` lo impiden y avisan («Solo cabe un aliado»).
+  - **La conversación** (`AllyChoice` en `DungeonScreen.tsx`): con alguien ya contigo, al hablar con un errante o un prisionero eliges:
+    - ⛨ quedarte con el tuyo: el errante se queda donde estaba y el prisionero, encadenado, o le sueltas sin que se una (+25 con Grizk);
+    - ⇋ separar caminos: el errante se lleva su parte del oro; el contratado vuelve y pierdes esa bajada del contrato; el rescatado se va;
+    - ✕ traicionar: combate a muerte con el nuevo a tu lado (combate nuevo `betray-merc`). El nuevo se fía menos (+15 % y 👁) y Grizk resta 150 (contrato) o 50 (rescatado), con su frase en el resumen.
+  - **Aviso rojo** con errantes de riesgo muy alto. **HUD:** una sola tarjeta con retrato, triángulo o contrato, y el ojo si te vio traicionar.
+  - **Confianza de Kael:** puntos de traición en `Profile.kael.trust` (`config/wanderers.ts`, `KAEL_TRUST`):
+    - traicionar o atacar suma 2, negarle su parte suma 1 y cada bajada leal (extraer juntos pagándole) resta 1;
+    - alta por debajo de 2, baja (naranja, 25 % de traición y saludo receloso) desde 2, hostil desde 6 (permanente: ataca al verte);
+    - las partidas existentes empiezan en alta y el antiguo `grudge` ya no se usa.
+  - **Mini tutoriales:** `exp.ally-conflict` y `exp.kael-trust`.
+  - **Modo de desarrollo:** `?debug&ally=bram&captive=tobias&kael=N` y `__GRAVEVOW__.dev.kaelTrust(n)`.
+  - **Pruebas:** `tests/aliados.test.ts` y `scripts/aliados-check.cjs`; `reparto-check` mira ahora `kael.trust`. El simulador de combate no cambia.
 - 13/11: **Resultados en páginas.** `SummaryScreen.tsx` pasa a 2 o 3 páginas:
   1. La expedición: personaje, tiempo, subzona con «primera vez», experiencia con barra animada, subida de nivel y aviso de habilidad de clase, criaturas con miniatura (jefe y élite destacados) y avisos de mercenario, errante y tutorial.
   2. Botín conseguido: solo lo nuevo, por rareza, con brillo en épico y legendario, ficha al tocar, oro conseguido, valor y planos aprendidos. Al morir, lo que se queda abajo y lo que salvó el bolsillo.

@@ -208,6 +208,7 @@ export class DungeonScene extends Phaser.Scene {
       bus.on('tutorial-revive', (t) => { this.debugTeleport(t.x, t.y); this.grace = 1.5; }),
       bus.on('rival-warn', () => { const mk = this.rival?.marker; if (mk) this.tweens.add({ targets: mk, angle: { from: -18, to: 18 }, duration: 90, yoyo: true, repeat: 7, onComplete: () => mk.setAngle(0) }); }),
       bus.on('merc-changed', () => this.refreshMerc()),
+      bus.on('captive-released', (id) => this.releaseCaptive(id)),
       bus.on('bags-changed', () => this.refreshBags()),
       bus.on('cancel-channel', () => this.cancelChannel()),
     );
@@ -344,6 +345,7 @@ export class DungeonScene extends Phaser.Scene {
         break;
       }
       case 'captive': {
+        if (getState().expedition?.released?.includes(e.mercId)) break;
         const m = this.makeMob(getMerc(e.mercId).sprite, 4, cx, cy);
         m.marker = this.add.image(0, 0, 'marker_neutral').setDepth(99980);
         const chains = this.add.image(c.x, c.y + 1, 'chains').setDepth(depthAt(cx, cy) + 1.5);
@@ -779,6 +781,14 @@ export class DungeonScene extends Phaser.Scene {
     if (Math.abs(wdx - wdy) > 0.05) m.sprite.setFlipX(wdx - wdy < 0);
   }
 
+  /** Prisionero liberado sin unirse a ti: las cadenas caen y se va. */
+  releaseCaptive(id: string) {
+    const c = this.captive;
+    if (!c || c.mercId !== id) return;
+    this.captive = null;
+    this.tweens.add({ targets: [c.chains, c.sprite, c.shadow, c.marker].filter(Boolean), alpha: 0, duration: 600, onComplete: () => { c.chains.destroy(); c.sprite.destroy(); c.shadow.destroy(); c.marker?.destroy(); } });
+  }
+
   /** Sincroniza el mercenario con el estado: aparece al liberarlo y desaparece si cae. */
   refreshMerc() {
     const st = getState().merc;
@@ -867,7 +877,7 @@ export class DungeonScene extends Phaser.Scene {
       const dist = Math.hypot(this.rival.x - p.x, this.rival.y - p.y);
       if (dist < 1.6) out.push({ dist, label: st.rival.disposition === 'allied' ? `Hablar con tu aliado ${getWanderer(st.rival.who).name.split(' ')[0]}` : `Hablar con ${getWanderer(st.rival.who).name}`, run: () => actions.interactRival() });
     }
-    if (this.captive && !st.merc?.alive) {
+    if (this.captive) {
       const dist = Math.hypot(this.captive.x - p.x, this.captive.y - p.y);
       const id = this.captive.mercId;
       if (dist < 1.6) out.push({ dist, label: `Liberar al prisionero: ${getMerc(id).name}`, run: () => actions.interactCaptive(id) });

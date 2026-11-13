@@ -80,7 +80,8 @@ describe('Mercenarios', () => {
     expect(h.profile.mercDiscounts).not.toContain('tobias');
     expect(captiveCandidate(ok, 'mazmorra')).toBeNull();
     expect(captiveCandidate(p, 'cripta')).toBe('mirra');
-    expect(captiveCandidate({ ...p, contract: { mercId: 'bram', left: 1, stance: 'cautious' } }, 'mazmorra')).toBeNull();
+    // Con contrato también puede salir: solo cabe un aliado y se decide en la conversación (13/11)
+    expect(captiveCandidate({ ...p, contract: { mercId: 'bram', left: 1, stance: 'cautious' } }, 'mazmorra')).toBe('tobias');
   });
 
   it('el generador encadena al prisionero en una sala alcanzable', () => {

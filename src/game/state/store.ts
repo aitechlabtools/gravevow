@@ -839,12 +839,14 @@ export const actions = {
 
   interactCaptive(mercId: string) {
     set({ modal: { type: 'captive', mercId } });
+    if (state.merc?.alive || state.rival.disposition === 'allied') actions.tutorialEvent('ally:conflict');
   },
 
   freeCaptive(mercId: string) {
     const s = state;
     if (!s.expedition) return;
-    if (s.merc?.alive) return invError('Ya te acompaña un mercenario.');
+    // Solo cabe un aliado: con alguien ya contigo se decide en la conversación (allyPart / allyBetray)
+    if (s.merc?.alive || s.rival.disposition === 'allied') return invError('Solo cabe un aliado.');
     const m = getMerc(mercId);
     set({ merc: rescuedMerc(mercId), modal: null });
     sfx('equip');
@@ -1017,6 +1019,9 @@ export const actions = {
   ...medicalActions,
 };
 
+/** Los parámetros de la URL se leen una sola vez (exposeDebug se llama al montar varias pantallas). */
+let urlFlagsRead = false;
+
 export function exposeDebug(extra: Record<string, unknown> = {}) {
   if (typeof window !== 'undefined' && /[?&]debug/.test(window.location.search)) {
     // En las pruebas, poner `profile.gold` a mano deja ese oro en monedas de verdad en el almacén (el oro es físico)
@@ -1026,5 +1031,12 @@ export function exposeDebug(extra: Record<string, unknown> = {}) {
       set(patch);
     };
     (window as unknown as Record<string, unknown>).__GRAVEVOW__ = { getState, getSave, actions, dev, setState: debugSet, ...extra };
+    // Aliados (13/11): ?debug&ally=bram (entras con ese contrato) &captive=tobias (prisionero en el mapa) &kael=N (Kael sale, con N puntos de traición)
+    const q = new URLSearchParams(window.location.search);
+    if (urlFlagsRead) return;
+    urlFlagsRead = true;
+    if (q.get('ally')) dev.forceContract = q.get('ally');
+    if (q.get('captive')) dev.forceCaptive = q.get('captive');
+    if (q.has('kael')) { dev.forceKael = true; dev.kaelTrustOnEnter = Number(q.get('kael')) || 0; }
   }
 }

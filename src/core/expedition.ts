@@ -57,6 +57,11 @@ export interface ExpeditionState {
   startGold?: number;
   /** Primera vez en esta subzona (para el resumen). */
   firstVisit?: boolean;
+  /** Reputación con Grizk que cambia al volver (traicionar a sus mercenarios, soltar prisioneros) y lo que te dirá. */
+  grizkRep?: number;
+  grizkNote?: string;
+  /** Prisioneros a los que rompiste las cadenas sin que se unieran a ti. */
+  released?: string[];
   /** Zona de la expedición. */
   zone?: string;
   /** Subzona de la expedición (las antiguas no la tienen). */

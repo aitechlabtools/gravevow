@@ -22,6 +22,8 @@ export interface MercState {
   /** Rescatado en esta expedición (va gratis; si extraes con él vivo, se desbloquea). */
   rescued: boolean;
   alive: boolean;
+  /** Ya no te acompaña sin haber caído en combate: os separasteis o lo traicionaste (solo cabe un aliado). */
+  left?: 'parted' | 'betrayed';
 }
 
 export const STANCE_NAME: Record<MercStance, string> = { aggressive: 'Agresivo', cautious: 'Prudente' };
@@ -125,6 +127,17 @@ export interface MercOutcome { profile: Profile; note: string | null }
 export function settleMerc(p: Profile, ms: MercState | null, extracted: boolean): MercOutcome {
   if (!ms) return { profile: p, note: null };
   const m = getMerc(ms.id);
+  // Separados por el camino: el rescatado sigue el suyo; el contratado vuelve sano, pero esa bajada del contrato se pierde
+  if (ms.left === 'parted') {
+    if (ms.rescued) return { profile: p, note: `${m.name} siguió su propio camino. Volverá a aparecer prisionero en ${zoneLabel(m.zone)}.` };
+    if (!p.contract || p.contract.mercId !== m.id) return { profile: p, note: null };
+    const left = p.contract.left - 1;
+    return { profile: { ...p, contract: left > 0 ? { ...p.contract, left } : null }, note: `${m.name} volvió al Bastión por su cuenta: esa bajada del contrato se ha perdido.` };
+  }
+  if (ms.left === 'betrayed') {
+    if (ms.rescued) return { profile: p, note: null };
+    return { profile: p.contract?.mercId === m.id ? { ...p, contract: null } : p, note: null };
+  }
   if (ms.rescued) {
     if (!ms.alive) return { profile: p, note: `${m.name} no sobrevivió. Volverá a aparecer prisionero en ${zoneLabel(m.zone)}.` };
     if (!extracted) return { profile: p, note: `${m.name} se ha perdido contigo en la oscuridad. Volverá a aparecer prisionero.` };
@@ -145,9 +158,8 @@ function zoneLabel(z: string): string {
   return z === 'cripta' ? 'La Cripta' : z === 'infierno' ? 'El Infierno' : 'La Mazmorra';
 }
 
-/** Prisionero que puede aparecer en una zona: uno aún no rescatado, y solo si no llevas mercenario. */
+/** Prisionero que puede aparecer en una zona: uno aún no rescatado. Si ya llevas aliado, decides en la conversación (solo cabe uno). */
 export function captiveCandidate(p: Profile, zone: string): string | null {
-  if (p.contract) return null;
   const c = MERC_ORDER.map(getMerc).find((m) => m.captive && m.zone === zone && !p.mercsRescued.includes(m.id));
   return c?.id ?? null;
 }

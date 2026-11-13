@@ -51,3 +51,41 @@ export const BETRAY_PORTAL_DIST = 5;
 /** En el Infierno, al traicionar, a veces roba y huye hacia el portal en lugar de atacar. */
 export const ROB_CHANCE: Record<ZoneId, number> = { mazmorra: 0, cripta: 0, infierno: 0.5 };
 export const ROB_ITEMS: [number, number] = [1, 2];
+
+// ── Un solo aliado (13/11) ──────────────────────────────────────────────
+/** Si te ve traicionar a tu aliado anterior, el nuevo se fía menos: su probabilidad de traición sube esto (👁 en su triángulo). */
+export const WITNESS_DISTRUST = 0.15;
+/** Reputación con Grizk (Garra Roja) por lo que haces con sus mercenarios y prisioneros. */
+export const GRIZK_REP = {
+  /** Traicionar a un mercenario contratado: el contrato se rompe. */
+  betrayContract: -150,
+  /** Traicionar a un prisionero que liberaste: corre la voz. */
+  betrayRescued: -50,
+  /** Romper las cadenas de un prisionero y dejarle marchar sin que se una a ti. */
+  releaseCaptive: 25,
+};
+
+/**
+ * Confianza de Kael: puntos de traición guardados en el personaje (`Profile.kael.trust`).
+ * Traicionarle (atacarle o cambiarle por otro a traición) suma `betray`; negarle su parte en el portal, `refuse` (menos grave).
+ * Extraer juntos pagándole su parte resta `recover`, salvo si ya es hostil: la hostilidad es permanente.
+ */
+export const KAEL_TRUST = {
+  betray: 2,
+  refuse: 1,
+  recover: 1,
+  /** Desde cuántos puntos es «baja» y desde cuántos «hostil» (3 traiciones). */
+  low: 2,
+  hostile: 6,
+};
+export type KaelTrust = 'high' | 'low' | 'hostile';
+/** Nivel, triángulo y nombre de cada confianza. */
+export const KAEL_TRUST_LEVEL: Record<KaelTrust, { risk: RiskLevel; label: string }> = {
+  high: { risk: 'kael', label: 'Confianza alta' },
+  low: { risk: 'mid', label: 'Confianza baja' },
+  hostile: { risk: 'hostile', label: 'Hostil' },
+};
+export function kaelTrust(points: number | undefined): KaelTrust {
+  const p = points ?? 0;
+  return p >= KAEL_TRUST.hostile ? 'hostile' : p >= KAEL_TRUST.low ? 'low' : 'high';
+}

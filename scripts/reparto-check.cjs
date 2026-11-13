@@ -85,7 +85,7 @@ require('fs').mkdirSync(OUT, { recursive: true });
   await tap('[data-testid=btn-combat-continue]'); await p.waitForTimeout(300);
   await G(() => window.__GRAVEVOW__.actions.requestExtract());
   await p.waitForSelector('[data-testid=summary]', { timeout: 10000 });
-  ok((await G(() => window.__GRAVEVOW__.getState().profile.kael.grudge)) === 1, 'Kael recuerda que le negaste su parte');
+  ok((await G(() => window.__GRAVEVOW__.getState().profile.kael.trust)) === 1, 'Kael recuerda que le negaste su parte (1 punto de traición)');
 
   // 4 · Atacarle primero: empieza aturdido
   await leaveSummary(p);

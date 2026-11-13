@@ -200,3 +200,12 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 - **Navegación:** Intro y → avanzan, ← retrocede, y en táctil se puede deslizar (más de 60 px). «Saltar» nunca se salta la página del cuerpo si vuelves herido.
 - **Botín:** casillas con el borde de su rareza y `loot-shine` en lo épico y legendario (sin animación con movimiento reducido). Al tocar o pasar el ratón, la ficha (`ItemTooltip`) debajo.
 - **Tu cuerpo:** `BodyFigure` grande; solo las lesiones que piden atención (sangra, rota o inutilizada; al tocar una, su efecto) y los golpes en una frase; la cura de Vesper con su precio o lo que falta.
+
+## Un solo aliado (13/11)
+- **Conversación con aliado ya presente** (`AllyChoice`):
+  - el nuevo arriba, con su triángulo y su frase de rivalidad;
+  - debajo, «Ya te acompaña» con el actual y «Solo cabe un aliado»;
+  - las opciones en tres columnas (una en móvil estrecho): ⛨ gris mantener, ⇋ oro separarse, ✕ rojo traicionar. El prisionero tiene una cuarta: ⛓ soltarle;
+  - cada opción lleva su consecuencia en una línea, con botones de 44 px o más;
+  - con riesgo muy alto, aviso rojo antes de las opciones.
+- **HUD:** una sola tarjeta de aliado con retrato de 36 px, nombre, triángulo (o «⛨ Contrato de Grizk» / «Rescatado»), 👁 si te vio traicionar, y su vida.

@@ -288,7 +288,7 @@ export interface Profile {
   /** Tutorial guiado de la primera expedición completado (o saltado). Las partidas con expediciones lo tienen hecho. */
   tutorialDone: boolean;
   /** Kael el Errante: expediciones a la Mazmorra seguidas sin encontrarlo (para la aparición garantizada). */
-  kael: { missStreak: number; met?: number; /** Veces que le negaste su parte o le atacaste (menos una por cada bajada en la que cumples). */ grudge?: number };
+  kael: { missStreak: number; met?: number; /** Antiguo rencor (ya no se usa: ver `trust`). */ grudge?: number; /** Puntos de traición: deciden su confianza (config/wanderers.ts, KAEL_TRUST). */ trust?: number };
   /** Habilidades de clase: las desbloqueadas (la primera es la inicial) y la que llevas equipada. */
   classSkills: { unlocked: string[]; equipped: string };
   /** Mochila puesta (decide cuántas casillas tiene la mochila). No se pierde al morir. */

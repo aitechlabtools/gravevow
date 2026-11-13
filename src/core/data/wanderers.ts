@@ -32,6 +32,12 @@ export interface WandererLines {
   farewell: string;
   /** Errantes hostiles: lo que gritan al verte. */
   hostile?: string;
+  /** Al encontrarlo cuando ya llevas otro aliado (solo cabe uno). */
+  rivalry?: string;
+  /** Tras verte traicionar a tu aliado anterior para quedarte con él. */
+  witness?: string;
+  /** Kael con la confianza baja: saludos recelosos. */
+  greetLow?: string[];
 }
 
 export interface WandererDef {
@@ -73,6 +79,13 @@ export const WANDERERS: Record<string, WandererDef> = {
         'Kael: «Los que corren mueren cansados. Los que se paran mueren antes. Camina.»',
         'Kael: «Si muero, mi linterna es tuya. No la apagues.»',
       ],
+      rivalry: 'Kael: «Ya tienes compañía. Yo no comparto hoguera con desconocidos… salvo que me lo pidas tú.»',
+      greetLow: [
+        'Kael: «Otra vez tú. Me aliaré, que el oro no entiende de rencores. Pero esta vez dormiré con un ojo abierto.»',
+        'Kael: «Mantén las manos donde pueda verlas y hablamos.»',
+      ],
+      hostile: 'Kael: «Te dije que no olvidaba. Aquí se acaba.»',
+      witness: 'Kael: «Ya he visto lo que haces con quien te sigue. No me des la espalda.»',
       join: 'Kael: «Vamos juntos. Repartimos a partes iguales. Y si no, también: lo que no quieras, me lo quedo.»',
       fair: 'Kael: «{Justo y honrado|Justa y honrada}. Así da gusto.»',
       greedy: 'Kael: «Ya veo cómo funciona esto…» Kael te mira en silencio.',
@@ -93,6 +106,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     lines: {
       greet: ['Brann: «Busco a un desertor con precio. Si me ayudas, comparto. Si me estorbas, también cobro por ti.»'],
       talk: ['Brann: «El oro es oro, venga de un bandido o de un muerto.»', 'Brann: «Mantén las antorchas a tu espalda. Ciegan a los arqueros.»'],
+      rivalry: 'Brann: «Ya llevas perro, por lo que veo. Suéltalo y mi ballesta es tuya. Si no, sigue andando y no me estorbes.»',
       join: 'Brann: «Trato. Tú delante, yo detrás. Así nadie se queda sin parte.»',
       fair: 'Brann: «Así se hacen los tratos.»', greedy: 'Brann: «Apunto la deuda. Siempre cobro.»',
       warn: 'Brann tensa la ballesta sin dejar de mirarte.', betray: 'Brann: «Tu cabeza no vale mucho. Tu mochila sí.»',
@@ -106,6 +120,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     lines: {
       greet: ['Sela: «Tranquil{o|a}, solo estaba mirando. ¿Ese cofre es tuyo? Qué pena.»'],
       talk: ['Sela: «Abro cualquier cerradura. Las de las personas también.»', 'Sela: «No me mires así. Hoy he venido a trabajar honradamente.»'],
+      rivalry: 'Sela: «Uy, ya vas acompañad{o|a}. Qué pena. Si te cansas de esa cara, yo sigo por aquí.»',
       join: 'Sela: «Me apunto. Tú pegas, yo abro. Y repartimos, palabra.»',
       fair: 'Sela: «Vaya, un caballero. Quedan pocos.»', greedy: 'Sela: «Muy bien. Lo recordaré cuando no mires.»',
       warn: 'Sela no deja de mirar tu mochila. Sonríe demasiado.', betray: 'Sela: «Lo siento, de verdad. Bueno, no tanto.»',
@@ -121,6 +136,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     lines: {
       greet: ['Hermano Odo: «Que la luz te guarde, {viajero|viajera}. Aquí abajo la necesitamos los dos.»'],
       talk: ['Hermano Odo: «Los muertos de Umbravel eran mis hermanos. Vengo a darles descanso.»', 'Hermano Odo: «La plata bendita les quema. Llévala si puedes.»'],
+      rivalry: 'Hermano Odo: «Veo que la luz ya te ha dado compañía. Si tu camino cambia, aquí rezaré.»',
       join: 'Hermano Odo: «Caminaré a tu lado. Lo que encontremos servirá a la orden… y a ti.»',
       fair: 'Hermano Odo: «Tu generosidad no pasará inadvertida.»', greedy: 'Hermano Odo: «La codicia también es una cripta.»',
       warn: 'Hermano Odo murmura una oración que no reconoces. Sus ojos brillan de otra forma.',
@@ -135,6 +151,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     lines: {
       greet: ['Varga: «Llegas tarde. Lo bueno ya lo he sacado yo. Bueno, casi todo.»'],
       talk: ['Varga: «Los nobles se enterraban con sus joyas. Error suyo.»', 'Varga: «Si oyes cantar, corre. No preguntes.»'],
+      rivalry: 'Varga: «Dos ya sois mucha gente para una tumba. Elige: o él o yo.»',
       join: 'Varga: «Dos palas cavan más que una. Vamos.»',
       fair: 'Varga: «Bien repartido. Así da gusto saquear.»', greedy: 'Varga: «Vale. La próxima tumba es mía entera.»',
       warn: 'Varga sopesa la pala mirando tu nuca.', betray: 'Varga: «Una tumba más no se nota.»',
@@ -149,6 +166,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     lines: {
       greet: ['Malek: «¿Viv{o|a}? ¿Aquí? Entonces o eres valiente o eres idiota. Me sirven los dos.»'],
       talk: ['Malek: «Belzar me encadenó. Las rompí. Ahora busco la salida, como tú.»', 'Malek: «El calor no mata. Lo que vive en el calor, sí.»'],
+      rivalry: 'Malek: «Deja a ese perro y camina conmigo. Prometo… lo de siempre.»',
       join: 'Malek: «Juntos, entonces. Hasta el portal.»',
       fair: 'Malek: «Bien. Hay honor hasta en el Infierno.»', greedy: 'Malek: «El Infierno enseña a cobrarse las deudas.»',
       warn: 'Malek respira hondo. Las marcas de sus cadenas empiezan a brillar.', betray: 'Malek: «Belzar me prometió la libertad por tu alma.»',
@@ -163,6 +181,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     lines: {
       greet: ['Iskra: «El fuego de aquí abajo canta. ¿No lo oyes? Ya lo oirás.»'],
       talk: ['Iskra: «Vine a robarle una llama a Belzar. Todavía no la he encontrado.»', 'Iskra: «El azufre se enciende con mirarlo. Ni lo mires.»'],
+      rivalry: 'Iskra: «Tu amigo arde poco. Cámbialo por mí y verás lo que es fuego.»',
       join: 'Iskra: «Me vienes bien. Los demonios atacan primero a quien va delante.»',
       fair: 'Iskra: «Mmm. Generos{o|a}. Qué raro.»', greedy: 'Iskra: «Arde por dentro, ¿eh? Como yo.»',
       warn: 'Iskra juega con una llama entre los dedos y te mira de reojo.', betray: 'Iskra: «Lo siento. El fuego quiere lo que quiere.»',
@@ -179,6 +198,7 @@ export const WANDERERS: Record<string, WandererDef> = {
     lines: {
       greet: ['Osric: «¡Eh, eh! No me mires así. Solo me caliento. ¿Vas hacia el castillo? Yo también.»'],
       talk: ['Osric: «Conozco estas murallas como mis bolsillos. Bueno, como los bolsillos de otros.»'],
+      rivalry: 'Osric: «Ya tienes quien te guarde la espalda, ¿eh? Yo solo miraba.»',
       join: 'Osric: «¡Trato hecho! Tú delante, yo te cubro. Palabra de Osric.»',
       fair: 'Osric: «¡Qué detalle!»', greedy: 'Osric: «Vaya. Bueno.»',
       warn: 'Osric mira tu mochila y se relame. «Bonita espada, ¿eh?»',

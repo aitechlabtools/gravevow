@@ -1,0 +1,92 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aliados · maqueta</title><style>body{background:#0b0a0e;color:#e9e1cc;font-family:Georgia,serif;margin:0;padding:16px;max-width:1500px}h1{color:#e8b33a}h2{color:#c8a46a;font-size:20px;margin:32px 0 8px;border-bottom:1px solid #3a3741}h3{color:#c8a46a;font-size:16px;margin:18px 0 6px}.r{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-items:start}figure{margin:0}img{width:100%;border:1px solid #3a3741}figcaption{font-size:12px;color:#8c8693}p,li,td{color:#b8b2a6;line-height:1.5}table{border-collapse:collapse;font-size:14px}td,th{border:1px solid #3a3741;padding:4px 8px;text-align:left;vertical-align:top}th{color:#e8b33a}code{color:#e8b33a}@media(max-width:900px){.r{grid-template-columns:1fr}}</style></head><body>
+<h1>Un solo aliado: la decisión dentro de la conversación (maqueta)</h1>
+<p>Prototipo con los sprites y triángulos reales del juego. Vivo: <code>npx vite --port 5173</code> y <code>/mockups/aliados/proto.html?s=errante</code> (también <code>kael-alta</code>, <code>kael-baja</code>, <code>kael-hostil</code>, <code>prisionero</code>, <code>rojo</code>, <code>hud</code>).</p>
+
+<h2>1. Análisis: por qué hoy se llega a tres</h2>
+<ul>
+<li><b>Hay dos huecos de compañero independientes</b> en el estado (<code>internals.ts</code>): <code>merc</code> (el contratado a Grizk, de Garra Roja, o el prisionero liberado) y <code>rival</code> (el errante de la expedición, Kael u otro, que pasa a aliado con <code>disposition: 'allied'</code>).</li>
+<li><b>Formas de conseguir aliado:</b>
+  <ul><li>contrato con Grizk: entras ya con él (<code>mercForExpedition</code>);</li>
+  <li>prisionero liberado (<code>freeCaptive</code>);</li>
+  <li>errante o Kael aliado (<code>rivalPropose</code>);</li>
+  <li>Osric en el tutorial (guionizado).</li></ul>
+  Hay un errante y, como mucho, un prisionero por expedición.</li>
+<li><b>El fallo:</b>
+  <ul><li><code>freeCaptive</code> solo mira <code>merc</code>: con un errante aliado deja liberar al prisionero → jugador + Kael + prisionero.</li>
+  <li><code>rivalPropose</code> no mira nada: con un contrato de Grizk puedes aliarte también con Kael. <b>Sí: se puede entrar con un contratado y además aliarse con un errante.</b></li></ul></li>
+<li><b>Quién lucha:</b> <code>startCombat</code> mete al mercenario si está vivo y, si no, al errante aliado (máximo dos por bando). El otro queda fuera del combate pero sigue «aliado»: cobra su parte de cofres y del oro en el portal, puede traicionarte, y el HUD enseña las dos tarjetas. Ese es el estado incoherente.</li>
+<li><b>Kael ya tiene memoria</b> (<code>kael.grudge</code>, de 0 a 3): sube si le niegas su parte o le atacas, baja si extraéis juntos y le pagas, y con 1 o más sale con riesgo naranja. Lo convierto en los tres niveles de confianza.</li>
+</ul>
+
+<h2>2. La regla</h2>
+<ul>
+<li><b>Un solo hueco de aliado</b> (contrato, prisionero o errante) y una sola función que lo cambia. Si algo intentara añadir un segundo aliado, no lo añade y avisa: «Solo cabe un aliado».</li>
+<li>Si el aliado muere, te traiciona, huye o os separáis, el hueco queda libre y el siguiente se acepta sin elegir.</li>
+<li>Tutorial: Osric es el único aliado y no se le puede sustituir ni traicionar (sin cambios). En el mapa del tutorial no hay prisioneros ni contratos.</li>
+</ul>
+
+<h2>3. Las tres opciones y sus consecuencias</h2>
+<table>
+<tr><th></th><th>Errante (o Kael) nuevo</th><th>Prisionero nuevo</th></tr>
+<tr><td><b>⛨ Quedarte con tu aliado</b></td><td>El errante se queda donde estaba, neutral: si tu aliado cae, puedes volver a buscarlo.</td><td>Sigue encadenado y puedes volver. Opción extra: <b>romper sus cadenas y dejarle marchar</b>. No se une, huye por su cuenta y no se desbloquea para contratar, pero se lo cuenta a Grizk: <b>+25 de reputación</b>.</td></tr>
+<tr><td><b>⇋ Separar caminos</b></td><td colspan="2">
+  <ul><li><b>Errante o Kael:</b> se despide amistoso y se lleva ya su parte del oro encontrado desde que os aliasteis (el mismo % que pediría en el portal; si no llevas tanto, lo que haya). La confianza de Kael no cambia.</li>
+  <li><b>Contrato de Grizk:</b> vuelve sano al Bastión; pierdes esta bajada del contrato, sin enfadar a Grizk.</li>
+  <li><b>Prisionero rescatado:</b> se marcha por su cuenta y no llega al Bastión (no se desbloquea).</li></ul>
+  No vuelve en esta expedición.</td></tr>
+<tr><td><b>✕ Traicionar</b></td><td colspan="2">
+  <ul><li>Combate a muerte sin huida contra tu aliado. Empieza aturdido, como hoy al traicionar, y <b>el nuevo lucha a tu lado</b> (al prisionero lo liberas antes).</li>
+  <li>Si ganas, te quedas con lo que llevaba: bolsa y oro del errante, pociones del mercenario.</li>
+  <li><b>El nuevo se fía menos:</b> +15 % de traición durante el resto de la bajada, con un 👁 en su triángulo y la frase «Ya he visto lo que haces con quien te sigue.»</li>
+  <li><b>Contrato de Grizk:</b> −150 de reputación con Grizk (puede bajarte de rango: contratos más caros y mercenarios bloqueados) y el contrato se rompe. Al volver, Grizk: «Me han contado lo de Bram. Mis chicos no son carne de cebo.»</li>
+  <li><b>Prisionero rescatado:</b> −50 con Grizk, porque corre la voz.</li>
+  <li><b>Kael:</b> su confianza baja un nivel.</li></ul></td></tr>
+</table>
+
+<h3>Confianza de Kael (datos en <code>config/wanderers.ts</code>)</h3>
+<table>
+<tr><th>Nivel</th><th>Cuándo</th><th>Efecto</th><th>Al encontrarlo</th></tr>
+<tr><td style="color:#5fd19a">Alta</td><td>Al empezar (y todos los personajes actuales)</td><td>Triángulo verde ✓, 10 % de traición</td><td>«Mira quién sigue vivo. Me alegro, de verdad.»</td></tr>
+<tr><td style="color:#e8913a">Baja</td><td>1 o 2 traiciones</td><td>Triángulo naranja !!, 25 % de traición</td><td>«Otra vez tú. Me aliaré, que el oro no entiende de rencores. Pero esta vez dormiré con un ojo abierto.»</td></tr>
+<tr><td style="color:#ff3a3a">Hostil</td><td>3 traiciones</td><td>Triángulo rojo ⚔: no se alía y te ataca al verte</td><td>«Te dije que no olvidaba. Aquí se acaba.»</td></tr>
+</table>
+<ul>
+<li><b>Cuenta como traición:</b> atacarle (aliado o neutral), traicionarle por otro y negarle su parte en el portal (como hoy).</li>
+<li><b>Recuperación:</b> cada vez que extraéis juntos sin traicionarle y le pagas, la cuenta baja uno. La hostilidad es <b>permanente</b>, porque ya no se puede aliar contigo.</li>
+<li><b>Migración:</b> todos los personajes empiezan en confianza alta (se pone a cero el antiguo <code>grudge</code>).</li>
+</ul>
+
+<h3>Textos de la conversación</h3>
+<ul>
+<li><b>Errante</b> (Brann): «Ya llevas perro, por lo que veo. Suéltalo y mi ballesta es tuya. Si no, sigue andando y no me estorbes.» Cada errante tendrá su frase con su tono: Sela burlona, Odo piadoso, Varga práctica, Malek siniestro, Iskra ardiente.</li>
+<li><b>Kael</b>, confianza alta: «Ya tienes compañía. Yo no comparto hoguera con un leñador a sueldo… salvo que me lo pidas tú.»</li>
+<li><b>Kael</b>, confianza baja: «Otra vez tú. Me aliaré, que el oro no entiende de rencores. Pero esta vez dormiré con un ojo abierto.»</li>
+<li><b>Prisionero</b> (Tobías): su frase de rescate, y tu aliado actual opina. Kael: «Dos bocas más que alimentar. Tú decides.»</li>
+<li><b>Contratado</b> (Bram) al ver al nuevo: «Si me mandas de vuelta, Grizk me pagará igual. Si me clavas un cuchillo, se enterará.»</li>
+<li><b>Tras traicionar</b>, el nuevo: «Ya he visto lo que haces con quien te sigue.»</li>
+<li><b>Rojo u hostil:</b> aviso en rojo antes de las opciones: «☠ Riesgo muy alto: es muy probable que te traicione» o «⚔ … te ataca nada más verte».</li>
+</ul>
+
+<h2>4. Maquetas</h2>
+<h3>Escritorio 1920 × 1080</h3><div class='r'><figure><a href='capturas/escritorio-1920x1080-1-errante.png'><img src='capturas/escritorio-1920x1080-1-errante.png' alt='Escritorio 1920 × 1080: Errante (Brann) con un contrato de Grizk (Bram) ya contigo'></a><figcaption>Errante (Brann) con un contrato de Grizk (Bram) ya contigo</figcaption></figure><figure><a href='capturas/escritorio-1920x1080-2-kael-alta.png'><img src='capturas/escritorio-1920x1080-2-kael-alta.png' alt='Escritorio 1920 × 1080: Kael con confianza alta'></a><figcaption>Kael con confianza alta</figcaption></figure><figure><a href='capturas/escritorio-1920x1080-3-kael-baja.png'><img src='capturas/escritorio-1920x1080-3-kael-baja.png' alt='Escritorio 1920 × 1080: Kael con confianza baja: triángulo naranja y frase recelosa'></a><figcaption>Kael con confianza baja: triángulo naranja y frase recelosa</figcaption></figure><figure><a href='capturas/escritorio-1920x1080-4-kael-hostil.png'><img src='capturas/escritorio-1920x1080-4-kael-hostil.png' alt='Escritorio 1920 × 1080: Kael hostil: ataca al verte, sin conversación'></a><figcaption>Kael hostil: ataca al verte, sin conversación</figcaption></figure><figure><a href='capturas/escritorio-1920x1080-5-prisionero.png'><img src='capturas/escritorio-1920x1080-5-prisionero.png' alt='Escritorio 1920 × 1080: Prisionero (Tobías) con Kael ya contigo, más «liberarle sin que se una»'></a><figcaption>Prisionero (Tobías) con Kael ya contigo, más «liberarle sin que se una»</figcaption></figure><figure><a href='capturas/escritorio-1920x1080-6-rojo.png'><img src='capturas/escritorio-1920x1080-6-rojo.png' alt='Escritorio 1920 × 1080: Errante de triángulo rojo (Malek): aviso antes de elegir'></a><figcaption>Errante de triángulo rojo (Malek): aviso antes de elegir</figcaption></figure><figure><a href='capturas/escritorio-1920x1080-7-hud.png'><img src='capturas/escritorio-1920x1080-7-hud.png' alt='Escritorio 1920 × 1080: Indicador de aliado del HUD: Kael, Kael con confianza baja, Brann tras verte traicionar (👁), contrato de Grizk y prisionero rescatado'></a><figcaption>Indicador de aliado del HUD: Kael, Kael con confianza baja, Brann tras verte traicionar (👁), contrato de Grizk y prisionero rescatado</figcaption></figure></div><h3>Móvil horizontal 844 × 390</h3><div class='r'><figure><a href='capturas/movil-844x390-1-errante.png'><img src='capturas/movil-844x390-1-errante.png' alt='Móvil horizontal 844 × 390: Errante (Brann) con un contrato de Grizk (Bram) ya contigo'></a><figcaption>Errante (Brann) con un contrato de Grizk (Bram) ya contigo</figcaption></figure><figure><a href='capturas/movil-844x390-2-kael-alta.png'><img src='capturas/movil-844x390-2-kael-alta.png' alt='Móvil horizontal 844 × 390: Kael con confianza alta'></a><figcaption>Kael con confianza alta</figcaption></figure><figure><a href='capturas/movil-844x390-3-kael-baja.png'><img src='capturas/movil-844x390-3-kael-baja.png' alt='Móvil horizontal 844 × 390: Kael con confianza baja: triángulo naranja y frase recelosa'></a><figcaption>Kael con confianza baja: triángulo naranja y frase recelosa</figcaption></figure><figure><a href='capturas/movil-844x390-4-kael-hostil.png'><img src='capturas/movil-844x390-4-kael-hostil.png' alt='Móvil horizontal 844 × 390: Kael hostil: ataca al verte, sin conversación'></a><figcaption>Kael hostil: ataca al verte, sin conversación</figcaption></figure><figure><a href='capturas/movil-844x390-5-prisionero.png'><img src='capturas/movil-844x390-5-prisionero.png' alt='Móvil horizontal 844 × 390: Prisionero (Tobías) con Kael ya contigo, más «liberarle sin que se una»'></a><figcaption>Prisionero (Tobías) con Kael ya contigo, más «liberarle sin que se una»</figcaption></figure><figure><a href='capturas/movil-844x390-6-rojo.png'><img src='capturas/movil-844x390-6-rojo.png' alt='Móvil horizontal 844 × 390: Errante de triángulo rojo (Malek): aviso antes de elegir'></a><figcaption>Errante de triángulo rojo (Malek): aviso antes de elegir</figcaption></figure><figure><a href='capturas/movil-844x390-7-hud.png'><img src='capturas/movil-844x390-7-hud.png' alt='Móvil horizontal 844 × 390: Indicador de aliado del HUD: Kael, Kael con confianza baja, Brann tras verte traicionar (👁), contrato de Grizk y prisionero rescatado'></a><figcaption>Indicador de aliado del HUD: Kael, Kael con confianza baja, Brann tras verte traicionar (👁), contrato de Grizk y prisionero rescatado</figcaption></figure></div>
+
+<h2>5. Interfaz, tutoriales y pruebas</h2>
+<ul>
+<li><b>HUD:</b> una sola tarjeta de aliado, con retrato pequeño, nombre, triángulo (o «⛨ Contrato» / «Rescatado»), 👁 si te vio traicionar, y su vida. Tocarla abre su conversación.</li>
+<li><b>Conversación:</b>
+  <ul><li>arriba, el nuevo con su triángulo y su frase;</li>
+  <li>debajo, «Ya te acompaña» con tu aliado actual;</li>
+  <li>las opciones con icono y color (⛨ gris mantener, ⇋ oro separarse, ✕ rojo traicionar) y la consecuencia en una línea. Botones de 44 px o más.</li></ul></li>
+<li><b>Mini tutoriales:</b> «Solo cabe un aliado» (la primera vez que sale esta conversación) y «Kael no olvida» (la primera vez que baja su confianza).</li>
+<li><b>Modo de desarrollo:</b> <code>?debug&amp;ally=bram&amp;captive=tobias&amp;kael=1</code> entra con un contrato, con prisionero en el mapa y con Kael tras una traición. También <code>__GRAVEVOW__.actions.devKaelTrust(n)</code>.</li>
+<li><b>Equilibrio:</b> no cambia daño ni vida. El combate de traición ya existe; ahora suma al nuevo aliado (2 contra 1). Pasaré el simulador para confirmar que no se mueve nada.</li>
+</ul>
+
+<h2>6. Preguntas</h2>
+<ol>
+<li>¿Tres traiciones para que Kael sea hostil, y hostilidad permanente? La alternativa es que baje un punto por cada expedición que pasa sin verte, muy despacio.</li>
+<li>¿Negarle su parte en el portal cuenta como traición para su confianza, como hoy?</li>
+<li>Cifras: +15 % de traición del nuevo si te ve traicionar, −150 con Grizk por traicionar un contrato, −50 por traicionar a un rescatado y +25 por liberar a un prisionero sin que se una. ¿Te valen?</li>
+<li>Al rechazar a un errante, ¿se queda donde estaba (para volver si tu aliado cae, que es lo que propongo) o se marcha?</li>
+</ol>
+</body></html>

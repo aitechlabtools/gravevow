@@ -62,7 +62,7 @@ describe('Subzonas', () => {
     delete old.tutorialDone; delete old.kael; delete old.lastSubzone;
     const p = sanitizeProfile(JSON.parse(JSON.stringify(old)))!;
     expect(p.tutorialDone).toBe(true);
-    expect(p.kael).toEqual({ missStreak: 0, met: 0, grudge: 0 });
+    expect(p.kael).toEqual({ missStreak: 0, met: 0, trust: 0 });
     expect(p.lastSubzone).toBeNull();
     const fresh = sanitizeProfile(JSON.parse(JSON.stringify({ ...createProfile('Nuevo', 'mage', { cloak: 0, skin: 0 }), lastSubzone: 'no_existe' })))!;
     expect(fresh.tutorialDone).toBe(false);

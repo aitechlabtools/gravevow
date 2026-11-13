@@ -280,7 +280,7 @@ export function CombatScreen() {
         {sideB.map((c, i) => {
           const x = 75 + (i - (sideB.length - 1) / 2) * 16;
           const fly = c.sprite in FLYER_SPECS;
-          const elite = !!(c.ref && c.ref !== 'rival' && getEnemy(c.ref).elite);
+          const elite = !!(c.ref && c.ref !== 'rival' && c.ref !== 'merc' && getEnemy(c.ref).elite);
           const h = c.boss ? 45 : fly ? 20 : c.sprite === 'rat' ? 15 : c.sprite === 'hound' ? 24 : c.sprite === 'imp' ? 30 : elite ? 42 : 38;
           return <StageFighter key={c.id} c={c} x={x} bottom={fly ? 55 : 44} h={h} shadowW={c.boss ? 15 : 11} shadowBottom={fly ? 42 : 44.5} flip anim={anim} floats={floats}
             active={actor?.id === c.id} selectable={playerTurn && c.hp > 0 && sideB.length > 1} selected={tgt?.id === c.id && sideB.length > 1} onSelect={() => setTarget(c.id)} fly={fly} />;

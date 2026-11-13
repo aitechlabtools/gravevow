@@ -24,7 +24,7 @@ export function useExpeditionMinis() {
   const load = useLoad();
   const full = useGame((s) => !!s.invError && /cabe|peso|sitio|espacio/i.test(s.invError)) || !!load?.tier;
   const rivalRisk = useGame((s) => (s.modal?.type === 'rival' ? s.rival.risk : null));
-  const elite = useGame((s) => !!s.combat?.state.combatants.some((c) => c.side === 'B' && c.hp > 0 && !!c.ref && c.ref !== 'rival' && !!getEnemy(c.ref)?.elite));
+  const elite = useGame((s) => !!s.combat?.state.combatants.some((c) => c.side === 'B' && c.hp > 0 && !!c.ref && c.ref !== 'rival' && c.ref !== 'merc' && !!getEnemy(c.ref)?.elite));
   const boss = useGame((s) => !!s.combat?.state.combatants.some((c) => c.side === 'B' && c.hp > 0 && c.boss));
   const classReady = useGame((s) => {
     const cs = s.combat?.state, p = s.profile;
