@@ -5,14 +5,14 @@ import json, subprocess, os, sys
 TX = os.path.dirname(os.path.abspath(__file__))
 T = next((a for a in sys.argv[1:] if not a.startswith('--')), '/tmp/claude-0/t6')
 OUT = os.environ.get('TRAILER_OUT', f'{T}/out6'); PUB = os.path.join(TX, '..', '..', 'public', 'trailer')
-W, H, FPS = 1280, 720, 30
+W, H, FPS = 1920, 1080, 30
 # El golpe se ve (destello rojo y cifra de daño) 0,32 s después (medido en la grabación de noviembre) de que el combate lo resuelve: el sonido va con la imagen
 HIT_LAG = 0.32
 os.makedirs(OUT, exist_ok=True)
 G = json.load(open(f'{TX}/guion.json'))
 ENC = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "17", "-pix_fmt", "yuv420p", "-r", str(FPS)]
 COL = {'dun': "eq=brightness=0.06:gamma=1.45:saturation=1.2:contrast=1.05", 'ui': "eq=gamma=1.15:saturation=1.1"}
-def crop(w, x, y): return f"crop={w}:{round(w*9/16)}:{x}:{y}"
+def crop(w, x, y): w, x, y = round(w * 1.5), round(x * 1.5), round(y * 1.5); return f"crop={w}:{round(w*9/16)}:{x}:{y}"  # cifras en 1280×720, grabación en 1920×1080
 CROP = {'cmb': crop(1000, 140, 20), 'uic': crop(1180, 50, 30), 'alijo': crop(820, 220, 70), 'cofre': crop(760, 260, 150), 'kael': crop(560, 360, 130)}
 
 def run(cmd):
@@ -84,9 +84,9 @@ if '--mux' not in sys.argv:
 else:
     os.makedirs(PUB, exist_ok=True)
     total = json.load(open(f'{OUT}/cuts.json'))['total']
-    run(['ffmpeg', '-y', '-loglevel', 'error', '-i', f'{OUT}/video.mp4', '-i', f'{OUT}/music.wav', '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20',
+    run(['ffmpeg', '-y', '-loglevel', 'error', '-i', f'{OUT}/video.mp4', '-i', f'{OUT}/music.wav', '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18',
          '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', '-t', str(total), f'{PUB}/gravevow-trailer.mp4'])
-    run(['ffmpeg', '-y', '-loglevel', 'error', '-i', f'{OUT}/video.mp4', '-i', f'{OUT}/music.wav', '-map', '0:v', '-map', '1:a', '-c:v', 'libvpx-vp9', '-crf', '34', '-b:v', '0', '-row-mt', '1', '-deadline', 'good', '-cpu-used', '4',
+    run(['ffmpeg', '-y', '-loglevel', 'error', '-i', f'{OUT}/video.mp4', '-i', f'{OUT}/music.wav', '-map', '0:v', '-map', '1:a', '-c:v', 'libvpx-vp9', '-crf', '30', '-b:v', '0', '-row-mt', '1', '-deadline', 'good', '-cpu-used', '4',
          '-c:a', 'libopus', '-b:a', '128k', '-t', str(total), f'{PUB}/gravevow-trailer.webm'])
     run(['ffmpeg', '-y', '-loglevel', 'error', '-ss', str(total - 3.5), '-i', f'{OUT}/video.mp4', '-frames:v', '1', '-q:v', '3', f'{PUB}/poster.jpg'])
     run(['ffmpeg', '-y', '-loglevel', 'error', '-i', f'{OUT}/clip.mp4', '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '24', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', f'{PUB}/clip.mp4'])

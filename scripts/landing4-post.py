@@ -22,5 +22,5 @@ for n, (srcn, box) in CROPS.items():
     if os.path.exists(p): Image.open(p).convert('RGB').crop(box).resize((1280, 720), Image.LANCZOS).save(f'{d}/{n}.png')
 for f in sorted(os.listdir(d)):
     if f[:2] in ('g-', 'h-') and f.endswith('.png'):
-        Image.open(f'{d}/{f}').convert('RGB').save(f'{d}/{f[:-4]}.webp', quality=88, method=6)
+        Image.open(f'{d}/{f}').convert('RGB').save(f'{d}/{f[:-4]}.webp', quality=95, method=6)
         print('webp:', f[:-4])

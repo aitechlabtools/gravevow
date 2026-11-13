@@ -98,14 +98,14 @@ fs.mkdirSync(OUT, { recursive: true });
   }
   await ev(() => { const D = window.__GRAVEVOW__; D.setState({ expedition: null, screen: 'lobby', dungeon: null, merc: null, combat: null, modal: null }); });
   await wait(600);
-  if (want('g-intendencia')) { await act('tab-stash', 900); const el = await page.$('[data-testid=slot-backpack-1]'); await shot('g-intendencia'); if (el) { await el.hover({ force: true, timeout: 2000 }).catch(() => {}); await wait(900); await page.screenshot({ path: `${OUT}/g-intendencia.png` }); } }
+  if (want('g-intendencia')) { await act('tab-stash', 900); await shot('g-intendencia'); }
   if (want('g-bastion')) { await act('tab-merchants', 700); if (await page.$('[data-testid=btn-refuge]')) await act('btn-refuge', 1000); await shot('g-bastion'); }
   await s.ctx.close();
   // Móvil en horizontal
   if (want('g-movil')) {
-    const m = await session(b, { width: 844, height: 390 }, true);
+    const m = await session(b, { width: 844, height: 390 }, true, 2);
     await m.start(); await m.page.fill('[data-testid=name-input]', 'Aldric'); await m.act('btn-create', 900); await m.advanced();
-    await m.enter('rios'); await m.walk(); await m.wait(1500);
+    await m.enter('catacumbas'); await m.walk(); await m.wait(1500);
     await m.page.screenshot({ path: `${OUT}/g-movil.png` }); console.log('captura g-movil');
   }
 

@@ -1,6 +1,7 @@
 // Landing v4 (13/11): los cinco ganchos del juego. Cada uno, una captura real y una o dos frases.
 // Solo lo que funciona en la alpha. Las capturas salen de scripts/landing4-shots.cjs (escenarios guionizados).
 import { Pic } from './sections';
+import { iconUrl } from '../shared/art';
 
 export interface Hook { id: string; kicker: string; title: string; text: string; shot: string; alt: string; accent: string }
 
@@ -23,6 +24,35 @@ export const HOOKS: Hook[] = [
     shot: DIR + 'h-bastion', alt: 'El refugio del Bastión con sus estaciones de cocina, forja y atril rúnico' },
 ];
 
+// Los 6 puntos clave, con iconos del juego (como la rejilla de la landing v3, pero solo lo esencial)
+export const KEY_POINTS = [
+  { icon: 'torch', title: 'Ningún mapa se repite', text: 'Diez escenarios del Bastión al Trono de las Cadenas. Cada bajada se genera de nuevo, con su élite y su jefe al fondo.' },
+  { icon: 'sword_dread', title: 'Cada arma pelea distinto', text: 'Cada arma trae sus propios ataques: sangrar, quemar, congelar, aturdir. Cambias de arma y cambias de táctica.' },
+  { icon: 'chalice', title: 'De común a legendario', text: 'Botín con atributos como «del vampiro» y piezas legendarias únicas, como la Cadena de Belzar.' },
+  { icon: 'gem_red', title: 'Todo o nada', text: 'Lo que llevas encima se pierde si caes. El almacén del Bastión y el bolsillo seguro, nunca.' },
+  { icon: 'amulet_heart', title: 'Hasta el nivel 100', text: 'Guerrero o Mago, con cinco habilidades por clase: en cada hito eliges cuál desbloquear y cuál llevas.' },
+  { icon: 'lantern', title: 'En el ordenador y en el móvil', text: 'En el navegador, con teclado y ratón o con controles táctiles. Gratis, sin registro ni descargas.' },
+];
+
+export function KeyPoints() {
+  return (
+    <div className="mt-20" data-testid="key-points">
+      <h3 className="font-display text-3xl md:text-4xl text-parchment">Lo esencial</h3>
+      <div className="mech-grid mt-8">
+        {KEY_POINTS.map((m) => (
+          <div key={m.title} className="mech">
+            <div className="item-slot shrink-0"><img src={iconUrl(m.icon, 4)} width={48} height={48} alt="" className="pixelated" /></div>
+            <div>
+              <h4 className="font-display text-xl text-gold leading-tight">{m.title}</h4>
+              <p className="font-body text-lg text-stone-300 leading-snug mt-1">{m.text}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function HooksSection({ cta }: { cta: React.ReactNode }) {
   return (
     <section id="mecanicas" className="max-w-6xl mx-auto px-4 py-24 scroll-mt-14" data-testid="hooks">
@@ -40,6 +70,7 @@ export function HooksSection({ cta }: { cta: React.ReactNode }) {
           </li>
         ))}
       </ol>
+      <KeyPoints />
       <div className="mt-16 text-center">{cta}</div>
     </section>
   );

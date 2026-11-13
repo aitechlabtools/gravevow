@@ -1,7 +1,7 @@
 import { Diorama } from './Diorama';
 import { GravevowLogo } from '../shared/GravevowLogo';
 import { DonateButton, DONATE_URL, PLAY_URL, SiteFooter, SiteHeader } from './site';
-import { PhoneShot, RoadmapSection, ShotCarousel, VarkHollowSection, type Shot } from './sections';
+import { PhoneShot, RoadmapSection, SaveSection, ShotCarousel, VarkHollowSection, type Shot } from './sections';
 import { HooksSection } from './hooks';
 import { DiscordBanner } from './discord';
 
@@ -89,6 +89,8 @@ export function App() {
 
       <DiscordBanner />
 
+      <SaveSection />
+
       <RoadmapSection />
 
       {/* Cierre: jugar (y, en segundo plano, apoyar) */}
@@ -96,7 +98,7 @@ export function App() {
         <div className="absolute inset-0 demo-glow" />
         <div className="relative max-w-3xl mx-auto px-4 py-20 text-center">
           <h2 className="font-display text-4xl md:text-5xl text-parchment">La puerta está abierta</h2>
-          <p className="font-body text-xl text-stone-300 mt-4">Crea a tu saqueador y baja. Sin registro: tu partida se guarda en este navegador y puedes hacer copias desde el juego.</p>
+          <p className="font-body text-xl text-stone-300 mt-4">Crea a tu saqueador y baja. Tu progreso se guarda en este navegador.</p>
           <div className="mt-8"><PlayButton big /></div>
           {DONATE_URL && <p className="font-body text-stone-400 mt-8">Gravevow lo hace una sola persona. Si te gusta, puedes ayudar a que avance. <DonateButton className="ml-1 px-3 py-1.5 text-sm align-middle" /></p>}
         </div>

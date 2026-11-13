@@ -10,8 +10,8 @@ const LOOT = [['chain_axe', 'epic', ['vampire', 'bleeding']], ['belzar_chain', '
 
 function mk(name) { const dir = `${OUT}/${name}`; fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true }); return dir; }
 
-async function session(b, vp, touch) {
-  const ctx = await b.newContext({ viewport: vp, hasTouch: touch, isMobile: touch, deviceScaleFactor: 1 });
+async function session(b, vp, touch, dsf = 1) {
+  const ctx = await b.newContext({ viewport: vp, hasTouch: touch, isMobile: touch, deviceScaleFactor: dsf });
   const page = await ctx.newPage();
   const cdp = await ctx.newCDPSession(page);
   const wait = (ms) => page.waitForTimeout(ms);
@@ -29,7 +29,7 @@ async function session(b, vp, touch) {
     };
     cdp.on('Page.screencastFrame', onFrame);
     await ev(() => window.__GRAVEVOW__?.setState({ toasts: [] }));
-    await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: Math.min(vp.width, 1280), maxHeight: Math.min(vp.height, 720), everyNthFrame: 1 });
+    await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: vp.width, maxHeight: vp.height, everyNthFrame: 1 });
     await fn();
     await cdp.send('Page.stopScreencast'); cdp.off('Page.screencastFrame', onFrame);
     fs.writeFileSync(`${dir}/frames.json`, JSON.stringify(frames));
@@ -45,7 +45,7 @@ async function session(b, vp, touch) {
         if (!sc) return;
         if (src) new Function('i', 'sc', 'cam', src)(i, sc, sc.cameras.main);
         c.t += 1000 / 30; sc.lightTimer = 1000; c.game.step(c.t, 1000 / 30); }, [perFrame || '', i]);
-      const { data } = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 92, clip: { x: 0, y: 0, width: vp.width, height: vp.height, scale: Math.min(1, 1280 / vp.width) } });
+      const { data } = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 92, clip: { x: 0, y: 0, width: vp.width, height: vp.height, scale: 1 } });
       const f = `${dir}/${String(i).padStart(5, '0')}.jpg`; fs.writeFileSync(f, Buffer.from(data, 'base64')); frames.push({ f, t: i / 30 });
     }
     await ev(() => window.__cine.game.loop.wake());
@@ -61,8 +61,7 @@ async function session(b, vp, touch) {
   };
   const advanced = () => ev(([GEAR, LOOT]) => {
     const G = window.__GRAVEVOW__; const pr = G.getState().profile;
-    const bp = [...pr.backpack]; LOOT.forEach(([id, rarity, affixes], i) => { bp[i] = { uid: 'bp-' + id, itemId: id, qty: 1, rarity, ...(affixes ? { affixes } : {}) }; });
-    bp[LOOT.length] = { uid: 'bp-pot', itemId: 'health_potion', qty: 5 };
+    const bp = pr.backpack.map(() => null);
     const eq = { ...pr.equipment }; for (const [slot, id] of Object.entries(GEAR)) eq[slot] = { uid: 'eq-' + id, itemId: id, qty: 1 };
     const st = [...pr.stash];
     [['iron_ore', 10], ['silver_ore', 8], ['blessed_silver', 10], ['ancient_bone', 10], ['ectoplasm', 6], ['copper_ore', 10], ['sulfur', 8], ['obsidian_shard', 8]]
@@ -71,6 +70,9 @@ async function session(b, vp, touch) {
       character: { ...pr.character, level: 95 }, classSkills: { unlocked: ['war_cry', 'bloodthirst', 'last_bastion', 'hold_line', 'steel_whirl'], equipped: 'bloodthirst' }, tutorialSeen: { ...pr.tutorialSeen, lobby: true, dungeon: true },
       stats: { ...pr.stats, expeditions: 64, extractions: 51, kills: 830 }, bossesDefeated: ['ossuary_lord', 'veiled_queen', 'belzar'],
       reputation: { garra: 2600, brand: 2600, orvel: 1800, vesper: 1200 }, skins: { owned: [], equipped: null } } });
+    // El botín entra con dev.give, que respeta el tamaño de cada objeto (las armas ocupan varias casillas)
+    for (const [id, rarity, affixes] of LOOT) G.dev.give(id, rarity, affixes);
+    G.dev.give('health_potion', undefined, undefined, 5);
   }, [GEAR, LOOT]);
   const cinematic = (on) => ev((on) => { let st = document.getElementById('cine'); if (!st) { st = document.createElement('style'); st.id = 'cine'; document.head.appendChild(st); }
     st.textContent = on ? '[data-testid^=hud-], [data-testid=tutorial-guide], .absolute.right-3.top-3, .absolute.left-3.bottom-3, [aria-live=polite].absolute, .absolute.top-3, .absolute.bottom-3 { display: none !important; }' : ''; }, on);

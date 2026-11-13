@@ -17,7 +17,7 @@ const cards = {
   final: '<div class="c"><div class="logo" style="font-size:96px">GRAVEVOW</div><div style="display:flex;align-items:center;width:560px;margin-top:14px;filter:drop-shadow(0 0 8px rgba(196,40,59,.6))"><span style="flex:1;height:3px;background:linear-gradient(90deg,transparent,#c4283b)"></span><i style="width:18px;height:18px;margin:0 9px;transform:rotate(45deg);border:3px solid #c4283b;box-shadow:inset 0 0 0 3px #07060a,inset 0 0 0 6px #c4283b"></i><span style="flex:1;height:3px;background:linear-gradient(270deg,transparent,#c4283b)"></span></div><div class="mid gold" style="font-size:40px;margin-top:18px">Juega la alpha gratis</div><div class="sub" style="margin-top:22px;font-size:30px">gravevow.com</div></div>',
 };
 (async () => {
-  const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
+  const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1.5 });
   await p.goto('file://' + __dirname + '/../cards.html');
   await p.addStyleTag({ content: '.big2{font-family:Cinzel;font-weight:800;font-size:60px;letter-spacing:.12em;text-shadow:0 0 30px rgba(196,40,59,.55),0 4px 0 #000}.grad{position:absolute;left:0;right:0;bottom:0;height:300px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.78))}.gradt{position:absolute;left:0;right:0;top:0;height:240px;background:linear-gradient(0deg,rgba(0,0,0,0),rgba(0,0,0,.78))}.low{padding-bottom:56px}' });
   await p.evaluate(() => document.fonts.ready);
