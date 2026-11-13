@@ -170,6 +170,7 @@ function Hud() {
             <div className="flex gap-2">
               <button className="btn text-sm" onClick={() => actions.openModal({ type: 'inventory' })} data-testid="btn-inventory">Inventario <kbd className="opacity-60">I</kbd></button>
               <button className="btn text-sm" onClick={() => actions.openModal({ type: 'pause' })} data-testid="btn-menu">Menú <kbd className="opacity-60">Esc</kbd></button>
+              <FullscreenButton />
             </div>
             <Companions width="w-52" />
           </div>

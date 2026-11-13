@@ -1,3 +1,4 @@
+import { FullscreenButton } from './FullscreenButton';
 import { useEffect, useRef, useState } from 'react';
 import { g, className } from '../../core/gender';
 import { actions, useGame } from '../state/store';
@@ -259,6 +260,8 @@ export function CombatScreen() {
     <div className="absolute inset-0 z-40 flex flex-col fade-in bg-void" data-testid="combat">
       <div className="relative flex-1 min-h-0 overflow-hidden combat-stage">
         {bg && <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover pixelated" />}
+        {/* Pantalla completa también en combate (la pantalla de combate tapa el HUD de la mazmorra) */}
+        <div className="absolute z-20" style={{ top: 'max(8px, env(safe-area-inset-top))', right: 'max(8px, env(safe-area-inset-right))' }}><FullscreenButton /></div>
         <div className="absolute left-1/2 -translate-x-1/2 top-[2.5%] text-center pointer-events-none">
           <div className="font-display text-xs tracking-[0.25em] uppercase" style={{ color: zone.accent, textShadow: `0 0 12px ${zone.accent}` }}>◆ {zone.name} ◆</div>
           <div className="font-display text-parchment text-lg md:text-xl mt-0.5 drop-shadow-[0_2px_0_#000]" data-testid="combat-title">{combat.title}</div>

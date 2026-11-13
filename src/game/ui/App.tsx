@@ -14,6 +14,8 @@ import { MiniTutorialLayer } from './MiniTutorial';
 import { exposeDebug } from '../state/store';
 import { initMusicDirector, stopMusic } from '../music/director';
 import { MusicLab } from './MusicLab';
+import { toggleFs } from './FullscreenButton';
+import { canFullscreen } from '../../shared/fullscreen';
 
 // Pantalla de pruebas de música: /play/?debug&musica (solo desarrollo)
 const MUSIC_LAB = typeof window !== 'undefined' && /[?&]debug\b/.test(window.location.search) && /[?&]musica\b/.test(window.location.search);
@@ -29,6 +31,16 @@ export function App() {
   useEffect(() => {
     if (music === false) stopMusic();
   }, [music]);
+  // Tecla F: pantalla completa (en cualquier pantalla; no choca con WASD, E, Q, I, R, 1–9, Tab ni Esc)
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key.toLowerCase() === 'f' && canFullscreen()) { e.preventDefault(); void toggleFs(); }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
   // Evita que el navegador haga scroll con espacio/flechas mientras se juega
   useEffect(() => {
     const h = (e: KeyboardEvent) => {

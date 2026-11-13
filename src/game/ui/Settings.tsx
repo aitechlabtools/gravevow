@@ -8,7 +8,8 @@ import { sfx } from '../audio';
 import { Segmented } from './kit';
 import { useLayout } from '../../config/ui';
 import { useIsTouch } from '../../shared/device';
-import { canFullscreen, enterFullscreen, exitFullscreen, isIOS, isStandalone, useFullscreen } from '../../shared/fullscreen';
+import { canFullscreen, isIOS, isIPad, isStandalone, useFullscreen } from '../../shared/fullscreen';
+import { toggleFs } from './FullscreenButton';
 import { backupAgoLabel } from '../../core/backup';
 import { MailButton } from '../../legal/LegalPage';
 import { CommunityLinks } from './TitleScreen';
@@ -147,13 +148,13 @@ function ScreenSection() {
         <p className="set-note">El juego está instalado y ya se abre sin las barras del navegador.</p>
       ) : supported ? (
         <>
-          <button className="btn" onClick={() => { sfx('click'); if (on) void exitFullscreen(); else void enterFullscreen(); }} data-testid="settings-fullscreen">
+          <button className="btn" style={{ minHeight: 44 }} onClick={() => { sfx('click'); void toggleFs(); }} data-testid="settings-fullscreen">
             {on ? 'Salir de pantalla completa' : 'Pantalla completa'}
           </button>
-          <p className="set-note">También puedes salir con la tecla Esc o el gesto del sistema.</p>
+          <p className="set-note">También con la tecla F o el botón de las cuatro esquinas, arriba a la derecha. Para salir: la misma tecla, Esc o el gesto del sistema (si entraste con F11, sal con F11).</p>
         </>
       ) : isIOS() ? (
-        <p className="set-note">En iPhone no hay pantalla completa: usa «Compartir» › «Añadir a pantalla de inicio» y abre el juego desde ese icono.</p>
+        <p className="set-note">En {isIPad() ? 'este iPad' : 'iPhone'} no hay pantalla completa: usa «Compartir» › «Añadir a pantalla de inicio» y abre el juego desde ese icono.</p>
       ) : (
         <p className="set-note">Este navegador no permite la pantalla completa.</p>
       )}
@@ -163,7 +164,7 @@ function ScreenSection() {
 
 const KEYS_DUNGEON: [string, string][] = [
   ['WASD, flechas o clic', 'Moverte'], ['E o Espacio', 'Interactuar'], ['1 – 9', 'Elegir una opción al interactuar'],
-  ['Q', 'Beber una poción'], ['I', 'Inventario'], ['R', 'Girar el objeto seleccionado'], ['Esc', 'Pausa, o cerrar la ventana abierta'],
+  ['Q', 'Beber una poción'], ['I', 'Inventario'], ['R', 'Girar el objeto seleccionado'], ['F', 'Pantalla completa (en cualquier pantalla)'], ['Esc', 'Pausa, o cerrar la ventana abierta'],
 ];
 const KEYS_COMBAT: [string, string][] = [
   ['1 – 6', 'Atacar, Especial, Habilidad, Mochila, Huir y Guardia'], ['1 – 4 (en un submenú)', 'Elegir'], ['Flechas y Enter', 'Moverte por las acciones y usar'],

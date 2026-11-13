@@ -99,6 +99,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Aliados (uno solo: mantener, separarse, traicionar, soltar prisionero, testigo, Grizk y confianza de Kael): `node scripts/aliados-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Resultados en páginas (botín conseguido, cuerpo, saltar, curar, muerte): `node scripts/resultados-check.cjs <url>/play/ <carpeta> [dispositivo]`. Para salir del resumen en otros guiones: `scripts/lib/summary.cjs` (`leaveSummary`, `summaryPage`).
   - Destruir con Orik, dividir con el selector común, dar parte al aliado y cuerpo del aliado caído: `node scripts/destruir-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Pantalla completa (botón en todas las pantallas, tecla F, salida por fuera): `node scripts/pantalla-completa-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Música (menú, Bastión, zona, combate, jefe, peligro, Ajustes y pantalla de pruebas): `node scripts/musica-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Almacén: `node scripts/almacen-check.cjs`.
   - Copias de seguridad: `node scripts/copia-check.cjs`.

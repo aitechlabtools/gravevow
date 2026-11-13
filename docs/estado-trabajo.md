@@ -4,6 +4,19 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 13/11: pantalla completa en todos los dispositivos
+- **Antes:** el botón solo salía en táctil (`if (!touch) return null`): no había en escritorio ni en tabletas con ratón o teclado (al mover el ratón desaparecía), ni en combate. F11 se confundía con la app instalada (el botón se ocultaba) y el icono no se enteraba de F11. En iPad sin pantalla completa la ayuda hablaba del iPhone.
+- **Ahora** (`shared/fullscreen.ts`, `FullscreenButton.tsx`):
+  - Se muestra según lo que admite el navegador (Fullscreen API, con prefijo `webkit` para Safari), no por el tipo de dispositivo: título, elegir personaje, copia, lobby (Jugar, Intendencia, Bastión…), mazmorra (escritorio y táctil) y combate (nuevo, arriba a la derecha).
+  - Mismo icono (cuatro esquinas, nítido) y 44 px. Cambia al entrar y salir también con Esc, F11 o el gesto del sistema (`fullscreenchange`, `webkitfullscreenchange`, `resize` y `display-mode`).
+  - F11 del navegador: el icono sale como «salir» y, al pulsarlo, avisa de que se sale con F11 (la página no puede quitarla). En Firefox se detecta por el tamaño de la ventana.
+  - Tecla **F** en cualquier pantalla (no choca con WASD, E, Q, I, R, 1–9, Tab ni Esc); ayuda del ratón «Pantalla completa (F)». Añadida a la lista de controles de Ajustes.
+  - Android: al entrar se fija la horizontal; al salir por fuera se suelta.
+  - iPhone (y iPad sin la API): sigue la ayuda de «Añadir a pantalla de inicio», con el nombre del dispositivo correcto. App instalada: sin botón.
+  - Ajustes › Pantalla usa la misma acción y explica la tecla F.
+  - El canvas (Phaser en modo RESIZE, `pixelArt`) se reajusta solo, sin deformarse.
+- **Probar:** `node scripts/pantalla-completa-check.cjs <url>/play/ <carpeta> [dispositivo]` (escritorio, `"iPad (gen 7) landscape"`, `"iPad (gen 7)"`, `"Pixel 7 landscape"`).
+
 ## Novedades del 13/11: música generativa que reacciona
 - **Antes:** un acorde grave fijo en bucle (dos «pistas», `lobby` y `dungeon`), igual en todas las subzonas y en combate; sin ambiente. Por eso cansaba.
 - **Ahora** (`src/game/music/`: `instruments.ts`, `engine.ts`, `director.ts`; datos en `src/config/music.ts`):
