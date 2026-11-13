@@ -529,7 +529,7 @@ export function equippedValue(eq: Equipment): number {
 }
 
 /** Valor en monedas de una casilla (botín extraído, oro en riesgo). Igual que en wallet.ts, aquí para no crear un ciclo. */
-function stackGoldValue(s: ItemStack | null): number {
+export function stackGoldValue(s: ItemStack | null): number {
   if (!s || s.itemId === 'cover') return 0;
   if (s.itemId === COIN_ID) return s.qty;
   return (s.gold ?? 0) + getItem(s.itemId).value * GOLD_SCALE * s.qty;

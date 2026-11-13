@@ -1,6 +1,7 @@
 // Fase 7: exploración. Sala secreta (examinar las marcas), sala cerrada (sin llave no abre; con llave, la gasta),
 // trampa (se desarma quieto; la que salta no se rearma), altar (beneficio y precio antes de aceptar; solo un pacto) y atajo (solo desde dentro).
 // Uso: node scripts/exploracion-check.cjs http://localhost:5173/play/ salida [dispositivo]
+const { leaveSummary, summaryPage } = require('./lib/summary.cjs');
 const { chromium, devices } = require('playwright');
 const [,, url = 'http://localhost:5173/play/', out = 'exploracion', dev] = process.argv;
 (async () => {
@@ -23,7 +24,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'exploracion', dev] = proce
     // Se prefiere un mapa con atajo (sale en uno de cada tres o cuatro); si no aparece, vale sin él
     if (kinds.doors.includes('secret') && kinds.doors.includes('key') && kinds.altar && (kinds.doors.includes('gate') || k >= 10)) break;
     await G(() => window.__GRAVEVOW__.actions.finishExpedition('extracted')); await p.waitForTimeout(400);
-    if (await p.$('[data-testid=btn-back-lobby]')) await tap('[data-testid=btn-back-lobby]');
+    if (await p.$('[data-testid=summary]')) await leaveSummary(p);
   }
   if (!kinds.doors.includes('secret')) fail('el mapa no tiene sala secreta: ' + JSON.stringify(kinds));
   // Sin enemigos ni errante, para que nada interrumpa

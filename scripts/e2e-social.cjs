@@ -1,6 +1,7 @@
 // Prueba de los mercenarios errantes y de Kael: aparición, triángulo de riesgo, alianza, aviso y traición,
 // robo y huida en el Infierno, errantes hostiles, parte del oro al extraer y huida de un combate normal.
 // Usa las ayudas de desarrollo (?debug → __GRAVEVOW__.dev). Uso: node scripts/e2e-social.cjs [url] [carpeta]
+const { leaveSummary, summaryPage } = require('./lib/summary.cjs');
 const { chromium } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:5173/play/';
 const OUT = process.argv[3] || '/tmp/claude-0/social';
@@ -133,7 +134,7 @@ const OUT = process.argv[3] || '/tmp/claude-0/social';
   await page.waitForSelector('[data-testid=wanderer-note]');
   ok((await page.textContent('[data-testid=wanderer-note]')).includes('de oro'), 'al extraer se despide y se lleva su parte del oro');
   await page.screenshot({ path: `${OUT}/extraccion.png` });
-  await page.click('[data-testid=btn-back-lobby]');
+  await leaveSummary(page);
 
   // 5 · Huir de un combate normal sigue funcionando
   await enter('afueras', 5, {});

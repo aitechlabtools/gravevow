@@ -1,5 +1,6 @@
 // Bloque 2, fase 4: materias nuevas en las tiendas, planos en Brand con reputación (comprar = aprender) y resumen.
 // Uso: node scripts/fuentes-check.cjs http://localhost:5173/play/ salida [dispositivo]
+const { leaveSummary, summaryPage } = require('./lib/summary.cjs');
 const { chromium, devices } = require('playwright');
 const [,, url = 'http://localhost:5173/play/', out = 'fuentes', dev] = process.argv;
 (async () => {
@@ -44,6 +45,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'fuentes', dev] = process.a
 
   // Resumen: un plano traído de abajo se aprende al volver
   await G(() => { const g = window.__GRAVEVOW__, s = g.getState(); g.setState({ summary: { reason: 'extracted', durationMs: 60000, goldGained: 0, goldLost: 0, xpGained: 0, levelsGained: 0, kills: {}, kept: [], lost: [], found: [], extractedValue: 0, blueprintsLearned: ['bp_knight_helm'] }, screen: 'summary' }); });
+  await summaryPage(p, 2);
   await p.waitForSelector('[data-testid=blueprints-note]');
   if (!/Yelmo del caballero/.test(await p.textContent('[data-testid=blueprints-note]'))) fail('el resumen no nombra el plano');
   await wide('Resumen');

@@ -3,6 +3,7 @@
 //   con una captura por fotograma → movimiento fluido real aunque el navegador sin GPU vaya lento.
 // - Pantallas de interfaz (combate, creación, equipo): screencast del navegador.
 // Uso: node scripts/trailer2-capture.cjs http://localhost:5173/play/ carpeta_salida
+const { leaveSummary, summaryPage } = require('./lib/summary.cjs');
 const { chromium } = require('playwright');
 const fs = require('fs');
 const BASE = process.argv[2] || 'http://localhost:5173/play/';
@@ -228,7 +229,7 @@ const ONLY = process.argv[4] ? process.argv[4].split(',') : null;
     await wait(600);
     await ev(() => window.__GRAVEVOW__.actions.backToLobby());
     await wait(500);
-    if (await page.$('[data-testid=btn-back-lobby]')) { await page.click('[data-testid=btn-back-lobby]'); await wait(500); }
+    if (await page.$('[data-testid=summary]')) { await leaveSummary(page); await wait(500); }
     await ev(() => { const s = window.__GRAVEVOW__.getState(); s.profile.stats.expeditions = Math.max(1, s.profile.stats.expeditions); });
     if (await page.$('[data-testid=tab-play]')) await page.click('[data-testid=tab-play]');
     await wait(300);

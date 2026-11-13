@@ -194,3 +194,9 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 - **Nombre:** campo con el botón de pluma al lado (`name-random`, del alto del campo). El nombre sale según el género.
 - **Opciones nuevas:** se añaden en `src/core/data/appearance.ts`. Un color nuevo es solo un dato; un peinado nuevo es un dato más su dibujo en `art.ts`.
 - **Textos sobre el jugador:** se escriben con `{masculino|femenino}` (por ejemplo «cansad{o|a}») y se resuelven con `g()` de `src/core/gender.ts`. Avisos, registro de combate, errantes y tutoriales ya lo aplican solos; en un texto nuevo de la interfaz, envuélvelo con `g()`. Para el nombre de la clase del jugador usa `className(classId, sex)`, no `CLASSES[..].name`.
+
+## Resultados en páginas (13/11)
+- **Estructura:** cabecera con el título en pequeño (desde la página 2), rombos de página y «Saltar» discreto a la derecha (44 px). Abajo, «◂ Atrás», «Siguiente ▸» o, en la última página, «Volver al Bastión». Cada página entra con `fade-in`.
+- **Navegación:** Intro y → avanzan, ← retrocede, y en táctil se puede deslizar (más de 60 px). «Saltar» nunca se salta la página del cuerpo si vuelves herido.
+- **Botín:** casillas con el borde de su rareza y `loot-shine` en lo épico y legendario (sin animación con movimiento reducido). Al tocar o pasar el ratón, la ficha (`ItemTooltip`) debajo.
+- **Tu cuerpo:** `BodyFigure` grande; solo las lesiones que piden atención (sangra, rota o inutilizada; al tocar una, su efecto) y los golpes en una frase; la cura de Vesper con su precio o lo que falta.

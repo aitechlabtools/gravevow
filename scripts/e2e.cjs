@@ -1,5 +1,6 @@
 // Prueba de extremo a extremo del criterio de éxito de la primera entrega.
 // Uso: node scripts/e2e.cjs http://localhost:5173/play/ [carpeta_capturas]
+const { leaveSummary, summaryPage } = require('./lib/summary.cjs');
 const { chromium } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:5173/play/';
 const OUT = process.argv[3] || 'e2e-shots';
@@ -215,7 +216,7 @@ fs.mkdirSync(OUT, { recursive: true });
     if (!/escapado/i.test(t)) throw new Error('resumen: ' + t);
   });
   await step('El botín aparece en el inventario del lobby', async () => {
-    await page.click('[data-testid=btn-back-lobby]');
+    await leaveSummary(page);
     await page.click('[data-testid=tab-stash]');
     const lobbyItems = (await st()).backpack;
     console.log('\n   lobby:', lobbyItems.join(', '));
@@ -252,7 +253,7 @@ fs.mkdirSync(OUT, { recursive: true });
       await page.keyboard.press(String(labels.findIndex((l) => /portal/i.test(l)) + 1));
     }
     await page.waitForSelector('[data-testid=summary]', { timeout: 30000 });
-    await page.click('[data-testid=btn-back-lobby]');
+    await leaveSummary(page);
   });
   await step('Morir pierde lo transportado (otro mapa distinto)', async () => {
     await page.click('[data-testid=tab-play]');
@@ -263,9 +264,10 @@ fs.mkdirSync(OUT, { recursive: true });
     await page.evaluate(() => window.__GRAVEVOW__.actions.trapHit(9999));
     await page.waitForSelector('[data-testid=summary]');
     // Se pierde todo lo transportado y el intendente entrega el kit de recluta automáticamente
+    await summaryPage(page, 3);
     await page.waitForSelector('[data-testid=recruit-kit]');
     await shot('18-death');
-    await page.click('[data-testid=btn-back-lobby]');
+    await leaveSummary(page);
     const s = await st();
     if (s.backpack.join() !== 'bandagex2,stale_breadx1,waterx1') throw new Error('tras morir la mochila debería tener solo el kit de recluta (2 vendas, pan y agua): ' + s.backpack);
     const weapon = await page.evaluate(() => window.__GRAVEVOW__.getState().profile.equipment.mainHand?.itemId);

@@ -49,7 +49,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»: entrada con Mercaderes y Bastión; las estaciones se reconstruyen en `RefugePanels.tsx`), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
   - Mercaderes: los 8 del plan maestro en `data/vendors.ts`; todos están desde el principio (`core/vendors.ts`), que migra la reputación antigua.
   - Las piezas comunes están en `kit/`.
-  - Mazmorra, combate y resumen: `DungeonScreen`, `CombatScreen` y `SummaryScreen`. El arrastre de objetos está en `pointerDrag.tsx`.
+  - Mazmorra, combate y resumen: `DungeonScreen`, `CombatScreen` y `SummaryScreen` (resultados en 2 o 3 páginas; el botín conseguido sale de `startCounts` en `expedition.ts`). El arrastre de objetos está en `pointerDrag.tsx`.
 - `src/game/persistence/db.ts`: guardado en IndexedDB «gravevow», con respaldo en localStorage `gravevow.*`.
 - **La expedición es una copia:** el perfil solo cambia al extraer o morir.
 - `src/landing` (portada), `src/legal` (páginas legales) y `src/shared`:
@@ -94,6 +94,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Mini tutoriales del Bastión y de las estaciones (regalo, crafteo, aviso de nivel, venta): `node scripts/e2e-bastion-minis.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Personajes y guardado: `node scripts/personajes-check.cjs`.
   - Creación de personaje (giro, aspecto, género, Aleatorio y nombre al azar): `node scripts/creacion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Resultados en páginas (botín conseguido, cuerpo, saltar, curar, muerte): `node scripts/resultados-check.cjs <url>/play/ <carpeta> [dispositivo]`. Para salir del resumen en otros guiones: `scripts/lib/summary.cjs` (`leaveSummary`, `summaryPage`).
   - Almacén: `node scripts/almacen-check.cjs`.
   - Copias de seguridad: `node scripts/copia-check.cjs`.
   - Combate por grupos: `node scripts/grupos-check.cjs <url>/play/ <carpeta> [dispositivo]`.

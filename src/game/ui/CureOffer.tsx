@@ -1,5 +1,5 @@
 // Curación completa (Fase 10): «Curarse por N de oro». Tras caer, 1 moneda (o gratis si no te queda ninguna).
-// Sale al volver al Bastión (resumen), en la enfermería de Vesper y en Intendencia → Estado.
+// Sale en la página «Tu cuerpo» de los resultados (useCure), en la enfermería de Vesper y en Intendencia → Estado.
 import { g } from '../../core/gender';
 import { actions, useGame } from '../state/store';
 import { cureCost } from '../../core/anatomy';

@@ -677,3 +677,8 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 @media (prefers-reduced-motion:reduce){ .mini-hole{animation:none} }
 /* Móvil en horizontal: en combate, el cartel del tutorial sube arriba del todo para no tapar la ficha del ataque */
 @media (max-height: 560px) { .tut-guide.in-combat, html.is-touch .tut-guide.in-combat { top: 4px; padding: 4px 12px; font-size: 13px; } }
+
+/* Resultados: brillo breve de lo épico y legendario al aparecer */
+@keyframes lootShine { 0% { box-shadow: 0 0 0 0 #e8b33a00; transform: scale(.85); } 40% { box-shadow: 0 0 18px 4px #e8b33acc; transform: scale(1.06); } 100% { box-shadow: 0 0 6px 1px #e8b33a55; transform: scale(1); } }
+.loot-shine { animation: lootShine 1.1s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .loot-shine { animation: none; box-shadow: 0 0 6px 1px #e8b33a55; } }

@@ -2,6 +2,7 @@
 // Preparar (comprar una venda), entrar en S1, combatir, herirse y tratarse, recoger un objeto de varias casillas,
 // desgastar el arma, extraer, recargar, reparar con Nira, bajar otra vez y morir (kit de recluta, bolsillo intacto).
 // Uso: node scripts/ciclo-check.cjs <url>/play/ <carpeta> <warrior|mage> <nueva|migrada> [dispositivo]
+const { leaveSummary, summaryPage } = require('./lib/summary.cjs');
 const { chromium, devices } = require('playwright');
 const fs = require('fs');
 const [,, url = 'http://localhost:5173/play/', out = 'ciclo', cls = 'warrior', mode = 'nueva', dev] = process.argv;
@@ -143,7 +144,7 @@ fs.mkdirSync(out, { recursive: true });
   await p.waitForSelector('[data-testid=summary]', { timeout: 30000 });
   if (!/escapado/i.test(await p.textContent('[data-testid=summary-title]'))) fail('no fue una extracción');
   await shot('4-extraccion');
-  await tap('[data-testid=btn-back-lobby]');
+  await leaveSummary(p);
   if ((await count('base', 'iron_sword')) !== 1) fail('la espada no llegó al Bastión');
 
   // ── Recargar ──
@@ -173,6 +174,7 @@ fs.mkdirSync(out, { recursive: true });
   if (w2.sub !== 'afueras' || w2.seed === null) fail('la segunda bajada no es un mapa de S1 con semilla: ' + JSON.stringify(w2));
   await G(() => window.__GRAVEVOW__.actions.trapHit(9999));
   await p.waitForSelector('[data-testid=summary]');
+  await summaryPage(p, 3);
   const rk = await p.waitForSelector('[data-testid=recruit-kit]', { timeout: 3000 }).catch(() => null);
   if (!rk) fail('al volver sin arma no sale el aviso del equipo de recluta');
   else if (!/Has vuelto sin nada/.test(await rk.textContent())) fail('el aviso de recluta no dice el texto acordado');
@@ -193,7 +195,7 @@ fs.mkdirSync(out, { recursive: true });
     if (g0 > 0 && c.gold !== g0 - 1) fail('la curación tras caer no costó 1 moneda: ' + g0 + ' → ' + c.gold);
     if (await p.$('[data-testid=cure-offer]')) fail('el aviso sigue tras curarse');
   }
-  await tap('[data-testid=btn-back-lobby]');
+  await leaveSummary(p);
   const dead = await G(() => { const pr = window.__GRAVEVOW__.getState().profile; return { weapon: pr.equipment.mainHand?.itemId ?? null, pocket: pr.pocket.filter(Boolean).map((x) => x.itemId), deaths: pr.stats.deaths, ext: pr.stats.extractions }; });
   if (!dead.weapon) fail('tras morir no hay arma (kit de recluta)');
   if (!dead.pocket.includes('health_potion')) fail('el bolsillo seguro se perdió al morir');
@@ -208,7 +210,7 @@ fs.mkdirSync(out, { recursive: true });
   await G(() => window.__GRAVEVOW__.actions.trapHit(9999));
   await p.waitForSelector('[data-testid=summary]');
   if (await p.$('[data-testid=recruit-kit]')) fail('vuelve a dar el kit aunque el de recluta no se perdió');
-  await tap('[data-testid=btn-back-lobby]');
+  await leaveSummary(p);
   const rec = await G(() => { const pr = window.__GRAVEVOW__.getState().profile; return { main: pr.equipment.mainHand?.itemId, armor: pr.equipment.armor?.itemId }; });
   if (!/^recruit_/.test(rec.main ?? '') || !/^recruit_/.test(rec.armor ?? '')) fail('el equipo de recluta se perdió al morir: ' + JSON.stringify(rec));
   // Sin armadura: el intendente la ofrece a mano, una sola vez

@@ -297,6 +297,8 @@ export interface Profile {
   goldPhysical?: boolean;
   /** Última subzona a la que se bajó (la tarjeta de Jugar la propone de nuevo). */
   lastSubzone: string | null;
+  /** Subzonas a las que ya se ha bajado (para «primera vez» del resumen). Sin valor en partidas antiguas: se deducen de `lastSubzone`. */
+  visitedSubzones?: string[];
   settings: Settings;
   createdAt: number;
 }

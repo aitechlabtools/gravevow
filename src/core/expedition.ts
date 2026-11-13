@@ -1,12 +1,13 @@
 import type { BossMemory } from './combat';
 import { baseSupply, needsOf, toSaved, type Needs } from './needs';
-import { gridGold } from './gold';
+import { gridGold, isCoins } from './gold';
 import type { Equipment, Grid, ItemStack, Profile } from './types';
-import { cloneGrid, gridValue, equippedValue } from './inventory';
+import { cloneGrid, gridValue, equippedValue, stackGoldValue } from './inventory';
 import { computeStats, applyXp } from './stats';
 import { updateQuests } from './quests';
 import { addToGrid, emptyEquipment, emptyGrid, LAYOUTS } from './inventory';
 import { getItem } from './data/items';
+import { SUBZONE_ORDER } from './data/subzones';
 import { fromWounds, stabilize, summaryHp, toWounds, type Body, type Region } from './anatomy';
 
 // ════════════════════════════════════════════════════════════════════
@@ -51,6 +52,11 @@ export interface ExpeditionState {
   found: ItemStack[];
   /** Valor de lo que el jugador llevaba al entrar (lo que arriesga). */
   riskedValue: number;
+  /** Lo que llevabas al bajar (objeto|rareza → unidades, sin monedas) y tus monedas: el resumen enseña solo lo de más. */
+  startCounts?: Record<string, number>;
+  startGold?: number;
+  /** Primera vez en esta subzona (para el resumen). */
+  firstVisit?: boolean;
   /** Zona de la expedición. */
   zone?: string;
   /** Subzona de la expedición (las antiguas no la tienen). */
@@ -87,6 +93,42 @@ export interface ExpeditionSummary {
   blueprintsLearned?: string[];
   /** Fin del tutorial (o tutorial repetido). */
   tutorialNote?: string;
+  /** Solo lo nuevo que traes (lo que no llevabas al bajar), de mayor a menor rareza. Sin monedas. */
+  gained?: ItemStack[];
+  /** Valor del botín conseguido: objetos nuevos + oro conseguido. */
+  lootValue?: number;
+  /** Al morir: lo que salvó el bolsillo seguro. */
+  saved?: ItemStack[];
+  /** Nivel y experiencia antes de sumar los de esta expedición (para la barra). */
+  xpBefore?: { level: number; xp: number };
+  subzone?: string;
+  firstVisit?: boolean;
+}
+
+/** Unidades que llevas de cada objeto y rareza (equipo, mochila y bolsillo), sin monedas ni casillas tapadas. */
+export function carriedCounts(eq: Equipment, ...grids: Grid[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const s of [...Object.values(eq), ...grids.flat()]) {
+    if (!s || s.itemId === 'cover' || isCoins(s)) continue;
+    const k = `${s.itemId}|${s.rarity ?? ''}`;
+    out[k] = (out[k] ?? 0) + s.qty;
+  }
+  return out;
+}
+
+const RARITY_RANK: Record<string, number> = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
+
+/** Lo que hay de más al salir respecto a lo que llevabas al bajar, de mayor a menor rareza. */
+export function gainedItems(start: Record<string, number>, end: Record<string, number>): ItemStack[] {
+  const out: ItemStack[] = [];
+  for (const [k, n] of Object.entries(end)) {
+    const extra = n - (start[k] ?? 0);
+    if (extra <= 0) continue;
+    const [itemId, rarity] = k.split('|');
+    out.push({ uid: `gain-${k}`, itemId, qty: extra, ...(rarity ? { rarity: rarity as ItemStack['rarity'] } : {}) });
+  }
+  const rank = (s: ItemStack) => RARITY_RANK[s.rarity ?? getItem(s.itemId).rarity] ?? 0;
+  return out.sort((a, b) => rank(b) - rank(a) || getItem(a.itemId).name.localeCompare(getItem(b.itemId).name));
 }
 
 export function startExpedition(p: Profile, now: number): { profile: Profile; expedition: ExpeditionState } {
@@ -107,6 +149,8 @@ export function startExpedition(p: Profile, now: number): { profile: Profile; ex
     kills: {},
     found: [],
     riskedValue: gridValue(p.backpack) + equippedValue(p.equipment),
+    startCounts: carriedCounts(p.equipment, p.backpack, p.pocket),
+    startGold: gridGold(p.backpack) + gridGold(p.pocket),
   };
   expedition.hp = summaryHp(expedition.body);
   return {
@@ -171,7 +215,6 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
     summary: {
       reason,
       durationMs: Math.min(e.durationMs, now - e.startedAt),
-      goldGained: extracted ? gridGold(e.backpack) + gridGold(e.pocket ?? []) : gridGold(e.pocket ?? []),
       goldLost: extracted ? 0 : gridGold(e.backpack),
       xpGained,
       levelsGained: xp.levelsGained,
@@ -180,11 +223,34 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
       lost: extracted ? [] : carried(e).filter((x) => !getItem(x.itemId).recruit),
       found: e.found.map((s) => ({ ...s })),
       extractedValue,
+      ...lootOf(e, extracted),
+      xpBefore: { level: p.character.level, xp: p.character.xp },
+      subzone: e.subzone,
+      firstVisit: e.firstVisit,
     },
   };
+}
+
+/** Botín conseguido (solo lo nuevo), oro conseguido y su valor; al morir, lo que salvó el bolsillo. */
+function lootOf(e: ExpeditionState, extracted: boolean): Pick<ExpeditionSummary, 'gained' | 'lootValue' | 'saved' | 'goldGained'> {
+  const pocket = e.pocket ?? [];
+  if (!extracted) return { gained: [], lootValue: 0, goldGained: gridGold(pocket), saved: pocket.filter((s): s is ItemStack => !!s && s.itemId !== 'cover') };
+  // Expediciones empezadas antes de este cambio: sin foto de salida, todo cuenta como antes
+  if (!e.startCounts) return { gained: e.found.filter((s) => !isCoins(s)), lootValue: gridValue(e.backpack) + equippedValue(e.equipment), saved: [], goldGained: gridGold(e.backpack) + gridGold(pocket) };
+  const gained = gainedItems(e.startCounts, carriedCounts(e.equipment, e.backpack, pocket));
+  const goldGained = Math.max(0, gridGold(e.backpack) + gridGold(pocket) - (e.startGold ?? 0));
+  const lootValue = Math.round(goldGained + gained.reduce((n, s) => n + stackGoldValue({ ...s, gold: 0 }), 0));
+  return { gained, lootValue, saved: [], goldGained };
 }
 
 /** Si la página se recargó a mitad de expedición: se anula sin castigo (el equipo de entrada se conserva). */
 export function abandonInterruptedExpedition(p: Profile): Profile {
   return { ...p, activeExpedition: null };
+}
+
+/** Subzonas ya visitadas. Las partidas antiguas no las guardan: cuentan todas hasta la última a la que se bajó. */
+export function visitedSubzones(p: Pick<Profile, 'visitedSubzones' | 'lastSubzone'>): string[] {
+  if (p.visitedSubzones) return p.visitedSubzones;
+  const i = p.lastSubzone ? SUBZONE_ORDER.indexOf(p.lastSubzone as never) : -1;
+  return i >= 0 ? SUBZONE_ORDER.slice(0, i + 1) : [];
 }

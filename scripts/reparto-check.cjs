@@ -1,5 +1,6 @@
 // Reparto con el errante aliado: medidor del saco de combate, cobro en el portal (pagar, negarse, atacar).
 // Uso: node scripts/reparto-check.cjs http://localhost:5173/play/ [carpeta] [dispositivo de Playwright]
+const { leaveSummary, summaryPage } = require('./lib/summary.cjs');
 const { chromium, devices } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:5173/play/';
 const OUT = process.argv[3] || 'reparto-shots';
@@ -68,7 +69,7 @@ require('fs').mkdirSync(OUT, { recursive: true });
   ok(/Le pagaste su parte/.test(await p.textContent('[data-testid=summary]')), 'el resumen dice lo que le pagaste');
 
   // 3 · Negarse: combate a muerte sin huida
-  await tap('[data-testid=btn-back-lobby]');
+  await leaveSummary(p);
   await enter();
   await G(() => { const s = window.__GRAVEVOW__.getState(); s.expedition.backpack[5] = { uid: 'c3', itemId: 'gold_coins', qty: 10 }; window.__GRAVEVOW__.actions.requestExtract(); });
   await p.waitForSelector('[data-testid=rival-demand]');
@@ -87,7 +88,7 @@ require('fs').mkdirSync(OUT, { recursive: true });
   ok((await G(() => window.__GRAVEVOW__.getState().profile.kael.grudge)) === 1, 'Kael recuerda que le negaste su parte');
 
   // 4 · Atacarle primero: empieza aturdido
-  await tap('[data-testid=btn-back-lobby]');
+  await leaveSummary(p);
   await enter();
   await G(() => { const s = window.__GRAVEVOW__.getState(); s.expedition.backpack[5] = { uid: 'c4', itemId: 'gold_coins', qty: 10 }; window.__GRAVEVOW__.actions.requestExtract(); });
   await p.waitForSelector('[data-testid=rival-demand]');

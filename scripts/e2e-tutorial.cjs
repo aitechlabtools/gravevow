@@ -4,6 +4,7 @@
 // objetos, huir, portal antes de tiempo, dejar o traicionar a Osric), que caer no hace perder nada, el cartel
 // «Paso N de 8» con «Saltar» (y su confirmación), botones de 44 px, «Repetir el tutorial» y saltarlo de verdad.
 // Uso: node scripts/e2e-tutorial.cjs [url] [carpeta] [dispositivo de Playwright]
+const { leaveSummary, summaryPage } = require('./lib/summary.cjs');
 const { chromium, devices } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:5173/play/';
 const OUT = process.argv[3] || '/tmp/claude-0/tutorial';
@@ -221,7 +222,7 @@ const DEVICE = process.argv[4];
   const p = await G(() => window.__GRAVEVOW__.getState().profile);
   ok(p.tutorialDone && p.gold >= 10, 'al extraer: tutorial completado, oro y equipo básico');
   ok(p.kael.missStreak === 0, 'el tutorial no cuenta para la aparición de Kael');
-  await tap('[data-testid=btn-back-lobby]');
+  await leaveSummary(page);
 
   // Repetir desde Ajustes: sin recompensas ni cambios en el inventario
   const snap = await G(() => JSON.stringify({ g: window.__GRAVEVOW__.getState().profile.gold, bp: window.__GRAVEVOW__.getState().profile.backpack }));
@@ -231,7 +232,7 @@ const DEVICE = process.argv[4];
   await page.waitForSelector('[data-testid=tutorial-note]');
   const snap2 = await G(() => JSON.stringify({ g: window.__GRAVEVOW__.getState().profile.gold, bp: window.__GRAVEVOW__.getState().profile.backpack }));
   ok(snap === snap2, 'repetir el tutorial no cambia el oro ni el inventario');
-  await tap('[data-testid=btn-back-lobby]');
+  await leaveSummary(page);
   // Repetido y saltado: vuelves al Bastión con tu personaje igual
   await G(() => window.__GRAVEVOW__.actions.replayTutorial());
   await page.waitForSelector('[data-testid=tutorial-guide]');

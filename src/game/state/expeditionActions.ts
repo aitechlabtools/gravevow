@@ -2,7 +2,7 @@
 import type { ItemStack, Profile } from '../../core/types';
 import { RARITY_ORDER, rollStacks } from '../../core/data/rarity';
 import { createProfile, grantRecruitKit, recruitGaps } from '../../core/profile';
-import { startExpedition, endExpedition, timeLeft, type EndReason } from '../../core/expedition';
+import { startExpedition, endExpedition, timeLeft, visitedSubzones, type EndReason } from '../../core/expedition';
 import { addManyToGrid, addToGrid, countItem, emptyGrid, removeItem, cloneGrid, removeAt, isCover, LAYOUTS } from '../../core/inventory';
 import { coins as coinsStack, gridGold, isCoins } from '../../core/gold';
 import { earnGoldSafe, stackGoldValue } from '../../core/wallet';
@@ -65,8 +65,10 @@ export const expeditionActions = {
     const dungeon = first ? CRYPTS_OF_UMBRAVEL : generateDungeon(seed, { zone: zoneId, subzone: sub.id, captive, wanderer: !!enc.who });
     const started = startExpedition(p, Date.now());
     const kael = { ...p.kael, missStreak: first || sub.zone !== 'mazmorra' ? p.kael.missStreak : enc.kaelStreak };
-    const profile = first ? started.profile : { ...started.profile, lastSubzone: sub.id, kael };
-    const expedition = { ...started.expedition, zone: dungeon.zone ?? 'mazmorra', subzone: dungeon.subzone, chestsOpened: {}, veinsMined: 0 };
+    const seen = visitedSubzones(p);
+    const firstVisit = !first && !seen.includes(sub.id);
+    const profile = first ? started.profile : { ...started.profile, lastSubzone: sub.id, kael, visitedSubzones: seen.includes(sub.id) ? seen : [...seen, sub.id] };
+    const expedition = { ...started.expedition, zone: dungeon.zone ?? 'mazmorra', subzone: dungeon.subzone, chestsOpened: {}, veinsMined: 0, firstVisit };
     set({
       profile, expedition, dungeon, screen: 'dungeon', summary: null, combat: null, modal: null,
       rival: enc.who ? initialRival(enc.who, enc.who === 'kael' && !enc.hostile && (p.kael.grudge ?? 0) > 0 ? 'mid' : enc.risk, enc.hostile) : noRival(), rivalLine: null, merc: mercForExpedition(p), chests: {}, mined: {}, bags: {},

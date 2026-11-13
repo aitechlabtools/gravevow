@@ -4,6 +4,31 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 13/11: resultados en tres páginas
+- **Antes:** «Botín encontrado» apuntaba lo cogido sin restar lo soltado o gastado, con las monedas como objetos. «Conservas» listaba todo lo que llevabas, también el equipo con el que bajaste. El oro y el valor contaban lo que ya llevabas.
+- **Ahora:**
+  - Al bajar se guarda lo que llevas: unidades por objeto y rareza en equipo, mochila y bolsillo, sin monedas, y las monedas aparte.
+  - Al salir, botín = lo que hay de más, y oro = monedas al salir menos monedas al bajar.
+  - Valor = objetos nuevos + oro conseguido, redondeado.
+  - Las expediciones empezadas antes del cambio caen al cálculo antiguo.
+- **Páginas:**
+  - 1 · Expedición.
+  - 2 · Botín (o lo perdido y lo que salvó el bolsillo).
+  - 3 · Tu cuerpo, solo si `useCure()` da algo al llegar (no sale en el tutorial).
+  - «Saltar» (`summary-skip`) lleva al Bastión, o a la página 3 si vuelves herido.
+  - En la página 3, «Ahora no» (`cure-later`) avisa de que se puede curar en la Enfermería o en Intendencia › Estado.
+  - Muerte: la misma estructura, con la cura por 1 de oro (o gratis) y el aviso de recluta en la página 3.
+- **Decisiones** (preguntas sin respuesta, se tomó lo propuesto):
+  - se guarda la lista de subzonas visitadas;
+  - mercenario, errante y tutorial van en la página 1, y los planos en la 2;
+  - se mantiene «◂ Atrás»;
+  - el hito de habilidad se avisa y se elige en el Bastión.
+- **Cómo probar:**
+  - Extraer herido con algo nuevo: página 1 → Siguiente (o →, o deslizar) → botín sin lo que bajaste → Siguiente → curarse.
+  - Extraer sano: 2 páginas.
+  - Morir: lo perdido y el bolsillo, luego la cura por 1 de oro.
+  - Script: `node scripts/resultados-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+
 ## Novedades del 13/11: creación de personaje (giro, capa, aspecto y género)
 - Aprobado por el usuario: solo frente y espalda; peinados comunes a todas las clases; rasgos de mujer sutiles (pestañas y labios, sin cambiar el mentón); etiqueta «Género»; nombre de clase con género en todas partes; barba «Ninguna» por defecto; sin giro automático ni color de acento.
 - Fases hechas:
