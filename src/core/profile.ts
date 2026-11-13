@@ -21,6 +21,9 @@ import { xpForNextLevel } from './stats';
 
 export const STARTING_GOLD = STARTING_COINS;
 
+/** Volumen de música por defecto (13/11): algo por debajo de los efectos. Lo guardado por cada jugador se respeta. */
+export const MUSIC_DEFAULT = 0.6;
+
 export function createProfile(name: string, classId: ClassId, appearance: Appearance): Profile {
   const cls = CLASSES[classId];
   if (!cls.playable) throw new Error('Esa clase todavía no está disponible.');
@@ -59,7 +62,7 @@ export function createProfile(name: string, classId: ClassId, appearance: Appear
     tutorialDone: false,
     kael: { missStreak: 0 },
     lastSubzone: null,
-    settings: { volume: 0.6, music: true, musicVolume: 1, sfxVolume: 1 },
+    settings: { volume: 0.6, music: true, musicVolume: MUSIC_DEFAULT, sfxVolume: 1 },
     createdAt: Date.now(),
   };
 }
@@ -106,7 +109,7 @@ export function sanitizeProfile(raw: unknown): Profile | null {
   p.kael = { missStreak: Number.isFinite(streak) && streak > 0 ? Math.floor(streak) : 0, met: Number.isFinite(met) && met > 0 ? Math.floor(met) : 0, trust: Number.isFinite(trust) && trust > 0 ? Math.min(KAEL_TRUST.hostile, Math.floor(trust)) : 0 };
   p.classSkills = sanitizeClassSkills(p);
   p.lastSubzone = isSubzoneId(p.lastSubzone) ? p.lastSubzone : null;
-  p.settings = Object.assign({ volume: 0.6, music: true, musicVolume: 1, sfxVolume: 1 }, p.settings ?? {});
+  p.settings = Object.assign({ volume: 0.6, music: true, musicVolume: MUSIC_DEFAULT, sfxVolume: 1 }, p.settings ?? {});
   // Partidas de antes de las zonas: si ya cobraste «El trono vacío», el Señor del Osario cuenta como derrotado
   if (!Array.isArray(p.bossesDefeated)) p.bossesDefeated = p.quests.some((q) => q.id === 'q_lord' && q.progress >= 1) ? ['ossuary_lord'] : [];
   if (!p.contract || typeof p.contract !== 'object' || !MERCENARIES[p.contract.mercId] || !(p.contract.left > 0)) p.contract = null;

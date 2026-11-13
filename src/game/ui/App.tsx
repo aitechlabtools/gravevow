@@ -12,7 +12,7 @@ import { CopiaSeguridad } from './screens/CopiaSeguridad';
 import { Toasts } from './common';
 import { MiniTutorialLayer } from './MiniTutorial';
 import { exposeDebug } from '../state/store';
-import { initMusicDirector, stopMusic } from '../music/director';
+import { initMusicDirector } from '../music/director';
 import { MusicLab } from './MusicLab';
 import { toggleFs } from './FullscreenButton';
 import { canFullscreen } from '../../shared/fullscreen';
@@ -22,15 +22,11 @@ const MUSIC_LAB = typeof window !== 'undefined' && /[?&]debug\b/.test(window.loc
 
 export function App() {
   const screen = useGame((s) => s.screen);
-  const music = useGame((s) => s.profile?.settings.music);
   useEffect(() => {
     exposeDebug();
     initMusicDirector();
     void actions.boot();
   }, []);
-  useEffect(() => {
-    if (music === false) stopMusic();
-  }, [music]);
   // Tecla F: pantalla completa (en cualquier pantalla; no choca con WASD, E, Q, I, R, 1–9, Tab ni Esc)
   useEffect(() => {
     const h = (e: KeyboardEvent) => {

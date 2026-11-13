@@ -144,7 +144,7 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 ## Ajustes por secciones (12/11)
 
 `src/game/ui/Settings.tsx` (`SettingsModal`; `TitleScreen.tsx` la reexporta). Maquetas en `mockups/ajustes/index.html`.
-- Secciones: Sonido (general, música, efectos y ambiente; música en combate; interruptor de música), Pantalla (pantalla completa, también con la tecla F, o, en iPhone, cómo instalar), Controles (teclado de mazmorra y combate, y táctil; primero lo del dispositivo), Partida (botón a la Copia de seguridad, Elegir personaje y Repetir el tutorial; en la mazmorra solo avisos), Comunidad e Información (versión, legales y `MailButton`).
+- Secciones: Sonido (general, música y efectos; nota «La música suena en el Bastión y el menú.»), Pantalla (pantalla completa, también con la tecla F, o, en iPhone, cómo instalar), Controles (teclado de mazmorra y combate, y táctil; primero lo del dispositivo), Partida (botón a la Copia de seguridad, Elegir personaje y Repetir el tutorial; en la mazmorra solo avisos), Comunidad e Información (versión, legales y `MailButton`).
 - Escritorio y tableta: lista de secciones de 200 px a la izquierda. Móvil (alto ≤ 520): dos columnas de iconos de 44 px y el nombre de la sección en la cabecera.
 - Pie fijo con «Cerrar» y «Salir al título» (este, solo en el Bastión). Esc cierra el panel; en el Bastión, Esc lo abre si no hay otra ventana (`data-modal`).
 - La sección abierta y los volúmenes se guardan en la cuenta (`Settings.settingsTab`, `musicVolume`, `sfxVolume`); el audio tiene un bus de música y otro de efectos bajo el general (`setAudio`).

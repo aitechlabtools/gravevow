@@ -4,6 +4,14 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 13/11 (noche, 2): música de archivo en el Bastión y el menú; sin ambiente
+- **Dónde suena:** menú, elegir/crear personaje, copia y todo el Bastión (todas las pestañas del lobby): `medieval-estampie` y `whisper-of-the-bow` alternándose sin repetir, con 5–15 s de silencio entre ellas. Mazmorra, combate, jefes y resultados: sin música. Al bajar, fundido de salida de 2 s; al volver, de entrada.
+- **Interruptores** en `src/config/music.ts`: `listasActivadas = true` (música de archivo), `musicaActivada = false` (pistas generadas, peligro y fanfarrias), `ambienteActivado = false` (goteo, viento, lava…; el código sigue). `PLAYLISTS` decide pistas, pantallas, pausas, fundidos y volumen.
+- **Reproductor:** `src/game/music/playlist.ts`, en streaming con `<audio>` conectado al bus de música (respeta los volúmenes de Ajustes); cada pista se pide al sonar (no retrasa el arranque). OGG y, si el navegador no lo lee (Safari), MP3. Arranca tras la primera interacción.
+- **Audio:** originales en `assets/audio/originales/` (sin tocar). Web en `public/audio/`: `ffmpeg … -af "loudnorm=I=-16:TP=-1.5:LRA=11:<medidas de la 1.ª pasada>:linear=true,aresample=44100,afade=t=in:d=1.5,afade=t=out:st=<duración−1,5>:d=1.5"` → OGG (`libvorbis -q:a 4`) y MP3 (`libmp3lame -q:a 4`). Resultado: −16 LUFS las dos.
+- **Ajustes › Sonido:** General, Música y Efectos, con la nota «La música suena en el Bastión y el menú.». Fuera Ambiente, «Música en combate» y la casilla de música. Música por defecto al 60 % (`MUSIC_DEFAULT` en `core/profile.ts`); lo guardado por cada jugador se respeta.
+- **Probar:** `node scripts/musica-check.cjs <url>/play/ <carpeta> [dispositivo]` (menú → Bastión → alternancia con silencio → mazmorra y jefe en silencio → resultados → vuelve en el Bastión; sin ambiente y sin errores).
+
 ## Novedades del 13/11 (noche): música apagada hasta la banda sonora definitiva
 - Interruptor único `musicaActivada = false` en `src/config/music.ts`. El director (`src/game/music/director.ts`) no toca ninguna pista, ni la capa de peligro, ni las fanfarrias (decisión: se quitan junto con la música). El ambiente de cada subzona y los efectos siguen sonando.
 - Ajustes › Sonido: la barra de Música, gris y desactivada con «(Próximamente)»; el bloque Música sustituido por «Música: próximamente. Estamos preparando la banda sonora de Gravevow.» General, Efectos y Ambiente funcionan igual. Los valores guardados de música (volumen, interruptor, música en combate) no se tocan.

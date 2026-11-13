@@ -5,7 +5,7 @@
 import { emptyTutorials, sanitizeTutorials, type TutorialsSave } from './tutorials';
 import { seenFromHistory } from './tutorialsMigration';
 import type { Grid, Profile, Settings } from './types';
-import { sanitizeProfile } from './profile';
+import { MUSIC_DEFAULT, sanitizeProfile } from './profile';
 import { makeUid } from './rng';
 import { joinPages, migrateLegacyStash, splitPages } from './stashPages';
 import { gridGold } from './gold';
@@ -20,7 +20,7 @@ export const OLD_SAVE_FORMAT = 'cryptraiders-save';
 /** 4 = expansión: tiempo de juego activo por personaje (`playMs`). Las partidas 3 se migran al cargarlas. */
 export const SAVE_VERSION = 4;
 export const MAX_CHARACTERS = 4;
-const DEFAULT_SETTINGS: Settings = { volume: 0.6, music: true, musicVolume: 1, sfxVolume: 1 };
+const DEFAULT_SETTINGS: Settings = { volume: 0.6, music: true, musicVolume: MUSIC_DEFAULT, sfxVolume: 1 };
 
 export interface AccountData {
   /** Identificador de la cuenta (para el futuro guardado en la nube). */

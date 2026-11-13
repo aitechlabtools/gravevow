@@ -76,6 +76,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- 13/11 (noche, 2): **Música de archivo solo en el Bastión y el menú** (dos pistas de Magnific que se alternan con 5–15 s de silencio); mazmorra sin música; ambiente apagado con interruptor; Ajustes con General, Música y Efectos.
 - 13/11 (noche): **Música apagada** hasta la banda sonora definitiva (`musicaActivada = false` en `src/config/music.ts`); ambiente y efectos siguen; Ajustes muestra «Próximamente».
 - 13/11: **El «?» abre solo la Guía** (antes abría Ajustes › Partida). Arreglado un error de la música (nota en tiempo negativo al arrancar).
 - 13/11: **Pantalla completa en todos los dispositivos.** Botón según el navegador (no el dispositivo) en todas las pantallas, también combate; tecla F; detecta F11 y salidas por fuera; Ajustes y controles actualizados.

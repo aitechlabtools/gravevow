@@ -150,10 +150,34 @@ export const SUBZONE_MUSIC: Record<string, SubzoneVariation> = {
 };
 export const DEFAULT_VARIATION: SubzoneVariation = { transpose: 0, tempo: 1, cutoff: 1, intensity: 0.4, dissonance: 0, ambient: ['viento'] };
 
-/** Interruptor general (13/11): la música está apagada mientras se prepara la banda sonora definitiva.
- *  Con false no suena ninguna pista, ni la capa de peligro, ni las fanfarrias; el ambiente y los efectos siguen.
- *  Para volver a activarla: pon true (y quita «Próximamente» en Ajustes › Sonido: SOUND_MUSIC_SOON en Settings.tsx). */
+/** Interruptores (13/11, noche):
+ *  · musicaActivada: las 6 pistas GENERADAS por código (con su capa de peligro y sus fanfarrias). Apagadas.
+ *  · ambienteActivado: el sonido ambiente de cada subzona (goteo, viento, antorchas, lava…). Apagado.
+ *  · listasActivadas: la música de archivo (PLAYLISTS, abajo; rutas relativas a /play/). Encendida: suena en el menú y el Bastión. */
 export const musicaActivada = false;
+export const ambienteActivado = false;
+export const listasActivadas = true;
+
+/** Listas de música de archivo. Cada una suena en sus pantallas, alternando pistas sin repetir la misma dos veces
+ *  seguidas, con una pausa en silencio al azar entre una y otra. En las pantallas que no están en ninguna lista
+ *  (mazmorra, combate y resultados) no hay música. Para añadir pistas: copia OGG + MP3 a public/audio y añádelas aquí. */
+export interface FileTrack { id: string; name: string; ogg: string; mp3: string; gain?: number; origen: string }
+export interface Playlist { screens: string[]; tracks: FileTrack[]; pause: [number, number]; fadeIn: number; fadeOut: number; gain: number }
+
+export const PLAYLISTS: Record<string, Playlist> = {
+  bastion: {
+    // Menú principal, elegir y crear personaje, copia de seguridad y todo el Bastión (todas las pestañas del lobby)
+    screens: ['boot', 'title', 'select', 'create', 'backup', 'lobby'],
+    tracks: [
+      { id: 'estampie', name: 'Medieval Estampie', ogg: '../audio/medieval-estampie.ogg', mp3: '../audio/medieval-estampie.mp3', origen: 'Magnific (biblioteca de audio)' },
+      { id: 'whisper', name: 'Whisper of the Bow', ogg: '../audio/whisper-of-the-bow.ogg', mp3: '../audio/whisper-of-the-bow.mp3', origen: 'Magnific (biblioteca de audio)' },
+    ],
+    pause: [5, 15],
+    fadeIn: 2,
+    fadeOut: 2,
+    gain: 0.8,
+  },
+};
 
 export const MUSIC_CFG = {
   /** Volumen relativo de cada parte bajo el general (los de Ajustes multiplican). */

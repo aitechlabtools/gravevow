@@ -34,14 +34,13 @@ const [,, url = 'http://localhost:5173/play/', out = 'ajustes', dev] = process.a
   if (gear.width < 43.5 || gear.height < 43.5) fail('engranaje menor de 44 px: ' + gear.width + '×' + gear.height);
   await tap('[data-testid=btn-lobby-settings]'); await p.waitForSelector('[data-testid=settings-section-sound]');
   await fits('Sonido');
-  // Música en «Próximamente» (13/11): su barra está desactivada y su valor guardado no cambia
-  const musicSoon = await p.isDisabled('[data-testid=vol-music]');
-  if (musicSoon) { if (!(await p.$('[data-testid=vol-music-soon]')) || !(await p.$('[data-testid=music-soon]'))) fail('la música desactivada no dice «Próximamente»'); }
-  else await p.locator('[data-testid=vol-music]').fill('0.3');
+  // Sonido (13/11, noche): solo General, Música y Efectos, y la nota de dónde suena la música
+  if (await p.$('[data-testid=vol-ambient]') || await p.$('[data-testid=combat-music]') || await p.$('[data-testid=music-toggle]')) fail('quedan opciones de ambiente o de música en combate');
+  if (!(await p.$('[data-testid=music-note]'))) fail('falta la nota «La música suena en el Bastión y el menú.»');
+  await p.locator('[data-testid=vol-music]').fill('0.3');
   await p.locator('[data-testid=vol-sfx]').fill('0.45');
-  await p.locator('[data-testid=vol-ambient]').fill('0.6');
   const st = await G(() => window.__GRAVEVOW__.getState().profile.settings);
-  if ((!musicSoon && st.musicVolume !== 0.3) || st.sfxVolume !== 0.45 || st.ambientVolume !== 0.6) fail('los volúmenes no se guardan: ' + JSON.stringify(st));
+  if (st.musicVolume !== 0.3 || st.sfxVolume !== 0.45) fail('los volúmenes no se guardan: ' + JSON.stringify(st));
   await p.screenshot({ path: out + '-sonido.png' });
   for (const t of ['screen', 'controls', 'community', 'info', 'game']) { await tap(`[data-testid=settings-tab-${t}]`); await p.waitForSelector(`[data-testid=settings-section-${t}]`); await fits(t); }
   if (!(await p.$('[data-testid=settings-open-backup]'))) fail('Partida sin botón de copia');

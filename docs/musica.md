@@ -1,6 +1,18 @@
 # Gravevow · Música: brief para la versión definitiva
 
-**Ahora mismo la música está apagada** (`musicaActivada = false` en `src/config/music.ts`); el ambiente y los efectos suenan. Ponlo a `true` al integrar la música definitiva.
+**Estado actual (13/11, noche):**
+- Suena **música de archivo** solo en el menú, la creación de personaje y el Bastión: dos pistas que se alternan sin repetirse, con 5–15 s de silencio entre una y otra (`PLAYLISTS` en `src/config/music.ts`, reproductor `src/game/music/playlist.ts`).
+- Mazmorra, combate, jefes y resultados: **sin música**, solo efectos. Al bajar, la música se apaga en 2 s; al volver, entra con fundido.
+- **Apagados** con interruptor en `src/config/music.ts`: las pistas generadas (`musicaActivada`), el ambiente (`ambienteActivado`) y, con ellas, la capa de peligro y las fanfarrias. La música de archivo tiene el suyo (`listasActivadas`).
+- Añadir una pista: OGG + MP3 en `public/audio/` y una línea en `PLAYLISTS` (con `screens` se elige en qué pantallas suena).
+
+### Pistas en uso
+| Pista | Archivos | Duración | Origen | Licencia | Atribución (si hace falta en créditos) |
+|---|---|---|---|---|---|
+| Medieval Estampie | `public/audio/medieval-estampie.ogg/.mp3` (original en `assets/audio/originales/`) | 1:29 | Biblioteca de audio de Magnific | Uso gratuito (comprobar condiciones de uso comercial y de atribución) | _pendiente_ |
+| Whisper of the Bow | `public/audio/whisper-of-the-bow.ogg/.mp3` (original en `assets/audio/originales/`) | 2:00 (original a 128 kbps) | Biblioteca de audio de Magnific | Uso gratuito (comprobar condiciones de uso comercial y de atribución) | _pendiente_ |
+
+**Preparación:** sonoridad igualada a −16 LUFS (pico −1,5 dBTP, `loudnorm` en dos pasadas), fundidos de 1,5 s al principio y al final, 44,1 kHz estéreo; OGG Vorbis q4 y MP3 VBR q4. Los originales no se tocan. Para regenerarlas: el bloque de `ffmpeg` está en `docs/estado-trabajo.md` (13/11, noche).
 
 Hoy las 6 pistas y las fanfarrias se generan por código (`src/game/music`), con los datos en `src/config/music.ts`.
 Para cambiar una por un archivo definitivo:

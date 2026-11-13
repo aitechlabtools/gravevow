@@ -1,4 +1,7 @@
-// Director de música (13/11): mira el estado de la partida y decide qué suena. Exploración: el tema de la zona
+// Director de música (13/11). Ahora (noche del 13/11): solo suena la música de archivo del menú y el Bastión
+// (PLAYLISTS en config/music.ts); las pistas generadas y el ambiente están apagados con sus interruptores.
+// Lo de abajo describe el sistema generado, por si se vuelve a encender:
+// mira el estado de la partida y decide qué suena. Exploración: el tema de la zona
 // con la variación de su subzona y pausas de ambiente. Combate: fundido a la pista de combate (más intensa con
 // élites y jefes). Peligro: capa de tensión. Fanfarrias al extraer, morir, subir de nivel o sacar un legendario.
 // Solo arranca tras la primera interacción del jugador (lo exigen los navegadores).
@@ -7,10 +10,12 @@ import { getState, subscribe } from '../state/store';
 import { getEnemy } from '../../core/data/enemies';
 import { getItem } from '../../core/data/items';
 import { timeLeft } from '../../core/expedition';
-import { DEFAULT_VARIATION, MUSIC_CFG, musicaActivada, SUBZONE_MUSIC, type AmbientId, type FanfareId, type SubzoneVariation, type TrackId } from '../../config/music';
+import { ambienteActivado, DEFAULT_VARIATION, listasActivadas, MUSIC_CFG, musicaActivada, PLAYLISTS, SUBZONE_MUSIC, type AmbientId, type FanfareId, type SubzoneVariation, type TrackId } from '../../config/music';
 import { MusicEngine } from './engine';
+import { PlaylistPlayer } from './playlist';
 
 let engine: MusicEngine | null = null;
+let playlist: PlaylistPlayer | null = null;
 let unlocked = false;
 let started = false;
 let lastKey = '';
@@ -20,8 +25,17 @@ let labOverride = false;
 
 export function musicEngine(): MusicEngine | null {
   if (!unlocked) return null;
-  if (!engine) { const g = audioGraph(); if (g) engine = new MusicEngine(g); }
+  if (!engine) { const g = audioGraph(); if (g) { engine = new MusicEngine(g); playlist = new PlaylistPlayer(g.c, g.music); } }
   return engine;
+}
+
+/** Música de archivo (13/11, noche): la lista de la pantalla actual, o silencio con fundido si no hay ninguna. */
+function syncPlaylist() {
+  if (!playlist) return;
+  const screen = getState().screen;
+  const id = listasActivadas ? Object.keys(PLAYLISTS).find((k) => PLAYLISTS[k].screens.includes(screen)) : undefined;
+  if (id) playlist.play(id, PLAYLISTS[id]);
+  else if (playlist.playingId) playlist.stop(PLAYLISTS[playlist.playingId]?.fadeOut ?? 2);
 }
 
 export function setLabOverride(on: boolean) { labOverride = on; lastKey = ''; if (!on) sync(); }
@@ -82,8 +96,11 @@ function sync() {
   const m = musicEngine(); if (!m) return;
   const s = getState();
   const w = want();
-  // Música apagada (config/music.ts): solo queda el ambiente
-  if (!musicaActivada) { w.track = null; w.key = `muted:${w.ambient?.join() ?? ''}`; }
+  syncPlaylist();
+  // Pistas generadas y ambiente, cada uno con su interruptor (config/music.ts)
+  if (!musicaActivada) w.track = null;
+  if (!ambienteActivado) w.ambient = null;
+  if (!musicaActivada) w.key = `muted:${w.ambient?.join() ?? ''}`;
   if (w.key !== lastKey) {
     const wasCombat = lastKey.startsWith('combat');
     const fade = w.combat || wasCombat ? MUSIC_CFG.combatFade : MUSIC_CFG.crossfade;
@@ -110,10 +127,10 @@ export function initMusicDirector() {
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
   subscribe(sync);
   // Con ?debug, para las pruebas: qué suena y por qué
-  if (/[?&]debug\b/.test(window.location.search)) (window as unknown as Record<string, unknown>).__MUSIC__ = { current: () => engine?.current ?? null, key: () => lastKey, ambient: () => engine?.ambientIds ?? [], danger: () => inDanger() };
+  if (/[?&]debug\b/.test(window.location.search)) (window as unknown as Record<string, unknown>).__MUSIC__ = { current: () => engine?.current ?? null, playlist: () => (playlist ? { list: playlist.playingId, track: playlist.current?.id ?? null, status: playlist.status } : null), skip: () => playlist?.skipToEnd(), key: () => lastKey, ambient: () => engine?.ambientIds ?? [], danger: () => inDanger() };
   window.setInterval(() => { if (unlocked && !labOverride) { const m = musicEngine(); m?.setDanger(musicaActivada && getState().profile?.settings.music !== false && inDanger()); } }, 1000);
 }
 
 /** Compatibilidad: antes cada pantalla arrancaba su música. Ahora decide el director. */
 export function startMusic(_mood?: 'lobby' | 'dungeon') { lastKey = ''; sync(); }
-export function stopMusic() { lastKey = 'stopped'; engine?.stopAll(); }
+export function stopMusic() { lastKey = 'stopped'; engine?.stopAll(); playlist?.stop(); }
