@@ -5,3 +5,5 @@ Disallow: /aviso-legal.html
 Disallow: /privacidad.html
 Disallow: /legal/
 Allow: /
+
+Sitemap: https://gravevow.com/sitemap.xml
