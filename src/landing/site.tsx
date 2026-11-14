@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DISCORD_HINT, DISCORD_URL, DiscordIcon, EXTERNAL, HeartIcon, SUPPORT_HINT, SUPPORT_URL } from '../shared/community';
-import { openConsent } from '../shared/consent';
+import { openConsentSettings } from '../shared/consent';
 // Cabecera y pie comunes a la landing y a las páginas legales.
 // `home` es la ruta a la landing: '' en la propia landing (anclas #) y './' en las páginas legales.
 
@@ -106,7 +106,7 @@ export function SiteFooter({ home = '' }: { home?: string }) {
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-stone-300 mb-3">Legal</h2>
           <ul className="space-y-1">
             {LEGAL_LINKS.map((l) => <li key={l.href}><a href={l.href} className="footer-link">{l.label}</a></li>)}
-            <li><button type="button" className="footer-link" data-testid="footer-cookie-settings" onClick={openConsent}>Configurar cookies</button></li>
+            <li><button type="button" className="footer-link" data-testid="footer-cookie-settings" onClick={openConsentSettings}>Configurar cookies</button></li>
           </ul>
         </nav>
       </div>

@@ -12,7 +12,7 @@
 import type { ReactNode } from 'react';
 import { DONATE_URL } from '../landing/site';
 import { Dato, EmailInline, MailButton, StorageTable, revealData, useRevealed, type LegalSection } from './LegalPage';
-import { openConsent } from '../shared/consent';
+import { openConsentSettings } from '../shared/consent';
 
 export const UPDATED = '14 de noviembre de 2026';
 
@@ -175,7 +175,7 @@ export const COOKIES: PageDef = {
   title: 'Política de cookies',
   intro: <>
     <p><strong>En resumen:</strong> el juego guarda tu partida en tu navegador, que es necesario para jugar. Además, <strong>solo si aceptas</strong>, se cargan cookies de análisis de Google a través de Google Tag Manager. Puedes cambiar tu elección cuando quieras con el botón de abajo, «Configurar cookies» en el pie de la web o en Ajustes del juego.</p>
-    <p><button type="button" className="btn-ghost" data-testid="legal-cookie-settings" onClick={openConsent}>Configurar cookies</button></p>
+    <p><button type="button" className="btn-ghost" data-testid="legal-cookie-settings" onClick={openConsentSettings}>Configurar cookies</button></p>
   </>,
   sections: [
     { id: 'que-son', title: 'Qué son las cookies', body: <>
@@ -188,7 +188,7 @@ export const COOKIES: PageDef = {
     </> },
     { id: 'aviso', title: 'El aviso de cookies', body: <>
       <p>La ley exige pedirte permiso antes de guardar información en tu navegador, excepto cuando es <strong>estrictamente necesario para prestar un servicio que tú pides</strong> (artículo 22.2 de la LSSI-CE). Guardar tu partida es justo eso: sin ese guardado no podrías jugar ni continuar donde lo dejaste. Así lo considera también la guía sobre cookies de la Agencia Española de Protección de Datos.</p>
-      <p>Las cookies de análisis no son necesarias, así que te pedimos permiso antes: en tu primera visita aparece un aviso con «Aceptar» y «Rechazar», igual de visibles. Mientras no aceptes, no se carga Google Tag Manager. No usamos cookies de publicidad ni de redes sociales.</p>
+      <p>Las cookies de análisis no son necesarias, así que te pedimos permiso antes: en tu primera visita aparece un aviso con «Rechazar», «Configurar» y «Aceptar», igual de visibles. «Configurar» te deja elegir por finalidades: las técnicas siempre están activas y las de análisis puedes activarlas o no. Mientras no aceptes el análisis, no se carga Google Tag Manager. Hoy no usamos cookies de publicidad ni de redes sociales; si algún día se usan, se añadirán al panel como finalidad aparte y te lo volveremos a preguntar.</p>
     </> },
     { id: 'terceros', title: 'Cookies de terceros', body: <>
       <p>Solo las de Google, y solo si aceptas (ver la tabla). Las tipografías, las imágenes y el tráiler se sirven desde la propia web. El alojamiento (GitHub Pages) no instala cookies en tu navegador; lo que trata se explica en la <a href="./privacidad.html">Política de privacidad</a>.</p>

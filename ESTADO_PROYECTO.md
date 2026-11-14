@@ -178,3 +178,4 @@
 - GTM `GTM-WJNS8GH8` en la web, el juego y las páginas legales, solo tras «Aceptar» en el aviso de cookies (`src/shared/consent.ts`, modo de consentimiento v2, elección en `gv-consent`).
 - «Configurar cookies» en el pie de la landing, en Ajustes › Legal y en la página de cookies. Retirar el consentimiento recarga la página para descargar GTM.
 - Políticas de cookies y de privacidad actualizadas (fecha 14/11/2026).
+- Aviso con «Rechazar», «Configurar» y «Aceptar»; panel por finalidades (Técnicas siempre activas, Análisis con interruptor). Solo se concede `analytics_storage`; publicidad preparada en `CATEGORIES` de `consent.ts` para el futuro.
