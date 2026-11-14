@@ -21,15 +21,23 @@ import { makeUid } from './rng';
 export type Result = { ok: true; profile: Profile; note?: string } | { ok: false; error: string };
 
 // ── Estado del Refugio en el perfil ─────────────────────────────────
-/** Nivel de cada estación (0 = bloqueada, 1 a 3). `v: 2` = formato de la parte 2.1 (catre desde nivel 1). */
-export interface RefugeState { cot: number; kitchen: number; bench: number; infirmary: number; forge: number; alchemy: number; runic: number; v?: 2 }
-export const EMPTY_REFUGE: RefugeState = { cot: 1, kitchen: 0, bench: 0, infirmary: 0, forge: 0, alchemy: 0, runic: 0, v: 2 };
-/** Estado con migración: en el formato antiguo el catre empezaba en 0 (paja) y el jergón era el 1; ahora son 1 y 2.
- *  Lo demás conserva su nivel (el antiguo nivel 1 es el desbloqueo, el 2 de la cocina es su primera mejora). */
+/** Nivel de cada estación (0 = bloqueada, 1 a 3). `v: 2` = formato de la parte 2.1 (catre desde nivel 1); `v: 3` = Bastión unificado. */
+export interface RefugeState { cot: number; kitchen: number; bench: number; infirmary: number; forge: number; alchemy: number; tannery: number; armory: number; v?: 3 }
+export const EMPTY_REFUGE: RefugeState = { cot: 1, kitchen: 0, bench: 0, infirmary: 0, forge: 0, alchemy: 0, tannery: 0, armory: 0, v: 3 };
+/** Estado con migración (nadie pierde nivel):
+ *  · formato 1 (sin `v`): el catre empezaba en 0 (paja) y el jergón era el 1; ahora son 1 y 2.
+ *  · formato 2 → 3 (Bastión unificado, 14/11): la Curtiduría de Nira hereda el nivel del Banco de trabajo, la Forja de
+ *    armaduras de Valerius el de la Forja y el Laboratorio de Eldrin el mayor entre la Mesa de alquimia y el Atril rúnico. */
 export function refugeOf(p: Pick<Profile, 'refuge'>): RefugeState {
-  const raw = (p.refuge ?? {}) as Partial<RefugeState>;
-  const out: RefugeState = { ...EMPTY_REFUGE, ...raw, v: 2 };
-  if (p.refuge && raw.v !== 2) out.cot = Math.min(3, (raw.cot ?? 0) + 1);
+  const raw = (p.refuge ?? {}) as Partial<RefugeState> & { runic?: number; v?: number };
+  const out: RefugeState = { ...EMPTY_REFUGE, ...raw, v: 3 };
+  delete (out as { runic?: number }).runic;
+  if (p.refuge && !raw.v) out.cot = Math.min(3, (raw.cot ?? 0) + 1);
+  if (p.refuge && (raw.v ?? 0) < 3 && raw.tannery === undefined && raw.armory === undefined) {
+    out.tannery = raw.bench ?? 0;
+    out.armory = raw.forge ?? 0;
+    out.alchemy = Math.max(raw.alchemy ?? 0, raw.runic ?? 0);
+  }
   for (const k of MODULE_ORDER) out[k] = Math.max(0, Math.min(3, Math.floor(out[k] ?? 0)));
   out.cot = Math.max(1, out.cot);
   return out;
@@ -177,6 +185,11 @@ export function stationBatch(p: Pick<Profile, 'refuge'>, id: ModuleId): number {
 }
 
 /** Dormir en el catre: con el catre mejorado (nivel 2 o 3), además, preparación de Descanso. */
+/** Lo que cobra Grizk por una noche en el Catre (según su nivel). */
+export function cotGold(p: Pick<Profile, 'refuge'>): number {
+  return STATION_FX.cotGold[refugeOf(p).cot] ?? 0;
+}
+
 export function cotPrepCut(p: Profile): number {
   return STATION_FX.cotPrep[refugeOf(p).cot] ?? 0;
 }

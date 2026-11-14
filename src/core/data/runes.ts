@@ -31,7 +31,7 @@ export const RUNE_ITEMS: ItemDef[] = [
 ];
 
 const r = (result: string, ingredients: [string, number][]): CraftRecipe => ({
-  id: `c_${result}`, result, qty: 1, station: 'runic', level: 3, ingredients: ingredients.map(([itemId, qty]) => ({ itemId, qty })),
+  id: `c_${result}`, result, qty: 1, station: 'alchemy', level: 3, ingredients: ingredients.map(([itemId, qty]) => ({ itemId, qty })),
 });
 export const RUNE_RECIPES: CraftRecipe[] = [
   r('rune_vampire', [['rune_ink', 2], ['ecto_crystal', 1], ['silver_ingot', 1]]),

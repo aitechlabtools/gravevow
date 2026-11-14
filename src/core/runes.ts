@@ -25,7 +25,7 @@ const isWeaponSlot = (s?: EquipSlot) => s === 'mainHand' || s === 'offHand';
 
 /** null si esa runa se puede grabar en ese hueco; si no, el motivo. */
 export function runeBlock(p: Profile, st: ItemStack, slotIdx: number, runeId: string): string | null {
-  if (refugeOf(p).runic < 3) return 'Las runas se graban en el Atril rúnico de nivel 3.';
+  if (refugeOf(p).alchemy < 3) return 'Las runas se graban en el Laboratorio de Eldrin a nivel 3.';
   const def = getItem(st.itemId);
   const n = runeSlots(st);
   if (!n) return stackRarity(st, def) === 'legendary' ? 'Lo legendario no se encanta.' : 'Este objeto no admite runas.';

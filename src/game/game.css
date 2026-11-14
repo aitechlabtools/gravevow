@@ -682,3 +682,32 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 @keyframes lootShine { 0% { box-shadow: 0 0 0 0 #e8b33a00; transform: scale(.85); } 40% { box-shadow: 0 0 18px 4px #e8b33acc; transform: scale(1.06); } 100% { box-shadow: 0 0 6px 1px #e8b33a55; transform: scale(1); } }
 .loot-shine { animation: lootShine 1.1s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .loot-shine { animation: none; box-shadow: 0 0 6px 1px #e8b33a55; } }
+
+/* ── Bastión unificado (14/11): tarjetas de mercader con primer plano de medio pecho ── */
+.vtile { display: flex; flex-direction: column; min-height: 0; padding: 0; cursor: pointer; overflow: hidden; transition: filter .1s; }
+.vtile:hover { filter: brightness(1.15); }
+.vtile:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+.vtile-name { display: block; text-align: center; padding: 8px; font-size: clamp(15px, 1.15vw, 22px); letter-spacing: .08em; color: var(--color-parchment);
+  background: linear-gradient(180deg, #26232c, #15131a); border-bottom: 2px solid #3a3741; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vtile-port { position: relative; flex: 1; min-height: 0; display: block;
+  background: radial-gradient(ellipse at 50% 35%, #e8b33a26, #0000 65%), linear-gradient(180deg, #1b1920, #0d0c11); border-bottom: 2px solid #3a3741; }
+.vbust { position: absolute; inset: 0; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; }
+.vtile-pend { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); white-space: nowrap; font-family: var(--font-display); font-size: 13px;
+  letter-spacing: .1em; text-transform: uppercase; padding: 2px 8px; color: #5fd19a; border: 2px solid currentColor; background: #0d0c11f0; }
+.vtile-pend.gold { color: var(--color-gold); }
+.vtile-info { display: flex; align-items: center; gap: 8px; padding: 8px 12px 0; min-width: 0; }
+.vtile-rep { display: block; padding: 4px 12px 10px; }
+@media (max-height: 520px) {
+  .vtile-name { padding: 2px 4px; font-size: 14px; }
+  .vtile-pend { left: auto; right: 4px; top: 3px; bottom: auto; transform: none; padding: 0 4px; font-size: 12px; }
+  .vtile-info { display: none; }
+  .vtile-rep { padding: 4px 6px 6px; }
+  .vtile-rep > div > div:first-child { display: none; }
+}
+/* Pestañas de un mercader: el selector dorado de siempre (ui-seg), con el aviso de lo pendiente */
+.vtabs { align-self: flex-start; flex-shrink: 0; flex-wrap: wrap; max-width: 100%; }
+@media (max-height: 520px) { .vtabs { flex-wrap: nowrap; } }
+.vtabs button { white-space: nowrap; }
+.vtab-dot { margin-left: 6px; color: #5fd19a; font-size: .85em; }
+.vtab-dot.gold { color: var(--color-gold); }
+.vtabs button.on .vtab-dot { color: #1a1205; }

@@ -73,7 +73,7 @@ async function dungeon(s, zone, zoom = 1.45) {
   const shot = (n) => d.p.screenshot({ path: `${OUT}/${n}.png` });
   await d.act('tab-play'); await d.act('btn-zone-map'); await d.act('zone-infierno'); await d.wait(500); await shot('jugar');
   await d.act('tab-stash'); await d.wait(400); await shot('alijo');
-  await d.act('tab-merchants'); await d.act('btn-merchants'); await d.act('vendor-brand'); await d.act('vendor-view-forge'); await d.wait(300); await shot('forja');
+  await d.act('tab-merchants'); await d.act('vendor-brand'); await d.act('vendor-view-station'); await d.wait(300); await shot('forja');
   await d.act('tab-shop'); await d.wait(400); await shot('tienda');
   // Infierno: exploración y combate contra Belzar
   await dungeon(d, 'infierno');

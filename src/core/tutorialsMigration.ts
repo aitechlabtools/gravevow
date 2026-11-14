@@ -35,7 +35,7 @@ export function seenFromHistory(chars: Hist[], acc: AccountHist): string[] {
       if (k !== 'cot' && r[k] >= 1) seen.add(`station.${k}`);
       for (let lv = 2; lv <= r[k]; lv++) seen.add(`station.${k}.lv${lv}`);
     }
-    if (r.runic >= 1) seen.add('station.runes');
+    if (r.alchemy >= 1) seen.add('station.runes');
     if (c.bossesDefeated?.length) seen.add('exp.boss');
     const elites = new Set(SUBZONE_ORDER.map((s) => SUBZONES[s].elite));
     if (Object.entries(c.bestiary ?? {}).some(([id, b]) => elites.has(id) && b.kills > 0)) seen.add('exp.elite');

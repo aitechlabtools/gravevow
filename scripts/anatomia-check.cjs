@@ -23,7 +23,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'anatomia', dev] = process.
     g.setState({ profile: { ...pr, backpack: bp, gold: 900, wounds: { pct: { legL: 0.5 }, fractures: ['armR'] } } });
   });
   // 1) Enfermería de Vesper: muestra las heridas y el precio
-  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]'); await tap('[data-testid=vendor-vesper]'); await tap('[data-testid=vendor-view-infirmary]');
+  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=vendor-vesper]'); await tap('[data-testid=vendor-view-infirmary]');
   await p.waitForSelector('[data-testid=infirmary]');
   const vb = await box('[data-testid=vesper-treat]');
   if (!vb || vb.height < 44) fail('botón de Vesper menor de 44 px');

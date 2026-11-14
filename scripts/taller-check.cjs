@@ -28,30 +28,21 @@ const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.ar
 
   // Con nivel alto sale el aviso de habilidad de clase: más tarde
   if (await p.waitForSelector('[data-testid=btn-class-unlock-later]', { timeout: 1500 }).catch(() => null)) await tap('[data-testid=btn-class-unlock-later]');
-  // 1 · Bastión: los dos módulos nuevos
-  await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=btn-refuge]');
-  await tap('[data-testid=btn-refuge]'); await p.waitForSelector('[data-testid=screen-refuge]');
-  if ((await p.$$('[data-testid=station-grid] > article')).length !== 7) fail('el Bastión no enseña sus siete estaciones');
-  await small('[data-testid=ask-alchemy]', 'Reconstruir la mesa');
-  await tap('[data-testid=ask-infirmary]'); await p.waitForTimeout(150);
-  await tap('[data-testid=ask-alchemy]'); await p.waitForTimeout(150);
+  // 1 · Bastión unificado: el rincón se reconstruye en la pestaña de Vesper y el Laboratorio en la de Eldrin
+  const station = async (v) => { await p.waitForSelector(`[data-testid=vendor-${v}]`); await tap(`[data-testid=vendor-${v}]`); await tap('[data-testid=vendor-view-station]'); await p.waitForSelector('[data-testid=station-panel]'); };
+  await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=vendor-list]');
+  if ((await p.$$('[data-testid=vendor-list] > button')).length !== 8) fail('el Bastión no enseña sus ocho mercaderes');
+  await station('vesper'); await small('[data-testid=upgrade-infirmary]', 'Reconstruir el rincón'); await tap('[data-testid=upgrade-infirmary]'); await p.waitForTimeout(150); await tap('[data-testid=vendor-back]');
+  await station('eldrin'); await tap('[data-testid=upgrade-alchemy]'); await p.waitForTimeout(150); await tap('[data-testid=vendor-back]');
   const ref = await G(() => window.__GRAVEVOW__.getState().profile.refuge);
-  if (ref?.infirmary !== 1 || ref?.alchemy !== 1) fail('no se construyeron rincón y mesa: ' + JSON.stringify(ref));
+  if (ref?.infirmary !== 1 || ref?.alchemy !== 1) fail('no se construyeron rincón y laboratorio: ' + JSON.stringify(ref));
   await wide('Bastión');
   await p.screenshot({ path: out + '-bastion.png' });
-  await tap('[data-testid=refuge-back]'); await tap('[data-testid=btn-merchants]');
-
-  // 2 · Forja de Brand: en ruinas, «Ir al Bastión» lleva a reconstruirla; reconstruida, menú común sin yunque
-  await p.waitForSelector('[data-testid=vendor-brand]'); await tap('[data-testid=vendor-brand]');
-  await tap('[data-testid=vendor-view-forge]'); await p.waitForSelector('[data-testid=craft-locked-forge]');
-  await small('[data-testid=go-station-forge]', 'Ir al Bastión');
+  // 2 · Forja de Brand: en ruinas se reconstruye en su pestaña; reconstruida, menú común sin yunque
+  await station('brand'); await p.waitForSelector('[data-testid=craft-locked-forge]');
   await wide('Forja en ruinas');
   await p.screenshot({ path: out + '-forja-cerrada.png' });
-  await tap('[data-testid=go-station-forge]'); await p.waitForSelector('[data-testid=station-detail-forge]');
-  await tap('[data-testid=upgrade-forge]'); await p.waitForTimeout(150);
-  await tap('[data-testid=detail-back]'); await tap('[data-testid=refuge-back]'); await tap('[data-testid=btn-merchants]');
-  await p.waitForSelector('[data-testid=vendor-brand]'); await tap('[data-testid=vendor-brand]');
-  await tap('[data-testid=vendor-view-forge]'); await p.waitForSelector('[data-testid=craft-forge]');
+  await tap('[data-testid=upgrade-forge]'); await p.waitForSelector('[data-testid=craft-forge]');
   if (await p.$('[data-testid=workshop-job], [data-testid^=move-]')) fail('sigue el yunque');
   if (await p.$('[data-testid=craft-back]')) fail('el menú del mercader no debe llevar «◂ Volver» del Bastión');
   await tap('[data-testid=recipe-c_scrap_bar]'); await tap('[data-testid=craft-go]'); await p.waitForTimeout(150);
@@ -62,7 +53,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.ar
 
   // 3 · Mesa de Eldrin
   await p.waitForSelector('[data-testid=vendor-eldrin]'); await tap('[data-testid=vendor-eldrin]');
-  await tap('[data-testid=vendor-view-alchemy]'); await p.waitForSelector('[data-testid=craft-alchemy]');
+  await tap('[data-testid=vendor-view-station]'); await p.waitForSelector('[data-testid=craft-alchemy]');
   const mana0 = await count('mana_potion');
   await tap('[data-testid=recipe-c_mana_potion]'); await small('[data-testid=craft-to-backpack]', 'A la mochila');
   await tap('[data-testid=craft-to-backpack]'); await p.waitForTimeout(150);
@@ -72,7 +63,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.ar
 
   // 4 · Rincón de cura de Vesper
   await p.waitForSelector('[data-testid=vendor-vesper]'); await tap('[data-testid=vendor-vesper]');
-  await tap('[data-testid=vendor-view-care]'); await p.waitForSelector('[data-testid=craft-infirmary]');
+  await tap('[data-testid=vendor-view-station]'); await p.waitForSelector('[data-testid=craft-infirmary]');
   const band0 = await count('bandage');
   await tap('[data-testid=recipe-c_bandage]'); await tap('[data-testid=craft-go]'); await p.waitForTimeout(150);
   if ((await count('bandage')) !== band0 + 2) fail('el rincón de cura no preparó vendas');
@@ -81,9 +72,9 @@ const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.ar
 
   // 5 · Recepción: dos excedentes; se vende uno y se descarta otro (con confirmación)
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, reception: [{ uid: 'x1', itemId: 'chainmail', qty: 1 }, { uid: 'x2', itemId: 'iron_helm', qty: 1 }] } }); });
-  await tap('[data-testid=merchants-back]'); await p.waitForSelector('[data-testid=btn-refuge]');
-  if (!/recepción 2/.test(await p.textContent('[data-testid=bastion-refuge]'))) fail('la tarjeta del Refugio no avisa de la recepción');
-  await tap('[data-testid=btn-refuge]'); await tap('[data-testid=btn-reception]'); await p.waitForSelector('[data-testid=reception]');
+  await p.waitForSelector('[data-testid=btn-reception]');
+  if (!/\(2\)/.test(await p.textContent('[data-testid=btn-reception]'))) fail('el botón de recepción no dice cuántos hay');
+  await tap('[data-testid=btn-reception]'); await p.waitForSelector('[data-testid=reception]');
   await small('[data-testid=reception-sell-0]', 'Vender desde recepción');
   await wide('Recepción');
   await p.screenshot({ path: out + '-recepcion.png' });

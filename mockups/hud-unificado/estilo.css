@@ -1,0 +1,142 @@
+/* HUD unificado · componentes comunes y las 3 direcciones visuales (A, B y C).
+   Las 3 usan las mismas piezas y medidas (tokens.css); solo cambian las variables del tema. */
+
+/* ── Temas ───────────────────────────────────────────────────────── */
+body.dir-a { /* A · Pergamino y libro: claro y cálido sobre la mesa de madera */
+  --page: #120d09 url(px/tex-madera.png); --page-tint: radial-gradient(ellipse at 50% 40%, #0000 30%, #000c 100%);
+  --panel-img: url(px/marco-pergamino.png); --panel-ink: #24180e; --panel-ink-2: #5a4630; --head: #6a1018;
+  --sheet-img: url(px/marco-pergamino.png); --sheet-ink: #24180e; --sheet-ink-2: #5a4630; --sheet-head: #6a1018;
+  --btn-img: url(px/boton-pergamino.png); --btn-ink: #24180e;
+  --cta-img: url(px/boton-oro.png); --cta-ink: #1a1206;
+  --slot-img: url(px/casilla-pergamino.png); --tab-img: url(px/marcapaginas-gris.png); --tab-on-img: url(px/marcapaginas-rojo.png);
+  --sep-img: url(px/separador-pergamino.png); --nav-bg: #1f150e url(px/tex-cuero.png); --nav-ink: #e9dcc0;
+  --accent: #8a1c24; --good: #2f6b22; --bad: #8a1c24; --gold: #7a5410; --bar-bg: #a8916a; --muted-bg: #b39d7466;
+  --cap: #8a1c24;
+}
+body.dir-b { /* B · Cuero y hierro: oscuro y robusto */
+  --page: #0b0a0e url(px/tex-piedra.png); --page-tint: radial-gradient(ellipse at 50% 40%, #0000 30%, #000d 100%);
+  --panel-img: url(px/marco-cuero.png); --panel-ink: #e9e1cc; --panel-ink-2: #b8ad98; --head: #e2b54e;
+  --sheet-img: url(px/marco-cuero.png); --sheet-ink: #e9e1cc; --sheet-ink-2: #b8ad98; --sheet-head: #e2b54e;
+  --btn-img: url(px/boton-hierro.png); --btn-ink: #f2ecdc;
+  --cta-img: url(px/boton-oro.png); --cta-ink: #1a1206;
+  --slot-img: url(px/casilla-cuero.png); --tab-img: url(px/boton-hierro.png); --tab-on-img: url(px/boton-oro.png);
+  --sep-img: url(px/separador-hierro.png); --nav-bg: #0d0b0f url(px/tex-piedra.png); --nav-ink: #e9e1cc;
+  --accent: #e2b54e; --good: #7fd65a; --bad: #ff6b6b; --gold: #f2c75a; --bar-bg: #0b0a0d; --muted-bg: #ffffff10;
+  --cap: #e2b54e;
+}
+body.dir-c { /* C · Mezcla: paneles de hierro oscuro y pergamino solo en títulos, fichas y hojas */
+  --page: #0b0a0e url(px/tex-piedra.png); --page-tint: radial-gradient(ellipse at 50% 40%, #0000 30%, #000d 100%);
+  --panel-img: url(px/marco-hierro.png); --panel-ink: #e9e1cc; --panel-ink-2: #b8ad98; --head: #24180e;
+  --sheet-img: url(px/marco-pergamino.png); --sheet-ink: #24180e; --sheet-ink-2: #5a4630; --sheet-head: #6a1018;
+  --btn-img: url(px/boton-hierro.png); --btn-ink: #f2ecdc;
+  --cta-img: url(px/boton-oro.png); --cta-ink: #1a1206;
+  --slot-img: url(px/casilla-hierro.png); --tab-img: url(px/marcapaginas-gris.png); --tab-on-img: url(px/marcapaginas-rojo.png);
+  --sep-img: url(px/separador-hierro.png); --nav-bg: #0d0b0f url(px/tex-piedra.png); --nav-ink: #e9e1cc;
+  --accent: #e2b54e; --good: #7fd65a; --bad: #ff6b6b; --gold: #f2c75a; --bar-bg: #0b0a0d; --muted-bg: #ffffff10;
+  --cap: #8a1c24;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body { background: var(--page); color: var(--panel-ink); font: var(--fs-body)/1.35 'Crimson Pro', Georgia, serif; overflow: hidden; image-rendering: pixelated; }
+body::before { content: ''; position: fixed; inset: 0; background: var(--page-tint); pointer-events: none; }
+.px { image-rendering: pixelated; display: block; }
+h1, h2, h3, .disp { font-family: 'Cinzel', serif; font-weight: 600; letter-spacing: .06em; }
+.app { position: relative; height: 100vh; display: grid; grid-template-rows: var(--nav-h) 1fr; }
+.main { min-height: 0; padding: var(--gap) max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left)); display: grid; gap: var(--gap); grid-template-columns: minmax(0, 1fr); }
+
+/* ── Barra superior ───────────────────────────────────────────────── */
+.nav { background: var(--nav-bg); color: var(--nav-ink); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--pad); border-bottom: 2px solid #07060a; box-shadow: 0 2px 0 #ffffff10; position: relative; z-index: 2; }
+.nav .who { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.nav .who img { width: calc(20px * var(--s-ui) * 1.6); }
+.nav .who b { font: 600 var(--fs-small) 'Cinzel'; display: block; }
+.nav .who span { font-size: var(--fs-label); opacity: .75; }
+.tabs { display: flex; gap: var(--sp-1); margin: 0 auto; align-self: stretch; align-items: stretch; }
+.tab { font: 600 var(--fs-label) 'Cinzel'; letter-spacing: .1em; text-transform: uppercase; color: var(--nav-ink); padding: 0 var(--sp-4); display: flex; align-items: center; min-height: var(--touch);
+  border: 0; border-image: var(--tab-img) 4 4 8 4 fill / 8px 8px 16px 8px stretch; background: none; position: relative; opacity: .85; }
+.dir-b .tab { border-image: var(--tab-img) 5 fill / 10px; margin: 12px 0; }
+.tab.on { border-image-source: var(--tab-on-img); opacity: 1; color: #fff4e0; }
+.dir-a .tab, .dir-c .tab { padding-bottom: 14px; margin-bottom: -14px; }
+.dir-b .tab.on { color: #1a1206; }
+.tab .pin { position: absolute; top: 4px; right: 4px; width: 16px; }
+.rest { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-small); border: 2px solid #ffffff22; padding: 4px 4px 4px 12px; background: #00000055; }
+.rest .mini { width: 80px; height: 8px; background: #000; border: 1px solid #ffffff33; }
+.rest .mini i { display: block; height: 100%; width: 62%; background: #7aa2ff; }
+.gold { font: 600 var(--fs-small) 'Cinzel'; color: #f2c75a; white-space: nowrap; }
+.ib { width: var(--touch); height: var(--touch); display: grid; place-items: center; border-image: url(px/boton-hierro.png) 5 fill / 10px; font: 600 var(--fs-small) 'Cinzel'; color: #f2ecdc; }
+
+/* ── Panel (nine-slice) ───────────────────────────────────────────── */
+.panel { border: var(--frame) solid; border-image: var(--panel-img) 8 fill / var(--frame) round; color: var(--panel-ink); min-height: 0; display: flex; flex-direction: column; padding: var(--sp-2); position: relative; }
+.ph { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); min-height: var(--touch); }
+.ph h2 { font-size: var(--fs-panel); color: var(--head); text-transform: uppercase; }
+.ph .r { margin-left: auto; display: flex; gap: var(--sp-2); }
+/* A: inicial iluminada en el título */
+.dir-a .ph h2::first-letter { font-size: 1.5em; color: var(--cap); font-weight: 800; }
+/* C: título sobre tira de pergamino */
+.dir-c .panel > .ph h2 { border: 8px solid; border-image: url(px/marco-pergamino.png) 8 fill / 8px; padding: 0 var(--sp-3); line-height: 1.6; color: #24180e; }
+.dir-c .panel > .ph h2::first-letter { color: var(--cap); font-weight: 800; }
+.dir-b .ph h2 { text-shadow: 0 2px 0 #000; }
+.body { min-height: 0; flex: 1; overflow: hidden; }
+.sub { font-size: var(--fs-small); color: var(--panel-ink-2); }
+.lbl { font: 600 var(--fs-label) 'Cinzel'; letter-spacing: .12em; text-transform: uppercase; color: var(--panel-ink-2); }
+.sep { height: 14px; border-style: solid; border-width: 0 40px; border-image: var(--sep-img) 0 20 fill / 0 40px round; margin: var(--sp-2) 0; }
+
+/* Hoja / ficha: pergamino en C, el panel normal en A y B */
+.sheet { border: var(--frame) solid; border-image: var(--sheet-img) 8 fill / var(--frame) round; color: var(--sheet-ink); padding: var(--sp-2); }
+.sheet .sub, .sheet .lbl { color: var(--sheet-ink-2); }
+.sheet h2, .sheet h3 { color: var(--sheet-head); }
+
+/* ── Botones ──────────────────────────────────────────────────────── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); min-height: var(--btn-h); padding: 0 var(--sp-4); border: 10px solid; border-image: var(--btn-img) 5 fill / 10px;
+  font: 600 var(--fs-label) 'Cinzel'; letter-spacing: .1em; text-transform: uppercase; color: var(--btn-ink); white-space: nowrap; }
+.btn.sm { min-height: var(--btn-sm); }
+.btn.cta { border-image-source: var(--cta-img); color: var(--cta-ink); min-height: var(--cta-h); font-size: var(--fs-panel); font-weight: 800; letter-spacing: .18em; width: 100%; }
+.btn.red { border-image-source: url(px/marcapaginas-rojo.png); border-image-slice: 4 fill; color: #fff4e0; }
+.btn.off { opacity: .45; }
+.btn img { width: calc(12px * var(--s-ui)); }
+.dir-a .btn.cta { border-image-source: url(px/marcapaginas-rojo.png); border-image-slice: 4 fill; color: #fff4e0; }
+
+/* Pestañas internas (marcapáginas): las de un mercader */
+.itabs { display: flex; gap: var(--sp-1); align-items: flex-end; }
+.itab { font: 600 var(--fs-label) 'Cinzel'; letter-spacing: .1em; text-transform: uppercase; min-height: var(--touch); padding: 0 var(--sp-4) 10px; display: flex; align-items: center; gap: var(--sp-2);
+  border: 0; border-image: var(--tab-img) 4 4 8 4 fill / 8px 8px 16px 8px stretch; color: #e9e1cc; }
+.itab.on { border-image-source: var(--tab-on-img); color: #fff4e0; }
+.dir-b .itab { border-image: var(--tab-img) 5 fill / 10px; padding-bottom: 0; }
+.dir-b .itab.on { color: #1a1206; }
+.itab .pin { width: 16px; }
+
+/* ── Casillas ─────────────────────────────────────────────────────── */
+.slot { width: var(--slot); height: var(--slot); border: 4px solid; border-image: var(--slot-img) 4 fill / 4px; display: grid; place-items: center; position: relative; flex: none; }
+.slot img { width: calc(12px * var(--s-icon)); }
+.slot.big { width: var(--slot-big); height: var(--slot-big); }
+.slot.big img { width: calc(12px * var(--s-icon-big)); }
+.slot .q { position: absolute; right: 2px; bottom: 0; font: 600 var(--fs-label) 'Crimson Pro'; color: #fff; text-shadow: 0 1px 0 #000, 0 0 2px #000; }
+.slot.r-u { box-shadow: inset 0 0 0 2px #4f9a3a; } .slot.r-r { box-shadow: inset 0 0 0 2px #4a7ad0; } .slot.r-e { box-shadow: inset 0 0 0 2px #a56bff; }
+.slot .nm { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); font: 600 var(--fs-label) 'Cinzel'; letter-spacing: .08em; color: var(--panel-ink-2); white-space: nowrap; margin-top: 2px; text-transform: uppercase; }
+.grid { display: grid; gap: var(--sp-1); }
+
+/* Barras */
+.bar { height: 12px; background: var(--bar-bg); border: 2px solid #07060a; }
+.bar i { display: block; height: 100%; background: var(--c, #c4283b); }
+.tag { display: inline-flex; align-items: center; gap: 6px; font: 600 var(--fs-label) 'Cinzel'; letter-spacing: .08em; padding: 2px 8px; border: 2px solid currentColor; text-transform: uppercase; }
+.tag img { width: 16px; }
+.good { color: var(--good); } .bad { color: var(--bad); } .gld { color: var(--gold); }
+
+/* Fondo de mazmorra (escenas) */
+.scene { position: absolute; inset: 0; background-size: cover; image-rendering: pixelated; }
+.scene::after { content: ''; position: absolute; inset: 0; background: #0009; }
+
+@media (max-height: 520px) {
+  .nav { gap: 6px; padding: 0 var(--pad); }
+  .nav .who div { display: none; }
+  .tab { padding: 0 8px 12px; letter-spacing: .04em; }
+  .rest { padding: 2px; border: 0; background: none; }
+  .rest .mini, .rest > span:first-child { display: none; }
+  .itab { padding: 0 10px 10px; }
+}
+
+@media (max-width: 1279px) and (min-height: 521px) {
+  .nav .who div, .rest > span:first-child, .rest b { display: none; }
+  .tab { padding: 0 10px 14px; letter-spacing: .05em; }
+}

@@ -31,7 +31,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Armadura y lesiones (Fase 10): `armor.ts` (pieza que cubre cada región, protección por tramos de durabilidad, lesión según el tipo de golpe, «Puede causar» de la ficha); cifras en `config/armor.ts`. Curación completa: `cureCost` en `anatomy.ts` (tras caer, `Profile.fallen`, 1 moneda o gratis).
   - Anatomía: `anatomy.ts` (7 regiones, muerte solo por cabeza o tórax, exceso de daño, sangrado por pulso con techo, fracturas, tratamientos, estabilización y heridas guardadas en `Profile.wounds`); cifras en `config/anatomy.ts`. Solo el jugador tiene cuerpo (`Combatant.body`); la vida `hp` es su resumen.
   - Necesidades: `needs.ts` (Saciedad, Hidratación y Descanso de 0 a 100; se gastan por pulso de 6 s o por ronda; recortan el máximo de Ímpetu o Maná; a cero, sed y hambre hieren el tórax; guardadas en `Profile.needs`); cifras en `config/needs.ts`.
-  - Refugio (Fase 9 y bloque 2): estaciones con encargado y 3 niveles en `config/stations.ts`; runas en `runes.ts`; crafteo común en `crafting.ts`. `refuge.ts` (estaciones, desguace, cocina por pasos, preparación `Profile.prep` → `Expedition.prep`); datos en `data/refuge.ts`, cifras en `config/refuge.ts`. Taller: `workshop.ts` (yunque, mesa de alquimia y rincón de cura; datos en `data/workshop.ts`); recepción de excedentes en `refuge.ts` (`deliver`).
+  - Refugio (Fase 9 y bloque 2; Bastión unificado 14/11): una estación por mercader, con 3 niveles, en `config/stations.ts` (Catre de Grizk, que cobra la noche; Curtiduría de Nira; Forja de Brand; Forja de armaduras de Valerius; Laboratorio de Eldrin, que une alquimia y atril); qué receta va a cada una, `assignStation` en `data/crafting.ts`; formato `refuge.v: 3` con migración en `refugeOf`; runas en `runes.ts`; crafteo común en `crafting.ts`. `refuge.ts` (estaciones, desguace, cocina por pasos, preparación `Profile.prep` → `Expedition.prep`); datos en `data/refuge.ts`, cifras en `config/refuge.ts`. Taller: `workshop.ts` (yunque, mesa de alquimia y rincón de cura; datos en `data/workshop.ts`); recepción de excedentes en `refuge.ts` (`deliver`).
   - Botín: `loot.ts`. Oro físico: `gold.ts`, `bag.ts` y `inventory.ts`.
   - Inventario espacial: `inventory.ts` (objetos de varias casillas con marcas `cover`, giro `rot`, `splitStack`) y peso en `carry.ts` (carga por clase, tramos y tope del 150 %); cifras en `config/carry.ts`.
   - Expedición: `expedition.ts`, `dungeonGen.ts` y `dungeon.ts`.
@@ -48,7 +48,7 @@ Capas: datos → lógica → estado → interfaz y motor.
 - `src/game/music`: música de archivo del Bastión y el menú (`playlist.ts`, archivos en `public/audio`) y sistema generado apagado (instrumentos, motor y director); interruptores y listas en `config/music.ts`; brief y licencias en `docs/musica.md`. Pruebas del generado: `/play/?debug&musica`.
 - `src/game/engine`: la escena de mazmorra (`DungeonScene.ts`) solo dibuja y mueve; los hechos del juego pasan por acciones del estado.
 - `src/game/ui`: pantallas.
-  - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»: entrada con Mercaderes y Bastión; las estaciones se reconstruyen en `RefugePanels.tsx`), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
+  - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»: los 8 mercaderes con retrato de medio pecho; cada uno con sus pestañas y su estación dentro), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
   - Mercaderes: los 8 del plan maestro en `data/vendors.ts`; todos están desde el principio (`core/vendors.ts`), que migra la reputación antigua.
   - Las piezas comunes están en `kit/`.
   - Mazmorra, combate y resumen: `DungeonScreen`, `CombatScreen` y `SummaryScreen` (resultados en 2 o 3 páginas; el botín conseguido sale de `startCounts` en `expedition.ts`). El arrastre de objetos está en `pointerDrag.tsx`.
@@ -117,7 +117,7 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Guía de Ajustes, «?», desactivar y reiniciar mini tutoriales: `node scripts/e2e-guia.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Mini tutoriales (cola, «!», cartel, guardado en la cuenta): `node scripts/minis-check.cjs <url>/play/ <carpeta> [dispositivo]`. Con `?debug` los mini tutoriales no salen; con `?debug&minis`, sí.
   - Jugar con fichas (ratón o mantener pulsado en zona y Expedición): `node scripts/jugar-ficha-check.cjs <url>/play/ <carpeta> [dispositivo]`.
-  - Bastión (entrada, Mercaderes, estaciones con «Reconstruir»/«Usar», «▲ Mejorar» dentro y detalle): `node scripts/bastion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Bastión unificado (8 mercaderes, pestañas, estación de cada uno, Catre de pago, Curtiduría, Forja de armaduras y Laboratorio): `node scripts/bastion-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Refugio, estaciones, crafteo, runas, desguace y cocina: `node scripts/refugio-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Desguace (seguro y posible, recluta fuera, confirmación y varios a la vez): `node scripts/desguace-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Materias y planos en tiendas, compra de plano y resumen: `node scripts/fuentes-check.cjs <url>/play/ <carpeta> [dispositivo]`.

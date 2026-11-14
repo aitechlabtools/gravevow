@@ -16,13 +16,14 @@ export function RepBar({ rep }: { rep: number }) {
   const base = REP_RANKS[r].rep;
   return (
     <div>
-      <div className="flex justify-between text-[11px]"><span className="text-gold">{REP_RANKS[r].name}</span><span className="text-stone-400">{next ? `${rep - base}/${next.rep - base}` : 'Máximo'}</span></div>
+      <div className="flex justify-between text-[13px]"><span className="text-gold">{REP_RANKS[r].name}</span><span className="text-stone-400">{next ? `${rep - base}/${next.rep - base}` : 'Máximo'}</span></div>
       <Bar value={next ? rep - base : 1} max={next ? next.rep - base : 1} color="#e8b33a" />
     </div>
   );
 }
 
-export type VendorView = 'shop' | 'quests' | 'sell' | 'forge' | 'repair' | 'contracts' | 'infirmary' | 'cook' | 'scrap' | 'alchemy' | 'care' | 'stations';
+/** Pestañas de un mercader. 'station': su estación del Bastión (una por mercader). */
+export type VendorView = 'shop' | 'quests' | 'sell' | 'repair' | 'contracts' | 'infirmary' | 'scrap' | 'station';
 export interface VendorTarget { vendor: VendorId; view: VendorView }
 
 /** Mercancía de un mercader, con el precio según tu reputación y lo que está bloqueado por rango. */

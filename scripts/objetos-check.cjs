@@ -36,7 +36,7 @@ const LOOT = [['knight_sword', 'rare'], ['war_mace', 'common'], ['iron_shield', 
     await p.evaluate(([LOOT, AT, COV]) => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; const bp = [...pr.backpack];
       const bp0 = bp.map(() => null); bp.splice(0, bp.length, ...bp0); LOOT.forEach(([id, rarity, qty], i) => { bp[AT[i]] = { uid: 'v' + i, itemId: id, qty: qty ?? 1, ...(rarity ? { rarity } : {}) }; for (const d of COV[i] ?? []) bp[AT[i] + d] = { uid: 'cover:' + 'v' + i, itemId: 'cover', qty: 1 }; });
       G.setState({ profile: { ...pr, backpack: bp } }); }, [LOOT, AT, COV]);
-    await act('tab-merchants'); await act('btn-merchants'); await act('vendor-nira'); await act('vendor-view-sell');
+    await act('tab-merchants'); await act('vendor-nira'); await act('vendor-view-sell');
     for (const i of [3, 6]) await act(`slot-backpack-${i}`);
     await act('mark-materials');
     if (n === 'movil') { await act('vendor-side').catch(() => {}); }

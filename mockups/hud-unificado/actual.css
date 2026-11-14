@@ -1,0 +1,36 @@
+/* Estilo ACTUAL del juego (sin cambios estéticos): solo se aplican la nueva organización y la escala de textos. */
+@font-face { font-family: 'Grenze'; font-weight: 400; src: url(fonts/grenze-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Grenze'; font-weight: 600; src: url(fonts/grenze-latin-600-normal.woff2) format('woff2'); }
+body.dir-actual { --page: #07060a; --page-tint: radial-gradient(ellipse at 50% 30%, #1a1626 0%, #07060a 70%); --panel-ink: #e9e1cc; --panel-ink-2: #8c8693; --head: #e8b33a;
+  --sheet-ink: #e9e1cc; --sheet-ink-2: #8c8693; --sheet-head: #e8b33a; --accent: #e8b33a; --good: #5fd19a; --bad: #e8752b; --gold: #e8b33a; --bar-bg: #0d0c11; --muted-bg: #0d0c1199; --cap: #e8b33a;
+  font-family: 'Grenze', Georgia, serif; }
+.dir-actual .nav { background: linear-gradient(180deg,#07060af2,#07060a00); border: 0; box-shadow: none; }
+.dir-actual .tabs { align-self: center; gap: 6px; }
+.dir-actual .tab, .dir-actual .tab.on { border: 1px solid #ffffff1a; border-image: none; background: #0d0c11b3; color: #d9d3c1; padding: 0 16px; margin: 0; opacity: 1; min-height: 44px; }
+.dir-actual .tab.on { background: #e9e1cc; color: #120f0a; }
+.dir-actual .tab .pin { top: -6px; right: -6px; }
+.dir-actual .rest { border: 1px solid #ffffff1a; background: #0d0c11b3; }
+.dir-actual .ib { border-image: none; background: #2a2830; border: 2px solid #07060a; }
+.dir-actual .panel, .dir-actual .sheet { border: 2px solid #3a3741; border-image: none; background: linear-gradient(180deg,#1b1920,#131118);
+  box-shadow: inset 0 0 0 1px #07060a, inset 0 0 0 3px #26232c, 0 0 0 1px #07060a, 0 10px 30px #0009; color: #e9e1cc; padding: var(--sp-3); }
+.dir-actual .ph { justify-content: center; border-bottom: 1px solid #2a2830; padding-bottom: var(--sp-2); }
+.dir-actual .ph h2 { color: #e8b33a; letter-spacing: .1em; }
+.dir-actual .ph h2::before { content: '◆  '; font-size: .6em; color: #9a6b1a; vertical-align: middle; }
+.dir-actual .ph h2::after { content: '  ◆'; font-size: .6em; color: #9a6b1a; vertical-align: middle; }
+.dir-actual .ph .r { position: absolute; right: var(--sp-3); }
+.dir-actual .ph > .tag, .dir-actual .ph > .sub { position: absolute; left: var(--sp-3); }
+.dir-actual .btn { border: 2px solid #07060a; border-image: none; background: linear-gradient(180deg,#3a3741,#26232c); box-shadow: inset 0 1px 0 #625d69, inset 0 -2px 0 #15131a; color: #e9e1cc; }
+.dir-actual .btn.cta { background: linear-gradient(180deg,#f2c75a 0%,#c48f22 55%,#8a5d14 100%); box-shadow: inset 0 1px 0 #fbe7a6, inset 0 -3px 0 #5a3c0a, 0 0 0 1px #6b4a12; color: #1a1206; }
+.dir-actual .btn.red { background: linear-gradient(180deg,#a3232f,#6e1424); box-shadow: inset 0 1px 0 #ff6a5a, inset 0 -2px 0 #3a0810; border-image: none; }
+.dir-actual .itabs { border: 2px solid #6b4a12; background: #0d0c11e6; box-shadow: 0 0 0 1px #07060a; display: inline-flex; gap: 0; align-self: flex-start; }
+.dir-actual .itab, .dir-actual .itab.on { border: 0; border-image: none; border-right: 1px solid #2a2830; padding: 0 20px; color: #8c8693; }
+.dir-actual .itab.on { background: linear-gradient(180deg,#e8b33a,#9a6b1a); color: #1a1205; }
+.dir-actual .slot { border: 2px solid #2a2830; border-image: none; background: #0d0c11; box-shadow: inset 0 0 0 1px #07060a, inset 0 2px 6px #000b; }
+.dir-actual .slot.r-u { border-color: #5fd19a; } .dir-actual .slot.r-r { border-color: #4a9eff; } .dir-actual .slot.r-e { border-color: #a35ae0; }
+.dir-actual .sep { border: 0; border-image: none; height: 1px; background: #2a2830; }
+.dir-actual .vcard h3, .dir-actual .sheet h2, .dir-actual .sheet h3 { color: #e9e1cc; }
+.dir-actual .vimg { background: radial-gradient(ellipse at 50% 85%, #e8b33a22, #0000 60%); }
+.dir-actual .atbox { border: 1px solid #2a2830; clip-path: none; background: #0d0c1199; }
+.dir-actual .dport { border: 2px solid #3a3741; border-image: none; background: #0d0c11; }
+@media (max-height: 520px) { .dir-actual .tab, .dir-actual .tab.on { padding: 0 8px; letter-spacing: .03em; } .dir-actual .tabs { gap: 3px; } .dir-actual .itab, .dir-actual .itab.on { padding: 0 10px; } }
+@media (max-width: 1279px) and (min-height: 521px) { .dir-actual .tab, .dir-actual .tab.on { padding: 0 10px; } }

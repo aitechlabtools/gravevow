@@ -71,8 +71,8 @@ export function enemyCraftDrops(enemyId: string, tier: number, kind: { elite: bo
 export function vendorBlueprints(v: VendorId): { itemId: string; rank: number }[] {
   const test: Partial<Record<VendorId, (station: string, cat: string) => boolean>> = {
     brand: (st, c) => st === 'forge' && c === 'weapon',
-    valerius: (st, c) => st === 'forge' && ['helmet', 'shield', 'gloves'].includes(c),
-    eldrin: (st) => st === 'runic',
+    valerius: (st, c) => st === 'armory' && ['helmet', 'shield', 'gloves'].includes(c),
+    eldrin: (st, c) => st === 'alchemy' && c !== 'potion' && c !== 'material',
   };
   const t = test[v];
   if (!t) return [];

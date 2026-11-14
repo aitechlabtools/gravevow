@@ -181,12 +181,12 @@ describe('fase 4: Bastión y estaciones', () => {
     expect(enqueueTrigger([], off, 'station-up:kitchen:2')).toEqual(['station.kitchen.lv2']);
     expect(enqueueTrigger([], off, 'vendor:nira')).toEqual([]);
     expect(enqueueTrigger([], markSeen(off, 'station.kitchen.lv2'), 'station-up:kitchen:2')).toEqual([]);
-    expect(getMini('station.cot.lv3')!.narrator).toBe('orik');
+    expect(getMini('station.cot.lv3')!.narrator).toBe('grizk');
   });
   it('hay uno por mercader, contado por él, y uno por estación de crafteo', async () => {
     const { VENDOR_ORDER } = await import('../src/core/data/vendors');
     for (const v of VENDOR_ORDER) expect(getMini(`vendor.${v}`)?.narrator, v).toBe(v);
-    for (const st of ['kitchen', 'bench', 'infirmary', 'forge', 'alchemy', 'runic']) expect(getMini(`station.${st}`)?.trigger, st).toBe(`station:${st}`);
+    for (const st of ['kitchen', 'bench', 'infirmary', 'forge', 'alchemy', 'tannery', 'armory']) expect(getMini(`station.${st}`)?.trigger, st).toBe(`station:${st}`);
   });
 });
 

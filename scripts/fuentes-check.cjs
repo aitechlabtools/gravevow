@@ -19,9 +19,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'fuentes', dev] = process.a
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile;
     pr.tutorialSeen.dungeon = true; pr.tutorialDone = true;
     g.setState({ profile: { ...pr, character: { ...pr.character, level: 12 }, gold: 5000, reputation: { ...pr.reputation, brand: 400 } } }); });
-  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]');
-
-  // Garth vende harina; Nira, madera
+  await tap('[data-testid=tab-merchants]'); // Garth vende harina; Nira, madera
   await p.waitForSelector('[data-testid=vendor-garth]'); await tap('[data-testid=vendor-garth]');
   await p.waitForSelector('[data-testid=buy-flour]'); await small('[data-testid=buy-flour]', 'Comprar harina');
   await tap('[data-testid=buy-flour]'); await p.waitForTimeout(150);

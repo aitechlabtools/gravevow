@@ -22,7 +22,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'durabilidad', dev] = proce
   });
   await breakGear();
   // 1) Yunque de Brand
-  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]'); await tap('[data-testid=vendor-nira]'); await tap('[data-testid=vendor-view-repair]');
+  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=vendor-nira]'); await tap('[data-testid=vendor-view-repair]');
   await p.waitForSelector('[data-testid=repair]');
   const jobs = await p.$$('[data-testid^=repair-eq-]');
   if (jobs.length < 1) fail('el yunque no lista lo dañado');

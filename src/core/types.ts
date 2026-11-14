@@ -272,7 +272,7 @@ export interface Profile {
   /** Saciedad, Hidratación y Descanso (Fase 5) al volver al Bastión. Sin valor: llenas. */
   needs?: { sat: number; hyd: number; rest: number } | null;
   /** Refugio (Fase 9): nivel de cada módulo. Sin valor: todo a 0. */
-  refuge?: { cot: number; kitchen: number; bench: number; infirmary?: number; forge?: number; alchemy?: number; runic?: number; v?: 2 };
+  refuge?: { cot: number; kitchen: number; bench: number; infirmary?: number; forge?: number; alchemy?: number; tannery?: number; armory?: number; /** Solo en partidas antiguas: se une al Laboratorio. */ runic?: number; v?: number };
   /** Preparación para la siguiente incursión (catre mejorado, plato). Se gasta al bajar. */
   prep?: { cot?: boolean | number; dish?: string; dishCut?: number } | null;
   /** Receta en el fogón (ingredientes ya gastados): se retoma al volver a la cocina. */

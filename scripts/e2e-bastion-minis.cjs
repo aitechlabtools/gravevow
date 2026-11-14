@@ -62,11 +62,9 @@ const DEVICE = process.argv[4];
     g.setState({ profile: { ...pr, stash: st, gold: 300 } }); });
 
   await tap('[data-testid=tab-merchants]');
-  await page.waitForSelector('[data-testid=screen-bastion]');
-  ok(!!(await page.$('[data-testid=tut-dot-bastion-merchants]')) && !!(await page.$('[data-testid=tut-dot-bastion-refuge]')), 'el «!» sale en Mercaderes y en Bastión');
-  await tap('[data-testid=btn-merchants]');
+  await page.waitForSelector('[data-testid=vendor-list]');
   await walk('screen.bastion-entry');
-  ok(!!(await page.$('[data-testid=vendor-interior]')) && (await page.textContent('[data-testid=vendor-name]')).includes('Nira'), 'tocar Hablar te deja dentro de Nira');
+  ok(!!(await page.$('[data-testid=vendor-interior]')) && (await page.textContent('[data-testid=vendor-name]')).includes('Nira'), 'tocar a Nira te deja dentro de su pantalla');
   await walk('vendor.nira');
 
   // Primera venta: marcar materiales y vender
@@ -81,20 +79,18 @@ const DEVICE = process.argv[4];
     g.setState({ profile: { ...pr, stash: st, gold: 300 } }); });
 
   await tap('[data-testid=vendor-back]');
-  await tap('[data-testid=merchants-back]');
-  ok(!(await page.$('[data-testid=tut-dot-bastion-merchants]')), 'visto, el «!» de Mercaderes se va');
-  await tap('[data-testid=btn-refuge]');
+  await page.waitForSelector('[data-testid=vendor-garth]'); await tap('[data-testid=vendor-garth]');
+  await walk('vendor.garth');
+  await tap('[data-testid=vendor-view-station]');
   await walk('tab.refugio');
-  ok(!!(await page.$('[data-testid=station-detail-kitchen]')), 'el Bastión acaba en el detalle de la cocina');
+  ok(!!(await page.$('[data-testid=station-detail-kitchen]')), 'la pestaña Cocina de Garth enseña lo que pide su reconstrucción');
 
   // Construir la cocina: Garth regala los materiales de la primera receta
   const meat0 = await count('salted_meat');
   await tap('[data-testid=upgrade-kitchen]');
   ok(await G(() => window.__GRAVEVOW__.getState().profile.refuge.kitchen === 1), 'cocina construida');
   ok((await count('salted_meat')) === meat0 + 1, 'Garth regala la carne salada de la primera receta');
-  await tap('[data-testid=detail-back]');
-  ok(!!(await page.$('[data-testid=tut-dot-module-kitchen]')), 'la cocina construida lleva el «!»');
-  await tap('[data-testid=enter-kitchen]');
+  await page.waitForSelector('[data-testid=craft-kitchen]');
   const jerky0 = await count('jerky');
   await walk('station.kitchen');
   ok((await count('jerky')) === jerky0 + 1, 'en el mini tutorial se craftea de verdad (cecina al almacén)');

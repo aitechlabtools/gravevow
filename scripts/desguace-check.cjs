@@ -22,8 +22,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'desguace', dev] = process.
     const st = pr.stash.slice(); let k = 0; const put = (itemId, qty, extra) => { while (st[k]) k++; st[k] = { uid: 'd' + k, itemId, qty, ...extra }; };
     put('chainmail', 1); put('iron_helm', 1); put('bastion_shield', 1); put('recruit_sword', 1);
     g.setState({ profile: { ...pr, stash: st, character: { ...pr.character, level: 12 }, gold: 100 } }); });
-  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]');
-  await p.waitForSelector('[data-testid=vendor-orik]'); await tap('[data-testid=vendor-orik]');
+  await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=vendor-orik]'); await tap('[data-testid=vendor-orik]');
   await tap('[data-testid=vendor-view-scrap]'); await p.waitForSelector('[data-testid=scrap]');
 
   // El equipo de recluta no aparece

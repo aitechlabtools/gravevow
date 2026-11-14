@@ -23,7 +23,7 @@ import { jobResult } from './workshop';
 import { CRAFT_CFG } from '../config/crafting';
 
 export const STATION_NAMES: Record<CraftStation, string> = {
-  kitchen: 'Cocina', bench: 'Banco de trabajo', infirmary: 'Rincón de cura', forge: 'Forja', alchemy: 'Mesa de alquimia', runic: 'Atril rúnico',
+  kitchen: 'Cocina', bench: 'Banco de trabajo', infirmary: 'Rincón de cura', forge: 'Forja', alchemy: 'Laboratorio', tannery: 'Curtiduría', armory: 'Forja de armaduras',
 };
 
 export function getRecipe(id: string): CraftRecipe {

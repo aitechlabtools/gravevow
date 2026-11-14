@@ -4,7 +4,9 @@
 // ════════════════════════════════════════════════════════════════════
 import type { ItemDef } from '../types';
 
-export type CraftStation = 'kitchen' | 'bench' | 'infirmary' | 'forge' | 'alchemy' | 'runic';
+export type CraftStation = 'kitchen' | 'bench' | 'infirmary' | 'forge' | 'alchemy' | 'tannery' | 'armory';
+/** Estación de origen en la tabla (antes del reparto del Bastión unificado; ver `assignStation`). */
+type SourceStation = CraftStation | 'runic';
 export interface CraftRecipe {
   id: string;
   result: string;
@@ -147,7 +149,7 @@ export const BLUEPRINT_ITEMS: ItemDef[] = [
   { id: 'bp_belzar_chain', name: 'Plano: Cadena de Belzar', description: 'Plano legendario. Solo lo guardan los jefes y élites del fondo.', icon: 'blueprint_gold', category: 'blueprint', rarity: 'legendary', value: 1231, stack: 1 },
 ];
 
-export const CRAFT_RECIPES: CraftRecipe[] = [
+const SOURCE_RECIPES: (Omit<CraftRecipe, 'station'> & { station: SourceStation })[] = [
   { id: 'c_scrap_bar', result: 'scrap_bar', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'scrap_metal', qty: 2 }] },
   { id: 'c_copper_ingot', result: 'copper_ingot', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'copper_ore', qty: 2 }] },
   { id: 'c_iron_ingot', result: 'iron_ingot', qty: 1, station: 'forge', level: 1, ingredients: [{ itemId: 'iron_ore', qty: 2 }, { itemId: 'scrap_metal', qty: 1 }] },
@@ -336,3 +338,19 @@ export const CRAFT_RECIPES: CraftRecipe[] = [
   { id: 'c_ignaroth_hammer', result: 'ignaroth_hammer', qty: 1, station: 'forge', level: 3, ingredients: [{ itemId: 'obsidian_ingot', qty: 8 }, { itemId: 'grip', qty: 2 }, { itemId: 'scrap_metal', qty: 2 }, { itemId: 'sulfur', qty: 24 }, { itemId: 'demon_blood', qty: 5 }], blueprint: 'bp_ignaroth_hammer' },
   { id: 'c_belzar_chain', result: 'belzar_chain', qty: 1, station: 'forge', level: 3, ingredients: [{ itemId: 'hellsteel', qty: 8 }, { itemId: 'grip', qty: 2 }, { itemId: 'scrap_metal', qty: 2 }, { itemId: 'demon_blood', qty: 11 }], blueprint: 'bp_belzar_chain' },
 ];
+
+// ── Bastión unificado (14/11): cada mercader con su estación; las recetas no cambian, solo dónde se hacen ──
+/** Forja de armaduras de Valerius: yelmos, corazas, guanteletes y escudos de metal (antes, en la Forja de Brand). */
+export const ARMORY_RESULTS = new Set(['chainmail', 'bastion_plate', 'silver_plate', 'hellsteel_plate', 'demonblood_plate', 'gauntlets', 'silver_gauntlets', 'demon_gauntlets',
+  'iron_helm', 'knight_helm', 'silver_helm', 'hellsteel_helm', 'iron_shield', 'bastion_shield', 'headstone_shield', 'bone_bulwark', 'demonscale_shield', 'chain_shield']);
+/** Lo que sigue en el Banco de trabajo de Orik (madera y herramientas); el resto del antiguo banco va a la Curtiduría de Nira. */
+export const BENCH_RESULTS = new Set(['grip', 'haft', 'pitch_torch', 'ferryman_lantern', 'infernal_torch', 'wooden_shield', 'repair_kit']);
+/** Dónde se hace cada receta: el Atril rúnico se une a la Mesa de alquimia (Laboratorio de Eldrin), el cuero y la tela
+ *  pasan a la Curtiduría de Nira y las armaduras de metal a la Forja de armaduras de Valerius. */
+export function assignStation(station: SourceStation, result: string): CraftStation {
+  if (station === 'runic') return 'alchemy';
+  if (station === 'bench') return BENCH_RESULTS.has(result) ? 'bench' : 'tannery';
+  if (station === 'forge') return ARMORY_RESULTS.has(result) ? 'armory' : 'forge';
+  return station;
+}
+export const CRAFT_RECIPES: CraftRecipe[] = SOURCE_RECIPES.map((r) => ({ ...r, station: assignStation(r.station, r.result) }));

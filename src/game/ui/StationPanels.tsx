@@ -2,14 +2,14 @@
 // estaciones con recetas (fase 3: sin minijuegos) y la vista de runas. Todo se decide tocando; objetivos de 44 px.
 import { useEffect, useMemo, useState } from 'react';
 import { actions, useGame } from '../state/store';
-import { MODULES, MODULE_ORDER, type ModuleId } from '../../core/data/refuge';
+import { MODULES, type ModuleId } from '../../core/data/refuge';
 import { needsOf } from '../../core/needs';
-import { canSleepForPrep, missingFor, nextCost, ownedQty, refugeOf, upgradeBlock } from '../../core/refuge';
+import { canSleepForPrep, cotGold, missingFor, nextCost, ownedQty, refugeOf, upgradeBlock } from '../../core/refuge';
 import { Card, usePixelScale } from './kit';
 import { useLayout } from '../../config/ui';
 import { MonsterSprite } from './common';
 import { stationArtUrl, STATION_ART_W, STATION_ART_H } from './stationArt';
-import { MATERIAL_SOURCES } from '../../config/stations';
+import { MATERIAL_SOURCES, STATION_FX } from '../../config/stations';
 import { VENDORS, type VendorId } from '../../core/data/vendors';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { craftBlock, fineChance, maxCraftable, needs, recipeLock, stationLevel, stationRecipes, batchLimit, recipeFor } from '../../core/crafting';
@@ -166,17 +166,6 @@ export function StationTile({ id, onUse, onDetails }: { id: ModuleId; onUse: (id
   );
 }
 
-/** Rejilla del Bastión: las 7 estaciones, en ruinas hasta que las reconstruyas, en filas de 4 como los mercaderes. */
-export function StationTiles({ onUse, onDetails }: { onUse: (id: ModuleId) => void; onDetails: (id: ModuleId) => void }) {
-  const layout = useLayout();
-  const cols = layout === 'tablet' && typeof window !== 'undefined' && window.innerWidth < 1000 ? 3 : 4;
-  return (
-    <div className="grid w-full" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: 'var(--gap)' }} data-testid="station-grid">
-      {MODULE_ORDER.map((id) => <StationTile key={id} id={id} onUse={onUse} onDetails={onDetails} />)}
-    </div>
-  );
-}
-
 /** Detalle de una estación: reconstruirla o mejorarla, con los tres niveles, el coste y el retrato del encargado. */
 export function StationDetail({ id, onUse, onGo, children }: { id: ModuleId; onUse: (id: ModuleId) => void; onGo?: GoTo; children?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
@@ -232,25 +221,47 @@ export function UpgradeButton({ id, onOpen }: { id: ModuleId; onOpen: (id: Modul
   return <button className={`btn text-xs font-display tracking-[0.08em] ${ready ? 'btn-gold' : ''}`} style={BTN} onClick={() => { sfx('click'); onOpen(id); }} data-testid={`upgrade-open-${id}`}>▲ Mejorar</button>;
 }
 
-/** El Catre en uso: dormir y, arriba, «▲ Mejorar». */
-export function CotPanel({ onBack, extra }: { onBack: () => void; extra?: React.ReactNode }) {
+/** El Catre de Grizk (hostal de mercenarios): tu Descanso, «Dormir · N oro» y los tres niveles con su precio. */
+export function CotPanel({ extra }: { extra?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
   const lvl = refugeOf(profile).cot;
   const rest = Math.round(needsOf(profile.needs).rest);
   const prep = canSleepForPrep(profile);
+  const price = cotGold(profile);
+  const phone = useLayout() === 'phone';
   return (
-    <div className="flex flex-col gap-2" data-testid="cot-panel">
+    <div className="flex flex-col gap-3" data-testid="cot-panel">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-display text-parchment tracking-[0.08em]">{MODULES.cot.name} · Nivel {lvl}/3</span>
+        <span className="font-display text-parchment tracking-[0.08em] text-[17px]">{MODULES.cot.levels[lvl].name} · Nivel {lvl}/3</span>
         <span className="ml-auto" />{extra}
-        <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="cot-back">◂ Volver</button>
       </div>
-      <div className="panel p-3 flex flex-col gap-2 max-w-xl">
-        <div className="text-sm text-stone-300"><span className="text-gold">{MODULES.cot.levels[lvl].name}.</span> {MODULES.cot.levels[lvl].effect}</div>
-        <div className="text-sm text-stone-300">Descanso: <b className="text-parchment">{rest}</b></div>
-        <button className="btn btn-gold font-display" style={{ minHeight: 52 }} disabled={rest >= 100 && !prep} onClick={() => { actions.sleepCot(); sfx('click'); }} data-testid="btn-cot">
-          {prep ? 'Dormir · bajarás descansado' : 'Dormir'}
-        </button>
+      <div className="grid gap-3" style={{ gridTemplateColumns: phone ? '1fr' : 'minmax(0,1fr) minmax(0,1fr)' }}>
+        <div className="panel p-3 flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <img src={stationArtUrl('cot')} className="pixelated shrink-0" alt="" draggable={false} style={{ width: STATION_ART_W * (phone ? 2 : 4), height: STATION_ART_H * (phone ? 2 : 4) }} />
+            <div className="flex-1 min-w-0">
+              <div className="text-[13px] uppercase tracking-[0.12em] text-stone-400">Descanso</div>
+              <div className="font-display text-[34px] leading-none" style={{ color: '#9fb4ff' }} data-testid="cot-rest">{rest}<span className="text-[15px] text-stone-400"> / 100</span></div>
+              <div className="h-3 mt-2 border border-black bg-[#0d0c11]"><i className="block h-full" style={{ width: `${rest}%`, background: '#7aa2ff' }} /></div>
+            </div>
+          </div>
+          <button className="btn btn-gold font-display tracking-[0.12em] uppercase" style={{ minHeight: 56 }} disabled={(rest >= 100 && !prep) || profile.gold < price} onClick={() => { actions.sleepCot(); sfx('click'); }} data-testid="btn-cot">
+            {prep ? `Dormir · ${price} oro · bajarás descansado` : `Dormir · ${price} oro`}
+          </button>
+          {profile.gold < price && <div className="text-[14px] text-[#d0905a]" data-testid="cot-no-gold">Te faltan {price - profile.gold} de oro. Grizk no fía.</div>}
+          {!phone && <div className="text-[14px] text-stone-400">{MODULES.cot.levels[lvl].effect}</div>}
+        </div>
+        {!phone && (
+          <div className="flex flex-col gap-2" data-testid="cot-levels">
+            <div className="font-display text-gold text-[14px] tracking-[0.1em] uppercase">Niveles del Catre</div>
+            {[1, 2, 3].map((k) => (
+              <div key={k} className={`border p-2 bg-[#19171f] ${k === lvl ? 'border-gold' : 'border-stone-700 opacity-80'}`}>
+                <div className="flex items-center gap-2"><b className="font-display text-[14px] text-parchment flex-1">Nv {k} · {MODULES.cot.levels[k].name}{k <= lvl ? ' ✓' : ''}</b><span className="text-gold text-[14px]">{STATION_FX.cotGold[k]} oro</span></div>
+                <div className="text-[14px] text-stone-300">{MODULES.cot.levels[k].effect}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

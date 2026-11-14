@@ -38,7 +38,7 @@ fs.mkdirSync(OUT, { recursive: true });
   let goldBefore;
   await step('Comprar una poción', async () => {
     goldBefore = (await st()).gold;
-    await page.click('[data-testid=tab-merchants]'); await page.click('[data-testid=btn-merchants]');
+    await page.click('[data-testid=tab-merchants]');
     await page.click('[data-testid=vendor-vesper]');
     await page.click('[data-testid=buy-health_potion]');
     const s = await st();

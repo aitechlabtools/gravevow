@@ -36,7 +36,7 @@ import { vendorUnlocked } from '../../core/vendors';
 import { STATION_FX } from '../../config/stations';
 import { craft as craftItems, getRecipe, learnBlueprints, settlePendingJobs, storeCrafted } from '../../core/crafting';
 import { applyRune, type RuneLoc } from '../../core/runes';
-import { canSleepForPrep, cotPrepCut, giveItems, refugeOf, receptionDiscard, receptionSell, receptionWithdraw, RECEPTION_NOTE, upgradeModule } from '../../core/refuge';
+import { canSleepForPrep, cotGold, cotPrepCut, giveItems, refugeOf, receptionDiscard, receptionSell, receptionWithdraw, RECEPTION_NOTE, upgradeModule } from '../../core/refuge';
 import { destroyItems, receptionSalvage, salvage, type DestroyRef, type SalvageRef } from '../../core/salvage';
 import type { ModuleId } from '../../core/data/refuge';
 import type { CraftStation } from '../../core/data/crafting';
@@ -614,9 +614,15 @@ export const actions = {
     const prep = canSleepForPrep(p);
     if (n.rest >= 100 && !prep) return invError('Ya estás descansad{o|a}.');
     const cut = cotPrepCut(p);
-    set({ profile: { ...p, needs: toSaved(sleep(n)), ...(prep ? { prep: { ...(p.prep ?? {}), cot: cut } } : {}) } });
+    // Grizk cobra la cama (hostal de mercenarios): 5, 10 o 15 de oro según el nivel del Catre
+    const price = cotGold(p);
+    const paid = price > 0 ? spendGold(p, price) : { ok: true as const, profile: p };
+    if (!paid.ok) return invError(`Grizk no fía: la noche cuesta ${price} de oro.`);
+    const q = paid.profile;
+    set({ profile: { ...q, needs: toSaved(sleep(n)), ...(prep ? { prep: { ...(q.prep ?? {}), cot: cut } } : {}) } });
     sfx('heal');
-    toast(prep ? `Duermes en el catre del Bastión. Bajarás descansado: −${Math.round(cut * 100)} % de Descanso en la próxima incursión.` : 'Duermes en el catre del Bastión. Descanso recuperado.', 'good');
+    const pay = price > 0 ? ` (−${price} de oro)` : '';
+    toast(prep ? `Duermes en el catre de Grizk${pay}. Bajarás descansado: −${Math.round(cut * 100)} % de Descanso en la próxima incursión.` : `Duermes en el catre de Grizk${pay}. Descanso recuperado.`, 'good');
   },
 
   drinkPotion() {

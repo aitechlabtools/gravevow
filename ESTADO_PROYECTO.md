@@ -76,6 +76,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- **14/11 · Bastión unificado**: la pestaña Bastión enseña los 8 mercaderes (retrato de medio pecho); cada uno abre su pantalla con pestañas y su estación dentro. Una estación por mercader: Catre con Grizk (5/10/15 de oro la noche), Curtiduría (Nira), Forja de armaduras (Valerius, «La armería»), Laboratorio (Eldrin: alquimia + atril). Migración sin pérdida de niveles. Plan: `docs/plan-bastion-unificado.md`.
 - 13/11 (noche, 2): **Música de archivo solo en el Bastión y el menú** (dos pistas de Magnific que se alternan con 5–15 s de silencio); mazmorra sin música; ambiente apagado con interruptor; Ajustes con General, Música y Efectos.
 - 13/11 (noche): **Música apagada** hasta la banda sonora definitiva (`musicaActivada = false` en `src/config/music.ts`); ambiente y efectos siguen; Ajustes muestra «Próximamente».
 - 13/11: **El «?» abre solo la Guía** (antes abría Ajustes › Partida). Arreglado un error de la música (nota en tiempo negativo al arrancar).

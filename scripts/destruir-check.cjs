@@ -42,8 +42,7 @@ fs.mkdirSync(out, { recursive: true });
   ok(!(await p.$('[data-testid=act-destroy]')), 'en la Intendencia no hay botón de destruir');
 
   // ── 2. Destruir en el taller de Orik ──
-  await tap('[data-testid=tab-merchants]'); await tap('[data-testid=btn-merchants]');
-  await p.waitForSelector('[data-testid=vendor-orik]'); await tap('[data-testid=vendor-orik]');
+  await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=vendor-orik]'); await tap('[data-testid=vendor-orik]');
   await tap('[data-testid=vendor-view-scrap]');
   await tap('[data-testid=orik-mode-destroy]'); await p.waitForSelector('[data-testid=destroy]');
   await tall('[data-testid=orik-mode-destroy]', 'Pestaña Destruir');

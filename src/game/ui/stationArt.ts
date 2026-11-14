@@ -26,7 +26,10 @@ const ART: Record<StationArtId, Rect[]> = {
   infirmary: [[4, 10, 12, 14, '#e9e1cc'], [5, 11, 10, 12, '#d8cfb6'], [9, 13, 2, 8, '#b02a2a'], [6, 16, 8, 2, '#b02a2a'], [6, 7, 8, 3, W]],
   forge: [[4, 16, 12, 3, ST], [7, 19, 6, 5, ST], [3, 15, 14, 1, ST2], [6, 11, 8, 2, '#3a3741'], [13, 6, 2, 6, W], [11, 5, 6, 2, ST2], [2, 21, 3, 3, FI]],
   alchemy: [[1, 18, 18, 2, W2], [2, 20, 2, 4, W], [16, 20, 2, 4, W], [4, 11, 4, 7, '#5ab08a'], [5, 9, 2, 2, '#cceeee'], [10, 13, 4, 5, '#b58cff'], [11, 11, 2, 2, '#cceeee'], [15, 14, 2, 4, '#e8b33a']],
-  runic: [[9, 12, 2, 12, W], [5, 22, 10, 2, W], [4, 8, 12, 5, W2], [5, 9, 10, 3, '#e9e1cc'], [7, 10, 1, 1, '#b58cff'], [10, 10, 1, 1, '#b58cff'], [12, 10, 1, 1, '#b58cff']],
+  // Curtiduría de Nira: bastidor con una piel tendida y un rollo de tela
+  tannery: [[2, 6, 2, 18, W], [16, 6, 2, 18, W], [2, 6, 16, 2, W2], [5, 9, 10, 9, '#a0703e'], [6, 10, 8, 7, '#b8834a'], [8, 12, 1, 1, '#7a5230'], [11, 14, 1, 1, '#7a5230'], [4, 21, 6, 3, '#8a7a9a'], [5, 20, 4, 1, '#a898b8']],
+  // Forja de armaduras de Valerius: yunque con una coraza y un yelmo colgado
+  armory: [[4, 18, 12, 3, ST], [7, 21, 6, 3, ST], [3, 17, 14, 1, ST2], [6, 9, 8, 8, ST2], [7, 10, 6, 6, '#b8b8c4'], [9, 11, 2, 4, '#e9e1cc'], [14, 3, 4, 4, ST2], [15, 5, 2, 1, '#0b0a0e'], [2, 21, 3, 3, FI]],
 };
 
 /** Estación en ruinas: su silueta en piedra apagada, una grieta y cascotes delante (marcador hasta el arte final). */

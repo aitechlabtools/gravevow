@@ -12,7 +12,7 @@ function veteran() {
   p.character.level = 40;
   p.stats = { expeditions: 20, extractions: 15, deaths: 5, kills: 200 };
   p.reputation = { nira: 150, vesper: 20 };
-  p.refuge = { cot: 2, kitchen: 2, bench: 1, infirmary: 0, forge: 0, alchemy: 0, runic: 0, v: 2 };
+  p.refuge = { cot: 2, kitchen: 2, bench: 1, infirmary: 0, forge: 0, alchemy: 0, tannery: 0, armory: 0, v: 3 };
   p.bossesDefeated = ['mordrek'];
   p.bestiary = { bandit_captain: { seen: 2, kills: 1 } };
   p.lastSubzone = 'calabozos';

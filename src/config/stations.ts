@@ -6,7 +6,10 @@
 //    mena de cobre (vetas), polvo de hueso y esquirlas arcanas (enemigos y desguace de equipo de Mago).
 import type { VendorId } from '../core/data/vendors';
 
-export type StationId = 'cot' | 'kitchen' | 'bench' | 'infirmary' | 'forge' | 'alchemy' | 'runic';
+// Bastión unificado (14/11): una estación por mercader. El Catre pasa a Grizk (hostal de mercenarios: dormir cuesta oro),
+// la Forja de Brand se queda con armas, lingotes y anillos; Valerius tiene la Forja de armaduras; Nira, la Curtiduría
+// (cuero y tela, antes en el Banco de Orik) y Eldrin, el Laboratorio (la Mesa de alquimia y el Atril rúnico, unidos).
+export type StationId = 'cot' | 'kitchen' | 'bench' | 'infirmary' | 'forge' | 'alchemy' | 'tannery' | 'armory';
 
 export interface StationLevel {
   name: string;
@@ -35,15 +38,15 @@ const c = (gold: number, ...items: [string, number][]) => ({ gold, items: items.
 
 export const STATIONS: Record<StationId, StationDef> = {
   cot: {
-    id: 'cot', name: 'Catre', icon: '🛏', by: 'orik',
-    purpose: 'Dormir llena el Descanso y, mejorado, te deja a punto para bajar.',
+    id: 'cot', name: 'Catre', icon: '🛏', by: 'grizk',
+    purpose: 'La cama de la lonja, donde duermen los que venden su espada. Dormir llena el Descanso y, mejorado, te deja a punto para bajar.',
     fallback: 'Paja en el suelo.',
-    lines: ['«Entre estos muros caídos aún queda un rincón seco. Paja limpia; no preguntes de dónde.»', '«Un jergón como Dios manda. Casi.»', '«Mantas de lana y un somier que no chirría. Dormirás como un muerto. Uno contento.»'],
+    lines: ['«Paja limpia en la trastienda. Aquí duermen los que venden su espada; tú también, si pagas.»', '«Un jergón como Dios manda. Lo cobro como Dios manda.»', '«Mantas de lana y un somier que no chirría. Dormirás como un muerto. Uno que ha pagado.»'],
     levels: [
       { name: 'Sin catre', effect: 'Paja en el suelo.' },
-      { name: 'Catre de paja', effect: 'Dormir recupera todo el Descanso, gratis.' },
-      { name: 'Catre con jergón', effect: 'Dormir te deja a punto: −10 % de Descanso en la siguiente incursión.', cost: c(80, ['scrap_metal', 6], ['leather_scrap', 6]) },
-      { name: 'Cama de lana', effect: 'Dormir te deja a punto: −15 % de Descanso en la siguiente incursión.', cost: c(250, ['iron_ore', 4], ['silver_ore', 2], ['leather_scrap', 10]) },
+      { name: 'Catre de paja', effect: 'Dormir recupera todo el Descanso. 5 de oro la noche.' },
+      { name: 'Catre con jergón', effect: 'Dormir te deja a punto: −10 % de Descanso en la siguiente incursión. 10 de oro la noche.', cost: c(80, ['scrap_metal', 6], ['leather_scrap', 6]) },
+      { name: 'Cama de lana', effect: 'Dormir te deja a punto: −15 % de Descanso en la siguiente incursión. 15 de oro la noche.', cost: c(250, ['iron_ore', 4], ['silver_ore', 2], ['leather_scrap', 10]) },
     ],
   },
   kitchen: {
@@ -60,7 +63,7 @@ export const STATIONS: Record<StationId, StationDef> = {
   },
   bench: {
     id: 'bench', name: 'Banco de trabajo', icon: '🪚', by: 'orik',
-    purpose: 'Desguazar rinde más materiales. Cuero, tela, ropa, botas y bolsas.',
+    purpose: 'Desguazar rinde más materiales. Empuñaduras y astiles de madera.',
     fallback: 'Desguazas en el taller de Orik con su rendimiento normal.',
     lines: ['«He sacado los escombros del taller. Tornillo, lima y un mazo: lo demás lo pones tú.»', '«Un banco de roble con su tornillo de hierro. Esto ya es otra cosa.»', '«Herramienta fina. Si lo rompes tú, lo arreglas tú.»'],
     levels: [
@@ -84,48 +87,62 @@ export const STATIONS: Record<StationId, StationDef> = {
   },
   forge: {
     id: 'forge', name: 'Forja', icon: '⚒', by: 'brand',
-    purpose: 'Lingotes, armas y armaduras de metal, escudos, anillos y llaves.',
-    fallback: 'Las armas y armaduras de metal se compran en la tienda de Brand.',
+    purpose: 'Lingotes, armas de hierro y anillos.',
+    fallback: 'Las armas de metal se compran en la tienda de Brand.',
     lines: ['«La forja del Bastión respira otra vez. Un yunque viejo y un fuelle: suficiente para empezar.»', '«Ahora el fuego aguanta el hierro bueno.»', '«Esta forja ya no me da vergüenza. Haz algo digno con ella.»'],
     levels: [
-      { name: 'Sin forja', effect: 'Lo de metal se compra en la tienda de Brand.' },
+      { name: 'Sin forja', effect: 'Las armas de metal se compran en la tienda de Brand.' },
       { name: 'Forja', effect: 'Recetas de forja de nivel 1. Lotes de hasta 5.', cost: c(20, ['scrap_metal', 5], ['bone_dust', 1]) },
       { name: 'Forja con fuelle doble', effect: 'Recetas de nivel 2, lotes de 10 y 10 % de acabado fino.', cost: c(150, ['iron_ore', 6], ['scrap_metal', 10], ['bone_dust', 4]) },
       { name: 'Gran forja', effect: 'Recetas de nivel 3, lotes de 20 y 20 % de acabado fino.', cost: c(320, ['silver_ore', 6], ['iron_ore', 6]) },
     ],
   },
   alchemy: {
-    id: 'alchemy', name: 'Mesa de alquimia', icon: '⚗', by: 'eldrin',
-    purpose: 'Consumibles: pociones, antídotos, tónicos y bombas.',
-    fallback: 'Las pociones se compran a Eldrin.',
-    lines: ['«He rescatado redomas de entre los cascotes. No casan y el quemador tose, pero funciona.»', '«Alambique de cobre. Ya no destilarás veneno por error. Tanto.»', '«Una mesa de verdad. Hasta yo trabajaría aquí.»'],
+    id: 'alchemy', name: 'Laboratorio', icon: '⚗', by: 'eldrin',
+    purpose: 'Alquimia (pociones, antídotos, tónicos y bombas) y runas (cristales, tinta, equipo mágico y, al máximo, runas para grabar).',
+    fallback: 'Las pociones se compran a Eldrin; el equipo mágico se encuentra o se compra.',
+    lines: ['«He rescatado redomas y un atril de entre los cascotes. No casan y el quemador tose, pero funciona.»', '«Alambique de cobre y cristales en el atril. Ya no destilarás veneno por error. Tanto.»', '«Un laboratorio de verdad: hasta las runas se dejan grabar. Cuidado, una runa nueva borra la vieja.»'],
     levels: [
-      { name: 'Sin mesa', effect: 'Las pociones se compran a Eldrin.' },
-      { name: 'Mesa de alquimia', effect: 'Antídotos, pociones de maná y tónicos. Lotes de hasta 5.', cost: c(20, ['arcane_shard', 2], ['cave_mushroom', 2]) },
-      { name: 'Alambique', effect: 'Lotes de hasta 10.', cost: c(130, ['iron_ore', 3], ['arcane_shard', 6], ['bone_dust', 4]) },
-      { name: 'Laboratorio', effect: 'Lotes de hasta 20.', cost: c(280, ['silver_ore', 4], ['arcane_shard', 10]) },
+      { name: 'Sin laboratorio', effect: 'Las pociones se compran a Eldrin; el equipo mágico se encuentra o se compra.' },
+      { name: 'Mesa y atril', effect: 'Pociones, antídotos, tónicos, bombas y equipo mágico básico. Lotes de hasta 5.', cost: c(20, ['arcane_shard', 2], ['cave_mushroom', 2]) },
+      { name: 'Alambique y cristal', effect: 'Recetas de nivel 2, lotes de 10 y 10 % de acabado fino.', cost: c(130, ['iron_ore', 3], ['arcane_shard', 6], ['bone_dust', 4]) },
+      { name: 'Laboratorio de runas', effect: 'Recetas de nivel 3, lotes de 20 y runas para grabar en armas, armaduras y equipo mágico.', cost: c(280, ['silver_ore', 4], ['arcane_shard', 10]) },
     ],
   },
-  runic: {
-    id: 'runic', name: 'Atril rúnico', icon: '📜', by: 'eldrin',
-    purpose: 'Equipo mágico (báculos, varitas, tomos, orbes y amuletos) y, al máximo, runas.',
-    fallback: 'El equipo mágico se encuentra o se compra.',
-    lines: ['«El atril estaba bajo media bóveda caída. Lo he enderezado, y la tinta no se seca. Lee despacio.»', '«Cristales tallados en el marco. Ahora el atril escucha.»', '«Ya puede grabar runas. Cuidado: una runa nueva borra la vieja.»'],
+  tannery: {
+    id: 'tannery', name: 'Curtiduría', icon: '🧵', by: 'nira',
+    purpose: 'Cuero curtido, correas, telas, ropa, botas, guantes, capuchas, bolsas y mochilas.',
+    fallback: 'Lo de cuero y tela se compra en la tienda de Nira.',
+    lines: ['«He colgado las pieles donde antes se secaban los estandartes. Huele fatal; funciona.»', '«Tinas nuevas y agujas de hueso. Ya no se te descoserá la capa a la primera.»', '«Una curtiduría como las de antes de la caída. Ni yo cosería mejor.»'],
     levels: [
-      { name: 'Sin atril', effect: 'El equipo mágico se encuentra o se compra.' },
-      { name: 'Atril rúnico', effect: 'Equipo mágico básico (recetas de nivel 1). Lotes de hasta 5.', cost: c(20, ['arcane_shard', 3], ['bone_dust', 2]) },
-      { name: 'Atril de cristal', effect: 'Equipo mágico mejor (nivel 2), lotes de 10 y 10 % de acabado fino.', cost: c(150, ['arcane_shard', 8], ['silver_ore', 2], ['bone_dust', 6]) },
-      { name: 'Atril de runas', effect: 'Equipo de nivel 3 y runas para grabar en armas, armaduras y equipo mágico.', cost: c(320, ['arcane_shard', 12], ['silver_ore', 6]) },
+      { name: 'Sin curtiduría', effect: 'Lo de cuero y tela se compra en la tienda de Nira.' },
+      { name: 'Curtiduría', effect: 'Recetas de cuero y tela de nivel 1. Lotes de hasta 5.', cost: c(10, ['scrap_metal', 3], ['leather_scrap', 2]) },
+      { name: 'Tinas de curtido', effect: 'Recetas de nivel 2, lotes de 10 y 10 % de acabado fino.', cost: c(120, ['scrap_metal', 8], ['iron_ore', 4]) },
+      { name: 'Taller de sastre', effect: 'Recetas de nivel 3, lotes de 20 y 20 % de acabado fino.', cost: c(280, ['silver_ore', 3], ['leather_scrap', 10], ['iron_ore', 4]) },
+    ],
+  },
+  armory: {
+    id: 'armory', name: 'Forja de armaduras', icon: '🛡', by: 'valerius',
+    purpose: 'Yelmos, corazas, guanteletes, grebas y escudos de metal.',
+    fallback: 'Las armaduras de metal se encuentran o se compran a Valerius.',
+    lines: ['«He limpiado el yunque de la vieja armería. Las placas no se forjan solas, pero ya hay dónde.»', '«Fuelle doble y tenazas nuevas. La plata ya no se me resiste.»', '«Una armería digna del Bastión. Que tiemblen los que te esperan abajo.»'],
+    levels: [
+      { name: 'Sin forja', effect: 'Las armaduras de metal se encuentran o se compran a Valerius.' },
+      { name: 'Forja de armaduras', effect: 'Recetas de armadura de nivel 1. Lotes de hasta 5.', cost: c(20, ['scrap_metal', 5], ['bone_dust', 1]) },
+      { name: 'Forja con fuelle doble', effect: 'Recetas de nivel 2, lotes de 10 y 10 % de acabado fino.', cost: c(150, ['iron_ore', 6], ['scrap_metal', 10], ['bone_dust', 4]) },
+      { name: 'Gran armería', effect: 'Recetas de nivel 3, lotes de 20 y 20 % de acabado fino.', cost: c(320, ['silver_ore', 6], ['iron_ore', 6]) },
     ],
   },
 };
 
-export const STATION_ORDER: StationId[] = ['cot', 'kitchen', 'bench', 'infirmary', 'forge', 'alchemy', 'runic'];
+export const STATION_ORDER: StationId[] = ['tannery', 'infirmary', 'kitchen', 'bench', 'cot', 'forge', 'armory', 'alchemy'];
 
 /** Beneficios numéricos por nivel (índice = nivel). */
 export const STATION_FX = {
   /** Recorte de Descanso al dormir en el catre. */
   cotPrep: [0, 0, 0.1, 0.15],
+  /** Lo que cobra Grizk por dormir en el Catre, según su nivel (hostal de mercenarios). */
+  cotGold: [0, 5, 10, 15],
   /** Recorte que da un plato según el nivel de la cocina al comerlo. */
   dishPrep: [0.1, 0.1, 0.1, 0.15],
   /** Desguace: materiales de más con el banco. */

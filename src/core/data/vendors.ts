@@ -6,7 +6,7 @@
 import type { SubzoneId } from './subzones';
 
 export type VendorId = 'vesper' | 'garth' | 'nira' | 'orik' | 'grizk' | 'brand' | 'valerius' | 'eldrin';
-export type PlaceId = 'enfermeria' | 'cocina' | 'mercado' | 'taller' | 'lonja' | 'forja' | 'laboratorio';
+export type PlaceId = 'enfermeria' | 'cocina' | 'mercado' | 'taller' | 'lonja' | 'forja' | 'armeria' | 'laboratorio';
 
 export interface VendorDef {
   id: VendorId;
@@ -33,6 +33,7 @@ export const PLACES: Record<PlaceId, { name: string; blurb: string }> = {
   taller: { name: 'El taller', blurb: 'Chatarra ordenada por alguien que sabe lo que vale.' },
   lonja: { name: 'La lonja', blurb: 'Aquí se pesa el oro y se alquilan espadas.' },
   forja: { name: 'La forja', blurb: 'Yunques que no descansan.' },
+  armeria: { name: 'La armería', blurb: 'Placas colgadas como pellejos de caballeros que ya no vuelven.' },
   laboratorio: { name: 'El laboratorio', blurb: 'Redomas, azufre y humo de colores.' },
 };
 
@@ -100,7 +101,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
     ],
   },
   valerius: {
-    id: 'valerius', name: 'Valerius', role: 'Armero de placas', sprite: 'vendor_valerius', color: '#c8ccd8', place: 'forja', unlockAt: 'catacumbas', buysItems: false,
+    id: 'valerius', name: 'Valerius', role: 'Armero de placas', sprite: 'vendor_valerius', color: '#c8ccd8', place: 'armeria', unlockAt: 'catacumbas', buysItems: false,
     blurb: 'Una espada mata una vez. Un buen escudo te salva cien. Elige bien lo que llevas encima.',
     stock: [
       { itemId: 'iron_shield', rank: 0 }, { itemId: 'gauntlets', rank: 0 },

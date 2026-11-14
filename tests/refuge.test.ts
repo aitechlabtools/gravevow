@@ -7,7 +7,8 @@ import { ITEMS, getItem } from '../src/core/data/items';
 import { VENDORS } from '../src/core/data/vendors';
 import { buyPrice, sellPrice } from '../src/core/economy';
 import { DISHES, MODULES, MODULE_ORDER } from '../src/core/data/refuge';
-import { prepMods, refugeOf, upgradeBlock, upgradeModule } from '../src/core/refuge';
+import { cotGold, EMPTY_REFUGE, prepMods, refugeOf, upgradeBlock, upgradeModule } from '../src/core/refuge';
+import { STATION_FX } from '../src/config/stations';
 import { craft, craftBlock } from '../src/core/crafting';
 import { consumptionMult, tickNeeds, FULL_NEEDS } from '../src/core/needs';
 import { startExpedition } from '../src/core/expedition';
@@ -33,7 +34,7 @@ const total = (p: Profile, id: string) => countItem(p.backpack, id) + countItem(
 describe('Refugio', () => {
   it('parte 2.1: todo bloqueado menos el catre (nivel 1); el desbloqueo gasta materiales y oro una vez', () => {
     let p = rich(give(give(base(), 'scrap_metal', 3), 'cave_mushroom', 3));
-    expect(refugeOf(p)).toEqual({ cot: 1, kitchen: 0, bench: 0, infirmary: 0, forge: 0, alchemy: 0, runic: 0, v: 2 });
+    expect(refugeOf(p)).toEqual({ cot: 1, kitchen: 0, bench: 0, infirmary: 0, forge: 0, alchemy: 0, tannery: 0, armory: 0, v: 3 });
     const gold0 = p.gold;
     const r = upgradeModule(p, 'kitchen');
     expect(r.ok).toBe(true);
@@ -52,16 +53,39 @@ describe('Refugio', () => {
     expect(upgradeModule(p, 'bench').ok).toBe(true);
   });
 
+  it('Bastión unificado (v3): Curtiduría = Banco, Forja de armaduras = Forja y Laboratorio = el mayor entre Mesa y Atril', () => {
+    const v2 = { ...base(), refuge: { cot: 2, kitchen: 1, bench: 2, infirmary: 0, forge: 3, alchemy: 1, runic: 2, v: 2 } };
+    expect(refugeOf(v2)).toEqual({ cot: 2, kitchen: 1, bench: 2, infirmary: 0, forge: 3, alchemy: 2, tannery: 2, armory: 3, v: 3 });
+    // Ya migrado: no se vuelve a copiar (la Curtiduría puede ir por su cuenta)
+    const v3 = { ...base(), refuge: { ...refugeOf(v2), tannery: 3, bench: 1 } };
+    expect(refugeOf(v3)).toMatchObject({ tannery: 3, bench: 1, armory: 3, alchemy: 2 });
+  });
+
+  it('dormir en el Catre de Grizk cuesta 5, 10 o 15 de oro según el nivel', () => {
+    expect(STATION_FX.cotGold).toEqual([0, 5, 10, 15]);
+    expect(MODULES.cot.by).toBe('grizk');
+    for (const lv of [1, 2, 3]) expect(cotGold({ refuge: { ...EMPTY_REFUGE, cot: lv } })).toBe(STATION_FX.cotGold[lv]);
+  });
+
+  it('una estación por mercader', () => {
+    const by = MODULE_ORDER.map((id) => MODULES[id].by);
+    expect(new Set(by).size).toBe(by.length);
+    expect(MODULES.alchemy.name).toBe('Laboratorio');
+    expect(MODULES.tannery.by).toBe('nira');
+    expect(MODULES.armory.by).toBe('valerius');
+  });
+
   it('migración: el catre sube uno y lo demás conserva su nivel', () => {
     const old = { ...base(), refuge: { cot: 1, kitchen: 2, bench: 1, infirmary: 1, alchemy: 1 } };
-    expect(refugeOf(old)).toMatchObject({ cot: 2, kitchen: 2, bench: 1, infirmary: 1, alchemy: 1, forge: 0, runic: 0 });
+    expect(refugeOf(old)).toMatchObject({ cot: 2, kitchen: 2, bench: 1, infirmary: 1, alchemy: 1, forge: 0, tannery: 1, armory: 0 });
+    expect(refugeOf(old)).not.toHaveProperty('runic');
     expect(refugeOf({ ...base(), refuge: { cot: 0, kitchen: 0, bench: 0 } }).cot).toBe(1);
     // Ya migrado: no vuelve a subir
     expect(refugeOf({ ...base(), refuge: refugeOf(old) }).cot).toBe(2);
   });
 
   it('no se mejora por encima del nivel 3', () => {
-    const p = { ...base(), refuge: { cot: 3, kitchen: 3, bench: 3, infirmary: 3, forge: 3, alchemy: 3, runic: 3, v: 2 as const } };
+    const p = { ...base(), refuge: { cot: 3, kitchen: 3, bench: 3, infirmary: 3, forge: 3, alchemy: 3, tannery: 3, armory: 3, v: 3 } };
     for (const id of MODULE_ORDER) expect(upgradeBlock(p, id)).toMatch(/máximo/);
   });
 

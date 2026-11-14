@@ -4,6 +4,20 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 14/11 (2): Bastión unificado, implementado
+- **Pestaña Bastión** = los 8 mercaderes en 2 filas de 4 con primer plano de medio pecho (sprite recortado a escala entera), estación, reputación y avisos. Fuera la entrada y la rejilla de estaciones (`RefugePanel` eliminado; `Dishes` y `ScrapPanel` siguen en `RefugePanels.tsx`).
+- **Pantalla del mercader**: pestañas (`ui-seg`) solo con lo que tiene y su estación al final; «◂ Bastión». Pendiente con botón directo. La estación se reconstruye, usa y mejora dentro (`StationTab`).
+- **Datos**: `StationId` = cot · kitchen · bench · infirmary · forge · alchemy · tannery · armory (sin `runic`). Catre `by: 'grizk'` y `STATION_FX.cotGold = [0, 5, 10, 15]` (`cotGold`, cobra `actions.sleepCot`). Valerius en «La armería» (`PLACES.armeria`). Recetas: `assignStation` en `data/crafting.ts` (atril → Laboratorio, banco → Curtiduría salvo madera y herramientas, forja → Forja de armaduras para yelmos, corazas, guanteletes y escudos). Runas: Laboratorio a nivel 3.
+- **Migración** (`refugeOf`, `v: 3`): Curtiduría = nivel del Banco, Forja de armaduras = el de la Forja, Laboratorio = el mayor entre Mesa y Atril. Regalo de primera receta: Banco `c_grip`, Curtiduría `c_strap`, Forja de armaduras `c_gauntlets`.
+- **Tutoriales**: `screen.bastion-entry` (tras la bienvenida, sobre `vendor-list`), `tab.refugio` (Orik, `bastion:station`), `vendor.*` apuntan a `vendor-view-station`, nuevos `station.tannery` y `station.armory`, avisos de nivel del Catre los cuenta Grizk, bienvenida apunta a `vendor-list`.
+- **Pruebas actualizadas**: `bastion-check` (reescrito), `refugio-check`, `taller-check`, `e2e-bastion-minis`, `necesidades-check`, `menus-check` y varios guiones (sin `btn-merchants`). Tests: refuge, runes, tutorials, tutorials-migracion.
+
+## Novedades del 14/11: propuesta del Bastión unificado
+- Acordado con el usuario: **solo se cambia el apartado Bastión**, con la estética actual; nada de estilo nuevo ni cambios en el resto de pantallas (se descartaron las direcciones visuales de rol de mesa).
+- La pestaña Bastión mostrará los 8 mercaderes en 2 filas de 4; cada uno abre su pantalla con pestañas y su estación dentro. Sin pantalla de entrada ni rejilla de estaciones.
+- Reparto: Catre → Grizk (hostal, 5/10/15 oro por dormir), Forja de armas → Brand, Forja de armaduras (nueva) → Valerius en «La armería», Curtiduría (nueva, cuero y tela) → Nira, Laboratorio (alquimia + atril rúnico) → Eldrin, Banco de trabajo → Orik. Recetas existentes repartidas por material, sin recetas nuevas. Sin botón «Dormir» en la barra.
+- Plan y preguntas: `docs/plan-bastion-unificado.md`. Maquetas y capturas: `mockups/hud-unificado/index.html` (`maqueta.html`, `capturar.cjs`, sprites exportados con `exportar.cjs`).
+
 ## Novedades del 13/11 (noche, 2): música de archivo en el Bastión y el menú; sin ambiente
 - **Dónde suena:** menú, elegir/crear personaje, copia y todo el Bastión (todas las pestañas del lobby): `medieval-estampie` y `whisper-of-the-bow` alternándose sin repetir, con 5–15 s de silencio entre ellas. Mazmorra, combate, jefes y resultados: sin música. Al bajar, fundido de salida de 2 s; al volver, de entrada.
 - **Interruptores** en `src/config/music.ts`: `listasActivadas = true` (música de archivo), `musicaActivada = false` (pistas generadas, peligro y fanfarrias), `ambienteActivado = false` (goteo, viento, lava…; el código sigue). `PLAYLISTS` decide pistas, pantallas, pausas, fundidos y volumen.

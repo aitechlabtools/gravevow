@@ -120,7 +120,7 @@ async function session(b, vp, touch) {
   await page.mouse.move(5, 5);
   await act('tab-merchants', 500);
   await record('n-forja', async () => {
-    await wait(600); await act('vendor-brand', 700); await act('vendor-view-forge', 900);
+    await wait(600); await act('vendor-brand', 700); await act('vendor-view-station', 900);
     const r = await page.$('[data-testid^=recipe-]'); if (r) { await r.hover(); await wait(500); }
     const f = await page.$('[data-testid^=forge-r_]:not([disabled])'); if (f) { await f.click(); await wait(1300); }
   });

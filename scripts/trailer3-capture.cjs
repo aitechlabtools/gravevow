@@ -153,7 +153,7 @@ const ONLY = process.argv[4] ? process.argv[4].split(',') : null;
     await page.click('[data-testid=vendor-brand]'); await wait(200);
     await record('x-forja', async () => {
       await wait(300);
-      await page.click('[data-testid=vendor-view-forge]'); await wait(900);
+      await page.click('[data-testid=vendor-view-station]'); await wait(900);
       await page.hover('[data-testid=forge-r_silver_sword]'); await wait(400);
       await page.click('[data-testid=forge-r_silver_sword]'); await wait(1500);
     });

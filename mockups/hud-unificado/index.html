@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bastión unificado · maquetas</title>
+<style>
+body { margin: 0; background: #07060a; color: #e9e1cc; font: 17px/1.5 Georgia, serif; }
+main { max-width: 1400px; margin: auto; padding: 24px; }
+h1, h2 { font-family: Cinzel, serif; color: #e8b33a; letter-spacing: .06em; }
+h2 { margin-top: 40px; border-bottom: 1px solid #2a2830; padding-bottom: 6px; }
+.g { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; }
+figure { margin: 0; background: #131118; border: 2px solid #3a3741; padding: 8px; }
+figure img { width: 100%; display: block; }
+figcaption { font-size: 14px; color: #8c8693; margin-top: 6px; }
+a { color: #e8b33a; }
+</style></head><body><main>
+<h1>Bastión unificado · maquetas</h1>
+<p>Solo cambia el apartado Bastión, con la estética actual del juego. Plan completo: <a href="../../docs/plan-bastion-unificado.md">docs/plan-bastion-unificado.md</a>.
+Maqueta navegable: <a href="maqueta.html?s=bastion">Bastión</a> · <a href="maqueta.html?s=garth&v=garth">Garth</a> · <a href="maqueta.html?s=garth&v=grizk">Grizk</a> · <a href="maqueta.html?s=garth&v=nira">Nira</a> · <a href="maqueta.html?s=garth&v=eldrin">Eldrin</a>.</p>
+<div id="c"></div>
+</main><script>
+const S = [['bastion', 'Bastión: los 8 mercaderes'], ['garth', 'Garth · Cocina'], ['grizk', 'Grizk · Catre'], ['nira', 'Nira · Curtiduría'], ['eldrin', 'Eldrin · Laboratorio']];
+const F = [['escritorio', '1920 × 1080'], ['tableta', '1180 × 820'], ['movil', '844 × 390']];
+let h = '';
+for (const [f, t] of F) h += `<h2>${f[0].toUpperCase() + f.slice(1)} · ${t}</h2><div class="g">` + S.map(([s, n]) => `<figure><a href="capturas/${f}-${s}.webp"><img loading="lazy" src="capturas/${f}-${s}.webp" alt="${n}"></a><figcaption>${n}</figcaption></figure>`).join('') + '</div>';
+h += `<h2>Antes</h2><div class="g">` + [['escritorio-bastion-entrada', 'Entrada del Bastión'], ['escritorio-bastion-estaciones', 'El Bastión (estaciones)'], ['escritorio-mercader-nira', 'Nira'], ['escritorio-garth-cocina', 'Garth · Cocina'], ['movil-mercaderes', 'Móvil: Bastión'], ['movil-mercader-nira', 'Móvil: Nira']].map(([s, n]) => `<figure><a href="antes/${s}.webp"><img loading="lazy" src="antes/${s}.webp" alt="${n}"></a><figcaption>${n}</figcaption></figure>`).join('') + '</div>';
+document.getElementById('c').innerHTML = h;
+</script></body></html>

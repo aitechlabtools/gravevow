@@ -11,7 +11,7 @@ import { CRAFT_RECIPES } from '../src/core/crafting';
 import type { ItemStack, Profile, Rarity } from '../src/core/types';
 
 // Bloque 2, parte 2.1: runas del Atril rúnico.
-const base = (runic = 3): Profile => ({ ...createProfile('R', 'warrior', { cloak: 0, skin: 0 }), refuge: { cot: 1, kitchen: 0, bench: 0, infirmary: 0, forge: 0, alchemy: 0, runic, v: 2 } });
+const base = (lab = 3): Profile => ({ ...createProfile('R', 'warrior', { cloak: 0, skin: 0 }), refuge: { cot: 1, kitchen: 0, bench: 0, infirmary: 0, forge: 0, alchemy: lab, tannery: 0, armory: 0, v: 3 } });
 function give(p: Profile, st: Omit<ItemStack, 'uid'>): Profile {
   const r = addToGrid(p.stash, { uid: makeUid(), ...st }, LAYOUTS.stash);
   return { ...p, stash: r.grid };
@@ -66,18 +66,18 @@ describe('Runas', () => {
     expect(sellPrice('iron_sword', { ...plain, runes: ['rune_stone'] } as ItemStack)).toBe(sellPrice('iron_sword', plain));
     for (const r of RUNE_RECIPES) {
       expect(RUNES[r.result]).toBeTruthy();
-      expect(r.station).toBe('runic');
+      expect(r.station).toBe('alchemy');
       expect(r.level).toBe(3);
       expect(CRAFT_RECIPES).toContain(r);
     }
   });
 
-  it('Mesa de alquimia y Atril no comparten recetas: el equipo mágico es del atril', () => {
+  it('Laboratorio de Eldrin: la Mesa de alquimia y el Atril rúnico unidos; cada objeto tiene una sola receta', () => {
     const seen = new Set<string>();
     for (const r of CRAFT_RECIPES) { expect(seen.has(r.result)).toBe(false); seen.add(r.result); }
-    for (const r of CRAFT_RECIPES.filter((x) => x.station === 'alchemy')) expect(getItem(r.result).slot).toBeUndefined();
     const magic = CRAFT_RECIPES.filter((r) => ['staff', 'wand', 'tome', 'orb'].includes(getItem(r.result).family ?? ''));
     expect(magic.length).toBeGreaterThan(0);
-    for (const r of magic) expect(r.station).toBe('runic');
+    for (const r of magic) expect(r.station).toBe('alchemy');
+    for (const r of CRAFT_RECIPES) expect(['kitchen', 'bench', 'infirmary', 'forge', 'alchemy', 'tannery', 'armory']).toContain(r.station);
   });
 });

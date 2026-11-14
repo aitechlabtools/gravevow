@@ -1,26 +1,25 @@
-// Bastión (antes «Mercaderes»). Fuera: los ocho mercaderes, cada uno en su lugar (cocina, enfermería, forja…), con su
-// retrato, rango, barra de reputación, misiones listas y servicios; los que aún no han llegado dicen cuándo llegan. El
-// catre y las estaciones están en el Bastión, la pantalla de estaciones (entrada del Bastión con dos tarjetas). Al hablar: tres zonas: el mercader y sus servicios · el servicio elegido · tu mochila, tus materiales o la
-// ficha del objeto que vas a vender. La forja (Maese Brand) y los contratos (Grizk) viven dentro de su mercader.
-// En móvil, la tercera zona va en un cajón por la derecha.
+// Bastión unificado (14/11). La pestaña Bastión enseña directamente los 8 mercaderes (2 filas de 4) con un primer plano
+// de medio pecho, su lugar, el estado de su estación, la reputación y un aviso si hay algo pendiente. Al tocar uno se
+// abre su pantalla: a la izquierda su retrato, su frase, lo pendiente y la reputación; arriba, sus pestañas (solo las que
+// tiene: Tienda, Vender, Misiones, sus servicios y SU estación, que es una por mercader) y «◂ Bastión»; a la derecha, tu
+// mochila, tus materiales o la zona de venta. La estación se reconstruye, se usa y se mejora dentro de su pestaña.
+// En el móvil, el retrato y el nombre van en la misma línea que las pestañas y la tercera zona en un cajón.
 import { StashPanel } from '../StashPanel';
-import { useEffect, useState, type ReactNode, useCallback } from 'react';
+import { useEffect, useRef, useState, type ReactNode, useCallback } from 'react';
 import { actions, useGame } from '../../state/store';
-import { PLACES, VENDORS, VENDOR_ORDER, type VendorId } from '../../../core/data/vendors';
-import { vendorLockText, vendorUnlocked } from '../../../core/vendors';
+import { PLACES, VENDORS, type VendorId } from '../../../core/data/vendors';
 import { QUESTS } from '../../../core/data/quests';
-import { needsOf } from '../../../core/needs';
-import { readyStations, refugeOf } from '../../../core/refuge';
-import { CraftPanel, type GoTo } from '../StationPanels';
-import type { ModuleId } from '../../../core/data/refuge';
-import { stationArtUrl, STATION_ART_W, STATION_ART_H } from '../stationArt';
-import type { CraftStation } from '../../../core/data/crafting';
+import { prepText, refugeOf, upgradeBlock } from '../../../core/refuge';
+import { CotPanel, CraftPanel, RunePanel, StationDetail, UpgradeButton } from '../StationPanels';
+import { MODULES, MODULE_ORDER, type ModuleId } from '../../../core/data/refuge';
+import { stationArtUrl } from '../stationArt';
 import { REP_RANKS, rankOf } from '../../../config/reputation';
 import { readyQuestCount } from '../../../core/quests';
 import { getItem } from '../../../core/data/items';
 import { owned } from '../../../core/forge';
 import type { Loc } from '../../../core/inventory';
 import { MonsterSprite, GoldAmount, Modal } from '../common';
+import { monsterUrl } from '../../../shared/art';
 import { GridView, ItemIcon, isUpgrade } from '../inventory';
 import { useDrag, useClearOnDrop } from '../pointerDrag';
 import { useIsTouch } from '../../../shared/device';
@@ -29,228 +28,278 @@ import { isCover } from '../../../core/inventory';
 import { isCoins } from '../../../core/gold';
 import { stackRarity } from '../../../core/data/rarity';
 import { RARITY_INFO } from '../../../core/data/items';
-import type { ItemStack } from '../../../core/types';
+import type { ItemStack, Profile } from '../../../core/types';
 import { RepBar, ShopStock, VendorQuests, type VendorTarget, type VendorView } from '../VendorsTab';
 import { RepairPanel } from '../RepairPanel';
 import { InfirmaryPanel } from '../InfirmaryPanel';
 import { ContractsPanel } from '../ContractsPanel';
-import { RefugePanel, ScrapPanel } from '../RefugePanels';
+import { Dishes, ScrapPanel } from '../RefugePanels';
+import { ReceptionSection } from '../WorkshopPanels';
 import { ItemCard } from './ItemCard';
-import { Card, Drawer, Panel, SubHead, usePixelScale } from '../kit';
+import { Drawer, Panel, SubHead, usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
 import { sfx } from '../../audio';
+import { TutDot } from '../MiniTutorial';
 
-const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Misiones', sell: 'Vender', forge: 'Forja', repair: 'Reparar', contracts: 'Contratos', infirmary: 'Enfermería', cook: 'Cocina', scrap: 'Desguace', alchemy: 'Alquimia', care: 'Rincón de cura', stations: 'Encargos del Refugio' };
+/** Orden de las tarjetas del Bastión. */
+const BASTION_ORDER: VendorId[] = ['nira', 'vesper', 'garth', 'orik', 'grizk', 'brand', 'valerius', 'eldrin'];
+/** La estación de cada mercader (una por mercader; el encargado está en config/stations.ts). */
+export const STATION_OF = Object.fromEntries(MODULE_ORDER.map((id) => [MODULES[id].by, id])) as Partial<Record<VendorId, ModuleId>>;
 
+const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Misiones', sell: 'Vender', repair: 'Reparar', contracts: 'Contratos', infirmary: 'Enfermería', scrap: 'Desguace', station: 'Estación' };
+
+/** Las pestañas de cada mercader: solo las que tiene, y su estación al final. */
 function servicesOf(id: VendorId): VendorView[] {
-  const v: VendorView[] = ['shop'];
-  if (QUESTS.some((q) => q.vendor === id)) v.push('quests');
+  const v: VendorView[] = [];
+  if (VENDORS[id].stock.length) v.push('shop');
   if (VENDORS[id].buysItems) v.push('sell');
   if (id === 'grizk') v.push('contracts');
-  if (id === 'brand') v.push('forge');
-  if (id === 'brand' || id === 'nira' || id === 'orik') v.push('repair');
+  if (QUESTS.some((q) => q.vendor === id)) v.push('quests');
   if (id === 'vesper') v.push('infirmary');
-  if (id === 'garth') v.push('cook');
+  if (id === 'brand' || id === 'nira' || id === 'orik') v.push('repair');
   if (id === 'orik') v.push('scrap');
-  if (id === 'eldrin') v.push('alchemy');
-  if (id === 'vesper') v.push('care');
+  if (STATION_OF[id]) v.push('station');
   return v;
 }
-/** El servicio propio de cada mercader (se resalta en su tarjeta). */
-const SPECIAL: Partial<Record<VendorId, VendorView>> = { grizk: 'contracts', brand: 'forge', nira: 'sell', vesper: 'infirmary', orik: 'scrap', garth: 'cook', eldrin: 'alchemy' };
 
-/** Qué se ve dentro de la pestaña Bastión: la entrada con dos tarjetas, los mercaderes o el Bastión (estaciones). */
-type BastionArea = 'entry' | 'merchants' | 'refuge';
+/** Lo pendiente de un mercader: misión lista, estación que ya se puede reconstruir o mejora pagable. */
+function pendingOf(p: Profile, id: VendorId): { kind: 'quest' | 'rebuild' | 'upgrade'; text: string } | null {
+  if (readyQuestCount(p, id) > 0) return { kind: 'quest', text: 'Misión lista' };
+  const st = STATION_OF[id];
+  if (!st) return null;
+  const lvl = refugeOf(p)[st];
+  if (lvl < 3 && !upgradeBlock(p, st)) return lvl < 1 ? { kind: 'rebuild', text: 'Se puede reconstruir' } : { kind: 'upgrade', text: '▲ Mejora' };
+  return null;
+}
 
 export function Mercaderes({ target, onConsumed }: { target: VendorTarget | null; onConsumed: () => void }) {
   const [open, setOpen] = useState<VendorTarget | null>(target);
-  const [area, setArea] = useState<BastionArea>(target ? 'merchants' : 'entry');
-  useEffect(() => { if (target) { setArea('merchants'); setOpen(target); onConsumed(); } }, [target]); // eslint-disable-line react-hooks/exhaustive-deps
-  const profile = useGame((s) => s.profile)!;
-  const goTo = (vendor: VendorId, view: VendorView) => { setArea('merchants'); setOpen({ vendor, view }); };
-  const [stationAt, setStationAt] = useState<ModuleId | undefined>(undefined);
-  const toEntry = () => { setOpen(null); setStationAt(undefined); setArea('entry'); sfx('click'); };
-  // «Ir al Bastión» desde el servicio de un mercader: abre la estación en ruinas para reconstruirla
-  const toStation = (id: ModuleId) => { setOpen(null); setStationAt(id); setArea('refuge'); sfx('click'); };
-  if (area === 'refuge' && !open) return <RefugePanel key={stationAt ?? 'cards'} onBack={toEntry} onGo={goTo} initialDetail={stationAt} />;
-  if (area === 'entry' && !open) return <BastionEntry onPick={(a) => { setArea(a); sfx('click'); }} />;
-  return open && vendorUnlocked(profile, open.vendor)
-    ? <VendorInterior key={`${open.vendor}-${open.view}`} vendor={open.vendor} initial={open.view} onBack={() => { setOpen(null); sfx('click'); }} onGo={goTo} onStation={toStation} />
-    : <VendorCards onTalk={(vendor) => { setOpen({ vendor, view: 'shop' }); sfx('click'); }} onBack={toEntry} />;
+  useEffect(() => { if (target) { setOpen(target); onConsumed(); } }, [target]); // eslint-disable-line react-hooks/exhaustive-deps
+  const goTo = (vendor: VendorId, view: VendorView) => setOpen({ vendor, view });
+  return open
+    ? <VendorInterior key={`${open.vendor}-${open.view}`} vendor={open.vendor} initial={open.view} onBack={() => { setOpen(null); sfx('click'); }} onGo={goTo} />
+    : <BastionGrid onTalk={(vendor) => { setOpen({ vendor, view: servicesOf(vendor)[0] }); sfx('click'); }} />;
 }
 
-/** Entrada del Bastión: dos tarjetas grandes (Mercaderes y Bastión) con lo pendiente de cada lado. */
-function BastionEntry({ onPick }: { onPick: (a: 'merchants' | 'refuge') => void }) {
+/** El Bastión: los 8 mercaderes en dos filas de 4, llenando la pantalla. */
+function BastionGrid({ onTalk }: { onTalk: (v: VendorId) => void }) {
   const profile = useGame((s) => s.profile)!;
-  const scale = usePixelScale('vendor');
-  const big = useLayout() === 'phone' ? scale : scale * 2;
-  const quests = VENDOR_ORDER.filter((id) => vendorUnlocked(profile, id)).reduce((n, id) => n + readyQuestCount(profile, id), 0);
-  const stations = readyStations(profile).length;
-  const rec = (profile.reception ?? []).length;
-  const rest = Math.round(needsOf(profile.needs).rest);
-  const pend = (parts: string[]) => parts.filter(Boolean).join(' · ');
-  const sides = [
-    { id: 'merchants' as const, title: 'Mercaderes', art: <MonsterSprite sprite={VENDORS.garth.sprite} scale={big} />, text: 'Comercia, cumple encargos y gana su confianza.',
-      badge: quests, note: quests ? `${quests} ${quests === 1 ? 'encargo listo' : 'encargos listos'} para entregar` : '', testId: 'btn-merchants' },
-    { id: 'refuge' as const, title: 'Bastión', art: <img src={stationArtUrl('refuge')} className="pixelated" alt="" draggable={false} style={{ width: STATION_ART_W * big, height: STATION_ART_H * big }} />,
-      text: 'Reconstruye el Bastión: descansa, cocina, cura y fabrica.', badge: stations + rec,
-      note: pend([stations ? `${stations} ${stations === 1 ? 'estación lista' : 'estaciones listas'} para reconstruir` : '', rec ? `recepción ${rec}` : '', `Descanso ${rest}`]), testId: 'btn-refuge' },
-  ];
+  const phone = useLayout() === 'phone';
+  // La presentación de los mercaderes sale después de la bienvenida del intendente (que también pasa por aquí)
+  const welcomed = useGame((s) => !!s.tutorials?.seen.includes('bienvenida'));
+  useEffect(() => { if (welcomed) actions.tutorialEvent('bastion:merchants'); }, [welcomed]);
+  const [reception, setReception] = useState(false);
+  const recN = (profile.reception ?? []).length;
+  const prep = prepText(profile.prep);
   return (
-    <div className="h-full overflow-y-auto scroll-thin" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-bastion">
-      <div className="min-h-full flex flex-col items-center justify-center">
-        <div className="w-full max-w-[1100px] mb-2">
-          <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">Entrada del Bastión</h2>
+    <div className="h-full flex flex-col min-h-0" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' }} data-testid="screen-merchants">
+      {!phone && (
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 shrink-0">
+          <h2 className="font-display text-parchment tracking-[0.1em] text-[clamp(20px,1.7vw,32px)]">El Bastión de Ceniza</h2>
+          <span className="text-[15px] text-stone-400">Toca a un mercader para hablar, comerciar y usar su estación.</span>
+          <span className="ml-auto flex flex-wrap items-center gap-2" data-testid="refuge-prep">
+            <span className="text-[14px] text-stone-300" data-testid="prep-text">Preparación: {prep.length ? prep.join(' · ') : 'ninguna'}</span>
+            {recN > 0 && <button className="btn btn-gold text-xs" style={{ minHeight: 44 }} onClick={() => { setReception(true); sfx('click'); }} data-testid="btn-reception">Recepción ({recN})</button>}
+          </span>
         </div>
-        <div className="grid w-full max-w-[1100px]" style={{ gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 'var(--gap)' }}>
-          {sides.map((x) => (
-            <Card key={x.id} title={<span className="text-[clamp(16px,2vw,30px)]">{x.title}</span>} badge={x.badge} testId={`bastion-${x.id}`}
-              art={<div className="pb-2 pt-4">{x.art}</div>}>
-              <div className="text-center text-parchment text-[clamp(13px,1.1vw,16px)]">{x.text}</div>
-              {x.note && <div className="text-center text-[12px] text-heal">{x.note}</div>}
-              <button className="btn btn-gold w-full mt-auto font-display tracking-[0.12em] uppercase" style={{ minHeight: 'max(44px, var(--btn-h))' }}
-                onClick={() => onPick(x.id)} data-testid={x.testId}>Entrar</button>
-            </Card>
-          ))}
-        </div>
+      )}
+      <div className="grid flex-1 min-h-0" style={{ gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gridTemplateRows: 'repeat(2, minmax(0,1fr))', gap: 'var(--gap)' }} data-testid="vendor-list">
+        {BASTION_ORDER.map((id) => <VendorTile key={id} id={id} onTalk={onTalk} />)}
       </div>
+      {phone && recN > 0 && <button className="btn btn-gold text-xs shrink-0 self-end" style={{ minHeight: 44 }} onClick={() => { setReception(true); sfx('click'); }} data-testid="btn-reception">Recepción ({recN})</button>}
+      {reception && recN > 0 && (
+        <Modal onClose={() => setReception(false)} testId="reception-modal">
+          <ReceptionSection />
+          <button className="btn mt-3" style={{ minHeight: 44 }} onClick={() => setReception(false)}>Cerrar</button>
+        </Modal>
+      )}
     </div>
   );
 }
 
-function VendorCards({ onTalk, onBack }: { onTalk: (v: VendorId) => void; onBack: () => void }) {
-  const profile = useGame((s) => s.profile)!;
-  useEffect(() => { actions.tutorialEvent('bastion:merchants'); }, []);
-  const scale = usePixelScale('vendor');
-  const cols = 4;
+/** Primer plano de medio pecho: el sprite del mercader (20 × 26) recortado por la cabeza y el pecho, a la mayor escala
+ *  entera que quepa en el hueco. Si un día hay retratos dibujados a mano, sustituyen a este recorte. */
+function Bust({ sprite }: { sprite: string }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(4);
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    const fit = () => { const r = el.getBoundingClientRect(); setScale(Math.max(1, Math.floor(Math.min((r.width - 8) / 20, (r.height - 4) / 16)))); };
+    fit(); const ro = new ResizeObserver(fit); ro.observe(el); return () => ro.disconnect();
+  }, []);
   return (
-    <div className="h-full overflow-y-auto scroll-thin" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-merchants">
-      <div className="min-h-full flex flex-col items-center justify-center">
-      <div className="w-full max-w-[1200px] flex flex-wrap items-center justify-between gap-2 mb-2">
-        <h2 className="ui-ptitle border-0 !text-[clamp(14px,1.8vw,26px)] !tracking-[0.18em] !m-0">Mercaderes</h2>
-        <button className="btn font-display tracking-[0.1em] uppercase" style={{ minHeight: 44 }} onClick={onBack} data-testid="merchants-back">◂ Entrada</button>
-      </div>
-      <div className="grid w-full max-w-[1200px]" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: 'var(--gap)' }} data-testid="vendor-list">
-        {VENDOR_ORDER.map((id) => {
-          const v = VENDORS[id];
-          const here = vendorUnlocked(profile, id);
-          const rep = profile.reputation[id] ?? 0;
-          const ready = here ? readyQuestCount(profile, id) : 0;
-          const special = SPECIAL[id];
-          return (
-            <Card key={id} title={v.name} badge={ready} testId={`vendor-card-${id}`} className={here ? '' : 'opacity-60'}
-              art={<div className="pb-2 pt-4" style={here ? undefined : { filter: 'grayscale(1) brightness(0.5)' }}><MonsterSprite sprite={v.sprite} scale={scale} /></div>}>
-              <div className="text-center text-[11px] uppercase tracking-[0.12em] text-stone-400" data-testid={`vendor-place-${id}`}>{PLACES[v.place].name}</div>
-              <div className="text-center text-[12px]" style={{ color: v.color }}>{v.role}</div>
-              {here ? <>
-                <RepBar rep={rep} />
-                <div className="flex flex-wrap justify-center gap-1">
-                  {servicesOf(id).map((s) => <span key={s} className={`ui-tag ${s === special ? 'on' : ''}`}>{VIEW_LABEL[s]}</span>)}
-                </div>
-                <button className="btn w-full mt-auto font-display tracking-[0.12em] uppercase" style={{ minHeight: 'var(--btn-h)' }}
-                  onClick={() => onTalk(id)} data-testid={`vendor-${id}`}>Hablar</button>
-              </> : <p className="text-center text-[12px] text-stone-400 italic mt-auto" data-testid={`vendor-lock-${id}`}>{vendorLockText(id)}</p>}
-            </Card>
-          );
-        })}
-      </div>
-      </div>
+    <div ref={box} className="vbust" aria-hidden>
+      <img src={monsterUrl(sprite, scale)} className="pixelated" alt="" draggable={false} style={{ width: 20 * scale, height: 26 * scale, marginTop: scale }} />
     </div>
+  );
+}
+
+function VendorTile({ id, onTalk }: { id: VendorId; onTalk: (v: VendorId) => void }) {
+  const profile = useGame((s) => s.profile)!;
+  const phone = useLayout() === 'phone';
+  const v = VENDORS[id];
+  const rep = profile.reputation[id] ?? 0;
+  const st = STATION_OF[id];
+  const lvl = st ? refugeOf(profile)[st] : 0;
+  const pend = pendingOf(profile, id);
+  const status = st ? `${MODULES[st].name} · ${lvl < 1 ? 'En ruinas' : `Nv ${lvl}/3`}` : '';
+  return (
+    <button type="button" className="panel vtile text-left" onClick={() => onTalk(id)} data-testid={`vendor-${id}`}>
+      <span className="vtile-name font-display relative" data-testid={`vendor-card-${id}`}>{v.name}<TutDot testId={`vendor-card-${id}`} inset /></span>
+      <span className="vtile-port">
+        <Bust sprite={v.sprite} />
+        {pend && <span className={`vtile-pend ${pend.kind === 'upgrade' ? 'gold' : ''}`} data-testid={`vendor-pending-${id}`}>{pend.kind === 'upgrade' ? (phone ? '▲' : pend.text) : <>{'●'}{phone ? '' : ` ${pend.text}`}</>}</span>}
+      </span>
+      <span className="vtile-info">
+        {st && <img src={stationArtUrl(st, lvl < 1)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: phone ? 20 : 40, height: phone ? 26 : 52 }} />}
+        <span className="min-w-0">
+          <span className="block text-gold uppercase tracking-[0.12em] text-[13px] [@media(max-height:520px)]:text-[12px] truncate" data-testid={`vendor-place-${id}`}>{PLACES[v.place].name}</span>
+          {!phone && st && <span className="block text-[14px] text-stone-300 truncate" data-testid={`vendor-station-${id}`}>{status}</span>}
+        </span>
+      </span>
+      <span className="vtile-rep"><RepBar rep={rep} /></span>
+    </button>
   );
 }
 
 /** Lo que dice cada encargado si su estación sigue en ruinas. */
-const RUINED_LINE: Partial<Record<CraftStation, string>> = {
-  forge: 'Esta forja sigue en ruinas. Reconstrúyela en el Bastión y la haré cantar.',
+const RUINED_LINE: Partial<Record<ModuleId, string>> = {
+  forge: 'Esta forja sigue en ruinas. Reconstrúyela y la haré cantar.',
+  armory: 'La vieja armería está llena de escombros. Reconstrúyela y forjaremos placas de verdad.',
   kitchen: 'La cocina del Bastión sigue en ruinas. Reconstrúyela y volverá a oler a guiso.',
-  alchemy: 'La mesa de alquimia sigue entre escombros. Reconstrúyela en el Bastión y destilaremos juntos.',
-  infirmary: 'La enfermería sigue en ruinas. Reconstrúyela en el Bastión y podré atenderte allí.',
+  alchemy: 'Mi laboratorio sigue entre escombros. Reconstrúyelo y destilaremos juntos.',
+  infirmary: 'El rincón de cura sigue en ruinas. Reconstrúyelo y podré prepararte vendas.',
+  tannery: 'Las tinas están rotas. Reconstruye la curtiduría y te curtiré lo que traigas.',
+  bench: 'El banco del taller está bajo los cascotes. Levántalo y desguazar rendirá más.',
 };
-/** Servicio de fabricación de un mercader: su estación del Bastión con el menú común o, si sigue en ruinas, «Ir al Bastión». */
-function VendorCraft({ station, onStation }: { station: CraftStation; onGo: GoTo; onStation: (id: ModuleId) => void }) {
+
+/** La estación de un mercader dentro de su pestaña: reconstruirla (en ruinas), usarla y mejorarla. */
+function StationTab({ id, onGo, extraTop }: { id: ModuleId; onGo: (v: VendorId, x: VendorView) => void; extraTop?: ReactNode }) {
   const profile = useGame((s) => s.profile)!;
-  if (refugeOf(profile)[station] < 1) {
+  const lvl = refugeOf(profile)[id];
+  const [detail, setDetail] = useState(false);
+  const [runes, setRunes] = useState(false);
+  useEffect(() => { actions.tutorialEvent('bastion:station'); }, []);
+  if (lvl < 1 || detail) {
     return (
-      <div className="space-y-2" data-testid={`craft-locked-${station}`}>
-        <p className="font-body text-base text-stone-300">«{RUINED_LINE[station] ?? 'Esta estación sigue en ruinas. Reconstrúyela en el Bastión.'}»</p>
-        <button className="btn btn-gold font-display tracking-[0.1em] uppercase" style={{ minHeight: 'max(44px, var(--btn-h))' }} onClick={() => onStation(station as ModuleId)} data-testid={`go-station-${station}`}>Ir al Bastión</button>
+      <div className="flex flex-col gap-2" data-testid="station-panel">
+        {lvl < 1 && <p className="font-body text-base text-stone-300" data-testid={`craft-locked-${id}`}>«{RUINED_LINE[id] ?? 'Esta estación sigue en ruinas. Reconstrúyela.'}»</p>}
+        {detail && <div><button className="btn font-display tracking-[0.1em] uppercase" style={{ minHeight: 44 }} onClick={() => { setDetail(false); sfx('click'); }} data-testid="detail-back">◂ Volver</button></div>}
+        <StationDetail id={id} onUse={() => setDetail(false)} onGo={onGo} />
       </div>
     );
   }
-  return <CraftPanel station={station} />;
+  const up = <UpgradeButton id={id} onOpen={() => setDetail(true)} />;
+  if (id === 'cot') return <div data-testid="station-panel"><CotPanel extra={up} /></div>;
+  if (id === 'alchemy' && runes) return <div data-testid="station-panel"><RunePanel onBack={() => setRunes(false)} extra={up} /></div>;
+  const runeBtn = id === 'alchemy' && lvl >= 3
+    ? <button className="btn btn-gold text-xs font-display" style={{ minHeight: 44 }} onClick={() => { setRunes(true); sfx('click'); }} data-testid="runic-runes">Grabar runas</button> : null;
+  return (
+    <div className="flex flex-col gap-2" data-testid="station-panel">
+      {extraTop}
+      <CraftPanel station={id} extra={<>{runeBtn}{up}</>} />
+      {id === 'kitchen' && <div className="panel p-3 mt-2"><Dishes /></div>}
+    </div>
+  );
 }
 
-function VendorInterior({ vendor, initial, onBack, onGo, onStation }: { vendor: VendorId; initial: VendorView; onBack: () => void; onGo: (v: VendorId, x: VendorView) => void; onStation: (id: ModuleId) => void }) {
+function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; initial: VendorView; onBack: () => void; onGo: (v: VendorId, x: VendorView) => void }) {
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
   const scale = usePixelScale('vendor');
-  const [view, setView] = useState<VendorView>(initial);
+  const tabs = servicesOf(vendor);
+  const [view, setView] = useState<VendorView>(tabs.includes(initial) ? initial : tabs[0]);
   const [sel, setSel] = useState<Loc | null>(null);
   useEffect(() => { actions.tutorialEvent(`vendor:${vendor}`); }, [vendor]);
   useClearOnDrop(useCallback(() => setSel(null), []));
   const [marks, setMarks] = useState<string[]>([]);
   const v = VENDORS[vendor];
+  const st = STATION_OF[vendor];
   const rep = profile.reputation[vendor] ?? 0;
-  const rank = rankOf(rep);
-  const discount = REP_RANKS[rank].discount;
+  const discount = REP_RANKS[rankOf(rep)].discount;
   const go = (x: VendorView) => { setView(x); setSel(null); setMarks([]); sfx('click'); };
   // Quién compra al vender (Grizk solo joyas y tesoros, y paga mejor)
   useEffect(() => { actions.setActiveVendor(vendor); return () => actions.setActiveVendor(null); }, [vendor]);
+  const label = (x: VendorView) => (x === 'station' && st ? MODULES[st].name : VIEW_LABEL[x]);
+  const ready = readyQuestCount(profile, vendor);
+  const pend = pendingOf(profile, vendor);
 
-  const title = view === 'alchemy' ? `Mesa de ${v.name}` : view === 'care' ? 'Rincón de cura' : view === 'cook' ? `Cocina de ${v.name}` : view === 'scrap' ? `Desguace de ${v.name}` : view === 'forge' ? `Forja de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'infirmary' ? `Enfermería de ${v.name}` : view === 'contracts' ? 'Contratos de Grizk' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
+  const title = view === 'station' && st ? MODULES[st].name : view === 'scrap' ? `Desguace de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'infirmary' ? `Enfermería de ${v.name}` : view === 'contracts' ? 'Contratos de Grizk' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
   const center: ReactNode =
     view === 'shop' ? <ShopStock vid={vendor} cols={`grid gap-2 ${phone ? 'grid-cols-1' : 'grid-cols-2 2xl:grid-cols-3'}`} />
       : view === 'quests' ? <VendorQuests vendor={vendor} />
-        : view === 'forge' ? <VendorCraft station="forge" onGo={onGo} onStation={onStation} />
+        : view === 'station' && st ? <StationTab id={st} onGo={onGo} />
           : view === 'repair' ? <RepairPanel />
-          : view === 'infirmary' ? <InfirmaryPanel />
-          : view === 'contracts' ? <ContractsPanel />
-          : view === 'cook' ? <VendorCraft station="kitchen" onGo={onGo} onStation={onStation} />
-          : view === 'scrap' ? <ScrapPanel />
-          : view === 'alchemy' ? <VendorCraft station="alchemy" onGo={onGo} onStation={onStation} />
-          : view === 'care' ? <VendorCraft station="infirmary" onGo={onGo} onStation={onStation} />
-            : <SellGrids sel={sel} setSel={setSel} marks={marks} setMarks={setMarks} vendor={vendor} />;
+            : view === 'infirmary' ? <InfirmaryPanel />
+              : view === 'contracts' ? <ContractsPanel />
+                : view === 'scrap' ? <ScrapPanel />
+                  : <SellGrids sel={sel} setSel={setSel} marks={marks} setMarks={setMarks} vendor={vendor} />;
+  const crafting = (view === 'station' && st !== 'cot') || view === 'scrap';
   const side: ReactNode = view === 'sell'
     ? <Panel title="A vender" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="sale-panel">
         <SalePanel vendor={vendor} marks={marks} setMarks={setMarks} onSold={() => setSel(null)} />
         <div className="panel p-3 mt-3"><ItemCard loc={sel} mode="merchant" onClear={() => setSel(null)} compact /></div>
       </Panel>
-    : ['forge', 'scrap', 'cook', 'alchemy', 'care'].includes(view)
+    : crafting
       ? <Panel title="Tus materiales" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col"><Materials /></Panel>
       : <Panel title="Tu mochila" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col"><BagSummary /></Panel>;
 
+  const tabBar = (
+    <div className="ui-seg vtabs" role="tablist" data-testid="vendor-tabs">
+      {tabs.map((x) => (
+        <button key={x} type="button" role="tab" aria-selected={view === x} className={view === x ? 'on' : ''} onClick={() => go(x)} data-testid={`vendor-view-${x}`}>
+          {label(x)}{x === 'quests' && ready > 0 && <span className="vtab-dot" aria-label="Misión lista">●</span>}
+          {x === 'station' && pend && pend.kind !== 'quest' && <span className={`vtab-dot ${pend.kind === 'upgrade' ? 'gold' : ''}`} aria-label={pend.text}>{pend.kind === 'upgrade' ? '▲' : '●'}</span>}
+        </button>
+      ))}
+      <button type="button" onClick={onBack} data-testid="vendor-back">◂ Bastión</button>
+    </div>
+  );
+  const pendBox = pend && (
+    <div className="panel p-3 mt-3 text-left" data-testid="vendor-pending">
+      <div className="text-[13px] uppercase tracking-[0.12em] text-stone-400">Pendiente</div>
+      <div className="text-[15px] text-parchment mt-1">{pend.kind === 'quest' ? (ready === 1 ? 'Una misión lista para entregar' : `${ready} misiones listas para entregar`) : pend.kind === 'rebuild' ? `${MODULES[st!].name}: ya puedes reconstruirla` : `${MODULES[st!].name}: mejora disponible`}</div>
+      <button className="btn btn-gold w-full mt-2 font-display tracking-[0.1em] uppercase text-xs" style={{ minHeight: 44 }} onClick={() => go(pend.kind === 'quest' ? 'quests' : 'station')} data-testid="vendor-pending-go">
+        {pend.kind === 'quest' ? 'Entregar' : pend.kind === 'rebuild' ? 'Reconstruir' : '▲ Mejorar'}
+      </button>
+    </div>
+  );
   const left = (
     <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="vendor-panel">
-      <div className="ui-arch shrink-0" style={{ height: 26 * (phone ? 2 : scale) + (phone ? 14 : 30) }}><div className="pb-1"><MonsterSprite sprite={v.sprite} scale={phone ? 2 : scale} /></div></div>
-      <div className="text-center font-display text-parchment mt-2" data-testid="vendor-name">{v.name}</div>
-      <div className="text-center text-[12px]" style={{ color: v.color }}>{v.role}</div>
-      {!phone && <p className="font-body italic text-stone-300 text-center text-[15px] leading-snug mt-2">«{v.blurb}»</p>}
-      <div className="mt-2"><RepBar rep={rep} /></div>
-      {discount > 0 && <div className="text-[11px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento por tu reputación</div>}
-      <div className="flex flex-col gap-2 mt-3">
-        {servicesOf(vendor).map((s) => (
-          <button key={s} className={`btn font-display tracking-[0.1em] uppercase ${view === s ? 'btn-gold' : ''}`} style={{ minHeight: 'var(--btn-h)' }} onClick={() => go(s)} data-testid={`vendor-view-${s}`}>{VIEW_LABEL[s]}</button>
-        ))}
-        <button className="btn font-display tracking-[0.1em] uppercase" style={{ minHeight: 'var(--btn-h)' }} onClick={onBack} data-testid="vendor-back">◂ Volver</button>
-      </div>
+      <div className="ui-arch shrink-0" style={{ height: 26 * scale + 30 }}><div className="pb-1"><MonsterSprite sprite={v.sprite} scale={scale} /></div></div>
+      <div className="text-center font-display text-parchment text-[20px] mt-2" data-testid="vendor-name">{v.name}</div>
+      <div className="text-center text-[13px] uppercase tracking-[0.1em] text-gold">{PLACES[v.place].name}</div>
+      <div className="text-center text-[14px]" style={{ color: v.color }}>{v.role}</div>
+      <p className="font-body italic text-stone-300 text-center text-[15px] leading-snug mt-2">«{v.blurb}»</p>
+      {pendBox}
+      <div className="flex-1" />
+      <div className="mt-3"><RepBar rep={rep} /></div>
+      {discount > 0 && <div className="text-[13px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento por tu reputación</div>}
     </Panel>
   );
-  const main = <Panel title={title} className="min-h-0" bodyClassName={`overflow-y-auto scroll-thin ${view === 'sell' ? 'flex flex-col' : ''}`} testId={`vendor-main-${view}`}>{center}</Panel>;
+  const main = <Panel title={title} className="min-h-0 flex-1" bodyClassName={`overflow-y-auto scroll-thin ${view === 'sell' ? 'flex flex-col' : ''}`} testId={`vendor-main-${view}`}>{center}</Panel>;
   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
 
   if (phone) {
     return (
-      <div className="h-full grid relative" style={{ ...pad, gridTemplateColumns: '170px minmax(0,1fr)', paddingRight: 'calc(max(var(--pad), env(safe-area-inset-right)) + 40px)' }} data-testid="vendor-interior">
-        {left}{main}
-        <Drawer label={['forge', 'scrap', 'cook', 'alchemy', 'care'].includes(view) ? 'Materiales' : view === 'sell' ? (marks.length ? `Vender (${marks.length})` : 'A vender') : 'Mochila'} side="right" testId="vendor-side">{side}</Drawer>
+      <div className="h-full flex flex-col relative min-h-0" style={{ ...pad, paddingRight: 'calc(max(var(--pad), env(safe-area-inset-right)) + 40px)' }} data-testid="vendor-interior">
+        <div className="flex items-center gap-2 shrink-0 min-w-0" data-testid="vendor-panel">
+          <MonsterSprite sprite={v.sprite} scale={1} />
+          <span className="font-display text-parchment shrink-0" data-testid="vendor-name">{v.name}</span>
+          <div className="min-w-0 overflow-x-auto scroll-thin">{tabBar}</div>
+        </div>
+        {main}
+        <Drawer label={crafting ? 'Materiales' : view === 'sell' ? (marks.length ? `Vender (${marks.length})` : 'A vender') : 'Mochila'} side="right" testId="vendor-side">{side}</Drawer>
       </div>
     );
   }
   const sideW = layout === 'tablet' ? 260 : 320;
   return (
     <div className="h-full grid" style={{ ...pad, gridTemplateColumns: `${layout === 'tablet' ? 220 : 300}px minmax(0,1fr) ${sideW}px` }} data-testid="vendor-interior">
-      {left}{main}<div className="min-h-0">{side}</div>
+      {left}
+      <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }}>{tabBar}{main}</div>
+      <div className="min-h-0">{side}</div>
     </div>
   );
 }

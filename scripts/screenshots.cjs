@@ -17,7 +17,7 @@ const OUT = process.argv[3] || 'public/screenshots';
     s.profile.gold = 600;
     s.profile.character.level = 3;
   });
-  await page.click('[data-testid=tab-merchants]'); await page.click('[data-testid=btn-merchants]');
+  await page.click('[data-testid=tab-merchants]');
   await page.click('[data-testid=vendor-orvel]');
   for (const id of ['iron_helm', 'gauntlets', 'chainmail', 'iron_sword', 'health_potion', 'copper_ring', 'antidote']) await page.click(`[data-testid=buy-${id}]`);
   await page.click('[data-testid=tab-stash]');

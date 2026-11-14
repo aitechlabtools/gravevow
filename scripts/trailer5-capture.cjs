@@ -131,7 +131,7 @@ async function session(b, vp, touch) {
   await page.mouse.move(5, 5);
   await act('tab-merchants', 500);
   await record('n-forja', async () => {
-    await wait(400); await act('vendor-brand', 600); await act('vendor-view-forge', 800);
+    await wait(400); await act('vendor-brand', 600); await act('vendor-view-station', 800);
     const f = await page.$('[data-testid^=forge-r_]:not([disabled])'); if (f) { await f.hover(); await wait(400); await f.click(); await wait(1100); }
   });
   await act('tab-merchants', 400);

@@ -59,7 +59,7 @@ export interface MiniTutorial {
  * hacerla una vez. Va por personaje, porque cada uno reconstruye su Bastión.
  */
 export const STATION_FIRST_RECIPE: Record<CraftStation, string> = {
-  kitchen: 'c_jerky', bench: 'c_strap', infirmary: 'c_bandage', forge: 'c_scrap_bar', alchemy: 'c_antidote', runic: 'c_cut_crystal',
+  kitchen: 'c_jerky', bench: 'c_grip', infirmary: 'c_bandage', forge: 'c_scrap_bar', alchemy: 'c_antidote', tannery: 'c_strap', armory: 'c_gauntlets',
 };
 
 /** Bienvenida al Bastión: la cuenta el intendente al volver de la primera bajada (o al crear un personaje sin tutorial). */
@@ -76,7 +76,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
       { text: 'Este es tu **bolsillo seguro**: lo que guardes ahí **no se pierde al morir**. Caben cosas pequeñas, como llaves o saquitos. Arrastra ahí lo más valioso antes de bajar.', touch: 'Este es tu **bolsillo seguro**: lo que guardes ahí **no se pierde al morir**. Caben llaves o saquitos: toca uno y luego una casilla del bolsillo.', target: 'alijo-pocket' },
       { text: 'Pulsa **«Vaciar mochila»**: todo lo que llevas pasa al almacén, donde está a salvo.', touch: 'Toca **«Vaciar mochila»**: todo lo que llevas pasa al almacén, donde está a salvo.', target: 'empty-backpack', action: 'click' },
       { text: 'Ahora, la pestaña **Bastión**. Haz clic en ella.', touch: 'Ahora, la pestaña **Bastión**. Tócala.', target: 'tab-merchants', action: 'click' },
-      { text: 'Tiene dos puertas: los **Mercaderes** compran, venden y dan encargos; el **Bastión** son las ruinas que vas reconstruyendo, estación a estación. Ya los irás conociendo.', target: 'bastion-merchants' },
+      { text: 'Aquí están los **mercaderes**: compran, venden, dan encargos y cada uno cuida una **estación** del Bastión en ruinas que vas reconstruyendo. Ya los irás conociendo.', target: 'vendor-list' },
       { text: 'Tu partida vive en este navegador. Haz una **copia de seguridad** de vez en cuando: está en **Ajustes › Partida** y en el menú principal.', target: 'btn-lobby-settings' },
       { text: 'Cuando quieras bajar, vuelve a **Jugar**. Haz clic en la pestaña.', touch: 'Cuando quieras bajar, vuelve a **Jugar**. Toca la pestaña.', target: 'tab-play', action: 'click' },
       { text: 'Elige la subzona (de momento, las Afueras) y pulsa **Descender**. Tendrás un tiempo para encontrar el **portal**; si caes, pierdes lo que llevas. Pasa el ratón por encima para ver qué arriesgas.', touch: 'Elige la subzona (de momento, las Afueras) y toca **Descender**. Tendrás un tiempo para encontrar el **portal**; si caes, pierdes lo que llevas. Mantén pulsado para ver qué arriesgas.', target: 'btn-enter-dungeon' },
@@ -119,18 +119,18 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     ],
   },
   {
-    id: 'screen.bastion-entry', topic: 'mercaderes', trigger: 'bastion:merchants', badge: 'bastion-merchants',
+    id: 'screen.bastion-entry', topic: 'mercaderes', trigger: 'bastion:merchants', badge: 'tab-merchants',
     steps: [
-      { text: 'Cada mercader tiene su sitio y su **reputación** contigo: cuanto más tratas con él, más te ofrece.', target: 'vendor-card-nira' },
-      { text: 'Empieza por **Nira**. Haz clic en **Hablar**.', touch: 'Empieza por **Nira**. Toca **Hablar**.', target: 'vendor-nira', action: 'click' },
+      { text: 'Estos son los **mercaderes** del Bastión. Cada uno tiene su sitio, su **reputación** contigo y una **estación** en ruinas que reconstruyes con él.', target: 'vendor-list' },
+      { text: 'Un aviso sobre el retrato te dice si hay algo pendiente: una misión lista, una estación que ya puedes reconstruir o una mejora.', target: 'vendor-card-nira' },
+      { text: 'Empieza por **Nira**. Haz clic en ella.', touch: 'Empieza por **Nira**. Tócala.', target: 'vendor-nira', action: 'click' },
     ],
   },
   {
-    id: 'tab.refugio', topic: 'bastion', trigger: 'bastion:refuge', narrator: 'orik', badge: 'bastion-refuge',
+    id: 'tab.refugio', topic: 'bastion', trigger: 'bastion:station', narrator: 'orik',
     steps: [
-      { text: 'El Bastión de Ceniza está en ruinas, y es tuyo. Cada **estación** se reconstruye con tu oro y tus materiales; su encargado la levanta.', target: 'station-grid' },
-      { text: 'El **catre** ya está. Dormir llena el Descanso y, mejorado, te deja **a punto** para bajar.', target: 'module-cot' },
-      { text: 'Toca una estación para ver qué pide su reconstrucción. Empieza por la cocina.', target: 'module-kitchen', action: 'click' },
+      { text: 'El Bastión de Ceniza está en ruinas, y es tuyo. Cada mercader cuida una **estación**: se reconstruye con tu oro y tus materiales, en su última pestaña.', target: 'vendor-view-station' },
+      { text: 'Aquí ves qué pide, dónde conseguir lo que falta y, ya en pie, qué fabrica. Para **dormir**, el Catre de Grizk.', target: 'station-panel' },
     ],
   },
   {
@@ -167,7 +167,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     id: 'bastion.can-craft', topic: 'bastion', trigger: 'bastion:can-craft',
     steps: [
       { text: 'Con lo que traes puedes **fabricar** algo en tus estaciones del Bastión.' },
-      { text: 'Entra en la pestaña **Bastión** y luego en la tarjeta **Bastión**. Cada estación tiene un punto verde en lo que puedes hacer.', target: 'tab-merchants' },
+      { text: 'Entra en la pestaña **Bastión**: cada mercader tiene su estación en su última pestaña.', target: 'tab-merchants' },
     ],
   },
   {
@@ -235,6 +235,7 @@ function VENDOR_MINIS(): MiniTutorial[] {
       { text: 'Cuero, comida, saquitos para tu oro. Lo que necesites para no morir de tont{o|a}.', target: 'vendor-view-shop' },
       { text: 'Y si traes chatarra, la compro: **márcala y pulsa Vender**.', touch: 'Y si traes chatarra, la compro: **márcala y toca Vender**.', target: 'vendor-view-sell' },
       { text: 'Te iré pidiendo cosas. Cúmplelas y subirá tu **reputación** conmigo.', target: 'vendor-view-quests' },
+      { text: 'Y en mi **Curtiduría** te enseño a trabajar el cuero y la tela.', target: 'vendor-view-station' },
     ]),
     v('vesper', [
       { text: 'Vendas, pociones y remedios. Lo justo para volver de una pieza.', target: 'vendor-view-shop' },
@@ -242,27 +243,28 @@ function VENDOR_MINIS(): MiniTutorial[] {
     ]),
     v('garth', [
       { text: 'Comida y agua. Ahí abajo el hambre mata tan bien como un esqueleto.', target: 'vendor-view-shop' },
-      { text: 'En mi **Cocina** te enseño a guisar. Un buen plato te deja **preparad{o|a}** para bajar.', target: 'vendor-view-cook' },
+      { text: 'En mi **Cocina** te enseño a guisar. Un buen plato te deja **preparad{o|a}** para bajar.', target: 'vendor-view-station' },
     ]),
     v('orik', [
       { text: 'Herramientas y cachivaches. Y te arreglo lo que traigas abollado.', target: 'vendor-view-repair' },
-      { text: 'Lo que no uses, al **Desguace**: lo despiezo y te llevas el material.', target: 'vendor-view-scrap' },
+      { text: 'Lo que no uses, al **Desguace**: lo despiezo y te llevas el material. Con el **Banco de trabajo** en pie, rinde más.', target: 'vendor-view-scrap' },
     ]),
     v('grizk', [
       { text: 'Presto oro y compro lo que otros no quieren. Con intereses, claro.', target: 'vendor-view-shop' },
       { text: 'Y en **Contratos** te alquilo espadas. Algunas son leales. Otras, no tanto.', target: 'vendor-view-contracts' },
+      { text: 'Los que venden su espada duermen en mi **Catre**. Tú también, si pagas la noche.', target: 'vendor-view-station' },
     ]),
     v('brand', [
-      { text: 'Armas. Buenas, si las pagas. En la **Forja** te hago las tuyas con tu metal.', target: 'vendor-view-forge' },
+      { text: 'Armas. Buenas, si las pagas. En la **Forja** te hago las tuyas con tu metal.', target: 'vendor-view-station' },
       { text: 'Y lo que traigas mellado, lo **reparo**. Un filo roto no corta nada.', target: 'vendor-view-repair' },
     ]),
     v('valerius', [
       { text: 'Placas y cotas. Lo que se interpone entre tus tripas y una hoja.', target: 'vendor-view-shop' },
-      { text: 'Cumple mis **encargos** y te enseñaré piezas que no ofrezco a cualquiera.', target: 'vendor-view-quests' },
+      { text: 'En mi **Forja de armaduras** te hago las tuyas: yelmos, corazas y escudos. Los lingotes, pídeselos a Brand.', target: 'vendor-view-station' },
     ]),
     v('eldrin', [
       { text: 'Pociones, polvos y frascos. No los agites cerca de una antorcha.', target: 'vendor-view-shop' },
-      { text: 'En la **Alquimia** te enseño a destilarlos tú. Con cuidado.', target: 'vendor-view-alchemy' },
+      { text: 'En mi **Laboratorio** te enseño a destilarlos tú, y a tallar cristales y tinta para el equipo mágico. Con cuidado.', target: 'vendor-view-station' },
     ]),
   ];
 }
@@ -272,22 +274,24 @@ function VENDOR_MINIS(): MiniTutorial[] {
 function STATION_MINIS(): MiniTutorial[] {
   const what: Record<CraftStation, string> = {
     kitchen: 'Aquí se cocina lo que da **más saciedad** que el pan duro de ahí abajo.',
-    bench: 'Correas, mangos, cuero curtido y ropa. Lo pequeño que sostiene lo grande.',
+    bench: 'Empuñaduras, astiles y antorchas. Y con el banco en pie, **desguazar rinde más**.',
     infirmary: '**Vendas**, torniquetes y férulas, sin pagarme a mí.',
-    forge: 'Lingotes y piezas de metal para forjar tus propias armas y armaduras.',
-    alchemy: '**Antídotos**, pociones y frascos que arden.',
-    runic: '**Cristales**, tinta y pergamino para el equipo mágico. Y, más adelante, runas.',
+    forge: 'Lingotes y armas de hierro. Las armaduras, con Valerius.',
+    alchemy: '**Antídotos**, pociones y frascos que arden. Y en el atril, **cristales** y tinta para el equipo mágico; más adelante, runas.',
+    tannery: '**Cuero curtido**, correas, telas, ropa, botas y bolsas. Todo lo que no es de hierro.',
+    armory: 'Yelmos, corazas, **guanteletes** y escudos de metal. Los lingotes te los da Brand.',
   };
   const after: Record<CraftStation, string> = {
     kitchen: 'Va a tu almacén. Llévalo en la mochila y, abajo, elígelo y pulsa **Comer** cuando apriete el hambre.',
-    bench: 'Va a tu almacén. Lo usarán otras recetas: la correa sirve para torniquetes y férulas.',
+    bench: 'Va a tu almacén. Las empuñaduras las piden otras recetas.',
     infirmary: 'Van a tu almacén. Abajo, **arrástralas** sobre la parte herida.',
     forge: 'Va a tu almacén. Con lingotes se forjan armas y placas.',
     alchemy: 'Va a tu almacén. Bébelo abajo si algo te envenena.',
-    runic: 'Va a tu almacén. Los cristales piden huecos de runa en el equipo mágico.',
+    tannery: 'Va a tu almacén. La correa sirve para torniquetes, férulas y armaduras.',
+    armory: 'Van a tu almacén. Póntelos en la Intendencia.',
   };
   return (Object.keys(STATION_FIRST_RECIPE) as CraftStation[]).map((st) => ({
-    id: `station.${st}`, topic: 'bastion' as const, trigger: `station:${st}`, narrator: STATIONS[st].by, badge: `module-${st}`,
+    id: `station.${st}`, topic: 'bastion' as const, trigger: `station:${st}`, narrator: STATIONS[st].by,
     steps: [
       { text: what[st], target: `craft-${st}` },
       { text: 'Te he dejado los materiales justos para la primera. **Elige la receta** señalada: en verde lo que tienes.', touch: 'Te he dejado los materiales justos para la primera. **Toca la receta** señalada: en verde lo que tienes.', target: `recipe-${STATION_FIRST_RECIPE[st]}`, action: 'click' },
