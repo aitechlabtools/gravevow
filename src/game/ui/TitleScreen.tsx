@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Diorama } from '../../landing/Diorama';
+import { CLASSES } from '../../core/data/classes';
 import { actions, useGame } from '../state/store';
-import { MonsterSprite, Modal } from './common';
+import { Modal } from './common';
 import { sfx } from '../audio';
 import { startMusic } from '../music/director';
 import { isTouch } from '../../shared/device';
@@ -32,6 +34,9 @@ export function CommunityLinks({ testPrefix }: { testPrefix: string }) {
 import { SettingsModal } from './Settings';
 export { SettingsModal };
 
+/** Menú principal (14/11): logo arriba y menú de juego abajo en la columna izquierda; el diorama de la landing a la derecha,
+ *  flotando en el mismo negro de la página. Las entradas son texto grabado y el rombo del juramento marca la elegida
+ *  (ratón, toque o flechas y Enter). Apoyar, Discord y Volver a la web van en una fila discreta al pie. Maqueta: mockups/menu-principal. */
 export function TitleScreen() {
   const profile = useGame((s) => s.profile);
   const notice = useGame((s) => s.notice);
@@ -46,36 +51,63 @@ export function TitleScreen() {
     if (profile?.settings.music !== false) startMusic('lobby');
     actions.goto(profile ? 'lobby' : 'create');
   };
+  type Item = { id: string; label: ReactNode; go: () => void; main?: boolean };
+  const items: Item[] = [{ id: 'btn-play', label: profile ? 'Continuar' : 'Nuevo personaje', go: start, main: true }];
+  // Primera vez (sin partida en este navegador): se puede cargar una copia hecha en otro dispositivo
+  if (!profile) items.push({ id: 'btn-have-backup', label: 'Tengo una copia', go: () => { sfx('click'); void actions.openBackup('load'); } });
+  if (roster.length > 0) {
+    items.push({ id: 'btn-choose-char', label: 'Elegir personaje', go: () => { sfx('click'); void actions.openSelect(); } });
+    items.push({ id: 'btn-backup', go: () => { sfx('click'); void actions.openBackup(); }, label: <>Copia de seguridad{backup?.remind && <span className="tm-remind" data-testid="backup-reminder">· {backup.lastAt === null ? 'sin copia' : (backup.days ?? 0) >= 7 ? `hace ${backup.days} días` : `${backup.expeditionsSince} expediciones sin copia`}</span>}</> });
+  }
+  items.push({ id: 'btn-settings', label: 'Ajustes', go: () => { sfx('click'); setSettings(true); } });
+  const [sel, setSel] = useState(0);
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  useEffect(() => {
+    if (notice || settings) return;
+    const k = (e: KeyboardEvent) => {
+      const d = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      setSel((i) => { const n = (i + d + items.length) % items.length; refs.current[n]?.focus(); return n; });
+    };
+    window.addEventListener('keydown', k);
+    return () => window.removeEventListener('keydown', k);
+  }, [items.length, notice, settings]);
+  const cls = profile ? CLASSES[profile.character.classId] : null;
   return (
-    <div className="relative h-full flex flex-col items-center justify-center overflow-hidden" style={{ background: 'radial-gradient(ellipse at 50% 60%, #1d1424 0%, #0b0910 55%, #050407 100%)' }}>
-      <div className="absolute top-3 right-3 z-10"><FullscreenButton /></div>
-      <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(circle at 50% 110%, rgba(196,40,59,0.35), transparent 50%)' }} />
-      <div className="title-side absolute bottom-[12%] left-[8%] hidden md:block opacity-80 breathe"><MonsterSprite sprite="skeleton" scale={7} /></div>
-      <div className="title-side absolute bottom-[12%] right-[8%] hidden md:block opacity-80 breathe" style={{ animationDelay: '0.8s' }}><MonsterSprite sprite="rival" scale={7} className="-scale-x-100" /></div>
-      <div className="title-wrap relative text-center fade-in px-4">
-        <Logo />
-        <p className="title-tag font-body italic text-xl md:text-2xl text-stone-300 mt-4">Confía en tu espada. En nadie más.</p>
-        <div className="title-menu flex flex-col gap-3 mt-10 w-72 mx-auto">
-          <button className="btn btn-gold text-lg py-3" onClick={start} data-testid="btn-play" autoFocus>
-            {profile ? `Continuar como ${profile.character.name}` : 'Nuevo personaje'}
-          </button>
-          {/* Primera vez (sin partida en este navegador): se puede cargar una copia hecha en otro dispositivo */}
-          {!profile && (
-            <button className="btn flex items-center justify-center gap-2" onClick={() => { sfx('click'); void actions.openBackup('load'); }} data-testid="btn-have-backup">
-              <IconUp /> Tengo una copia
-            </button>
-          )}
-          {roster.length > 0 && <button className="btn" onClick={() => { sfx('click'); void actions.openSelect(); }} data-testid="btn-choose-char">Elegir personaje</button>}
-          {roster.length > 0 && (
-            <button className="btn flex items-center justify-center gap-2" onClick={() => { sfx('click'); void actions.openBackup(); }} data-testid="btn-backup">
-              Copia de seguridad{backup?.remind && <span className="text-[11px] text-ember font-display" data-testid="backup-reminder">· {backup.lastAt === null ? 'sin copia' : (backup.days ?? 0) >= 7 ? `hace ${backup.days} días` : `${backup.expeditionsSince} expediciones sin copia`}</span>}
-            </button>
-          )}
-          <button className="btn" onClick={() => setSettings(true)} data-testid="btn-settings">Ajustes</button>
-          <a className="btn text-center flex items-center justify-center" href="../">Volver a la web</a>
-          <CommunityLinks testPrefix="title" />
+    <div className="tm" data-testid="screen-title">
+      <div className="tm-art" aria-hidden><Diorama className="tm-dio" fill="#040308" ax={0.5} ay={0.47} /></div>
+      <div className="tm-fs"><FullscreenButton /></div>
+      <div className="tm-col fade-in">
+        <div className="tm-head">
+          <Logo />
+          <p className="tm-tag font-body italic">Confía en tu espada. En nadie más.</p>
         </div>
-        <p className="title-foot mt-10 text-xs text-stone-400 max-w-md mx-auto">Alpha v0.1 · En desarrollo: puede tener fallos y cambiar. Tu progreso se guarda en este navegador: haz copias de seguridad.</p>
+        <nav className="gm" aria-label="Menú principal">
+          {profile && cls && (
+            <div className="gm-save" data-testid="title-save">
+              <span className="gm-who">{profile.character.name}</span>
+              <span>{cls.name} · Nv {profile.character.level} · {profile.stats.expeditions} {profile.stats.expeditions === 1 ? 'expedición' : 'expediciones'}</span>
+            </div>
+          )}
+          <ul>
+            {items.map((it, i) => (
+              <li key={it.id}>
+                <button ref={(el) => { refs.current[i] = el; }} className={`gm-it${i === sel ? ' on' : ''}${it.main ? ' main' : ''}`}
+                  onMouseEnter={() => setSel(i)} onFocus={() => setSel(i)} onClick={it.go} data-testid={it.id} autoFocus={i === 0}
+                  aria-label={it.main && profile ? `Continuar como ${profile.character.name}` : undefined}>
+                  <i className="gm-rb" aria-hidden />{it.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="gm-links" data-testid="title-community">
+            <a href={SUPPORT_URL} {...EXTERNAL} title={SUPPORT_HINT} aria-label={`${SUPPORT_HINT} (se abre en una pestaña nueva)`} onClick={() => sfx('click')} data-testid="title-kofi"><HeartIcon size={14} /> Apoyar</a>
+            <a href={DISCORD_URL} {...EXTERNAL} title={DISCORD_HINT} aria-label={`${DISCORD_HINT} (se abre en una pestaña nueva)`} onClick={() => sfx('click')} data-testid="title-discord"><DiscordIcon size={16} /> Discord</a>
+            <a href="../" data-testid="title-web">Volver a la web</a>
+          </div>
+        </nav>
+        <p className="tm-foot">Alpha v0.1 · Tu progreso se guarda en este navegador: haz copias de seguridad.</p>
       </div>
       {notice && (
         <Modal onClose={() => actions.dismissNotice()}>
@@ -87,10 +119,6 @@ export function TitleScreen() {
       {settings && <SettingsModal onClose={() => setSettings(false)} />}
     </div>
   );
-}
-
-function IconUp() {
-  return <svg width={18} height={18} viewBox="0 0 12 12" shapeRendering="crispEdges" fill="currentColor" aria-hidden><path d="M5 2h2v1h1v1h1v1H7v5H5V5H3V4h1V3h1zM1 10h1v1h8v-1h1v2H1z" /></svg>;
 }
 
 /** Crear personaje: la pantalla vive en screens/CrearPersonaje.tsx (opción D, tres columnas). */

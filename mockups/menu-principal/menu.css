@@ -1,0 +1,59 @@
+/* Menú principal: columna izquierda (logo, menú y aviso) y diorama a la derecha tras un corte escalonado. */
+.tm{position:relative;height:100%;overflow:hidden;background:radial-gradient(ellipse at 20% 55%,#1d1424 0%,#0b0910 55%,#050407 100%)}
+.tm-art{position:absolute;top:0;bottom:0;right:0;left:30%;filter:drop-shadow(-10px 0 18px rgba(0,0,0,.85))}
+.tm-edge{position:absolute;inset:0;overflow:visible;filter:drop-shadow(0 0 5px rgba(196,40,59,.75))}
+.tm-dio{position:absolute;top:0;right:0;width:90% !important;height:100% !important}
+.tm-scene{position:absolute;inset:0;background:#07060a}
+.tm-fade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(7,6,10,.85) 0%,rgba(7,6,10,.35) 14%,rgba(7,6,10,0) 28%),linear-gradient(0deg,rgba(7,6,10,.55) 0%,rgba(7,6,10,0) 18%)}
+.tm-fs{position:absolute;top:12px;right:12px;z-index:3;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;padding:0}
+.tm-col{position:relative;z-index:2;height:100%;width:34%;min-width:420px;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(28px,8vh,96px) 0 clamp(64px,13vh,140px) clamp(24px,5vw,104px)}
+.tm-head{display:inline-flex;flex-direction:column;align-items:center;align-self:flex-start;text-align:center}
+.tm-logo{font-size:clamp(40px,4vw,80px)}
+.tm-tag{font-size:clamp(17px,1.35vw,26px);color:#d6d0c4;margin-top:.5em}
+.tm-menu{display:flex;flex-direction:column;gap:10px;width:clamp(260px,19vw,360px)}
+.tm-menu .btn{min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:clamp(15px,.95vw,18px)}
+.tm-menu .tm-play{min-height:52px;font-size:clamp(17px,1.1vw,21px)}
+.tm-comm{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tm-foot{position:absolute;font-size:13px !important;left:clamp(24px,5vw,104px);bottom:clamp(14px,3vh,32px);max-width:clamp(260px,22vw,400px);font-size:12px;color:#8c8693;line-height:1.4}
+/* Tableta: la columna algo más ancha */
+@media (max-width:1300px){.tm-art{left:38%}.tm-col{width:42%;min-width:0}.tm-logo{font-size:clamp(40px,5.2vw,68px)}.tm-menu{width:300px}}
+/* Móvil en horizontal: logo pequeño, botones por parejas, diorama más estrecho */
+@media (max-height:520px){
+  .tm-art{left:46%}
+  .tm-col{width:50%;gap:8px;padding:10px 0 8px max(16px,env(safe-area-inset-left))}
+  .tm-logo{font-size:clamp(30px,4.6vw,40px)}
+  .tm-tag{font-size:13px;margin-top:4px}
+  .tm-menu{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:min(330px,calc(100% - 8px))}
+  .tm-menu .btn,.tm-menu .tm-play{min-height:44px;font-size:13px;padding:0 6px;line-height:1.1}
+  .tm-menu .tm-play,.tm-comm{grid-column:1 / -1}
+  .tm-comm{gap:6px}
+  .tm-foot{position:static;font-size:10.5px;max-width:330px;margin-top:2px}
+}
+
+/* Propuesta C: menú de videojuego */
+.gm{width:clamp(280px,21vw,400px);font-family:var(--font-display)}
+.gm-save{display:flex;flex-direction:column;padding:0 0 12px 30px;margin-bottom:10px;border-bottom:1px solid rgba(196,40,59,.35);font-family:var(--font-body);font-style:italic;color:#8c8693;font-size:clamp(14px,.9vw,17px)}
+.gm-who{font-family:var(--font-display);font-style:normal;color:#e9e1cc;font-size:clamp(18px,1.2vw,24px);letter-spacing:.06em}
+.gm ul{list-style:none;margin:0;padding:0}
+.gm-it{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;min-height:48px;padding:0 10px;font-size:clamp(18px,1.25vw,25px);letter-spacing:.07em;color:#8c8693;text-shadow:0 2px 0 #000;transition:color .1s,padding .1s}
+.gm-it.main{font-size:clamp(22px,1.6vw,32px);color:#cfc8b8}
+.gm-it.on{color:#f2c75a;padding-left:16px;background:linear-gradient(90deg,rgba(196,40,59,.28),rgba(196,40,59,0) 85%)}
+.gm-rb{width:10px;height:10px;transform:rotate(45deg);border:2px solid transparent;flex:none}
+.gm-it.on .gm-rb{border-color:#c4283b;box-shadow:inset 0 0 0 2px #07060a,inset 0 0 0 5px #c4283b,0 0 8px #c4283b}
+.gm-links{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:16px;padding:12px 0 0 30px;border-top:1px solid rgba(140,134,147,.2)}
+.gm-links a{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-family:var(--font-pixel);font-size:15px;color:#8c8693;cursor:pointer}
+@media (max-height:520px){
+  .gm{width:min(330px,100%)}
+  .gm-save{display:none}
+  .gm-it{min-height:44px;font-size:16px}.gm-it.main{font-size:19px}
+  .gm-links{margin-top:2px;padding-top:0;border:0;gap:0 14px;padding-left:24px}
+  .gm-links a{font-size:13px}
+}
+
+/* Fondo todo negro: el diorama flota sobre el negro de la página (mismo color que su oscuridad), sin corte ni degradados;
+   sus bordes se funden con una máscara para que no se vea el rectángulo del lienzo. */
+.tm-negro{background:#040308}
+.tm-free{filter:none;left:30%}
+.tm-free .tm-dio{width:100% !important;mask-image:radial-gradient(ellipse 60% 62% at 50% 50%,#000 70%,transparent 100%)}
+@media (max-width:1300px){.tm-free{left:36%}}
+@media (max-height:520px){.tm-free{left:40%}}

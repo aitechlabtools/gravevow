@@ -4,6 +4,15 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 14/11 (3): menú principal nuevo
+- Columna izquierda con el logo arriba (lema centrado bajo él) y el menú abajo; a la derecha, el diorama animado de la landing
+  (`src/landing/Diorama.tsx`, ahora con `fill`, `ax` y `ay`) flotando sobre el mismo negro de la página (#040308), sin corte ni degradados.
+- Menú de videojuego: entradas de texto con el rombo del juramento marcando la elegida (ratón, toque o flechas y Enter);
+  encima, la ficha de la partida (nombre, clase, nivel y expediciones). Apoyar, Discord y Volver a la web en una fila al pie.
+- Fuera los dos personajes de las esquinas (el diorama ya los tiene). Mismos `data-testid` (`btn-play`, `btn-choose-char`, `btn-backup`, `btn-settings`…).
+- Móvil horizontal: menú más pequeño y con márgenes. Todo ≥ 44 px. La app instalada se llama «Gravevow Alpha» (antes «Gravevow · Demo»).
+- Maquetas en `mockups/menu-principal/index.html`.
+
 ## Novedades del 14/11 (2): Bastión unificado, implementado
 - **Pestaña Bastión** = los 8 mercaderes en 2 filas de 4 con primer plano de medio pecho (sprite recortado a escala entera), estación, reputación y avisos. Fuera la entrada y la rejilla de estaciones (`RefugePanel` eliminado; `Dishes` y `ScrapPanel` siguen en `RefugePanels.tsx`).
 - **Pantalla del mercader**: pestañas (`ui-seg`) solo con lo que tiene y su estación al final; «◂ Bastión». Pendiente con botón directo. La estación se reconstruye, usa y mejora dentro (`StationTab`).

@@ -207,3 +207,6 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
   - cada opción lleva su consecuencia en una línea, con botones de 44 px o más;
   - con riesgo muy alto, aviso rojo antes de las opciones.
 - **HUD:** una sola tarjeta de aliado con retrato de 36 px, nombre, triángulo (o «⛨ Contrato de Grizk» / «Rescatado»), 👁 si te vio traicionar, y su vida.
+
+## Menú principal (14/11)
+`TitleScreen.tsx`, estilos `.tm*` y `.gm*` en `game.css`. Columna izquierda: logo arriba, menú abajo (entradas `.gm-it`, la elegida con `.on`: dorado y rombo rojo; flechas y Enter), enlaces externos en `.gm-links` y aviso de la alpha al pie. Derecha: `Diorama` con `fill="#040308"` sobre el mismo negro, con máscara en los bordes. Maquetas: `mockups/menu-principal/index.html`.

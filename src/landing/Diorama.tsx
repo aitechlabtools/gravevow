@@ -8,7 +8,9 @@ const W = 11;
 const H = 9;
 type Thing = { gx: number; gy: number; draw: (ctx: CanvasRenderingContext2D, sx: number, sy: number, f: number) => void };
 
-export function Diorama({ className = '' }: { className?: string }) {
+/** `fill`: color del fondo del lienzo; `ax`/`ay`: dónde cae el centro de la sala (fracción del ancho y del alto).
+ *  Por defecto, como en la landing. El menú del juego lo usa centrado y con el fondo negro de la página. */
+export function Diorama({ className = '', fill = '#07060a', ax, ay = 0.4 }: { className?: string; fill?: string; ax?: number; ay?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -64,8 +66,8 @@ export function Diorama({ className = '' }: { className?: string }) {
       cv.width = Math.floor(r.width / scale);
       cv.height = Math.floor(r.height / scale);
       const centre = iso(W / 2, H / 2);
-      ox = Math.round(cv.width * (cv.width > cv.height * 1.2 ? 0.66 : 0.5) - centre.x);
-      oy = Math.round(cv.height * 0.4 - centre.y);
+      ox = Math.round(cv.width * (ax ?? (cv.width > cv.height * 1.2 ? 0.66 : 0.5)) - centre.x);
+      oy = Math.round(cv.height * ay - centre.y);
       ctx.imageSmoothingEnabled = false;
     };
     resize();
@@ -82,7 +84,7 @@ export function Diorama({ className = '' }: { className?: string }) {
       if (t - last < 83) return;
       last = t;
       frame++;
-      ctx.fillStyle = '#07060a';
+      ctx.fillStyle = fill;
       ctx.fillRect(0, 0, cv.width, cv.height);
       ctx.save();
       ctx.translate(ox, oy);
@@ -157,7 +159,7 @@ export function Diorama({ className = '' }: { className?: string }) {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
     };
-  }, []);
+  }, [fill, ax, ay]);
 
   return <canvas ref={ref} className={`pixelated w-full h-full ${className}`} aria-label="Un guerrero y un aventurero encapuchado se miran en una cripta iluminada por antorchas, junto a un portal violeta y un cofre abierto." role="img" />;
 }

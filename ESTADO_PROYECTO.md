@@ -170,3 +170,4 @@
 - Más adelante: redes sociales, Steam, guardado en la nube y multijugador.
   - El diseño propuesto está en `docs/ARQUITECTURA.md`.
   - Antes de nada de esto hay que actualizar las políticas legales.
+- 14/11: Menú principal nuevo: logo y menú de juego (rombo que marca la opción, ficha de la partida) a la izquierda y el diorama de la landing a la derecha sobre fondo negro. Sin figuras en las esquinas. La app instalada se llama «Gravevow Alpha».
