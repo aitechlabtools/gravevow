@@ -179,3 +179,6 @@
 - «Configurar cookies» en el pie de la landing, en Ajustes › Legal y en la página de cookies. Retirar el consentimiento recarga la página para descargar GTM.
 - Políticas de cookies y de privacidad actualizadas (fecha 14/11/2026).
 - Aviso con «Rechazar», «Configurar» y «Aceptar»; panel por finalidades (Técnicas siempre activas, Análisis con interruptor). Solo se concede `analytics_storage`; publicidad preparada en `CATEGORIES` de `consent.ts` para el futuro.
+
+- 2026-11-14: añadido public/sitemap.xml (/, /cookies.html; páginas legales excluidas) y línea Sitemap en robots.txt.
+- 2026-11-14: nuevo meta título y meta descripción SEO en index.html.
