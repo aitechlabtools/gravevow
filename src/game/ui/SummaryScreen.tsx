@@ -88,7 +88,7 @@ export function SummaryScreen() {
         {!last && <button className="btn btn-gold px-10 text-lg" style={{ minHeight: 'var(--btn-h)' }} onClick={next} data-testid="summary-next" autoFocus>Siguiente ▸</button>}
         {last && page === 3 && cure && (
           <button className="btn px-5" style={{ minHeight: 'var(--btn-h)' }} data-testid="cure-later"
-            onClick={() => { toast('Puedes curarte más tarde en la Enfermería o en Intendencia › Estado.', 'info'); leave(); }}>Ahora no</button>
+            onClick={() => { toast('Puedes curarte más tarde en la Enfermería o en el Alijo › Heridas.', 'info'); leave(); }}>Ahora no</button>
         )}
         {last && !(page === 3 && cure) && <button className="btn btn-gold px-10 text-lg" style={{ minHeight: 'var(--btn-h)' }} onClick={leave} data-testid="btn-back-lobby" autoFocus>Volver al Bastión</button>}
       </div>

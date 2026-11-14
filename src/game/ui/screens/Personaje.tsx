@@ -1,16 +1,14 @@
-// Personaje (opción A de mockups/personaje, aprobada el 4/11): Atributos a la izquierda; en el centro el héroe con sus
-// rombos en el orden de la barra de combate (clase arriba, mano derecha en el lado de la espada, mano izquierda en el del
-// escudo); a la derecha dos pestañas del mismo ancho: «Ataques» (por mano, informativo) y «Habilidad de clase» (camino de hitos).
-// En el móvil: héroe a la izquierda y pestañas Atributos · Ataques · Habilidad a la derecha.
+// Habilidades (antes «Personaje»; reorganizada el 14/11, mockups/habilidades): en escritorio, «Ataques» a la izquierda, el héroe
+// con sus rombos en el centro (clase arriba, mano derecha en el lado de la espada, mano izquierda en el del escudo) y «Clase»
+// (camino de hitos) a la derecha. En tableta y móvil, el héroe y un solo panel con selector Ataques · Clase.
+// Los atributos, el desglose y la trayectoria están en Intendencia → «Ver detalles» (HeroDetails.tsx).
 // No cambia ninguna regla: los ataques salen de las armas y la habilidad de clase se elige en los hitos (core/classSkills.ts).
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { actions, useGame } from '../../state/store';
-import { CLASSES, STAT_LABELS } from '../../../core/data/classes';
-import { computeStats, baseStats, xpForNextLevel } from '../../../core/stats';
-import { STAT_KEYS, type Stats } from '../../../core/types';
+import { CLASSES } from '../../../core/data/classes';
+import { computeStats, xpForNextLevel } from '../../../core/stats';
 import { combatLoadout } from '../../../core/loadout';
 import { getSkill } from '../../../core/data/skills';
-import { getEnemy } from '../../../core/data/enemies';
 import { getItem } from '../../../core/data/items';
 import { isTwoHanded } from '../../../core/data/weapons';
 import { pendingUnlocks, unlocksEarned } from '../../../core/classSkills';
@@ -62,41 +60,43 @@ export function Personaje({ onStash }: { onStash?: () => void }) {
   const k = useKit();
   const layout = useLayout();
   const phone = layout === 'phone';
+  const both = layout === 'desktop';
   const [focus, setFocus] = useState<string | null>(null);
-  // En el móvil se abre en Atributos (la primera pestaña); en pantallas grandes, Atributos ya está a la izquierda.
-  const [tab, setTab] = useState<'attrs' | 'atk' | 'class'>(phone ? 'attrs' : 'atk');
-  // Tocar un rombo resalta su entrada y abre la pestaña donde está
-  const pick = (id: string | null) => { setFocus(id); if (id) setTab(id === k.cs.id ? 'class' : 'atk'); };
+  // Tableta y móvil: un solo panel al lado del personaje, con selector Ataques · Clase. Se abre en Clase si hay un hito por elegir.
+  const pending = pendingUnlocks(k.profile) > 0;
+  const [tab, setTab] = useState<'atk' | 'class'>(pending ? 'class' : 'atk');
+  // Tocar un rombo resalta su entrada (en los dos sitios) y, con selector, abre el panel donde está
+  const pick = (id: string | null) => { setFocus(id); if (id && !both) setTab(id === k.cs.id ? 'class' : 'atk'); };
   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
   const arc = <SkillArc k={k} focus={focus} onFocus={pick} compact={phone} />;
   const attacks = <Attacks k={k} focus={focus} onFocus={pick} onStash={onStash} />;
   const path = <ClassPath focus={focus} onFocus={pick} />;
-  const pending = pendingUnlocks(k.profile) > 0;
+  const classTitle = pending ? 'Clase ◆' : 'Clase';
 
-  if (phone) {
+  if (both) {
+    // Escritorio: Ataques a la izquierda, el personaje en el centro y Clase a la derecha, sin selector
     return (
-        <div className="h-full grid" style={{ ...pad, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.15fr)' }} data-testid="screen-character">
-          <div className="min-h-0 relative">{arc}</div>
-          <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }}>
-            <Segmented full options={[{ id: 'attrs', label: 'Atributos' }, { id: 'atk', label: 'Ataques' }, { id: 'class', label: pending ? 'Habilidad ◆' : 'Habilidad' }]} value={tab} onChange={setTab} testId="character-seg" />
-            <Panel className="flex-1 min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId={`character-${tab}`}>{tab === 'attrs' ? <Attributes /> : tab === 'atk' ? attacks : path}</Panel>
-          </div>
-        </div>
-    );
-  }
-  const tablet = layout === 'tablet';
-  return (
-      <div className="h-full grid pj-wide" style={{ ...pad, gridTemplateColumns: `${tablet ? 280 : 360}px minmax(0,1fr) ${tablet ? 330 : 420}px` }} data-testid="screen-character">
-        <Panel title="Atributos" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="character-attrs"><Attributes /></Panel>
+      <div className="h-full grid pj-wide" style={{ ...pad, gridTemplateColumns: '400px minmax(0,1fr) 420px' }} data-testid="screen-character">
+        <div className="min-h-0 flex" data-testid="character-panels"><Panel title="Ataques" className="flex-1 min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="character-atk">{attacks}</Panel></div>
         <div className="min-h-0 flex flex-col">
           <div className="flex-1 min-h-0 relative">{arc}</div>
           <p className="font-body text-stone-400 text-center text-[16px] leading-snug max-w-lg mx-auto pt-2">Tus ataques salen de tus armas. Tu habilidad de clase la eliges tú.</p>
         </div>
-        <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }}>
-          <Segmented full options={[{ id: 'atk', label: 'Ataques' }, { id: 'class', label: pending ? 'Habilidad de clase ◆' : 'Habilidad de clase' }]} value={tab === 'attrs' ? 'atk' : tab} onChange={setTab} testId="character-seg" />
-          <Panel className="flex-1 min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId={tab === 'class' ? 'character-class' : 'character-atk'}>{tab === 'class' ? path : attacks}</Panel>
-        </div>
+        <Panel title={classTitle} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="character-class">{path}</Panel>
       </div>
+    );
+  }
+  return (
+    <div className={`h-full grid ${phone ? '' : 'pj-wide'}`} style={{ ...pad, gridTemplateColumns: phone ? 'minmax(0,1fr) minmax(0,1.15fr)' : 'minmax(0,1fr) 440px' }} data-testid="screen-character">
+      <div className="min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 relative">{arc}</div>
+        {!phone && <p className="font-body text-stone-400 text-center text-[16px] leading-snug max-w-lg mx-auto pt-2">Tus ataques salen de tus armas. Tu habilidad de clase la eliges tú.</p>}
+      </div>
+      <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }} data-testid="character-panels">
+        <Segmented full options={[{ id: 'atk', label: 'Ataques' }, { id: 'class', label: classTitle }]} value={tab} onChange={setTab} testId="character-seg" />
+        <Panel className="flex-1 min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId={tab === 'class' ? 'character-class' : 'character-atk'}>{tab === 'class' ? path : attacks}</Panel>
+      </div>
+    </div>
   );
 }
 
@@ -115,7 +115,7 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
   // Si lo que limita es el ancho, se centra en vertical (tableta)
   const usedH = big / 2 + 6 + R * 1.62 + label;
   const cx = dim.w / 2, cy = big / 2 + 6 + R + Math.max(0, (dim.h - usedH) / 2);
-  const scale = Math.max(min, Math.floor((R * 1.0) / 26));
+  const scale = Math.max(min, Math.floor(R / 21)); // más grande (14/11): la cabeza llega cerca del rombo de clase
   const feet = Math.min(dim.h - 6, cy + R * 0.55);
   // El sprite mira al frente: la mano derecha (espada) queda a la derecha de la pantalla y la izquierda (escudo) a la izquierda.
   const spread = (n: number, a0: number, a1: number) => Array.from({ length: n }, (_, i) => a0 + (a1 - a0) * (n === 1 ? 0.5 : i / (n - 1)));
@@ -186,7 +186,7 @@ function StashLink({ onStash }: { onStash?: () => void }) {
   return (
     <div className="border-t border-stone-700 pt-3 mt-1 flex items-center justify-between gap-3 flex-wrap">
       <span className="text-[13px] text-stone-400 italic">Los ataques dependen de tus armas.</span>
-      <button className="btn py-1 px-3 text-sm min-h-[44px]" onClick={onStash}>Cambiar armas en el Alijo</button>
+      <button className="btn py-1 px-3 text-sm min-h-[44px]" onClick={onStash} data-testid="btn-change-weapons">Cambiar armas en el Alijo</button>
     </div>
   );
 }
@@ -311,46 +311,3 @@ function ClassPath({ focus, onFocus }: { focus: string | null; onFocus: (id: str
   );
 }
 
-/** Nivel, atributos con lo que suma el equipo, desglose base/equipo y trayectoria. */
-function Attributes() {
-  const profile = useGame((s) => s.profile)!;
-  const ch = profile.character;
-  const cls = CLASSES[ch.classId];
-  const stats = computeStats(ch.classId, ch.level, profile.equipment);
-  const base = baseStats(ch.classId, ch.level);
-  const label = (k: keyof Stats) => (k === 'maxMp' ? cls.resourceName : STAT_LABELS[k]);
-  const need = xpForNextLevel(ch.level);
-  const row = 'flex justify-between py-1.5 border-b border-stone-700 font-body text-[15px]';
-  return (
-    <div className="font-body">
-      <div className="flex items-baseline justify-between">
-        <span className="font-display text-xl text-parchment">Nivel {ch.level}</span>
-        <span className="text-[11px] text-stone-400">{ch.xp} / {need} XP</span>
-      </div>
-      <div className="h-1.5 bg-stone-800 mt-1 mb-2"><div className="h-full bg-arcane" style={{ width: `${Math.min(100, (ch.xp / need) * 100)}%` }} /></div>
-      <div data-testid="character-stats">
-        {STAT_KEYS.map((k) => {
-          const bonus = stats[k] - base[k];
-          return (
-            <div key={k} className={row} data-stat={k}>
-              <span className="text-stone-300">{label(k)}</span>
-              <span>{stats[k]}{bonus !== 0 && <span className={bonus > 0 ? 'text-heal' : 'text-blood'}> ({bonus > 0 ? '+' : ''}{bonus})</span>}</span>
-            </div>
-          );
-        })}
-      </div>
-      <h3 className="ui-ptitle border-0 !py-3 !text-[12px]">Desglose</h3>
-      <ul className="text-[13px] text-stone-400 space-y-0.5" data-testid="character-breakdown">
-        {STAT_KEYS.map((k) => <li key={k}>{label(k)}: base {base[k]} · equipo {stats[k] - base[k] >= 0 ? '+' : ''}{stats[k] - base[k]}</li>)}
-      </ul>
-      <h3 className="ui-ptitle border-0 !py-3 !text-[12px]">Trayectoria</h3>
-      <div data-testid="character-record">
-        <div className={row}><span className="text-stone-300">Expediciones</span><span>{profile.stats.expeditions}</span></div>
-        <div className={row}><span className="text-stone-300">Extracciones</span><span>{profile.stats.extractions}</span></div>
-        <div className={row}><span className="text-stone-300">Muertes</span><span>{profile.stats.deaths}</span></div>
-        <div className={row}><span className="text-stone-300">Criaturas derrotadas</span><span>{profile.stats.kills}</span></div>
-        <div className={row}><span className="text-stone-300">Jefes derrotados</span><span className="text-right">{profile.bossesDefeated.length ? profile.bossesDefeated.map((b) => getEnemy(b).name).join(', ') : 'Ninguno'}</span></div>
-      </div>
-    </div>
-  );
-}

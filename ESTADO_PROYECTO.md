@@ -171,3 +171,4 @@
   - El diseño propuesto está en `docs/ARQUITECTURA.md`.
   - Antes de nada de esto hay que actualizar las políticas legales.
 - 14/11: Menú principal nuevo: logo y menú de juego (rombo que marca la opción, ficha de la partida) a la izquierda y el diorama de la landing a la derecha sobre fondo negro. Sin figuras en las esquinas. La app instalada se llama «Gravevow Alpha».
+- 14/11: Pestañas renombradas (Habilidades, Alijo, Heridas). Habilidades con Ataques · héroe · Clase; atributos con desglose en el Alijo (sin «Ver detalles»); trayectoria en Elegir personaje; contadores y jefes en el Bestiario.

@@ -89,11 +89,12 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 - Código: `CombatScreen.tsx` (`mainCmds`, `specials`, `Cmd`), estilos `.cmdgrid`, `.cmdsplit`, `.cmdback`, `.cdturns` en `game.css`.
 - testids: `act-attack`, `act-special`, `act-class`, `act-bag`, `act-flee`, `special-menu`, `bag-menu`, `skill-<id>`, `use-<id>`, `btn-menu-back`, `btn-page-next`.
 
-## Personaje: ataques y habilidad de clase (opción A, 4/11)
-- `src/game/ui/screens/Personaje.tsx`. Escritorio y tableta: Atributos a la izquierda · héroe con sus rombos en el centro ·
-  a la derecha `Segmented full` con dos pestañas del mismo ancho, «Ataques» y «Habilidad de clase», cada una a toda altura
-  (nada de dos paneles apretados con scroll propio). Móvil: héroe a la izquierda y pestañas Atributos · Ataques · Habilidad
-  (se abre en Atributos). Con un hito por elegir, la pestaña lleva ◆.
+## Habilidades (antes Personaje): ataques y habilidad de clase (reorganizada el 14/11)
+- `src/game/ui/screens/Personaje.tsx` (pestaña `character`, rótulo «Habilidades»). Escritorio: panel «Ataques» a la izquierda
+  (400 px), héroe con sus rombos en el centro (escala `R / 21`) y panel «Clase» a la derecha (420 px), sin selector.
+  Tableta y móvil (corte en `layout !== 'desktop'`): héroe y un solo panel con `Segmented` Ataques · Clase; se abre en Clase
+  si hay un hito por elegir (lleva ◆). Ya no hay atributos aquí: están en el Alijo (panel Aventurero, `HeroStats.tsx`).
+- «Cambiar armas en el Alijo» (`btn-change-weapons`) lleva a la pestaña Alijo.
 - Rombos en el orden de la barra de combate: la habilidad de clase arriba (dorada, más grande, marco doble); la mano derecha
   (básico y sus especiales) en el lado de la espada; la mano izquierda en el del escudo. Tocar un rombo resalta su entrada y abre su pestaña.
 - Colores = los de la barra de combate (`SOURCE` en combatActions.tsx): básico #d9d3c1, clase #e8b33a, arma #a56bff, mano izquierda #8fa8c8.
@@ -167,14 +168,14 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 - Prueba: `node scripts/jugar-ficha-check.cjs <url>/play/ <carpeta> [dispositivo]`.
 
 ## Comer y beber desde el objeto (12/11)
-- Las cajas de Saciedad, Hidratación y Descanso (`NeedsPanel` en `NeedsBars.tsx`, en el panel de heridas de la mazmorra, en combate y en Intendencia) solo llevan nombre, barra, valor y línea de ayuda. Sin «Comer…» ni «Beber…».
+- Las cajas de Saciedad, Hidratación y Descanso (`NeedsPanel` en `NeedsBars.tsx`, en el panel de heridas de la mazmorra, en combate y en el Alijo) solo llevan nombre, barra, valor y línea de ayuda. Sin «Comer…» ni «Beber…».
 - Se come desde el objeto: elegirlo y «Comer» o «Beber» (`act-eat`, en `ItemActions`). En el Bastión, de la mochila o del almacén (también los platos); en la expedición, solo de la mochila. Doble toque o doble clic también lo consume. En combate, por la Mochila de la barra (`use-<id>`, gasta el turno).
 - La ficha y la ventanita del objeto (`FoodLine`, `item-food`) dicen lo que aporta («+25 saciedad, +5 hidratación») y si se desperdiciaría parte.
 - Al subir, la barra se rellena con una animación corta (`.need-fill`).
-- Si una barra está baja y llevas con qué, la caja enseña «Tienes comida en la mochila» (`need-food-<need>`, 44 px en táctil): resalta esos objetos (`highlightItems`, clase `.slot-hint`); en la mazmorra abre antes la mochila y en Intendencia pasa a Equipo si la mochila no se ve. En combate es solo texto.
+- Si una barra está baja y llevas con qué, la caja enseña «Tienes comida en la mochila» (`need-food-<need>`, 44 px en táctil): resalta esos objetos (`highlightItems`, clase `.slot-hint`); en la mazmorra abre antes la mochila y en el Alijo pasa a Equipo si la mochila no se ve. En combate es solo texto.
 - Prueba: `node scripts/necesidades-check.cjs <url>/play/ <carpeta> [dispositivo]`.
 
-## Intendencia › Equipo en dos columnas (12/11)
+## Alijo (antes Intendencia) › Equipo en dos columnas (12/11)
 - Escritorio (`Alijo.tsx`): el panel Equipo pasa a dos columnas cuando mide 600 px o más (470 px en escritorio estrecho, por debajo de 1600 px de ancho):
   izquierda, las ranuras alrededor del personaje y debajo la caja Oro / En riesgo (`gold-box`); derecha (`equip-bag-col`), la Mochila
   (título, contador, Agrupar oro, Ordenar, cuadrícula, carga, Vaciar y Guardar materiales) y el Bolsillo seguro (3 casillas, contador,
@@ -210,3 +211,19 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
 
 ## Menú principal (14/11)
 `TitleScreen.tsx`, estilos `.tm*` y `.gm*` en `game.css`. Columna izquierda: logo arriba, menú abajo (entradas `.gm-it`, la elegida con `.on`: dorado y rombo rojo; flechas y Enter), enlaces externos en `.gm-links` y aviso de la alpha al pie. Derecha: `Diorama` con `fill="#040308"` sobre el mismo negro, con máscara en los bordes. Maquetas: `mockups/menu-principal/index.html`.
+
+## Nombres de pestañas (14/11)
+Rótulos visibles: Jugar · Habilidades · Alijo · Bastión · Misiones · Bestiario · Tienda; dentro del Alijo, Equipo · Heridas
+(móvil: Equipo · Almacén · Heridas). Por dentro no cambian (pestañas `character` y `stash`, vista `status`, `data-testid`
+`tab-character`, `tab-stash`, `seg-status`, archivo `Alijo.tsx`), para no tocar guardados ni pruebas.
+
+## Panel Aventurero del Alijo (14/11)
+`HeroStats.tsx`: `LevelBar` (Nivel N · XP con barra) arriba del panel y `HeroStats` (atributos). Pasar el ratón o tocar un
+atributo abre el desglose (`stat-tip`, en un portal): total, base y una línea por fuente distinta de cero, verde si suma y rojo
+si resta. Las fuentes salen de `statSources(profile)`: hoy solo «Equipo»; ahí se añaden runas, habilidades, heridas o comida.
+Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo, en la vista Equipo.
+
+## Elegir personaje y Bestiario (14/11)
+- Cada tarjeta lleva la trayectoria compacta (`char-record-<hueco>`): «3 expediciones · 2 extracciones · 1 muerte», o «Sin expediciones».
+- Bestiario: resumen arriba (`bestiary-summary`: criaturas derrotadas y jefes derrotados de N), «N derrotadas» en cada criatura
+  (`beast-kills-<id>`, del contador por tipo `profile.bestiary[id].kills`, que ya existía) y los jefes con «✓ Derrotado» o «Por derrotar».

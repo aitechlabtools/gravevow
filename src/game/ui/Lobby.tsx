@@ -50,7 +50,7 @@ export function Lobby() {
   const stationsReady = readyStations(profile).length;
   const tutBadges = pendingBadges(useGame((s) => s.tutorials));
   const tabs: PillTab<LobbyTab>[] = ([
-    { id: 'play', label: 'Jugar' }, { id: 'character', label: 'Personaje' }, { id: 'stash', label: 'Intendencia' }, { id: 'merchants', label: 'Bastión', badge: stationsReady },
+    { id: 'play', label: 'Jugar' }, { id: 'character', label: 'Habilidades' }, { id: 'stash', label: 'Alijo' }, { id: 'merchants', label: 'Bastión', badge: stationsReady },
     { id: 'quests', label: 'Misiones', badge: questsReady }, { id: 'bestiary', label: 'Bestiario' }, { id: 'shop', label: 'Tienda' },
   ] as PillTab<LobbyTab>[]).map((t) => ({ ...t, dot: !dev.skipMinis && tutBadges.has(`tab-${t.id}`) }));
   // Cada pestaña lanza su disparador de mini tutorial («tab:<id>»): solo sale la primera vez
@@ -97,7 +97,7 @@ export function Lobby() {
         <div key={tab} className="fade-in h-full">
           {tab === 'play' && <Jugar onNavigate={(t) => { if (t === 'contracts') setVendorTarget({ vendor: 'grizk', view: 'contracts' }); go(t === 'contracts' ? 'merchants' : t); }} />}
           {tab === 'character' && <Personaje onStash={() => go('stash')} />}
-          {tab === 'stash' && <Alijo onDetails={() => go('character')} onShop={() => go('shop')} />}
+          {tab === 'stash' && <Alijo onShop={() => go('shop')} />}
           {tab === 'merchants' && <Mercaderes target={vendorTarget} onConsumed={() => setVendorTarget(null)} />}
           {tab === 'quests' && <Misiones />}
           {tab === 'shop' && <Tienda />}

@@ -34,6 +34,8 @@ export type Screen = 'boot' | 'title' | 'select' | 'backup' | 'create' | 'lobby'
 export interface RosterEntry {
   id: string; slot: number; name: string; classId: ClassId; level: number; gold: number; lastPlayedAt: number;
   appearance: Appearance; equipment: Profile['equipment']; skin: string | null;
+  /** Trayectoria para Elegir personaje. */
+  record: { expeditions: number; extractions: number; deaths: number };
 }
 
 export interface Toast { id: number; text: string; kind: 'loot' | 'info' | 'danger' | 'social' | 'good'; icon?: string }
@@ -249,6 +251,7 @@ export function rosterOf(sv: SaveData | null): RosterEntry[] {
     id: c.id, slot: c.slot, name: c.character.name, classId: c.character.classId, level: c.character.level, gold: c.gold,
     lastPlayedAt: c.lastPlayedAt, appearance: c.character.appearance, equipment: c.equipment,
     skin: c.skinEquipped && sv.account.skinsOwned.includes(c.skinEquipped) ? c.skinEquipped : null,
+    record: { expeditions: c.stats?.expeditions ?? 0, extractions: c.stats?.extractions ?? 0, deaths: c.stats?.deaths ?? 0 },
   }));
 }
 /** Pone al día la lista de personajes que ve la interfaz. */

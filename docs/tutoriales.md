@@ -34,7 +34,7 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 | `tab.bestiario` | Progresión | `tab:bestiary` | intendant | `tab-bestiary` | `bestiary` | 2 | — |
 | `tab.tienda` | Cuenta y copia | `tab:shop` | intendant | `tab-shop` | `shop` | 2 | — |
 | `tab.intendencia` | Heridas y necesidades | `stash:status` | intendant | — | `intendencia-status`, `body-quick` | 2 | — |
-| `tab.personaje` | Progresión | `tab:character` | intendant | `tab-character` | `character-stats`, `class-path` | 2 | — |
+| `tab.personaje` | Progresión | `tab:character` | intendant | `tab-character` | `skill-arc`, `character-panels` | 2 | — |
 | `screen.bastion-entry` | Mercaderes | `bastion:merchants` | intendant | `tab-merchants` | `vendor-list`, `vendor-card-nira`, `vendor-nira` | 3 | tras la bienvenida |
 | `tab.refugio` | Bastión y estaciones | `bastion:station` | orik | — | `vendor-view-station`, `station-panel` | 2 | la primera vez que se abre la pestaña de una estación |
 | `screen.backup` | Cuenta y copia | `screen:backup` | intendant | — | `screen-backup` | 2 | — |

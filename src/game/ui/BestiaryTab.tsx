@@ -18,6 +18,10 @@ const STAT_NAMES: [keyof import('../../core/types').Stats, string][] = [['maxHp'
 
 export function BestiaryTab() {
   const rec = useGame((s) => s.profile!.bestiary);
+  const kills = useGame((s) => s.profile!.stats.kills);
+  const beaten = useGame((s) => s.profile!.bossesDefeated);
+  const bosses = Object.values(ENEMIES).filter((e) => e.boss).map((e) => e.id);
+  const bossDown = (id: string) => beaten.includes(id) || (rec[id]?.kills ?? 0) > 0;
   const [zone, setZone] = useState<ZoneId>('mazmorra');
   const [open, setOpen] = useState<string | null>(null);
   const groups = bestiaryByZone();
@@ -31,6 +35,10 @@ export function BestiaryTab() {
           <p className="font-body text-base text-stone-400">Lucha para saber más: al verla conoces su nombre; al derrotarla, cómo pelea; tras {BESTIARY_FULL_KILLS} victorias, todos sus secretos.</p>
         </div>
         <div className="text-gold font-display text-xl" data-testid="bestiary-progress">{prog.known} / {prog.total}</div>
+      </div>
+      <div className="panel px-4 py-2.5 flex flex-wrap gap-x-8 gap-y-1 font-body text-[16px]" data-testid="bestiary-summary">
+        <span><span className="text-stone-300">Criaturas derrotadas</span> <span className="font-display text-parchment">{kills}</span></span>
+        <span><span className="text-stone-300">Jefes derrotados</span> <span className="font-display text-parchment">{bosses.filter(bossDown).length}</span> <span className="text-stone-400">de {bosses.length}</span></span>
       </div>
       <div className="flex gap-2 flex-wrap">
         {groups.map((g) => {
@@ -54,6 +62,9 @@ export function BestiaryTab() {
               </div>
               <span className="text-[11px] text-center leading-tight">{k === 0 ? '???' : e.name}</span>
               <KnowledgePips k={k} />
+              {e.boss
+                ? <span className={`text-[11px] font-display whitespace-nowrap ${bossDown(id) ? 'text-heal' : 'text-blood'}`} data-testid={`beast-boss-${id}`}>{bossDown(id) ? '✓ Derrotado' : 'Por derrotar'}</span>
+                : (rec[id]?.kills ?? 0) > 0 && <span className="text-[11px] text-stone-400" data-testid={`beast-kills-${id}`}>{rec[id].kills} {rec[id].kills === 1 ? 'derrotada' : 'derrotadas'}</span>}
             </button>
           );
         })}

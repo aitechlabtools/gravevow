@@ -25,7 +25,7 @@ export function ClassUnlockNotice() {
       <Modal onClose={() => setJust(null)} testId="class-unlocked">
         <h2 className="panel-title text-xl mb-2">{sk.name}</h2>
         <p className="font-body text-lg text-stone-200">{sk.description}</p>
-        <p className="font-body text-stone-300 mt-2">¿La llevas en la próxima expedición para probarla? Solo puedes llevar una habilidad de clase; la cambias cuando quieras en Personaje.</p>
+        <p className="font-body text-stone-300 mt-2">¿La llevas en la próxima expedición para probarla? Solo puedes llevar una habilidad de clase; la cambias cuando quieras en Habilidades.</p>
         <div className="flex gap-2 mt-4 flex-wrap">
           <button className="btn btn-gold" onClick={() => { actions.equipClassSkill(just); setJust(null); }} data-testid="btn-try-class">Equiparla</button>
           <button className="btn" onClick={() => setJust(null)} data-testid="btn-later-class">Ahora no</button>

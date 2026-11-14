@@ -118,7 +118,7 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
           <div className="font-body text-parchment leading-tight mt-1">{phone ? sub.name : zone.name} · Nv {sub.levels[0]}–{sub.levels[1]}</div>
           {easy && <div className="text-xs text-ember mt-1" data-testid="zone-easy-note">Demasiado fácil para ti: {Math.round(easy.xp * 100)} % de experiencia y {Math.round(easy.gold * 100)} % de oro.</div>}
           {lock && <div className="text-xs text-blood mt-1" data-testid="zone-lock">{lock}</div>}
-          {!profile.equipment.mainHand && <div className="text-xs text-ember mt-1">Vas sin arma. Revisa tu equipo en la Intendencia.</div>}
+          {!profile.equipment.mainHand && <div className="text-xs text-ember mt-1">Vas sin arma. Revisa tu equipo en el Alijo.</div>}
           {cure && (
             <div className="flex items-center gap-2 mt-2" data-testid="jugar-cure">
               <span className="text-xs text-blood flex-1">{cure.fallen ? 'Caíste en la última incursión.' : g('Vas herid{o|a}.')} {g('Vesper puede dejarte enter{o|a}.')}</span>

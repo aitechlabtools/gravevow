@@ -48,6 +48,13 @@ export function ElegirPersonaje() {
   );
 }
 
+/** Trayectoria compacta: «3 expediciones · 2 extracciones · 1 muerte», o «Sin expediciones» (así todas las tarjetas miden igual). */
+function recordLine(r: RosterEntry['record']) {
+  if (!r.expeditions) return 'Sin expediciones';
+  const n = (v: number, one: string, many: string) => `${v} ${v === 1 ? one : many}`;
+  return [n(r.expeditions, 'expedición', 'expediciones'), n(r.extractions, 'extracción', 'extracciones'), n(r.deaths, 'muerte', 'muertes')].join(' · ');
+}
+
 function HeroCard({ r, active, onDelete }: { r: RosterEntry; active: boolean; onDelete: () => void }) {
   const layout = useLayout();
   const sc = layout === 'phone' ? 2 : layout === 'tablet' ? 4 : 6;
@@ -63,6 +70,7 @@ function HeroCard({ r, active, onDelete }: { r: RosterEntry; active: boolean; on
         </div>
         <div className="font-display text-parchment mt-2 truncate max-w-full" style={{ fontSize: layout === 'phone' ? 14 : 18 }}>{r.name}</div>
         <div className="text-xs md:text-sm text-stone-300">{className(r.classId, r.appearance.sex)} · Nv {r.level}</div>
+        <div className="text-[11px] md:text-[13px] text-stone-400 leading-tight mt-0.5" data-testid={`char-record-${r.slot}`}>{recordLine(r.record)}</div>
         <div className="mt-1 text-xs md:text-sm"><GoldAmount value={r.gold} /></div>
         <div className="text-[11px] text-stone-400 mt-0.5">{lastPlayedLabel(r.lastPlayedAt)}</div>
       </button>

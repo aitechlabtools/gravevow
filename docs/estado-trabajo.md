@@ -4,6 +4,15 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 14/11 (4): Habilidades, Alijo, Elegir personaje y Bestiario
+- Nombres: Personaje → **Habilidades**, Intendencia → **Alijo**, Estado → **Heridas** (textos, tutoriales y avisos). Por dentro
+  siguen `character`, `stash`, `status` y sus `data-testid`, para no tocar partidas ni pruebas.
+- Habilidades: Ataques a la izquierda, héroe (más grande) en el centro y Clase a la derecha; en tableta y móvil, selector Ataques · Clase.
+- Alijo: fuera «Ver detalles»; nivel y XP arriba del panel Aventurero; desglose de cada atributo al pasar el ratón o tocarlo (`HeroStats.tsx`, `statSources`).
+- Elegir personaje: trayectoria compacta en cada tarjeta. Bestiario: criaturas y jefes derrotados arriba, «N derrotadas» por criatura y jefes marcados.
+  El contador por tipo ya existía (`profile.bestiary[id].kills`): no cambia el guardado.
+- Maquetas: `mockups/reorganizacion-habilidades/index.html` (y `mockups/habilidades`).
+
 ## Novedades del 14/11 (3): menú principal nuevo
 - Columna izquierda con el logo arriba (lema centrado bajo él) y el menú abajo; a la derecha, el diorama animado de la landing
   (`src/landing/Diorama.tsx`, ahora con `fill`, `ax` y `ay`) flotando sobre el mismo negro de la página (#040308), sin corte ni degradados.

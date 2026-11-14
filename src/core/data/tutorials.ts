@@ -70,7 +70,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     id: WELCOME_ID, topic: 'bastion', trigger: 'lobby:welcome', narrator: 'intendant', long: true,
     steps: [
       { text: 'Bienvenido al **Bastión de Ceniza**. Soy el intendente: aquí arriba lo tienes todo, en estas pestañas.', target: 'lobby-nav' },
-      { text: 'Empecemos por tu **Intendencia**: tu equipo, tu mochila y el almacén. Haz clic en la pestaña.', touch: 'Empecemos por tu **Intendencia**: tu equipo, tu mochila y el almacén. Toca la pestaña.', target: 'tab-stash', action: 'click' },
+      { text: 'Empecemos por tu **Alijo**: tu equipo, tu mochila y el almacén. Haz clic en la pestaña.', touch: 'Empecemos por tu **Alijo**: tu equipo, tu mochila y el almacén. Toca la pestaña.', target: 'tab-stash', action: 'click' },
       { text: 'Lo que traes de abajo va en la **mochila**, y la mochila **se pierde si mueres**. El oro también **ocupa sitio**: las monedas sueltas llenan casillas. Elige un objeto para ver su ficha; arrástralo para moverlo y haz **doble clic** para la acción rápida.', touch: 'Lo que traes de abajo va en la **mochila**, y la mochila **se pierde si mueres**. El oro también **ocupa sitio**: las monedas sueltas llenan casillas. Toca un objeto para ver su ficha y luego una casilla libre para moverlo; **dos toques**, acción rápida.', target: 'alijo-backpack' },
       { text: 'Los **saquitos** y **sacos** que vende Nira guardan muchas monedas en una sola casilla. Pulsa **«Agrupar oro»**.', touch: 'Los **saquitos** y **sacos** que vende Nira guardan muchas monedas en una sola casilla. Toca **«Agrupar oro»**.', target: 'group-gold-backpack', action: 'click' },
       { text: 'Este es tu **bolsillo seguro**: lo que guardes ahí **no se pierde al morir**. Caben cosas pequeñas, como llaves o saquitos. Arrastra ahí lo más valioso antes de bajar.', touch: 'Este es tu **bolsillo seguro**: lo que guardes ahí **no se pierde al morir**. Caben llaves o saquitos: toca uno y luego una casilla del bolsillo.', target: 'alijo-pocket' },
@@ -114,8 +114,8 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   {
     id: 'tab.personaje', topic: 'progresion', trigger: 'tab:character', badge: 'tab-character',
     steps: [
-      { text: 'Tu nivel, tus atributos y lo que te da el equipo.', target: 'character-stats' },
-      { text: 'Las **habilidades de clase** se ganan por hitos. Equipa las que quieras llevar abajo.', target: 'class-path' },
+      { text: 'Tus **ataques** salen de tus armas: cada mano trae los suyos. Para cambiarlos, cambia de arma en el **Alijo**.', target: 'skill-arc' },
+      { text: 'La **habilidad de clase** se gana por hitos de nivel, en el panel **Clase**. Solo llevas una equipada.', target: 'character-panels' },
     ],
   },
   {
@@ -160,7 +160,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     steps: [
       { text: 'Te han traído a rastras. Lo que llevabas en la mochila se ha quedado abajo.' },
       { text: 'Te dejo entera la carne por **una moneda**, o gratis si no tienes ni eso.', target: 'cure-btn', action: 'click' },
-      { text: 'Y si te has quedado sin nada que ponerte, en **Intendencia** el Bastión te da **equipo de recluta**.' },
+      { text: 'Y si te has quedado sin nada que ponerte, en el **Alijo** el Bastión te da **equipo de recluta**.' },
     ],
   },
   {
@@ -173,7 +173,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   {
     id: 'bastion.first-sale', topic: 'objetos', trigger: 'bastion:sale',
     steps: [
-      { text: 'Bien vendido. El oro va a tu **Intendencia**, en saquitos.' },
+      { text: 'Bien vendido. El oro va a tu **Alijo**, en saquitos.' },
       { text: 'Si te equivocas, lo último que vendes se puede **recomprar** al mismo precio.' },
     ],
   },
@@ -208,7 +208,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   {
     id: 'unlock.class-skill', topic: 'progresion', trigger: 'unlock:class-skill',
     steps: [
-      { text: 'Habilidad de clase nueva. La tienes en **Personaje**, junto a las demás.', target: 'tab-character' },
+      { text: 'Habilidad de clase nueva. La tienes en **Habilidades**, en el panel Clase.', target: 'tab-character' },
       { text: '**Equípala** allí para llevarla abajo. Solo llevas una, y se cambia fuera de combate.' },
       { text: 'En combate aparece como un ataque más.' },
     ],
@@ -288,7 +288,7 @@ function STATION_MINIS(): MiniTutorial[] {
     forge: 'Va a tu almacén. Con lingotes se forjan armas y placas.',
     alchemy: 'Va a tu almacén. Bébelo abajo si algo te envenena.',
     tannery: 'Va a tu almacén. La correa sirve para torniquetes, férulas y armaduras.',
-    armory: 'Van a tu almacén. Póntelos en la Intendencia.',
+    armory: 'Van a tu almacén. Póntelos en el Alijo.',
   };
   return (Object.keys(STATION_FIRST_RECIPE) as CraftStation[]).map((st) => ({
     id: `station.${st}`, topic: 'bastion' as const, trigger: `station:${st}`, narrator: STATIONS[st].by,
@@ -373,7 +373,7 @@ function EXPEDITION_MINIS(): MiniTutorial[] {
     ] },
     { id: 'combat.class-skill', topic: 'combate', trigger: 'combat:class-skill', inCombat: true, steps: [
       { text: 'Tu **habilidad de clase** está lista. Es tu mejor golpe; luego tarda unos turnos en volver.', target: 'act-class' },
-      { text: 'Lleva una equipada. Las demás las desbloqueas y eliges en **Personaje**, en la ruta de tu clase.' },
+      { text: 'Lleva una equipada. Las demás las desbloqueas y eliges en **Habilidades**, en el panel Clase.' },
     ] },
   ];
 }

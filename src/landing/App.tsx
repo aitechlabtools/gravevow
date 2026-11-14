@@ -20,7 +20,7 @@ const SHOTS: Shot[] = [
   { src: SHOT_DIR + 'g-cripta', alt: 'Exploración de las Catacumbas Ahogadas, con agua negra y velas frías', caption: 'Las Catacumbas Ahogadas, en las criptas de Umbravel.' },
   { src: SHOT_DIR + 'g-infierno', alt: 'Exploración de los Ríos de Fuego, en el Infierno', caption: 'Los Ríos de Fuego, en el Infierno.' },
   { src: SHOT_DIR + 'g-traicion', alt: 'Un mercenario se vuelve contra el saqueador y empieza el combate', caption: 'Cuando el aliado se vuelve contra ti.' },
-  { src: SHOT_DIR + 'g-intendencia', alt: 'La Intendencia: mochila y almacén con botín de todas las rarezas', caption: 'Tu mochila y tu almacén: elige qué arriesgas.' },
+  { src: SHOT_DIR + 'g-intendencia', alt: 'El Alijo: mochila y almacén con botín de todas las rarezas', caption: 'Tu mochila y tu almacén: elige qué arriesgas.' },
 ];
 
 

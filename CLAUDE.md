@@ -48,7 +48,7 @@ Capas: datos → lógica → estado → interfaz y motor.
 - `src/game/music`: música de archivo del Bastión y el menú (`playlist.ts`, archivos en `public/audio`) y sistema generado apagado (instrumentos, motor y director); interruptores y listas en `config/music.ts`; brief y licencias en `docs/musica.md`. Pruebas del generado: `/play/?debug&musica`.
 - `src/game/engine`: la escena de mazmorra (`DungeonScene.ts`) solo dibuja y mueve; los hechos del juego pasan por acciones del estado.
 - `src/game/ui`: pantallas.
-  - `screens/`: Jugar, Alijo (pestaña «Intendencia», vistas Equipo y Estado), Personaje, Mercaderes (pestaña «Bastión»: los 8 mercaderes con retrato de medio pecho; cada uno con sus pestañas y su estación dentro), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
+  - `screens/`: Jugar, Alijo (pestaña «Alijo», vistas Equipo y Heridas; atributos con desglose en `HeroStats.tsx`), Personaje (pestaña «Habilidades»), Mercaderes (pestaña «Bastión»: los 8 mercaderes con retrato de medio pecho; cada uno con sus pestañas y su estación dentro), Misiones, Atuendos, Crear y Elegir personaje, Copia de seguridad.
   - Mercaderes: los 8 del plan maestro en `data/vendors.ts`; todos están desde el principio (`core/vendors.ts`), que migra la reputación antigua.
   - Las piezas comunes están en `kit/`.
   - Mazmorra, combate y resumen: `DungeonScreen`, `CombatScreen` y `SummaryScreen` (resultados en 2 o 3 páginas; el botín conseguido sale de `startCounts` en `expedition.ts`). El arrastre de objetos está en `pointerDrag.tsx`.

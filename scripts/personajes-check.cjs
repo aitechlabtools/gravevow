@@ -67,7 +67,7 @@ async function run(s) {
   // Recargar: sigue Aldric con su oro
   await p.waitForTimeout(400); await p.reload(); await p.waitForTimeout(800);
   x = await st();
-  const btn = await p.textContent('[data-testid=btn-play]');
+  const btn = (await p.getAttribute('[data-testid=btn-play]', 'aria-label')) ?? await p.textContent('[data-testid=btn-play]'); // «Continuar», con el nombre en la etiqueta y en la ficha
   if (x.name !== 'Aldric' || x.gold !== 4321 || !/Aldric/.test(btn)) fail('tras recargar: ' + JSON.stringify(x) + ' ' + btn);
   const smalls = [...new Set([...sm1, ...sm2])];
   if (smalls.length) fail('botones táctiles de menos de 44 px: ' + smalls.join(' | '));

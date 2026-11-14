@@ -526,7 +526,7 @@ export const actions = {
     if (def.use.kind === 'need') return actions.eat(loc);
     if (def.use.kind === 'bomb') return invError('Las bombas se lanzan en combate, desde la mochila.');
     if (!s.expedition && def.use.kind === 'heal' && loc.kind === 'grid' && loc.container === 'backpack') return actions.baseHeal(st.itemId);
-    if (!s.expedition && def.use.kind === 'treat') return invError('En el Bastión, las heridas se tratan en Intendencia → Estado.');
+    if (!s.expedition && def.use.kind === 'treat') return invError('En el Bastión, las heridas se tratan en el Alijo → Heridas.');
     if (s.screen !== 'dungeon' || !s.expedition) return invError(def.use.kind === 'repair' ? 'El kit se usa en la mazmorra; en la base, Maese Brand repara mejor.' : 'Las pociones solo se usan durante una expedición.');
     const stats = computeStats(s.profile.character.classId, s.profile.character.level, s.expedition.equipment);
     const exp = { ...s.expedition };
