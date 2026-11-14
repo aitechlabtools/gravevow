@@ -73,7 +73,7 @@ Capas: datos → lógica → estado → interfaz y motor.
 **Landing.** Mantén al día la hoja de ruta (`src/landing/roadmap.ts`) y los textos (`App.tsx` y `sections.tsx`) cuando cambie el juego. Nada de cifras exactas: como mucho «más de X».
 
 **Privacidad y legal.**
-- Los textos legales están en `src/legal/texts.tsx`. Hoy no hay cookies ni servicios de terceros, y por eso no hay banner.
+- Los textos legales están en `src/legal/texts.tsx`. Google Tag Manager (`GTM-WJNS8GH8`) se carga solo tras aceptar el aviso de cookies (`src/shared/consent.ts`, clave `gv-consent`; «Configurar cookies» en el pie, Ajustes y la página de cookies).
 - Antes de guardar algo nuevo en el navegador o de cargar un servicio externo, actualiza las políticas de cookies y de privacidad. Si no es estrictamente necesario, añade también un banner de consentimiento.
 - **Los datos del titular (nombre, NIF, ciudad y correo) van SOLO como imágenes** (`public/legal/d1–d5.png`, componente `Dato`).
   - Nunca se escriben como texto en el código, los documentos ni los commits, y nunca se inventan.

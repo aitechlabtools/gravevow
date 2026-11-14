@@ -12,8 +12,9 @@
 import type { ReactNode } from 'react';
 import { DONATE_URL } from '../landing/site';
 import { Dato, EmailInline, MailButton, StorageTable, revealData, useRevealed, type LegalSection } from './LegalPage';
+import { openConsent } from '../shared/consent';
 
-export const UPDATED = '11 de noviembre de 2026';
+export const UPDATED = '14 de noviembre de 2026';
 
 function Titular() {
   const shown = useRevealed();
@@ -98,7 +99,7 @@ export const AVISO: PageDef = {
 export const PRIVACIDAD: PageDef = {
   title: 'Política de privacidad',
   intro: <>
-    <p><strong>En resumen:</strong> esta web no tiene formularios, cuentas, analítica, publicidad ni cookies. Tu partida se guarda solo en tu navegador y no se envía al titular. El único tratamiento de datos es técnico: el del servicio que aloja la web (GitHub) y, si nos escribes, el de tu correo.</p>
+    <p><strong>En resumen:</strong> esta web no tiene formularios ni cuentas. Tu partida se guarda solo en tu navegador y no se envía al titular. Si aceptas las cookies de análisis, Google Tag Manager mide de forma agregada cómo se usan la web y el juego. Además están el servicio que aloja la web (GitHub) y, si nos escribes, tu correo.</p>
   </>,
   sections: [
     { id: 'responsable', title: 'Responsable del tratamiento', body: <>
@@ -106,10 +107,20 @@ export const PRIVACIDAD: PageDef = {
       <p>Puedes escribir al correo del titular para cualquier cuestión sobre tus datos.</p>
     </> },
     { id: 'datos', title: 'Qué datos tratamos', body: <>
-      <p><strong>El titular no recoge datos personales a través de la web.</strong> No hay registro, formularios, comentarios, analítica, píxeles de seguimiento, publicidad ni botones de redes sociales.</p>
+      <p><strong>El titular no recoge datos personales a través de formularios.</strong> No hay registro, formularios, comentarios ni botones de redes sociales. La única analítica es la descrita en «Analítica con Google Tag Manager», y solo si la aceptas.</p>
       <p><strong>Tu partida se queda en tu dispositivo.</strong> El juego guarda en tu navegador los nombres que pones a tus personajes, su progreso, su equipo y tus ajustes de sonido. Esos datos no salen de tu dispositivo: el titular no los recibe ni puede verlos. Puedes borrarlos cuando quieras desde Ajustes en el juego («Borrar personaje») o borrando los datos del sitio en tu navegador. Los detalles están en la <a href="./cookies.html">Política de cookies</a>.</p>
       <p><strong>Las copias de seguridad también son tuyas.</strong> Si haces una copia de tu partida, el juego crea un archivo o un código de texto en tu dispositivo. No se envía a ningún sitio: tú decides dónde guardarlo y con quién compartirlo. Al cargar una copia, el juego solo la lee en tu navegador.</p>
       <p><strong>Todo se sirve desde esta web.</strong> Las tipografías, las imágenes y el tráiler están alojados en la propia web: tu navegador no se conecta a servicios de terceros (como Google Fonts o YouTube) para mostrarlos.</p>
+    </> },
+    { id: 'analitica', title: 'Analítica con Google Tag Manager', body: <>
+      <p>Si pulsas «Aceptar» en el aviso de cookies, la web y el juego cargan <strong>Google Tag Manager</strong> (Google Ireland Limited, Gordon House, Barrow Street, Dublín 4, Irlanda) y las etiquetas de análisis que contiene. Sirven para saber, de forma agregada, cuántas personas visitan la web, de dónde llegan y cómo se juega, y así mejorar Gravevow.</p>
+      <ul>
+        <li><strong>Datos:</strong> identificadores de cookies, dirección IP, tipo de dispositivo y navegador, páginas vistas y acciones en la web y el juego.</li>
+        <li><strong>Base jurídica:</strong> tu consentimiento (artículo 6.1.a del RGPD). Puedes retirarlo cuando quieras con «Configurar cookies», en el pie de la web o en Ajustes del juego.</li>
+        <li><strong>Transferencia internacional:</strong> Google puede tratar los datos en Estados Unidos; se acoge al Marco de Privacidad de Datos UE-EE. UU. y a las cláusulas contractuales tipo.</li>
+        <li><strong>Más información:</strong> la política de privacidad de Google (policies.google.com/privacy).</li>
+      </ul>
+      <p>Si rechazas o no respondes, no se carga nada de Google.</p>
     </> },
     { id: 'alojamiento', title: 'Alojamiento web: GitHub Pages', body: <>
       <p>La web está alojada en GitHub Pages, un servicio de GitHub, Inc. (88 Colin P. Kelly Jr. St., San Francisco, CA 94107, Estados Unidos). Como cualquier servidor, para enviarte las páginas GitHub trata datos técnicos de cada visita, como tu <strong>dirección IP</strong>, el navegador, la página pedida y la fecha y la hora. Según GitHub, la IP de quien visita un sitio de GitHub Pages se registra y se guarda por motivos de seguridad, haya iniciado sesión en GitHub o no.</p>
@@ -155,29 +166,32 @@ export const PRIVACIDAD: PageDef = {
 // ─────────────────────────────────────────────────────────────────────────────
 const STORAGE_ROWS = [
   { name: 'gravevow', where: 'IndexedDB (base de datos del navegador)', owner: 'Propia', purpose: 'Guardar tu partida: tus personajes (hasta cuatro), su progreso, equipo y oro, tu almacén y tus ajustes de sonido. Al cargar una copia de seguridad, guarda también la partida anterior para poder deshacerlo.', duration: 'Hasta que borres el personaje o los datos del sitio.', type: 'Técnica, necesaria' },
+  { name: 'gv-consent', where: 'Almacenamiento local (localStorage)', owner: 'Propia', purpose: 'Recordar si aceptaste o rechazaste las cookies de análisis, para no volver a preguntarte.', duration: 'Hasta que borres los datos del sitio.', type: 'Técnica, necesaria' },
+  { name: '_ga, _ga_*', where: 'Cookie', owner: 'Google (tercero)', purpose: 'Analítica: distinguir visitantes y sesiones de forma agregada. Solo si aceptas.', duration: 'Hasta 2 años.', type: 'Análisis, opcional' },
   { name: 'gravevow.profile', where: 'Almacenamiento local (localStorage)', owner: 'Propia', purpose: 'Lo mismo que la anterior. Solo se usa si tu navegador no admite IndexedDB.', duration: 'Hasta que borres el personaje o los datos del sitio.', type: 'Técnica, necesaria' },
 ];
 
 export const COOKIES: PageDef = {
   title: 'Política de cookies',
   intro: <>
-    <p><strong>En resumen:</strong> esta web <strong>no usa cookies</strong>, ni propias ni de terceros. El juego solo guarda tu partida en tu navegador, y eso es necesario para que puedas jugar y continuar después. Por eso no verás ningún aviso de cookies.</p>
+    <p><strong>En resumen:</strong> el juego guarda tu partida en tu navegador, que es necesario para jugar. Además, <strong>solo si aceptas</strong>, se cargan cookies de análisis de Google a través de Google Tag Manager. Puedes cambiar tu elección cuando quieras con el botón de abajo, «Configurar cookies» en el pie de la web o en Ajustes del juego.</p>
+    <p><button type="button" className="btn-ghost" data-testid="legal-cookie-settings" onClick={openConsent}>Configurar cookies</button></p>
   </>,
   sections: [
     { id: 'que-son', title: 'Qué son las cookies', body: <>
       <p>Las cookies son pequeños archivos que una web guarda en tu navegador para recordar algo, como una preferencia o tu sesión. Hay otras tecnologías que funcionan parecido, como el almacenamiento local (localStorage) o IndexedDB, una pequeña base de datos dentro del navegador. La ley trata igual todas estas tecnologías.</p>
     </> },
     { id: 'que-usamos', title: 'Qué guarda esta web', body: <>
-      <p>La portada y las páginas legales no guardan nada en tu navegador. La alpha del juego guarda lo siguiente, y solo cuando creas un personaje:</p>
+      <p>Toda la web guarda tu elección sobre las cookies. La alpha del juego guarda además tu partida cuando creas un personaje. Y si aceptas la analítica, Google instala sus cookies:</p>
       <StorageTable rows={STORAGE_ROWS} />
-      <p>Todo es <strong>propio</strong>: lo crea esta web, se queda en tu dispositivo y nadie más lo lee, tampoco el titular.</p>
+      <p>Lo <strong>propio</strong> se queda en tu dispositivo y nadie más lo lee, tampoco el titular. Las cookies de Google las lee Google, como se explica en la <a href="./privacidad.html">Política de privacidad</a>.</p>
     </> },
-    { id: 'sin-banner', title: 'Por qué no hay aviso de cookies', body: <>
+    { id: 'aviso', title: 'El aviso de cookies', body: <>
       <p>La ley exige pedirte permiso antes de guardar información en tu navegador, excepto cuando es <strong>estrictamente necesario para prestar un servicio que tú pides</strong> (artículo 22.2 de la LSSI-CE). Guardar tu partida es justo eso: sin ese guardado no podrías jugar ni continuar donde lo dejaste. Así lo considera también la guía sobre cookies de la Agencia Española de Protección de Datos.</p>
-      <p>Esta web no usa cookies de análisis, de publicidad ni de redes sociales. Si algún día las usa, antes de cargarlas aparecerá un aviso con los botones «Aceptar» y «Rechazar» igual de visibles y la opción de configurarlas por categorías, y esta página se actualizará.</p>
+      <p>Las cookies de análisis no son necesarias, así que te pedimos permiso antes: en tu primera visita aparece un aviso con «Aceptar» y «Rechazar», igual de visibles. Mientras no aceptes, no se carga Google Tag Manager. No usamos cookies de publicidad ni de redes sociales.</p>
     </> },
     { id: 'terceros', title: 'Cookies de terceros', body: <>
-      <p>Ninguna. Las tipografías, las imágenes y el tráiler se sirven desde la propia web, sin servicios externos. El alojamiento (GitHub Pages) no instala cookies en tu navegador; lo que trata se explica en la <a href="./privacidad.html">Política de privacidad</a>.</p>
+      <p>Solo las de Google, y solo si aceptas (ver la tabla). Las tipografías, las imágenes y el tráiler se sirven desde la propia web. El alojamiento (GitHub Pages) no instala cookies en tu navegador; lo que trata se explica en la <a href="./privacidad.html">Política de privacidad</a>.</p>
       <p>Los botones «Apoyar» y «Discord» son simples enlaces a Ko-fi y a Discord, que se abren en otra pestaña. Esta web no carga nada de esos servicios; si los pulsas y entras en sus páginas, Ko-fi y Discord pueden usar allí sus propias cookies, según sus políticas.</p>
     </> },
     { id: 'borrar', title: 'Cómo borrar o bloquear estos datos', body: <>

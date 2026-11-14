@@ -15,6 +15,7 @@ import { MailButton } from '../../legal/LegalPage';
 import { CommunityLinks } from './TitleScreen';
 import { guideEntries, miniTitle, TOPIC_NAME, type TutTopic } from '../../core/data/tutorials';
 import { narratorName, rich } from './MiniTutorial';
+import { openConsent } from '../../shared/consent';
 
 export type SettingsTab = 'sound' | 'screen' | 'controls' | 'game' | 'community' | 'info';
 export const GAME_VERSION = 'Alpha v0.1';
@@ -306,6 +307,7 @@ function InfoSection() {
           <a className="btn" href="../aviso-legal.html" target="_blank" rel="noopener">Aviso legal</a>
           <a className="btn" href="../privacidad.html" target="_blank" rel="noopener">Privacidad</a>
           <a className="btn" href="../cookies.html" target="_blank" rel="noopener">Cookies</a>
+          <button type="button" className="btn" data-testid="settings-cookies" onClick={openConsent}>Configurar cookies</button>
         </div>
         <p className="set-note">Se abren en otra pestaña.</p>
       </Block>

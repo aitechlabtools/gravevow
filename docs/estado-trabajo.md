@@ -709,3 +709,9 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 1180 × 820). Pruebas: objetos-check, inventario-check, e2e-bienvenida (3 tamaños), almacen-check, necesidades-check, menus-check.
 `arrastre-check` ya fallaba antes en escritorio (slot-backpack-7): pendiente.
 
+
+
+## Novedades del 14/11 (5): Google Tag Manager
+- GTM `GTM-WJNS8GH8` en la web, el juego y las páginas legales, solo tras «Aceptar» en el aviso de cookies (`src/shared/consent.ts`, modo de consentimiento v2, elección en `gv-consent`).
+- «Configurar cookies» en el pie de la landing, en Ajustes › Legal y en la página de cookies. Retirar el consentimiento recarga la página para descargar GTM.
+- Políticas de cookies y de privacidad actualizadas (fecha 14/11/2026).

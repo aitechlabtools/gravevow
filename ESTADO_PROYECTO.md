@@ -172,3 +172,9 @@
   - Antes de nada de esto hay que actualizar las políticas legales.
 - 14/11: Menú principal nuevo: logo y menú de juego (rombo que marca la opción, ficha de la partida) a la izquierda y el diorama de la landing a la derecha sobre fondo negro. Sin figuras en las esquinas. La app instalada se llama «Gravevow Alpha».
 - 14/11: Pestañas renombradas (Habilidades, Alijo, Heridas). Habilidades con Ataques · héroe · Clase; atributos con desglose en el Alijo (sin «Ver detalles»); trayectoria en Elegir personaje; contadores y jefes en el Bestiario.
+
+
+## Novedades del 14/11 (5): Google Tag Manager
+- GTM `GTM-WJNS8GH8` en la web, el juego y las páginas legales, solo tras «Aceptar» en el aviso de cookies (`src/shared/consent.ts`, modo de consentimiento v2, elección en `gv-consent`).
+- «Configurar cookies» en el pie de la landing, en Ajustes › Legal y en la página de cookies. Retirar el consentimiento recarga la página para descargar GTM.
+- Políticas de cookies y de privacidad actualizadas (fecha 14/11/2026).
