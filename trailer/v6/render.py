@@ -34,7 +34,7 @@ def shot(i, src, t0, dur, cr, col, tag):
         fh.write(f"file '{sel[-1]['f']}'\n")
     vf = f'fps={FPS}'
     if cr == 'movil':
-        vf += f",scale=iw*2:ih*2:flags=neighbor,pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=0x07060a"  # móvil (960×444, ×2 exacto = 1920×888): pantalla entera
+        vf += f",scale='if(lt(iw,1000),iw*2,iw)':-2:flags=neighbor,pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=0x07060a"  # móvil 960×444: la grabación paso a paso ya sale a 1920×888 (doble resolución); el screencast se duplica ×2 exacto
     else:
         # Pantalla completa, sin recorte ni empuje de cámara (petición del 15/11); el recorte solo si se pide con FULL=0
         if cr and os.environ.get('FULL') == '0': vf += ',' + CROP[cr]

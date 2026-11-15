@@ -14,7 +14,7 @@ async function session(b, vp, touch, dsf = 1) {
   const ctx = await b.newContext({ viewport: vp, hasTouch: touch, isMobile: touch, deviceScaleFactor: dsf });
   // Aviso de cookies ya respondido (sin analítica): si no, tapa los botones durante la grabación
   await ctx.addInitScript(() => { try { localStorage.setItem('gv-consent', '{"analytics":false}'); } catch {} });
-  const page = await ctx.newPage(); vp = { width: vp.width * dsf, height: vp.height * dsf };
+  const page = await ctx.newPage(); const css = vp; vp = { width: vp.width * dsf, height: vp.height * dsf };
   const cdp = await ctx.newCDPSession(page);
   const wait = (ms) => page.waitForTimeout(ms);
   const ev = (fn, a) => page.evaluate(fn, a);
@@ -47,7 +47,7 @@ async function session(b, vp, touch, dsf = 1) {
         if (!sc) return;
         if (src) new Function('i', 'sc', 'cam', src)(i, sc, sc.cameras.main);
         c.t += 1000 / 30; sc.lightTimer = 1000; c.game.step(c.t, 1000 / 30); }, [perFrame || '', i]);
-      const { data } = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 92, clip: { x: 0, y: 0, width: vp.width, height: vp.height, scale: 1 } });
+      const { data } = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 92, clip: { x: 0, y: 0, width: css.width, height: css.height, scale: 1 } });
       const f = `${dir}/${String(i).padStart(5, '0')}.jpg`; fs.writeFileSync(f, Buffer.from(data, 'base64')); frames.push({ f, t: i / 30 });
     }
     await ev(() => window.__cine.game.loop.wake());

@@ -102,6 +102,7 @@ setup({ out: OUT, want, base: BASE });
       const cur = document.createElement('div'); cur.id = 'cine-cursor';
       cur.innerHTML = '<svg width="34" height="40" viewBox="0 0 17 20" shape-rendering="crispEdges"><path d="M1 1v15l4-4 3 7 3-1-3-7h6z" fill="#f3ead2" stroke="#07060a" stroke-width="1.4"/></svg>';
       Object.assign(cur.style, { position: 'fixed', left: '-60px', top: '-60px', zIndex: 99999, pointerEvents: 'none', filter: 'drop-shadow(0 0 6px rgba(232,179,58,.8))', transition: 'left .18s ease-out, top .18s ease-out' });
+      cur.style.display = 'none';  // sin puntero en el tráiler (15/11): los clics siguen siendo reales
       document.body.appendChild(cur);
       addEventListener('mousemove', (e) => { cur.style.left = e.clientX - 2 + 'px'; cur.style.top = e.clientY - 2 + 'px'; }, true);
     });
@@ -214,30 +215,22 @@ setup({ out: OUT, want, base: BASE });
       const sc = window.__GRAVEVOW__.scene(); const px = sc.player.x, py = sc.player.y;
       const live = sc.enemies.filter((e) => !e.dead).sort((a, b) => Math.hypot(a.x - px, a.y - py) - Math.hypot(b.x - px, b.y - py));
       for (const e of live) {
-        for (const [dx, dy] of [[4, 0], [0, 4], [-4, 0], [0, -4], [3, 3], [-3, 3], [3, -3], [-3, -3]]) {
+        for (const [dx, dy] of [[6, 0], [0, 6], [-6, 0], [0, -6], [5, 0], [0, 5], [-5, 0], [0, -5], [4, 0], [0, 4], [-4, 0], [0, -4]]) {
           const tx = Math.floor(e.x) + dx, ty = Math.floor(e.y) + dy; let clear = true;
-          for (let k = 1; k <= 4; k++) if (!sc.walkableTile(Math.floor(e.x) + Math.round(dx * k / 4), Math.floor(e.y) + Math.round(dy * k / 4))) clear = false;
+          const n = Math.max(Math.abs(dx), Math.abs(dy)); for (let k = 1; k <= n; k++) if (!sc.walkableTile(Math.floor(e.x) + Math.round(dx * k / n), Math.floor(e.y) + Math.round(dy * k / n))) clear = false;
           if (!clear || !sc.walkableTile(tx, ty)) continue;
           e.speed = 0; e.aggro = 0; for (const o of live) if (o !== e) o.aggro = 0;
-          sc.debugTeleport(tx, ty); window.__mob = e; return true;
+          sc.debugTeleport(tx, ty); window.__mob = e;
+          const n2 = Math.max(Math.abs(dx), Math.abs(dy)); window.__route = Array.from({ length: n2 - 1 }, (_, i) => [tx - Math.sign(dx) * (i + 1), ty - Math.sign(dy) * (i + 1)]); return true;
         }
       }
       return false;
     });
     console.log('móvil: enemigo cerca', ok);
     await m.wait(600);
-    const touch = (type, pts) => m.cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], i) => ({ x, y, id: i })) });
-    const zone = await (await m.page.$('[data-testid=touch-stick-zone]')).boundingBox();
-    const sx = zone.x + 110, sy = zone.y + zone.height - 100;
-    // Dirección del joystick: de Aldric hacia el enemigo, en pantalla
-    const dir = () => m.ev(() => { const sc = window.__GRAVEVOW__.scene(); const a = sc.player.sprite ?? sc.playerSprite, e = window.__mob.sprite;
-      const dx = e.x - a.x, dy = e.y - a.y, n = Math.hypot(dx, dy) || 1; return [dx / n, dy / n, Math.hypot(window.__mob.x - sc.player.x, window.__mob.y - sc.player.y)]; });
-    await m.record('n-movil', async () => {
-      await m.wait(250);
-      await touch('touchStart', [[sx, sy]]);
-      for (let k = 0; k < 40; k++) { const [dx, dy, d] = await dir(); if (d < 1.6) break; await touch('touchMove', [[sx + dx * 50, sy + dy * 50]]); await m.wait(50); }
-      await touch('touchEnd', []); await m.wait(500);
-    });
+    // Paso a paso a 30 fps exactos (igual que los planos de mazmorra), con la interfaz del móvil visible: camina hacia el enemigo
+    await m.ev(() => { const sc = window.__GRAVEVOW__.scene(); sc.path = window.__route.filter(([x, y]) => sc.walkableTile(x, y)); });
+    await m.stepRecord('n-movil', 60, '');
     await m.ctx.close();
   }
 
