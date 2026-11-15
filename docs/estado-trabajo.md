@@ -12,6 +12,7 @@ Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 - La grabación marca el aviso de cookies como respondido (sin analítica), porque tapaba los botones.
 - Vista previa: `mockups/trailer-golpe-marca/index.html`. Publicado en `public/trailer`.
 - **Rehacerlo:** con `npx vite --port 5173` en marcha, `npm run trailer` (todo) o `node scripts/trailer6-capture.cjs http://localhost:5173/play/ /tmp/claude-0/t6 c-marca,n-intendencia,n-movil` y después `npm run trailer:render`. Si se vuelve a grabar `c-marca`, revisa los inicios de sus tres trozos en `trailer/v6/guion.json` con los tiempos que imprime la captura.
+- Retoques: «¿Te atreves a bajar?» sobre negro (0–2,4 s); fuera el segundo plano del Infierno (Ríos de Fuego), el Carmesí dura 1,8 s y se entra directo al combate; en el plano del móvil, mochila vacía (sin sobrecarga) y Aldric camina con el joystick hacia un esqueleto.
 - Tutoriales: revisados, sin cambios.
 
 ## Novedades del 14/11 (4): Habilidades, Alijo, Elegir personaje y Bestiario

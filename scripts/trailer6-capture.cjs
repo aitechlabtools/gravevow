@@ -207,15 +207,36 @@ setup({ out: OUT, want, base: BASE });
     await m.start();
     await m.page.fill('[data-testid=name-input]', 'Aldric'); await m.act('btn-create');
     await m.advanced();
+    // Mochila vacía (sin sobrecarga) y Aldric a unas casillas de un enemigo, que se queda quieto (solo en el guion)
+    await m.ev(() => { const G = window.__GRAVEVOW__; const p = G.getState().profile; G.setState({ profile: { ...p, backpack: p.backpack.map(() => null) } }); });
     await m.enter('catacumbas');
+    const ok = await m.ev(() => {
+      const sc = window.__GRAVEVOW__.scene(); const px = sc.player.x, py = sc.player.y;
+      const live = sc.enemies.filter((e) => !e.dead).sort((a, b) => Math.hypot(a.x - px, a.y - py) - Math.hypot(b.x - px, b.y - py));
+      for (const e of live) {
+        for (const [dx, dy] of [[4, 0], [0, 4], [-4, 0], [0, -4], [3, 3], [-3, 3], [3, -3], [-3, -3]]) {
+          const tx = Math.floor(e.x) + dx, ty = Math.floor(e.y) + dy; let clear = true;
+          for (let k = 1; k <= 4; k++) if (!sc.walkableTile(Math.floor(e.x) + Math.round(dx * k / 4), Math.floor(e.y) + Math.round(dy * k / 4))) clear = false;
+          if (!clear || !sc.walkableTile(tx, ty)) continue;
+          e.speed = 0; e.aggro = 0; for (const o of live) if (o !== e) o.aggro = 0;
+          sc.debugTeleport(tx, ty); window.__mob = e; return true;
+        }
+      }
+      return false;
+    });
+    console.log('móvil: enemigo cerca', ok);
+    await m.wait(600);
     const touch = (type, pts) => m.cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], i) => ({ x, y, id: i })) });
     const zone = await (await m.page.$('[data-testid=touch-stick-zone]')).boundingBox();
     const sx = zone.x + 110, sy = zone.y + zone.height - 100;
+    // Dirección del joystick: de Aldric hacia el enemigo, en pantalla
+    const dir = () => m.ev(() => { const sc = window.__GRAVEVOW__.scene(); const a = sc.player.sprite ?? sc.playerSprite, e = window.__mob.sprite;
+      const dx = e.x - a.x, dy = e.y - a.y, n = Math.hypot(dx, dy) || 1; return [dx / n, dy / n, Math.hypot(window.__mob.x - sc.player.x, window.__mob.y - sc.player.y)]; });
     await m.record('n-movil', async () => {
-      await m.wait(300);
+      await m.wait(250);
       await touch('touchStart', [[sx, sy]]);
-      for (const [dx, dy] of [[1, 0], [1, -0.4], [0.6, -1], [0, -1], [-0.7, -0.7]]) for (let k = 0; k < 10; k++) { await touch('touchMove', [[sx + dx * 50, sy + dy * 50]]); await m.wait(50); }
-      await touch('touchEnd', []); await m.wait(300);
+      for (let k = 0; k < 40; k++) { const [dx, dy, d] = await dir(); if (d < 1.6) break; await touch('touchMove', [[sx + dx * 50, sy + dy * 50]]); await m.wait(50); }
+      await touch('touchEnd', []); await m.wait(500);
     });
     await m.ctx.close();
   }

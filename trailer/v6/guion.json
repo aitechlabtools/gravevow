@@ -2,11 +2,11 @@
  "nota": "Guion del tráiler v6 (30 s, landing v4). Cada toma: [carpeta de fotogramas, inicio en la toma (s), duración (s), recorte, color]. Rótulos: [png, inicio, fin]. Para cambiarlo: edita este archivo y ejecuta npm run trailer:render. «Cada golpe deja marca» (7,2-12,2 s): tres trozos de la toma c-marca (golpe del Caballero, venda, contragolpe); si se vuelve a grabar, ajusta sus inicios con los tiempos que imprime la captura.",
  "shots": [
   [
-   "z-trono",
-   0.3,
+   "card",
+   0,
    2.4,
    null,
-   "dun"
+   null
   ],
   [
    "z-afueras",
@@ -25,14 +25,7 @@
   [
    "z-carmesi",
    0.5,
-   0.8,
-   null,
-   "dun"
-  ],
-  [
-   "z-rios",
-   0.5,
-   1.0,
+   1.8,
    null,
    "dun"
   ],
@@ -87,7 +80,7 @@
   ],
   [
    "n-movil",
-   0.4,
+   1.9,
    1.5,
    "movil",
    "dun"
