@@ -719,3 +719,4 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 
 - 2026-11-14: añadido public/sitemap.xml (/, /cookies.html; páginas legales excluidas) y línea Sitemap en robots.txt.
 - 2026-11-14: nuevo meta título y meta descripción SEO en index.html.
+- 2026-11-15: /cookies.html bloqueada en robots.txt y retirada del sitemap.
