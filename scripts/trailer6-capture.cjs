@@ -73,6 +73,81 @@ setup({ out: OUT, want, base: BASE });
     console.log('golpes', hits.map((h) => h.who).join(' '));
     await ev(() => window.__GRAVEVOW__.setState({ combat: null }));
   }
+  // ── «Cada golpe deja marca»: golpe del Caballero infernal → venda en la zona herida → contragolpe de Aldric ──
+  // Solo se fuerza en el guion: sin esquivas, el golpe del enemigo abre un sangrado leve donde cae (si la tirada no lo abrió)
+  // y la vida no baja de la mitad. Se apunta cuándo cae cada golpe (hits.json) y cuándo se aplica la venda (marks.json, para el sonido).
+  if (want('c-marca')) {
+    await s.enter('rios');
+    await ev(() => window.__GRAVEVOW__.dev.give('bandage', undefined, undefined, 3));
+    await ev(() => window.__GRAVEVOW__.actions.startCombat('pve', 'd_hell_knight', 'hell_knight'));
+    await page.waitForSelector('[data-testid=act-attack]:not([disabled])', { timeout: 10000 }).catch(() => {});
+    await ev(() => {
+      const G = window.__GRAVEVOW__; G.setState({ toasts: [] });
+      const st = G.getState().combat.state; for (const c of st.combatants) c.stats.eva = 0;
+      window.__hits = []; window.__marks = {}; let last = st.step;
+      window.__hitTimer = setInterval(() => {
+        const c = G.getState().combat; if (!c) return;
+        const pl = c.state.combatants.find((x) => x.id === 'player'); if (pl.hp < pl.stats.maxHp * 0.5) pl.hp = pl.stats.maxHp;
+        if (c.state.step === last) return; last = c.state.step;
+        for (const e of c.state.events) {
+          if (e.type !== 'damage' || e.source !== 'hit') continue;
+          window.__hits.push({ t: Date.now() / 1000, who: e.targetId === 'player' ? 'hero' : 'foe', crit: e.crit });
+          if (e.targetId === 'player' && e.region && !window.__marks.region) {
+            window.__marks.region = e.region;
+            if (!pl.body.parts[e.region].bleed) pl.body = { ...pl.body, parts: { ...pl.body.parts, [e.region]: { ...pl.body.parts[e.region], bleed: 1 } } };
+          }
+        }
+      }, 10);
+      // Puntero visible en la grabación (Chromium sin cabeza no lo dibuja)
+      const cur = document.createElement('div'); cur.id = 'cine-cursor';
+      cur.innerHTML = '<svg width="34" height="40" viewBox="0 0 17 20" shape-rendering="crispEdges"><path d="M1 1v15l4-4 3 7 3-1-3-7h6z" fill="#f3ead2" stroke="#07060a" stroke-width="1.4"/></svg>';
+      Object.assign(cur.style, { position: 'fixed', left: '-60px', top: '-60px', zIndex: 99999, pointerEvents: 'none', filter: 'drop-shadow(0 0 6px rgba(232,179,58,.8))', transition: 'left .18s ease-out, top .18s ease-out' });
+      document.body.appendChild(cur);
+      addEventListener('mousemove', (e) => { cur.style.left = e.clientX - 2 + 'px'; cur.style.top = e.clientY - 2 + 'px'; }, true);
+    });
+    // Toda la secuencia corre dentro de la página con tiempos fijos (sin esperas de ida y vuelta de Playwright): el puntero se
+    // desliza con CSS y cada clic es un clic real sobre el botón del juego.
+    await ev(() => {
+      const $ = (id) => document.querySelector(`[data-testid=${id}]`);
+      const cur = document.getElementById('cine-cursor');
+      window.__aim = (id) => { const el = $(id); if (!el) return null; const r = el.getBoundingClientRect(); cur.style.left = r.x + r.width / 2 - 2 + 'px'; cur.style.top = r.y + r.height / 2 - 2 + 'px'; return el; };
+      window.__press = (id) => { const el = $(id); if (!el) return false; el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); el.click(); return true; };
+      window.__mine = () => !!document.querySelector('[data-testid=act-attack]:not([disabled])');
+    });
+    await page.mouse.move(1500, 700);
+    const until = async (fn, ms = 8000) => { for (let k = 0; k < ms / 20; k++) { if (await ev(fn)) return true; await wait(20); } return false; };
+    await record('c-marca', async () => {
+      // 1 · Aldric abre (se recorta en el montaje) y el Caballero responde
+      await ev(() => { window.__aim('act-attack'); });
+      await wait(250); await ev(() => window.__press('act-attack'));
+      await until(() => window.__marks.region);
+      await ev(() => { window.__marks.foeHit = Date.now() / 1000; });
+      // 2 · Heridas → Venda → la zona herida (en cuanto vuelve el turno)
+      await until(() => window.__mine());
+      await ev((r) => new Promise((done) => {
+        const m = window.__marks; const steps = [
+          [0, () => window.__aim('combat-body')], [200, () => { m.open = Date.now() / 1000; window.__press('combat-body'); }],
+          [480, () => window.__aim('kit-bandage')], [700, () => window.__press('kit-bandage')],
+          [900, () => window.__aim(`body-row-${r}`)], [1120, () => { m.bandage = Date.now() / 1000; window.__press(`body-row-${r}`); }],
+          [1650, () => window.__aim('combat-body-close')], [1800, () => { m.close = Date.now() / 1000; window.__press('combat-body-close'); }],
+          [1850, done]];
+        for (const [t, f] of steps) setTimeout(f, t);
+      }), await ev(() => window.__marks.region));
+      // (el turno del Caballero tras la venda se recorta en el montaje)
+      // Se espera a que el golpe del Caballero tras la venda termine de verse, para que el contragolpe vaya limpio
+      await until(() => window.__hits.filter((h) => h.who === 'hero').length >= 2, 15000);
+      await until(() => window.__mine(), 15000); await wait(1700);
+      // 3 · Contragolpe de Aldric con su arma
+      await ev(() => { window.__marks.heroTurn = Date.now() / 1000; window.__aim('act-attack'); });
+      await wait(220); await ev(() => { window.__marks.heroClick = Date.now() / 1000; window.__press('act-attack'); });
+      await wait(2600);
+    });
+    const out = await ev(() => { clearInterval(window.__hitTimer); document.getElementById('cine-cursor')?.remove(); return { hits: window.__hits, marks: window.__marks }; });
+    fs.writeFileSync(`${OUT}/c-marca/hits.json`, JSON.stringify(out.hits));
+    fs.writeFileSync(`${OUT}/c-marca/marks.json`, JSON.stringify(out.marks));
+    console.log('marca', out.hits.map((h) => h.who).join(' '), JSON.stringify(out.marks));
+    await ev(() => window.__GRAVEVOW__.setState({ combat: null }));
+  }
   // ── Cofre con botín legendario (Trono de las Cadenas) ──
   if (want('b-cofre')) {
     await s.enter('trono');
@@ -125,6 +200,25 @@ setup({ out: OUT, want, base: BASE });
     await ev(() => { window.__GRAVEVOW__.dev.forceKael = false; });
   }
   await s.ctx.close();
+
+  // ═══ Móvil en horizontal 960×444 a doble resolución (1920×888, se monta sin escalar), con toques reales en el joystick ═══
+  if (want('n-movil')) {
+    const m = await session(b, { width: 960, height: 444 }, true, 2);
+    await m.start();
+    await m.page.fill('[data-testid=name-input]', 'Aldric'); await m.act('btn-create');
+    await m.advanced();
+    await m.enter('catacumbas');
+    const touch = (type, pts) => m.cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], i) => ({ x, y, id: i })) });
+    const zone = await (await m.page.$('[data-testid=touch-stick-zone]')).boundingBox();
+    const sx = zone.x + 110, sy = zone.y + zone.height - 100;
+    await m.record('n-movil', async () => {
+      await m.wait(300);
+      await touch('touchStart', [[sx, sy]]);
+      for (const [dx, dy] of [[1, 0], [1, -0.4], [0.6, -1], [0, -1], [-0.7, -0.7]]) for (let k = 0; k < 10; k++) { await touch('touchMove', [[sx + dx * 50, sy + dy * 50]]); await m.wait(50); }
+      await touch('touchEnd', []); await m.wait(300);
+    });
+    await m.ctx.close();
+  }
 
   await b.close();
 })().catch((e) => { console.error('FALLO', e); process.exit(1); });

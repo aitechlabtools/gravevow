@@ -1,5 +1,5 @@
 {
- "nota": "Guion del tráiler v6 (30 s, landing v4). Cada toma: [carpeta de fotogramas, inicio en la toma (s), duración (s), recorte, color]. Rótulos: [png, inicio, fin]. Para cambiarlo: edita este archivo y ejecuta npm run trailer:render.",
+ "nota": "Guion del tráiler v6 (30 s, landing v4). Cada toma: [carpeta de fotogramas, inicio en la toma (s), duración (s), recorte, color]. Rótulos: [png, inicio, fin]. Para cambiarlo: edita este archivo y ejecuta npm run trailer:render. «Cada golpe deja marca» (7,2-12,2 s): tres trozos de la toma c-marca (golpe del Caballero, venda, contragolpe); si se vuelve a grabar, ajusta sus inicios con los tiempos que imprime la captura.",
  "shots": [
   [
    "z-trono",
@@ -37,9 +37,23 @@
    "dun"
   ],
   [
-   "c-duelo",
-   0.3,
-   5.0,
+   "c-marca",
+   2.8,
+   1.4,
+   "cmb",
+   "ui"
+  ],
+  [
+   "c-marca",
+   5.35,
+   1.5,
+   "cmb",
+   "ui"
+  ],
+  [
+   "c-marca",
+   10.95,
+   2.1,
    "cmb",
    "ui"
   ],
@@ -72,9 +86,16 @@
    "ui"
   ],
   [
+   "n-movil",
+   0.4,
+   1.5,
+   "movil",
+   "dun"
+  ],
+  [
    "d-portal",
-   0.5,
-   3.8,
+   2.0,
+   2.3,
    null,
    "dun"
   ],
@@ -110,7 +131,7 @@
   [
    "combate",
    7.3,
-   12.0
+   8.45
   ],
   [
    "equipo",
@@ -133,8 +154,13 @@
    21.9
   ],
   [
-   "sal",
+   "movil",
    22.1,
+   23.4
+  ],
+  [
+   "sal",
+   23.6,
    25.6
   ],
   [
@@ -173,4 +199,4 @@
    "dun"
   ]
  ]
-}
+}

@@ -87,13 +87,16 @@ ostinato(a, b); drums(a, b, 0.75, 0)
 for ct in cuts:
     if a <= ct < b - 0.1: add(boom(0.45, 0.9), ct)
 # 4 · Combate: batería a tope y un golpe en cada impacto real (tuyo: acero; suyo: golpe grave)
-a, b = sec('combate')
+a, b = sec('combate')[0], sec('equipo')[0]  # el rótulo se va antes, pero la batería sigue todo el combate
 drums(a, b, 0.95, 0.5)
 for i, k in enumerate(np.arange(a, b, BEAT / 4)): add(tick(0.12), k, pan=-0.4)
 ostinato(a, b, 1.0, 0.12, BEAT / 4)
 for h in hits:
     if h['who'] == 'foe': add(clang(1.0 if h.get('crit') else 0.8), h['t'], pan=0.2); add(boom(0.45, 0.7), h['t'])
     else: add(boom(1.0, 0.9), h['t']); add(snare(0.9), h['t'], pan=-0.2)
+# Venda: tela que se aprieta (roce corto y nudo seco), en el instante en que se aplica
+for m in marks:
+    if m['what'] == 'bandage': add(whoosh(0.22, 0.9), m['t'] - 0.08, pan=-0.3); add(tick(0.8), m['t'] + 0.1); add(kick(0.35), m['t'] + 0.1)
 # 5 · Botín e Intendencia: marcha que sube en cada bloque
 for name, up in [('equipo', 1.0), ('intendencia', 1.335)]:
     a, b = sec(name); ostinato(a, b, up, 0.13); drums(a, b, 0.8, 0.35); add(boom(0.6, 1.0), a + 0.15)

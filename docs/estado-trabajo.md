@@ -4,6 +4,16 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 15/11: tráiler v6 remontado
+- **«Cada golpe deja marca» (7,2–12,2 s):** nueva toma `c-marca` (golpe del Caballero infernal → «Heridas y necesidades» → Venda en la zona herida → contragolpe de Aldric), montada en tres trozos de la misma grabación. Rótulo arriba y solo durante el golpe (7,3–8,45 s). Puntero de pixel art añadido solo en la grabación; se fuerza en el guion que sin esquivas y que el golpe abra un sangrado leve. Sonido de venda (`marks.json` → `music.py`).
+- **Pantalla completa** en todos los planos: sin recorte ni empuje de cámara (`FULL=0` recupera el recorte).
+- **Alijo:** almacén con escudos, armaduras, yelmos, guantes y botas, y solo 1200 de oro (cinco bolsas) (`scripts/lib/cine.cjs`).
+- **«TAMBIÉN EN EL MÓVIL» (22,0–23,5 s):** toma `n-movil` a 960×444 (×2 exacto) con el joystick; «Sal con vida» pasa a 2,3 s. Total: 30 s, el resto de cortes igual.
+- La grabación marca el aviso de cookies como respondido (sin analítica), porque tapaba los botones.
+- Vista previa: `mockups/trailer-golpe-marca/index.html`. Publicado en `public/trailer`.
+- **Rehacerlo:** con `npx vite --port 5173` en marcha, `npm run trailer` (todo) o `node scripts/trailer6-capture.cjs http://localhost:5173/play/ /tmp/claude-0/t6 c-marca,n-intendencia,n-movil` y después `npm run trailer:render`. Si se vuelve a grabar `c-marca`, revisa los inicios de sus tres trozos en `trailer/v6/guion.json` con los tiempos que imprime la captura.
+- Tutoriales: revisados, sin cambios.
+
 ## Novedades del 14/11 (4): Habilidades, Alijo, Elegir personaje y Bestiario
 - Nombres: Personaje → **Habilidades**, Intendencia → **Alijo**, Estado → **Heridas** (textos, tutoriales y avisos). Por dentro
   siguen `character`, `stash`, `status` y sus `data-testid`, para no tocar partidas ni pruebas.

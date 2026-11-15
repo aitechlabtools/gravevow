@@ -7,6 +7,7 @@
 - Al terminar: Claude actualiza este archivo y da el mensaje de commit. Tú haces commit y push.
 
 ## Hecho y funcionando (alpha v0.1)
+- **Tráiler v6 (15/11):** 30 s a pantalla completa; «Cada golpe deja marca» cuenta golpe, venda y contragolpe; Alijo con equipo variado; plano «También en el móvil». Rehacer: `npm run trailer` (detalles en `docs/estado-trabajo.md`).
 - **Nombre y web:**
   - Gravevow (antes DREADBOUND y Crypt Raiders), en https://gravevow.com, publicado con GitHub Pages.
   - cryptraiders.es redirige con un 301.

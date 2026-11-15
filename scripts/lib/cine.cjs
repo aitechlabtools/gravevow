@@ -12,7 +12,9 @@ function mk(name) { const dir = `${OUT}/${name}`; fs.rmSync(dir, { recursive: tr
 
 async function session(b, vp, touch, dsf = 1) {
   const ctx = await b.newContext({ viewport: vp, hasTouch: touch, isMobile: touch, deviceScaleFactor: dsf });
-  const page = await ctx.newPage();
+  // Aviso de cookies ya respondido (sin analítica): si no, tapa los botones durante la grabación
+  await ctx.addInitScript(() => { try { localStorage.setItem('gv-consent', '{"analytics":false}'); } catch {} });
+  const page = await ctx.newPage(); vp = { width: vp.width * dsf, height: vp.height * dsf };
   const cdp = await ctx.newCDPSession(page);
   const wait = (ms) => page.waitForTimeout(ms);
   const ev = (fn, a) => page.evaluate(fn, a);
@@ -66,14 +68,23 @@ async function session(b, vp, touch, dsf = 1) {
     const st = [...pr.stash];
     [['iron_ore', 10], ['silver_ore', 8], ['blessed_silver', 10], ['ancient_bone', 10], ['ectoplasm', 6], ['copper_ore', 10], ['sulfur', 8], ['obsidian_shard', 8]]
       .forEach(([id, q], i) => { st[i] = { uid: 'st' + i, itemId: id, qty: q }; });
-    G.setState({ profile: { ...pr, equipment: eq, backpack: bp, stash: st, gold: 21450,
+    G.setState({ profile: { ...pr, equipment: eq, backpack: bp, stash: st, gold: 1200,
       character: { ...pr.character, level: 95 }, classSkills: { unlocked: ['war_cry', 'bloodthirst', 'last_bastion', 'hold_line', 'steel_whirl'], equipped: 'bloodthirst' }, tutorialSeen: { ...pr.tutorialSeen, lobby: true, dungeon: true },
       stats: { ...pr.stats, expeditions: 64, extractions: 51, kills: 830 }, bossesDefeated: ['ossuary_lord', 'veiled_queen', 'belzar'],
       reputation: { garra: 2600, brand: 2600, orvel: 1800, vesper: 1200 }, skins: { owned: [], equipped: null } } });
     // El botín entra con dev.give, que respeta el tamaño de cada objeto (las armas ocupan varias casillas)
     for (const [id, rarity, affixes] of LOOT) G.dev.give(id, rarity, affixes);
     G.dev.give('health_potion', undefined, undefined, 5);
-  }, [GEAR, LOOT]);
+  }, [GEAR, LOOT]).then(() => ev(async () => {
+    // Almacén variado (escudos, armaduras, yelmos, guantes y botas) tras las materias, y solo unas bolsas de oro
+    await new Promise((r) => setTimeout(r, 300));  // deja que el oro se reparta en bolsas antes
+    const inv = await import('/src/core/inventory.ts'); const G = window.__GRAVEVOW__; const pr = G.getState().profile;
+    let st = pr.stash;
+    for (const [id, rarity] of [['bastion_shield', 'rare'], ['bastion_plate', 'epic'], ['knight_helm', 'rare'], ['gauntlets', 'uncommon'], ['chainmail', 'uncommon'], ['iron_shield', 'common'],
+      ['swift_boots', 'rare'], ['leather_gloves', 'common'], ['iron_helm', 'uncommon'], ['worn_boots', 'common'], ['padded_tunic', 'common'], ['wooden_shield', 'common']])
+      st = inv.addToGrid(st, { uid: 'cine-' + id, itemId: id, qty: 1, rarity }, inv.LAYOUTS.stash).grid;
+    G.setState({ profile: { ...pr, stash: st } });
+  }));
   const cinematic = (on) => ev((on) => { let st = document.getElementById('cine'); if (!st) { st = document.createElement('style'); st.id = 'cine'; document.head.appendChild(st); }
     st.textContent = on ? '[data-testid^=hud-], [data-testid=tutorial-guide], .absolute.right-3.top-3, .absolute.left-3.bottom-3, [aria-live=polite].absolute, .absolute.top-3, .absolute.bottom-3 { display: none !important; }' : ''; }, on);
   const enter = async (sub) => {

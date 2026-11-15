@@ -34,11 +34,11 @@ def shot(i, src, t0, dur, cr, col, tag):
         fh.write(f"file '{sel[-1]['f']}'\n")
     vf = f'fps={FPS}'
     if cr == 'movil':
-        vf += f",scale=880:406:flags=neighbor,pad={W}:{H}:200:232:color=0x07060a"
+        vf += f",scale=iw*2:ih*2:flags=neighbor,pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=0x07060a"  # móvil (960×444, ×2 exacto = 1920×888): pantalla entera
     else:
-        if cr: vf += ',' + CROP[cr]
-        # Pixel art sin suavizado: escalado por vecino más próximo y empuje suave de cámara
-        vf += f",scale={W*2}:{H*2}:flags=neighbor,zoompan=z='1+0.03*on/{FPS}':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=1:s={W}x{H}:fps={FPS}"
+        # Pantalla completa, sin recorte ni empuje de cámara (petición del 15/11); el recorte solo si se pide con FULL=0
+        if cr and os.environ.get('FULL') == '0': vf += ',' + CROP[cr]
+        vf += f",scale={W}:{H}:flags=neighbor"
     if col: vf += ',' + COL[col]
     vf += f',trim=duration={dur},setpts=PTS-STARTPTS,format=yuv420p'
     run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-vf', vf, '-t', str(dur), *ENC, out]); return out
@@ -61,10 +61,14 @@ if '--mux' not in sys.argv:
             start = json.load(open(f'{T}/{src}/frames.json'))[0]['t']
             for h in json.load(open(hp)):
                 rel = h['t'] - start - t0 + HIT_LAG
-                if 0 <= rel < dur: hits.append({'t': round(t + rel, 3), 'who': h['who'], 'crit': h.get('crit', False)})
+                # Un golpe en el último cuarto de segundo no llega a verse antes del corte: sin sonido
+                if 0 <= rel < dur - 0.25: hits.append({'t': round(t + rel, 3), 'who': h['who'], 'crit': h.get('crit', False)})
         mp = f'{T}/{src}/marks.json'
         if src != 'card' and os.path.exists(mp):
-            fl = json.load(open(mp)).get('flashFrame')
+            mk = json.load(open(mp)); fl = mk.get('flashFrame')
+            if mk.get('bandage'):  # venda aplicada (marca de tiempo real de la grabación)
+                start = json.load(open(f'{T}/{src}/frames.json'))[0]['t']; rel = mk['bandage'] - start - t0 + HIT_LAG
+                if 0 <= rel < dur: marks.append({'t': round(t + rel, 3), 'what': 'bandage'})
             if fl is not None and 0 <= fl / 30 - t0 < dur: marks.append({'t': round(t + fl / 30 - t0, 3), 'what': 'portal'})
         t += dur; parts.append(shot(i, src, t0, dur, cr, col, 's')); print('toma', i, src, dur)
     concat(parts, f'{OUT}/base.mp4')

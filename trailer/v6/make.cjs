@@ -8,11 +8,14 @@ const cards = {
   mazmorra: top('LA MAZMORRA', 'el Bastión de Ceniza y sus mazmorras'),
   cripta: top('LA CRIPTA', 'las criptas de Umbravel'),
   infierno: top('EL INFIERNO', 'hasta el Trono de las Cadenas', 'red'),
-  combate: low('CADA GOLPE DEJA MARCA', 'combate por turnos · heridas por zonas', 'red'),
+  // Arriba y solo durante el golpe del Caballero: abajo tapaba la ficha de Aldric y la silueta de heridas
+  combate: top('CADA GOLPE DEJA MARCA', 'combate por turnos · heridas por zonas', 'red'),
   equipo: low('BOTÍN LEGENDARIO', 'cuanto más bajas, mejor', 'gold'),
   intendencia: low('ELIGE QUÉ ARRIESGAS', 'si caes, lo pierdes'),
   aliado: low('¿ALIADO…', 'otros saqueadores también buscan el oro'),
   traidor: low('…O TRAIDOR?', 'y tú también puedes traicionar', 'red'),
+  // Móvil: en la franja negra de abajo, para no tapar la pantalla del móvil
+  movil: '<div class="c" style="justify-content:flex-end;padding-bottom:22px"><div class="big2" style="font-size:40px">TAMBIÉN EN EL MÓVIL</div></div>',
   sal: low('SAL CON VIDA', 'y quédatelo todo'),
   final: '<div class="c"><div class="logo" style="font-size:96px">GRAVEVOW</div><div style="display:flex;align-items:center;width:560px;margin-top:14px;filter:drop-shadow(0 0 8px rgba(196,40,59,.6))"><span style="flex:1;height:3px;background:linear-gradient(90deg,transparent,#c4283b)"></span><i style="width:18px;height:18px;margin:0 9px;transform:rotate(45deg);border:3px solid #c4283b;box-shadow:inset 0 0 0 3px #07060a,inset 0 0 0 6px #c4283b"></i><span style="flex:1;height:3px;background:linear-gradient(270deg,transparent,#c4283b)"></span></div><div class="mid gold" style="font-size:40px;margin-top:18px">Juega la alpha gratis</div><div class="sub" style="margin-top:22px;font-size:30px">gravevow.com</div></div>',
 };
