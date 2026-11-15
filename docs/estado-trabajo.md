@@ -721,3 +721,4 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - 2026-11-14: nuevo meta título y meta descripción SEO en index.html.
 - 2026-11-15: /cookies.html bloqueada en robots.txt y retirada del sitemap.
 - 2026-11-15: cookies.html pasa a noindex (meta robots) y se quita su Disallow para que Google pueda leerlo y desindexarla.
+- 2026-11-15: favicon.ico, PNG 48/96/192 y apple-touch-icon generados desde favicon.svg (escalado nearest) y enlazados en index.html.

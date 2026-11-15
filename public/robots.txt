@@ -4,7 +4,6 @@ User-agent: *
 Disallow: /aviso-legal.html
 Disallow: /privacidad.html
 Disallow: /legal/
-Disallow: /cookies.html
 Allow: /
 
 Sitemap: https://gravevow.com/sitemap.xml
