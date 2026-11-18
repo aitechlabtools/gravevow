@@ -23,15 +23,20 @@ export const xpIcon = (s = 3) => draw([
 export const repIcon = (color: string, s = 3) => draw([
   'ooooooooo', 'oaaaaaaAo', 'oaaahaaAo', 'oaahhhaAo', 'oaaahaaAo', 'oaaaaaaAo', '.oaaaaAo.', '..oaaAo..', '...ooo...',
 ], { o: O, a: color, A: shade(color, -0.35), h: '#fff6dc' }, s);
-// Repetible: flecha circular (anillo abierto con punta), generada por geometría
+// Repetible: dos flechas en circuito (arriba hacia la derecha, abajo hacia la izquierda), con contorno
 export const loopIcon = (s = 3) => {
-  const N = 13, c = 6, g: string[][] = Array.from({ length: N }, () => Array(N).fill('.'));
-  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-    const d = Math.hypot(x - c, y - c), a = (Math.atan2(c - y, x - c) * 180) / Math.PI;
-    if (d >= 3.1 && d <= 5.1 && !(a > 5 && a < 70)) g[y][x] = 'b';
-  }
-  // punta de flecha al final del anillo (arriba a la derecha), apuntando hacia abajo
-  for (const [x, y] of [[9, 3], [10, 3], [11, 3], [12, 3], [10, 4], [11, 4], [11, 2], [10, 2], [9, 2]]) if (y < N && x < N) g[y][x] = 'b';
+  const shape = [
+    '........b...',
+    '.bbbbbbbbb..',
+    'bb......b...',
+    'bb..........',
+    'bb........bb',
+    '..........bb',
+    '...b......bb',
+    '..bbbbbbbbb.',
+    '...b........',
+  ];
+  const g = ['.'.repeat(14), ...shape.map((r) => '.' + r + '.'), '.'.repeat(14)].map((r) => [...r]);
   const out = g.map((r, y) => r.map((ch, x) => ch !== '.' ? ch : [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => g[y + dy]?.[x + dx] === 'b') ? 'o' : '.').join(''));
   return draw(out, { o: O, b: '#c8bfa8' }, s);
 };

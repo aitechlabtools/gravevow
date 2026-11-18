@@ -1,6 +1,6 @@
 # Gravevow · Estado del proyecto
 
-Última actualización: 12/11/2026 (bloque 1, fases 1–3: tipos de daño, zonas y estados). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
+Última actualización: 18/11/2026 (Misiones como tablón de notas y Bestiario como galería de trofeos). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
 
 ## Cómo retomar el trabajo
 - En un ordenador nuevo o en otra sesión: haz pull en GitHub Desktop y escribe a Claude «Lee CLAUDE.md y ESTADO_PROYECTO.md» seguido de la tarea.
@@ -65,6 +65,9 @@
 - Falta subir `public/sitemap.xml` (ya generado) y referenciarlo en `public/robots.txt`.
 
 ## Errores conocidos
+- Varias pruebas de navegador (`minis-check`, `menus-check` y otras) chocan con el aviso de cookies, que tapa los botones; `misiones-check` y `bestiario-check` ya lo dan por contestado. Falta hacer lo mismo en las demás.
+- `e2e-bastion-minis` busca la pestaña «Estado» del Alijo, que ahora se llama «Heridas».
+- `misiones-check` en el móvil falla a veces en el paso de la mazmorra (tiempo); al repetirla, pasa.
 - `almacen-check` falla en escritorio («la página debe verse entera sin desplazar», 117 casillas visibles). Ya fallaba antes de la Fase 1; tableta y móvil pasan. Pendiente de revisar.
 - Las pruebas e2e fallan de vez en cuando por tiempo de espera en el modal de botín. Al repetirlas, pasan.
 
@@ -77,6 +80,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- **18/11 · Misiones y Bestiario más visuales**: Misiones es un tablón de notas (retrato, objetivo grande, progreso, recompensas en iconos; Cobrar en la nota; detalle al tocar; huecos con «Ir al Bastión»; «?» con la explicación) y la pestaña Misiones de cada mercader usa las mismas notas. El Bestiario es una galería: el conocimiento es el color del borde, jefes en casilla doble, victorias en la esquina y ficha con candados. Estilo plano solo en estas pantallas. Maquetas y comparación en `mockups/misiones-bestiario-visual`; detalle en `docs/estado-trabajo.md`.
 - **14/11 · Bastión unificado**: la pestaña Bastión enseña los 8 mercaderes (retrato de medio pecho); cada uno abre su pantalla con pestañas y su estación dentro. Una estación por mercader: Catre con Grizk (5/10/15 de oro la noche), Curtiduría (Nira), Forja de armaduras (Valerius, «La armería»), Laboratorio (Eldrin: alquimia + atril). Migración sin pérdida de niveles. Plan: `docs/plan-bastion-unificado.md`.
 - 13/11 (noche, 2): **Música de archivo solo en el Bastión y el menú** (dos pistas de Magnific que se alternan con 5–15 s de silencio); mazmorra sin música; ambiente apagado con interruptor; Ajustes con General, Música y Efectos.
 - 13/11 (noche): **Música apagada** hasta la banda sonora definitiva (`musicaActivada = false` en `src/config/music.ts`); ambiente y efectos siguen; Ajustes muestra «Próximamente».

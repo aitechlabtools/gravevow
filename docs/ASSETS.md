@@ -71,3 +71,10 @@ La tarjeta «Mercaderes» de la entrada usa el retrato de Garth.
 
 - Retrato del intendente que cuenta la bienvenida al Bastión: 20 × 26 px, igual que los retratos de los mercaderes. Se muestra a escala entera.
 - Mientras no exista, se usa un marcador provisional dibujado por código (`intendant` en `src/game/ui/stationArt.ts`).
+
+## Iconos de Misiones y Bestiario (18/11, provisionales)
+
+Hechos por código en `src/game/ui/uiIcons.ts`, con la paleta del juego; se muestran a escala entera.
+- XP (chispa morada, 9 × 9), reputación (blasón del color del mercader, 9 × 9), repetible (flechas en circuito, 14 × 11).
+- Clavo de hierro (5 × 5) y chincheta roja de la misión fijada (9 × 10).
+- Candado (7 × 10), corona de jefe (7 × 6), calavera (9 × 9), libro (9 × 8) y sombra en el suelo (16 × 4).

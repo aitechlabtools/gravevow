@@ -1,7 +1,7 @@
 import { Tienda } from './screens/Atuendos';
 import { className } from '../../core/gender';
 import { BestiaryTab } from './BestiaryTab';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { actions, dev, useGame } from '../state/store';
 import { pendingBadges } from '../../core/tutorials';
 import { canCraftSomething } from '../../core/crafting';
@@ -101,7 +101,7 @@ export function Lobby() {
           {tab === 'merchants' && <Mercaderes target={vendorTarget} onConsumed={() => setVendorTarget(null)} />}
           {tab === 'quests' && <Misiones onBastion={() => go('merchants')} />}
           {tab === 'shop' && <Tienda />}
-          {tab === 'bestiary' && <Legacy><div className="max-w-5xl mx-auto"><BestiaryTab /></div></Legacy>}
+          {tab === 'bestiary' && <BestiaryTab />}
         </div>
       </main>
       {switcher && <CharacterSwitcher onClose={() => setSwitcher(false)} />}
@@ -112,10 +112,6 @@ export function Lobby() {
 }
 
 /** Contenedor con desplazamiento para las pantallas que aún no tienen su diseño propio. */
-function Legacy({ children }: { children: ReactNode }) {
-  return <div className="h-full overflow-y-auto scroll-thin" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }}>{children}</div>;
-}
-
 /** Desplegable de la barra superior: cambiar de personaje sin volver al menú principal. */
 function CharacterSwitcher({ onClose }: { onClose: () => void }) {
   const roster = useGame((s) => s.roster);

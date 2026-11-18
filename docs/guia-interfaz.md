@@ -227,3 +227,10 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - Cada tarjeta lleva la trayectoria compacta (`char-record-<hueco>`): «3 expediciones · 2 extracciones · 1 muerte», o «Sin expediciones».
 - Bestiario: resumen arriba (`bestiary-summary`: criaturas derrotadas y jefes derrotados de N), «N derrotadas» en cada criatura
   (`beast-kills-<id>`, del contador por tipo `profile.bestiary[id].kills`, que ya existía) y los jefes con «✓ Derrotado» o «Por derrotar».
+
+## Misiones y Bestiario (18/11)
+- **Notas de misión** (`ui/QuestNotes.tsx`, CSS «Notas de misión» en `game.css`): `QuestNote` (aceptada o del tablón), `EmptySlot`, `QuestDetail` (lateral o a pantalla completa con `QuestDetailOverlay`), `BoardNotes` y `VendorQuestNotes`. Se usan en la pantalla Misiones y en la pestaña Misiones de cada mercader: si cambias una nota, cambia en los dos sitios.
+- Solo se ve sin abrir la nota el botón que importa (Cobrar/Entregar si está lista; Aceptar en el tablón). Fijar y Dejar van en el detalle.
+- **Bestiario** (`ui/BestiaryTab.tsx`, CSS «Bestiario»): el nivel de conocimiento es el color del borde, no un texto. Jefes en casilla doble (`.btile.boss`), avisos rectos en la esquina superior izquierda para no tapar el sprite.
+- **Estilo plano:** en estas dos pantallas los paneles y botones van sin degradado (`.qscreen`, `.qdetail`, `.bscreen`). Usa solo colores de `theme.css`/`game.css`; la única luz permitida es la cálida de las tarjetas del Bastión detrás de los personajes.
+- Iconos pequeños nuevos (XP, reputación, repetible, clavo, chincheta, candado, corona, calavera, libro, sombra): `ui/uiIcons.ts`, a escala entera.

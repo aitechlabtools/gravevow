@@ -816,3 +816,60 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
   .qdetail.full { width: 100%; height: 100%; border-width: 0; gap: 8px; padding: 8px 12px; }
 }
 .qboard-in-list { padding: 0; } .qscreen .qboard-in-list { padding: clamp(12px, 1.4vw, 22px); }
+
+/* ── Bestiario (18/11): galería de trofeos (BestiaryTab.tsx). Plano; el conocimiento es el color del borde ── */
+.bscreen .btn { background: #26232c; }
+.bstat { display: inline-flex; align-items: center; gap: 6px; }
+.bzone { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 6px; font-family: var(--font-display); font-weight: 600; font-size: 14px;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--color-bone); background: #0d0c11b3; border: 1px solid #ffffff1a; }
+.bzone.on { background: var(--color-parchment); color: #120f0a; border-color: var(--color-parchment); }
+.bzone-sw { width: 30px; height: 30px; background-size: 64px 32px; image-rendering: pixelated; border: 1px solid #07060a; flex-shrink: 0; }
+.bgrid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-auto-rows: minmax(190px, 1fr); grid-auto-flow: row dense; gap: var(--gap); overflow-y: auto; align-content: start; }
+@media (max-width: 1279px) { .bgrid { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 180px; } }
+.btile { position: relative; display: flex; flex-direction: column; min-height: 0; padding: 0; background: #15131a; border: 2px solid var(--tier);
+  box-shadow: inset 0 0 0 1px #07060a, 0 0 0 1px #07060a; cursor: pointer; overflow: hidden; text-align: center; }
+.btile:hover:not(:disabled) { filter: brightness(1.15); }
+.btile:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+.btile:disabled { cursor: default; }
+.btile-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px;
+  background: #0d0c11 radial-gradient(ellipse at 50% 35%, #e8b33a26, #0000 65%); }
+.btile.unknown .btile-stage { background: #0d0c11; }
+.btile-fig { position: relative; display: flex; flex-direction: column; align-items: center; }
+.btile-shadow { margin-top: -2px; opacity: .8; }
+.btile-name { display: block; padding: 5px 6px; min-height: 30px; font-family: var(--font-display); font-size: clamp(11px, .78vw, 14px); letter-spacing: .04em;
+  color: var(--color-parchment); background: #1b1920; border-top: 1px solid #2a2830; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btile.unknown .btile-name { color: #625d69; }
+.btile-kills { position: absolute; top: 4px; right: 4px; display: inline-flex; align-items: center; gap: 3px; padding: 1px 5px; font-family: var(--font-display); font-size: 13px;
+  color: var(--color-parchment); background: #07060a; border: 1px solid #2a2830; }
+.btile.boss { grid-column: span 2; border-color: var(--color-blood); }
+.btile.boss.down { border-color: var(--color-gold); }
+.btile-crown { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); }
+.btile-stamp, .btile-threat { position: absolute; left: 6px; top: 6px; z-index: 1; font-family: var(--font-display); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+.btile-stamp { color: var(--color-heal); border: 2px solid var(--color-heal); padding: 0 6px; background: #0d0c11; }
+.btile-threat { color: var(--color-blood); }
+.bcard-wrap { padding: 24px; }
+.bcard { position: relative; display: grid; grid-template-columns: minmax(260px, 36%) 1fr; width: min(980px, 100%); max-height: 100%; background: #15131a;
+  border: 2px solid var(--tier); box-shadow: inset 0 0 0 1px #07060a, 0 0 0 1px #07060a; overflow: hidden; }
+.bcard-left { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: #0d0c11 radial-gradient(ellipse at 50% 30%, #e8b33a26, #0000 65%); border-right: 1px solid #2a2830; }
+.bcard-stage { height: clamp(200px, 32vh, 340px); display: flex; align-items: flex-end; justify-content: center; }
+.bcard-right { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px; overflow-y: auto; }
+.bcard-x { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; background: #26232c; }
+.bsec { padding: 10px 12px; background: #0d0c11; border: 1px solid #2a2830; }
+.bcard-right > .bsec:nth-child(2), .bcard-right > .grid:nth-child(2) { margin-right: 56px; }
+.bsec-t { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--color-gold); margin-bottom: 4px; }
+.bsec.locked { border-style: dashed; border-color: #3a3741; }
+.bsec.locked .bsec-t { color: #625d69; }
+@media (max-height: 520px) {
+  .bgrid { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 138px; }
+  .bzone-name { display: none; }
+  .bzone { padding: 0 8px 0 4px; }
+  .btile-name { font-size: 11px; padding: 2px 4px; min-height: 0; }
+  .btile-stamp { font-size: 10px; padding: 0 4px; }
+  .btile-threat { font-size: 10px; }
+  .bcard-wrap { padding: 0; }
+  .bcard { width: 100%; height: 100%; max-height: none; grid-template-columns: 40% 1fr; border-width: 0 0 0 2px; }
+  .bcard-left { padding: 8px; gap: 4px; }
+  .bcard-stage { height: auto; flex: 1; min-height: 0; }
+  .bcard-right { padding: 8px; gap: 6px; }
+}
+@media (max-height: 520px) { .bsec-t { font-size: 11px; letter-spacing: .04em; gap: 4px; } .bsec.locked .font-body { font-size: 13px; } }

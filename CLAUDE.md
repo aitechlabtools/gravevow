@@ -101,6 +101,8 @@ Capas: datos → lógica → estado → interfaz y motor.
   - Destruir con Orik, dividir con el selector común, dar parte al aliado y cuerpo del aliado caído: `node scripts/destruir-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Pantalla completa (botón en todas las pantallas, tecla F, salida por fuera): `node scripts/pantalla-completa-check.cjs <url>/play/ <carpeta> [dispositivo]`.
   - Música (menú y Bastión con alternancia y silencio; mazmorra, combate y resultados sin música; sin ambiente): `node scripts/musica-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Misiones (tablón de notas, detalle, hueco libre, «?» y pestaña del mercader): `node scripts/misiones-check.cjs <url>/play/ <carpeta> [dispositivo]`.
+  - Bestiario (marcos de conocimiento, jefes, ficha con candados): `node scripts/bestiario-check.cjs <url>/play/ <carpeta> [dispositivo o ANCHOxALTO]`.
   - Almacén: `node scripts/almacen-check.cjs`.
   - Copias de seguridad: `node scripts/copia-check.cjs`.
   - Combate por grupos: `node scripts/grupos-check.cjs <url>/play/ <carpeta> [dispositivo]`.
