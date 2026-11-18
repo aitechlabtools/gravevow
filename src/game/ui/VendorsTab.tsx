@@ -1,4 +1,3 @@
-import { useState } from 'react';
 // Piezas de los mercaderes (las usa screens/Mercaderes.tsx y screens/Misiones.tsx): barra de reputación,
 // mercancía con precio según tu reputación y lista de encargos.
 import { actions, useGame } from '../state/store';
@@ -6,8 +5,7 @@ import { VENDORS, type VendorId } from '../../core/data/vendors';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { buyPrice } from '../../core/economy';
 import { REP_RANKS, rankOf } from '../../config/reputation';
-import { acceptBlock, activeQuests, boardQuests, isOldQuest, questDef, questProgress } from '../../core/quests';
-import type { QuestProgress } from '../../core/types';
+import { VendorQuestNotes } from './QuestNotes';
 import { Bar, ItemIcon } from './inventory';
 
 export function RepBar({ rep }: { rep: number }) {
@@ -63,63 +61,7 @@ export function ShopStock({ vid, cols = 'grid sm:grid-cols-2 xl:grid-cols-3 gap-
   );
 }
 
-/** Una misión: aceptada (Cobrar, Dejar, Fijar) o del tablón (Aceptar). */
-export function QuestCard({ p, mode }: { p: QuestProgress; mode: 'active' | 'board' }) {
-  const profile = useGame((s) => s.profile)!;
-  const [confirm, setConfirm] = useState(false);
-  const q = questDef(p.id);
-  const prog = questProgress(p, profile);
-  const done = prog >= q.count;
-  const block = mode === 'board' ? acceptBlock(profile) : null;
-  const v = VENDORS[q.vendor];
-  return (
-    <div className={`bg-black/30 border p-3 flex flex-wrap items-center gap-3 ${p.pinned ? 'border-gold' : 'border-stone-800'}`} data-testid={`quest-${q.id}`} data-mode={mode}>
-      <div className="flex-1 min-w-[12rem]">
-        {mode === 'active' && <div className="text-sm" style={{ color: v.color }}>{v.name}</div>}
-        <div className="font-display text-xl text-gold">{q.name}{q.repeatable ? <span className="text-sm text-stone-400"> · repetible</span> : null}</div>
-        <div className="font-body text-lg text-stone-200 leading-snug">{q.description}</div>
-        {(mode === 'active' || q.type === 'deliver') && <div className="mt-2 max-w-sm quest-bar"><Bar value={prog} max={q.count} color={done ? '#5fd19a' : '#e8b33a'} label={q.type === 'deliver' ? 'Tienes' : 'Progreso'} /></div>}
-      </div>
-      <div className="text-right text-base leading-snug flex flex-col items-end">
-        <div className="text-gold">+{q.reward.gold} oro</div>
-        <div className="text-arcane">+{q.reward.xp} XP</div>
-        <div style={{ color: v.color }}>+{q.reward.rep} reputación</div>
-        {mode === 'board' ? (
-          <button className="btn btn-gold mt-2 px-4" style={{ minHeight: 44 }} disabled={!!block} title={block ?? undefined} onClick={() => actions.acceptQuest(q.id)} data-testid={`accept-${q.id}`}>Aceptar</button>
-        ) : (
-          <div className="flex gap-1.5 mt-2 flex-wrap justify-end">
-            <button className={`btn px-3 ${p.pinned ? 'btn-gold' : ''}`} style={{ minHeight: 44 }} onClick={() => actions.togglePinQuest(q.id)} aria-pressed={!!p.pinned} title="Se recuerda en Jugar y en la mazmorra" data-testid={`pin-${q.id}`}>{p.pinned ? '★ Fijada' : '☆ Fijar'}</button>
-            {confirm
-              ? <button className="btn btn-danger px-3" style={{ minHeight: 44 }} onClick={() => { actions.abandonQuest(q.id); setConfirm(false); }} data-testid={`abandon-yes-${q.id}`}>¿Seguro? Pierdes lo hecho</button>
-              : <button className="btn px-3" style={{ minHeight: 44 }} onClick={() => setConfirm(true)} data-testid={`abandon-${q.id}`}>Dejar</button>}
-            <button className="btn btn-gold px-4" style={{ minHeight: 44 }} disabled={!done} onClick={() => actions.claimQuest(q.id)} data-testid={`claim-${q.id}`}>{q.type === 'deliver' ? 'Entregar' : 'Cobrar'}</button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** Tablón de un mercader: sus misiones aceptadas arriba y las que puedes aceptar; las de zonas muy bajas, plegadas. */
-export function VendorQuests({ vendor, showActive = true }: { vendor: VendorId; showActive?: boolean }) {
-  const profile = useGame((s) => s.profile)!;
-  const [old, setOld] = useState(false);
-  const active = showActive ? activeQuests(profile, vendor) : [];
-  const board = boardQuests(profile, vendor);
-  const lv = profile.character.level;
-  const fresh = board.filter((p) => !isOldQuest(p.id, lv));
-  const stale = board.filter((p) => isOldQuest(p.id, lv));
-  return (
-    <div className="space-y-2">
-      {active.map((p) => <QuestCard key={p.id} p={p} mode="active" />)}
-      {fresh.map((p) => <QuestCard key={p.id} p={p} mode="board" />)}
-      {!active.length && !fresh.length && !stale.length && <p className="font-body text-lg text-stone-400 italic">No tiene encargos para ti ahora mismo. Vuelve cuando seas más fuerte.</p>}
-      {stale.length > 0 && (
-        <div>
-          <button className="btn w-full text-left px-3" style={{ minHeight: 44 }} aria-expanded={old} onClick={() => setOld(!old)} data-testid={`old-quests-${vendor}`}>{old ? '▾' : '▸'} Encargos antiguos ({stale.length})</button>
-          {old && <div className="space-y-2 mt-2">{stale.map((p) => <QuestCard key={p.id} p={p} mode="board" />)}</div>}
-        </div>
-      )}
-    </div>
-  );
+/** Encargos de un mercader: las mismas notas que la pantalla Misiones (QuestNotes.tsx), solo con los suyos. */
+export function VendorQuests({ vendor }: { vendor: VendorId }) {
+  return <VendorQuestNotes vendor={vendor} />;
 }

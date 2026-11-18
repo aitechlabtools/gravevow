@@ -738,3 +738,81 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
   .tm-foot{position:static;font-size:10px;max-width:300px}
   .tm-fs{top:16px;right:max(16px,env(safe-area-inset-right))}
 }
+
+/* ── Notas de misión (18/11): pantalla Misiones y pestaña Misiones de cada mercader (QuestNotes.tsx) ──
+   Todo plano, con la paleta del juego: panel #15131a, borde #3a3741, filete #07060a, separadores #2a2830, oro para lo
+   destacado. El papel se insinúa con la esquina doblada y el clavo. La única luz es la de las tarjetas del Bastión. */
+.qscreen .panel, .qdetail { background: #15131a; }
+.qscreen .btn, .qnote .btn, .qdetail .btn { background: #26232c; }
+.qscreen .btn-gold, .qnote .btn-gold, .qdetail .btn-gold { background: #c48f22; }
+.qscreen .btn-danger, .qdetail .btn-danger { background: #a3232f; }
+.bar.thin { display: block; height: 8px; border-width: 1px; }
+.phead { display: flex; align-items: center; gap: 12px; padding: 4px 14px; min-height: 52px; background: #1b1920; border-bottom: 2px solid #3a3741; }
+.phead-t { font-family: var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--color-parchment); font-size: clamp(15px, 1.15vw, 22px); }
+.qboard { padding: 0; overflow: hidden; }
+.qboard-in { padding: clamp(12px, 1.4vw, 22px); }
+.qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: clamp(10px, 1.2vw, 20px); align-items: start; }
+.qboard .qgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.qboard .qgrid.narrow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.qwrap-side { grid-template-columns: minmax(0, 1fr) clamp(360px, 26vw, 460px); align-items: start; }
+@media (max-width: 1279px) { .qboard .qgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .qboard .qgrid.narrow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.qnote { position: relative; display: flex; flex-direction: column; min-width: 0; background: #15131a; border: 2px solid #3a3741; box-shadow: inset 0 0 0 1px #07060a;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%); }
+.qnote::after { content: ''; position: absolute; right: 0; bottom: 0; width: 14px; height: 14px; background: #3a3741; clip-path: polygon(0 0, 100% 0, 0 100%); }
+.qnote .qn-body { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; text-align: center; cursor: pointer; background: none; border: 0; color: inherit; min-width: 0; }
+.qnote .qn-body:focus-visible { outline: 2px solid var(--color-gold); outline-offset: -4px; }
+.qnote:hover { filter: brightness(1.15); }
+.qnote.ready, .qnote.pinned, .qnote.sel { border-color: var(--color-gold); }
+.qnote.ready::after, .qnote.pinned::after, .qnote.sel::after { background: var(--color-gold); }
+.qn-hold { position: absolute; top: 3px; left: 50%; transform: translateX(-50%); z-index: 2; line-height: 0; pointer-events: none; }
+.qn-head { display: flex; align-items: center; gap: 8px; padding: 18px 10px 6px; min-height: 44px; border-bottom: 1px solid #2a2830; }
+.qn-vname { font-family: var(--font-display); font-size: 14px; letter-spacing: .06em; }
+.qn-art { position: relative; flex: none; height: clamp(110px, 12vh, 150px); overflow: hidden; margin: 0 10px; display: flex; align-items: center; justify-content: center;
+  background: #0d0c11 radial-gradient(ellipse at 50% 35%, #e8b33a26, #0000 65%); border: 1px solid #2a2830; }
+.qn-art.big { margin: 0; flex: 1; height: 100%; }
+.qn-art.has-seal { padding-bottom: 34px; }
+.qn-seal { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); white-space: nowrap; font-family: var(--font-display); font-size: 13px; letter-spacing: .1em;
+  text-transform: uppercase; padding: 2px 8px; color: #5fd19a; border: 2px solid currentColor; background: #0d0c11f0; pointer-events: none; }
+.qn-title { font-family: var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--color-gold); font-size: clamp(14px, 1vw, 17px); line-height: 1.2; padding: 0 10px; }
+.qn-desc { font-family: var(--font-body); font-size: 15px; line-height: 1.25; padding: 0 10px; color: #8c8693; }
+.qn-prog { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 0 14px; }
+.qdetail .qn-prog { padding: 0; }
+.qn-num { font-family: var(--font-display); font-size: clamp(22px, 1.7vw, 30px); line-height: 1; color: var(--color-parchment); }
+.qn-num .of { color: #625d69; }
+.qn-rewards { display: flex; align-items: center; justify-content: center; gap: 2px 14px; flex-wrap: wrap; font-size: 17px; }
+.qn-rewards > span { display: inline-flex; align-items: center; gap: 6px; }
+.qn-rewards[data-big] { font-size: 20px; }
+.qn-rw { font-family: var(--font-body); font-size: 15px; color: #8c8693; }
+.qn-cta { margin: 0 10px 14px; min-height: 48px; letter-spacing: .1em; text-transform: uppercase; }
+.qnote.empty { background: transparent; border: 2px dashed #3a3741; box-shadow: none; cursor: pointer; clip-path: none; min-height: 280px; }
+.qnote.empty::after { display: none; }
+.qnote.empty.old { min-height: 160px; align-self: stretch; }
+.qdetail { display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 2px solid var(--color-gold); box-shadow: inset 0 0 0 1px #07060a, 0 0 0 1px #07060a; }
+.qdetail.side { position: sticky; top: 0; }
+.qdetail.full { width: min(640px, 100%); max-height: 100%; overflow-y: auto; }
+.qd-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #2a2830; }
+.qvchip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px 0 6px; background: #0d0c11b3; border: 1px solid #ffffff1a; }
+.qvchip.on { background: var(--color-parchment); border-color: var(--color-parchment); }
+.qvchip-n { font-family: var(--font-display); font-size: 12px; min-width: 20px; height: 20px; display: grid; place-items: center; background: #07060a; color: var(--color-gold); }
+@media (max-height: 520px) {
+  .phead { min-height: 44px; padding: 0 8px; }
+  .qboard-in { padding: 10px 8px 8px; }
+  .qboard .qgrid, .qboard .qgrid.narrow { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .qgrid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .qnote.empty { min-height: 0; align-self: stretch; }
+  .qboard .qn-vname { display: none; }
+  .qn-head { min-height: 36px; padding: 10px 6px 4px; justify-content: space-between; }
+  .qnote .qn-body { gap: 4px; padding-bottom: 8px; }
+  .qn-art { height: 66px; margin: 0 6px; }
+  .qn-art.has-seal { padding-bottom: 22px; }
+  .qn-seal { bottom: 3px; font-size: 10px; padding: 0 4px; }
+  .qn-title { font-size: 11px; padding: 0 4px; min-height: 28px; display: grid; place-items: center; }
+  .qn-num { font-size: 18px; }
+  .qn-prog { padding: 0 8px; }
+  .qnote .qn-rewards { font-size: 12px; gap: 2px 6px; }
+  .qnote .qn-rewards img { width: 12px; height: 12px; }
+  .qn-cta { margin: 0 6px 10px; min-height: 44px; font-size: 12px; letter-spacing: .06em; }
+  .qe-hint, .qd-hint { display: none; }
+  .qdetail.full { width: 100%; height: 100%; border-width: 0; gap: 8px; padding: 8px 12px; }
+}
+.qboard-in-list { padding: 0; } .qscreen .qboard-in-list { padding: clamp(12px, 1.4vw, 22px); }

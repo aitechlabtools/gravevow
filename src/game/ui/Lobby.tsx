@@ -99,7 +99,7 @@ export function Lobby() {
           {tab === 'character' && <Personaje onStash={() => go('stash')} />}
           {tab === 'stash' && <Alijo onShop={() => go('shop')} />}
           {tab === 'merchants' && <Mercaderes target={vendorTarget} onConsumed={() => setVendorTarget(null)} />}
-          {tab === 'quests' && <Misiones />}
+          {tab === 'quests' && <Misiones onBastion={() => go('merchants')} />}
           {tab === 'shop' && <Tienda />}
           {tab === 'bestiary' && <Legacy><div className="max-w-5xl mx-auto"><BestiaryTab /></div></Legacy>}
         </div>

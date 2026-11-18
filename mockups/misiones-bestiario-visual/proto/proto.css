@@ -1,0 +1,143 @@
+/* Maqueta v2. Todo plano y con los valores del juego (game.css, theme.css y docs/guia-interfaz.md):
+   fondo #0b0a0e/#0d0c11 · panel #15131a con borde 2px #3a3741 y filete #07060a · separadores #2a2830 ·
+   oro #e8b33a / oro apagado #9a6b1a · pergamino #e9e1cc · gris stone-300 #8c8693 / stone-400 #625d69 ·
+   sangre #c4283b · cura #5fd19a · arcano #a35ae0 · barra .bar (#0b0a0f, borde #07060a, filete #3a3741).
+   Única luz: la cálida de las tarjetas del Bastión (.vtile-port, radial #e8b33a26) detrás de los personajes. */
+
+/* Paneles y botones en plano (en el juego .panel y .btn llevan un degradado muy suave; aquí se quita) */
+.mk .panel { background: #15131a; }
+.mk .btn { background: #26232c; box-shadow: inset 0 1px 0 #625d69, inset 0 -2px 0 #15131a; }
+.mk .btn-gold { background: #c48f22; box-shadow: inset 0 1px 0 #f8dc7a, inset 0 -2px 0 #5a3c0a; color: #1a1206; }
+.mk .bar { position: relative; }
+.mk .bar.thin { display: block; height: 8px; border-width: 1px; }
+
+/* Cabecera de panel, como la de las tarjetas del Bastión (.vtile-name) pero plana */
+.phead { display: flex; align-items: center; gap: 12px; padding: 4px 14px; min-height: 52px; background: #1b1920; border-bottom: 2px solid #3a3741; }
+.phead-t { font-family: var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--color-parchment); font-size: clamp(15px, 1.15vw, 22px); }
+
+/* ── Tablón ── */
+.qboard { padding: 0; overflow: hidden; }
+.qboard-wood { background-repeat: repeat; image-rendering: pixelated; padding: clamp(12px, 1.4vw, 22px); }
+.qgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(10px, 1.2vw, 20px); align-items: start; }
+.qgrid.narrow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.qwrap-side { grid-template-columns: minmax(0, 1fr) clamp(360px, 26vw, 460px); align-items: start; }
+@media (max-width: 1300px) { .qgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .qgrid.narrow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* La nota: panel oscuro plano; el papel se insinúa con la esquina doblada (abajo a la derecha) y la chincheta */
+.qnote { position: relative; display: flex; flex-direction: column; background: #15131a; border: 2px solid #3a3741;
+  box-shadow: inset 0 0 0 1px #07060a;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%); }
+.qnote::after { content: ''; position: absolute; right: 0; bottom: 0; width: 14px; height: 14px; background: #3a3741;
+  clip-path: polygon(0 0, 100% 0, 0 100%); }
+.qnote .qn-body { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; text-align: center; cursor: pointer; background: none; border: 0; color: inherit; min-width: 0; }
+.qnote .qn-body:focus-visible { outline: 2px solid var(--color-gold); outline-offset: -4px; }
+.qnote:hover { filter: brightness(1.15); }
+.qnote.ready, .qnote.pinned, .qnote.sel { border-color: var(--color-gold); }
+.qnote.ready::after, .qnote.pinned::after, .qnote.sel::after { background: var(--color-gold); }
+.qn-hold { position: absolute; top: 3px; left: 50%; transform: translateX(-50%); z-index: 2; line-height: 0; }
+.qn-head { display: flex; align-items: center; gap: 8px; padding: 18px 10px 6px; min-height: 44px; border-bottom: 1px solid #2a2830; }
+.qn-art { position: relative; height: clamp(110px, 12vh, 150px); margin: 0 10px; display: flex; align-items: center; justify-content: center; flex-direction: column;
+  background: #0d0c11 radial-gradient(ellipse at 50% 35%, #e8b33a26, #0000 65%); border: 1px solid #2a2830; }
+.qn-title { font-family: var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--color-gold); font-size: clamp(14px, 1vw, 17px); line-height: 1.2; padding: 0 10px; }
+.qn-desc { font-family: var(--font-body); font-size: 15px; line-height: 1.25; padding: 0 10px; color: #8c8693; }
+.qn-prog { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 0 14px; }
+.qn-num { font-family: var(--font-display); font-size: clamp(22px, 1.7vw, 30px); line-height: 1; color: var(--color-parchment); }
+.qn-num .of { color: #625d69; }
+.qn-art.has-seal { padding-bottom: 34px; }
+.qn-cta { margin: 0 10px 14px; min-height: 48px; font-family: var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
+.qn-seal { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); white-space: nowrap; font-family: var(--font-display); font-size: 13px; letter-spacing: .1em;
+  text-transform: uppercase; padding: 2px 8px; color: #5fd19a; border: 2px solid currentColor; background: #0d0c11f0; pointer-events: none; }
+.qnote.empty { background: transparent; border: 2px dashed #3a3741; box-shadow: none; cursor: pointer; clip-path: none; min-height: 280px; }
+.qnote.empty::after { display: none; }
+.qnote.empty.old { min-height: 0; align-self: stretch; }
+
+/* Detalle de una misión */
+.qdetail { display: flex; flex-direction: column; gap: 12px; padding: 14px; background: #15131a; border: 2px solid #3a3741; box-shadow: inset 0 0 0 1px #07060a, 0 0 0 1px #07060a; }
+.qdetail.panel-side { position: sticky; top: 0; border-color: var(--color-gold); }
+.qdetail.note-big { width: min(640px, 100%); max-height: 100%; overflow-y: auto; border-color: var(--color-gold); }
+.qd-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #2a2830; }
+.qd-paper { position: relative; display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
+.qd-paper > .qn-hold { display: none; }
+@media (max-height: 520px) { .qdetail.note-big { width: 100%; height: 100%; border-width: 0; gap: 8px; padding: 8px 12px; } .qd-paper { gap: 6px; } .qd-hint { display: none; } }
+
+/* Selector de mercader del tablón de encargos (como .pill) */
+.qvchip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px 0 6px; background: #0d0c11b3; border: 1px solid #ffffff1a; }
+.qvchip.on { background: var(--color-parchment); border-color: var(--color-parchment); }
+.qvchip-n { font-family: var(--font-display); font-size: 12px; min-width: 20px; height: 20px; display: grid; place-items: center; background: #07060a; color: var(--color-gold); }
+
+/* ── Bestiario ── */
+.bstat { display: inline-flex; align-items: center; gap: 6px; }
+.bzone { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 6px; font-family: var(--font-display); font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--color-bone); background: #0d0c11b3; border: 1px solid #ffffff1a; }
+.bzone.on { background: var(--color-parchment); color: #120f0a; border-color: var(--color-parchment); }
+.bzone-sw { width: 30px; height: 30px; background-size: 64px 32px; image-rendering: pixelated; border: 1px solid #07060a; }
+.bgrid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-auto-rows: minmax(190px, 1fr); gap: var(--gap); overflow-y: auto; align-content: start; grid-auto-flow: row dense; }
+@media (max-width: 1300px) { .bgrid { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 180px; } }
+@media (max-height: 520px) { .bgrid { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 138px; } }
+
+/* Casilla: fondo plano; el conocimiento es el color del borde (piedra, bronce = oro apagado, plata, oro) */
+.btile { position: relative; display: flex; flex-direction: column; min-height: 0; padding: 0; background: #15131a; border: 2px solid var(--tier);
+  box-shadow: inset 0 0 0 1px #07060a, 0 0 0 1px #07060a; cursor: pointer; overflow: hidden; }
+.btile:hover:not(:disabled) { filter: brightness(1.15); }
+.btile:disabled { cursor: default; }
+.btile-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px;
+  background: #0d0c11 radial-gradient(ellipse at 50% 35%, #e8b33a26, #0000 65%); }
+.btile.tier-0 .btile-stage { background: #0d0c11; }
+.btile-fig { position: relative; display: flex; flex-direction: column; align-items: center; }
+.btile-fig .shadow { margin-top: -2px; opacity: .8; }
+.btile-name { display: block; padding: 5px 6px; min-height: 30px; font-family: var(--font-display); font-size: clamp(11px, .78vw, 14px); letter-spacing: .04em; text-align: center;
+  color: var(--color-parchment); background: #1b1920; border-top: 1px solid #2a2830; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btile.tier-0 .btile-name { color: #625d69; }
+.btile-kills { position: absolute; top: 4px; right: 4px; display: inline-flex; align-items: center; gap: 3px; padding: 1px 5px; font-family: var(--font-display); font-size: 13px;
+  color: var(--color-parchment); background: #07060a; border: 1px solid #2a2830; }
+.btile.boss { grid-column: span 2; border-color: var(--color-blood); }
+.btile.boss.down { border-color: var(--color-gold); }
+.btile-crown { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); }
+.btile-stamp { position: absolute; left: 6px; top: 6px; z-index: 1; font-family: var(--font-display); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--color-heal); border: 2px solid var(--color-heal); padding: 0 6px; background: #0d0c11; }
+.btile-threat { position: absolute; left: 8px; top: 6px; font-family: var(--font-display); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--color-blood); }
+@media (max-height: 520px) { .btile-name { font-size: 11px; padding: 2px 4px; min-height: 0; } .btile-stamp { font-size: 10px; padding: 0 4px; } .btile-threat { font-size: 10px; } }
+
+/* Ficha de criatura */
+.bcard-wrap { padding: 24px; }
+.bcard { position: relative; display: grid; grid-template-columns: minmax(260px, 36%) 1fr; width: min(980px, 100%); max-height: 100%; padding: 0; border: 2px solid var(--tier); overflow: hidden; }
+.bcard-left { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: #0d0c11 radial-gradient(ellipse at 50% 30%, #e8b33a26, #0000 65%); border-right: 1px solid #2a2830; }
+.bcard-stage { height: clamp(200px, 32vh, 340px); display: flex; align-items: flex-end; justify-content: center; }
+.bcard-right { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px; overflow-y: auto; }
+.bcard-x { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; }
+.bsec { padding: 10px 12px; background: #0d0c11; border: 1px solid #2a2830; }
+.bcard-right > .bsec:nth-child(2) { margin-right: 56px; }
+.bsec-t { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--color-gold); margin-bottom: 4px; }
+.bsec.locked { border-style: dashed; border-color: #3a3741; }
+.bsec.locked .bsec-t { color: #625d69; }
+@media (max-height: 520px) {
+  .bcard-wrap { padding: 0; }
+  .bcard { width: 100%; height: 100%; max-height: none; grid-template-columns: 40% 1fr; border-width: 0 0 0 2px; }
+  .bcard-left { padding: 8px; gap: 4px; }
+  .bcard-stage { height: auto; flex: 1; min-height: 0; }
+  .bcard-right { padding: 8px; gap: 6px; }
+}
+
+/* Móvil en horizontal: las 5 notas en una fila, compactas */
+@media (max-height: 520px) {
+  .phead { min-height: 44px; padding: 0 8px; }
+  .qboard-wood { padding: 10px 8px 8px; }
+  .qgrid, .qgrid.narrow { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .qnote.empty { min-height: 0; align-self: stretch; }
+  .qn-vname { display: none; }
+  .qn-head { min-height: 36px; padding: 10px 6px 4px; justify-content: space-between; }
+  .qnote .qn-body { gap: 4px; padding-bottom: 8px; }
+  .qn-art { height: 66px; margin: 0 6px; }
+  .qn-title { font-size: 11px; padding: 0 4px; min-height: 28px; display: grid; place-items: center; }
+  .qn-num { font-size: 18px; }
+  .qn-prog { padding: 0 8px; }
+  .qnote [data-testid=quest-rewards] { font-size: 12px; gap: 2px 6px; }
+  .qnote [data-testid=quest-rewards] img { width: 12px; height: 12px; }
+  .qn-cta { margin: 0 6px 10px; min-height: 44px; font-size: 12px; letter-spacing: .06em; }
+  .qn-seal { bottom: 3px; font-size: 10px; padding: 0 4px; }
+  .qn-art.has-seal { padding-bottom: 22px; }
+  .qe-hint { display: none; }
+  .qnote.empty .btn { font-size: 11px !important; padding: 0 6px !important; }
+  .bzone-name { display: none; }
+  .bzone { padding: 0 8px 0 4px; }
+}
