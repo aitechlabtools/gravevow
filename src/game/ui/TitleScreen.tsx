@@ -57,7 +57,7 @@ export function TitleScreen() {
   if (!profile) items.push({ id: 'btn-have-backup', label: 'Tengo una copia', go: () => { sfx('click'); void actions.openBackup('load'); } });
   if (roster.length > 0) {
     items.push({ id: 'btn-choose-char', label: 'Elegir personaje', go: () => { sfx('click'); void actions.openSelect(); } });
-    items.push({ id: 'btn-backup', go: () => { sfx('click'); void actions.openBackup(); }, label: <>Copia de seguridad{backup?.remind && <span className="tm-remind" data-testid="backup-reminder">· {backup.lastAt === null ? 'sin copia' : (backup.days ?? 0) >= 7 ? `hace ${backup.days} días` : `${backup.expeditionsSince} expediciones sin copia`}</span>}</> });
+    items.push({ id: 'btn-backup', go: () => { sfx('click'); void actions.openBackup(); }, label: <span className="gm-lbl">Copia de seguridad{backup?.remind && <span className="tm-remind" data-testid="backup-reminder">{backup.lastAt === null ? 'sin copia' : (backup.days ?? 0) >= 7 ? `hace ${backup.days} días` : `${backup.expeditionsSince} expediciones sin copia`}</span>}</span> });
   }
   items.push({ id: 'btn-settings', label: 'Ajustes', go: () => { sfx('click'); setSettings(true); } });
   const [sel, setSel] = useState(0);
