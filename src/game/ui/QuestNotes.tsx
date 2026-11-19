@@ -122,7 +122,7 @@ export function QuestNote({ p, mode, selected, onOpen, showVendor = true }: { p:
       </button>
       {done && <ClaimButton q={q} done className="qn-cta" />}
       {mode === 'board' && (
-        <button className="btn btn-gold qn-cta font-display" disabled={!!block} title={block ?? undefined}
+        <button className={`btn ${block ? "" : "btn-gold"} qn-cta font-display`} disabled={!!block} title={block ?? undefined}
           onClick={() => { actions.acceptQuest(q.id); sfx('click'); }} data-testid={`accept-${q.id}`}>{block ? 'Tablón lleno' : 'Aceptar'}</button>
       )}
     </div>
