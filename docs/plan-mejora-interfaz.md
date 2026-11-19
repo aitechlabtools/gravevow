@@ -1,6 +1,6 @@
 # Plan de mejora visual y de usabilidad de los menús y el HUD
 
-Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0, 1, 2, 3 y 4 hechas** (19/11). Siguiente: maqueta de la fase 5 (combate).
+Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0 a 5 hechas** (19/11). Siguiente: maqueta de la fase 6 (menús, fichas, resultados y ajustes).
 
 Capturas del estado actual en los tres formatos, con los problemas marcados: `mockups/plan-interfaz/index.html`
 (carpeta `mockups/plan-interfaz/actual/`, script `mockups/plan-interfaz/capturar.cjs`). En el índice, cada número rojo es un
@@ -242,7 +242,7 @@ Hecho: paleta, paneles y botones planos, niveles de botón, desactivado legible,
 - **Riesgos:** solo DOM encima del lienzo; Phaser no cambia. Menos paneles con sombra y degradado = menos coste de pintado.
 - **Capturas:** exploración, con aliado, con aviso de canalización, pausa, en los tres formatos.
 
-### Fase 5 · Combate (grande)
+### Fase 5 · Combate (grande) — hecha 19/11 (`mockups/fase5-combate`)
 - **Qué:** nombre del enemigo una sola vez (en su tarjeta; el título central solo dice la zona) (P-13); «¿Qué hará Aldric?» pasa al registro (P-16); avisos fuera del combate (P-14, con el `Toasts` por zonas); subtítulos sin cortar (P-23); iconos de acción en pixel art (cuando estén).
 - **Móvil horizontal:** la escena ocupa los 230 px de arriba; el enemigo a la derecha y el jugador a la izquierda **sin fichas encima** (P-15): las dos fichas pasan a dos tiras finas pegadas arriba (enemigo a la derecha, jugador a la izquierda) con nombre, vida y recurso; el cuerpo y las heridas al tocar la tira. La barra de acciones 2×2 + 3 se queda (ya funciona bien en 844 px).
 - **Archivos:** `CombatScreen.tsx`, `combatActions.tsx`, `common.tsx` (`Toasts`).

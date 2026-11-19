@@ -763,6 +763,13 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - 2026-11-15: cookies.html pasa a noindex (meta robots) y se quita su Disallow para que Google pueda leerlo y desindexarla.
 - 2026-11-15: favicon.ico, PNG 48/96/192 y apple-touch-icon generados desde favicon.svg (escalado nearest) y enlazados en index.html.
 
+## Novedades del 19/11 (6): fase 5 de la interfaz implementada (combate)
+- `CombatScreen.tsx`: título solo con la zona; fuera «¿Qué hará…?»; último aviso como línea del registro (`combat-note`); busto en la ficha del jugador; barra principal en 2 + 2×2 (`.cmdpair`); orden y teclas: Atacar 1, Especial 2, Habilidad 3, Guardia 4, Mochila 5, Huir 6. Guardia azul (#5aa0ff), Mochila gris como Huir.
+- `common.tsx`: `Toasts` no se pinta en combate.
+- `Settings.tsx`: texto de las teclas de combate al día.
+- `game.css`: bloque «Fase 5 · Combate» (botones en dos líneas, tiras del móvil, `.foe`).
+- Pruebas: tsc, 512 tests, e2e, e2e-tutorial, e2e-exp-minis, e2e-merc, e2e-social, touch, mobile, menus, aliados, exploración, necesidades y pantalla completa.
+
 ## Novedades del 19/11 (5): fase 4 de la interfaz implementada (HUD de exploración)
 - Un solo bloque del jugador arriba a la izquierda (escritorio y tableta): retrato en busto (cabeza y hombros, `.hud-bust`), vida, recurso y dos filas de tres columnas: necesidades (icono, número y barra) y, debajo, botín, oro y carga (icono de peso y barra: verde hasta el 80 % de la capacidad, amarilla hasta el 100 %, roja con sobrecarga; `HudLoad` en `CarryBar.tsx`, `hud-load`). Fuera la caja de botín de abajo, el botón grande de poción y el aviso «Sobrecarga» en escritorio y tableta (sigue en el móvil). `inventario-check` acepta la barra roja como aviso.
 - Poción: en escritorio, botón redondo abajo a la derecha como en táctil, con «Q» pequeña arriba y el número de pociones (`btn-potion`).

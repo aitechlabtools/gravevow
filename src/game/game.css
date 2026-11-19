@@ -1015,3 +1015,69 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .hud-load{display:flex;align-items:center;gap:4px}
 .hud-load-bar{flex:1;height:4px;background:#0d0c11;border:1px solid #34303a;position:relative}
 .hud-load-bar>span{position:absolute;inset:0 auto 0 0}
+
+/* ── Fase 5 · Combate ── */
+/* Nombre y subtítulo de los botones sin cortar: pasan a dos líneas si no caben */
+.cmd-label{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.1}
+.cmd-sub{font-size:12px;opacity:.7;line-height:1.15}
+.cmdsplit>.cmd.half .cmd-label{font-size:clamp(11px,1.05vw,15px)}
+/* Avisos dentro del registro */
+.combat-note{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:.8em;color:#e8b33a}
+.combat-note img{flex-shrink:0}
+/* Busto del jugador en su ficha, con el nivel en la esquina */
+.frame-bust{position:relative}
+.frame-bust>img{max-width:none}
+.frame-bust>.frame-bust-lvl{position:absolute;left:0;bottom:0;width:20px;height:22px;font-size:11px}
+
+/* Móvil horizontal: dos tiras finas arriba (tú a la izquierda, el enemigo a la derecha) y la escena libre */
+@media (max-height:560px){
+  .combat-zone{display:none}
+  .combat-stage .info-stack{transform:none;top:6px;bottom:auto;gap:4px}
+  .combat-stage .info-stack:not(.info-stack-br){left:auto!important;right:calc(max(8px,env(safe-area-inset-right)) + 52px);align-items:flex-end}
+  .combat-stage .info-stack-br{right:auto!important;left:max(8px,env(safe-area-inset-left));align-items:flex-start;flex-direction:column-reverse}
+  .combat-stage .frame{width:300px;padding:4px 8px 4px;min-height:0}
+  .combat-stage .frame::before,.combat-stage .frame::after{width:7px;height:7px}
+  .combat-stage .frame .frame-body,.combat-stage .frame .text-\[11px\]{display:none}
+  .combat-stage .frame .fname{font-size:13px}
+  .combat-stage .frame .hprow{margin-top:2px}
+  .combat-stage .frame .lvl{width:22px;height:25px;font-size:11px}
+  .combat-stage .frame .hud-bust{width:36px;height:36px}
+  .combat-stage .frame .hud-bust img{transform:scale(.7);transform-origin:top center}
+  .combat-stage .frame .intent{font-size:12px;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .combat-stage .frame-sm{width:220px}
+  .cmd-sub{font-size:12px}
+}
+@media (max-height:560px){
+  /* Tira del jugador: busto a la izquierda a toda altura; toda la tira abre Heridas y necesidades */
+  .combat-stage .frame:has(.frame-bust){padding-left:50px;min-height:46px}
+  .combat-stage .frame .frame-bust{position:absolute;left:5px;top:5px;width:38px;height:38px}
+  .combat-stage .frame .combat-body-btn{position:absolute;inset:0;width:auto;height:auto;min-height:44px;background:transparent;border:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:3px 6px;font-size:12px;z-index:1}
+  .combat-stage .frame .combat-body-btn .combat-body-ok{display:none}
+  .combat-stage .frame .hpnum{font-size:11px}
+}
+@media (max-height:560px){
+  /* Sin fila vacía bajo la vida del enemigo, y los enemigos un poco más abajo para que la tira no los tape */
+  .combat-stage .frame > div:last-child:has(> span:first-child:empty){display:none}
+  .combat-stage .foe{transform:translateY(26px)}
+}
+@media (max-height:560px){
+  /* Busto del móvil: se encoge entero (no solo la imagen) para que el recorte siga siendo cabeza y hombros */
+  .combat-stage .frame .hud-bust img{transform:none;zoom:.72;margin-top:-2px}
+  .combat-stage .frame .frame-bust>.frame-bust-lvl{width:16px;height:18px;font-size:9px;left:-3px;bottom:-3px}
+  .combat-stage .frame .frame-bust{overflow:visible}
+  .combat-stage .frame .frame-bust>img{clip-path:inset(0)}
+}
+@media (max-height:560px){
+  .combat-stage .frame .frame-bust{overflow:hidden}
+  .combat-stage .frame .frame-bust>.frame-bust-lvl{left:0;bottom:0}
+}
+.fname-lvl{display:none;font-size:.8em;color:#e8b33a}
+@media (max-height:560px){
+  .combat-stage .frame .frame-bust>.frame-bust-lvl{display:none}
+  .combat-stage .frame .fname-lvl{display:inline}
+}
+/* Barra principal: Atacar | Especial arriba; abajo Grito | Guardia y Mochila | Huir */
+.cmdpair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+.cmdpair>.cmd.half{padding:4px 6px 4px 16px;gap:0}.cmdpair>.cmd.half>svg,.cmdpair>.cmd.half>img{display:none}
+.cmdpair>.cmd.half .cmd-label{letter-spacing:.02em;font-size:clamp(11px,1.05vw,15px)}.cmdpair>.cmd.half kbd{right:3px}
+@media (max-height:560px){.cmdpair{gap:6px}}

@@ -162,7 +162,7 @@ const KEYS_DUNGEON: [string, string][] = [
   ['Q', 'Beber una poción'], ['I', 'Inventario'], ['R', 'Girar el objeto seleccionado'], ['F', 'Pantalla completa (en cualquier pantalla)'], ['Esc', 'Pausa, o cerrar la ventana abierta'],
 ];
 const KEYS_COMBAT: [string, string][] = [
-  ['1 – 6', 'Atacar, Especial, Habilidad, Mochila, Huir y Guardia'], ['1 – 4 (en un submenú)', 'Elegir'], ['Flechas y Enter', 'Moverte por las acciones y usar'],
+  ['1 – 6', 'Atacar, Especial, Habilidad, Guardia, Mochila y Huir'], ['1 – 4 (en un submenú)', 'Elegir'], ['Flechas y Enter', 'Moverte por las acciones y usar'],
   ['Tab', 'Cambiar de objetivo (en la Mochila, de página)'], ['Esc o Retroceso', 'Volver atrás'], ['Enter o Espacio', 'Cerrar el resultado'],
 ];
 const GESTURES: [string, string][] = [

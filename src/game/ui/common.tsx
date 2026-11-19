@@ -65,7 +65,9 @@ export function Toasts() {
   const inCombat = useGame((s) => !!s.combat);
   const touch = useIsTouch();
   // En táctil, abajo a la derecha están los botones de poción y «Usar»: los avisos van arriba, bajo Inventario/Menú.
-  const place = inCombat ? 'top-4' : touch ? 'top-16' : 'bottom-4';
+  // En combate los avisos salen dentro del registro (CombatScreen), no encima de la escena
+  if (inCombat) return null;
+  const place = touch ? 'top-16' : 'bottom-4';
   const color = { loot: 'border-gold text-gold', info: 'border-stone-500', danger: 'border-blood text-[#ff8a7a]', social: 'border-heal text-heal', good: 'border-heal' };
   return (
     <div className={`absolute right-4 ${place} z-[60] flex flex-col gap-2 w-80 max-w-[45vw] pointer-events-none`} aria-live="polite">

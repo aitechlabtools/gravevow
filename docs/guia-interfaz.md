@@ -76,7 +76,7 @@ Todo está en un sitio: `src/config/ui.ts` (para el código) y el bloque «Base 
   para señalar algo del mapa, `target: { tile: [x, y] }` y la escena pone la flecha.
 
 ## Barra de combate (distribución D)
-- **Barra normal (2×2)**: Atacar (tecla 1) · Ataque especial (2) / Habilidad de clase (3) · Mochila (4) y Huir (5) a media anchura.
+- **Barra normal (fase 5)**: arriba Atacar (1) | Ataque especial (2); abajo, cada mitad partida en dos: Habilidad de clase (3) | Guardia (4, azul) y Mochila (5) | Huir (6), las dos en gris.
   - Atacar: ataque básico del arma de la mano derecha, sin coste ni recarga (sin arma: Puñetazo).
   - Ataque especial: subtítulo «N listos · M en recarga». Habilidad: coste o «Recarga: N turnos».
 - **Ataque especial** se abre en el mismo sitio: columna «Volver» (Esc) + 2×2. Arriba los 2 de la mano derecha (borde rojo),
@@ -266,3 +266,11 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - **Móvil:** tira de 44 px (figura del cuerpo, dos barras finas con número, tres iconos de necesidades que abren la tira completa, botín y oro). Solo el reloj en el centro; la sala aparece 3 s al cambiar, al tocar el reloj o si un aviso la señala (`hud-room`). Aliado: icono de 44 px con su vida bajo la tira.
 - **Pausa:** «Continuar» dorado, «Ajustes» secundario y, tras una línea, «Abandonar la expedición…» en rojo con confirmación.
 - Retratos pequeños de personaje: siempre en busto (cabeza y hombros), no la figura entera.
+
+## Combate (fase 5)
+- Arriba en el centro solo la zona y el orden de turnos; el nombre del enemigo sale solo en su ficha (`combat-title` es ahora la línea de la zona, con el nombre en el `title`).
+- No hay «¿Qué hará…?»: el botón resaltado marca el turno. En el turno ajeno, «X está actuando…».
+- Los avisos (`Toasts`) no salen en combate: el último aparece como línea dorada en el registro (`combat-note`).
+- Botones: el nombre y el subtítulo pasan a dos líneas en vez de cortarse (`.cmd-sub`).
+- Ficha del jugador con busto (`.frame-bust`) y el nivel en la esquina.
+- Móvil (alto ≤ 560 px): dos tiras finas arriba, tú a la izquierda (busto, «Nv N» junto al nombre, PV y recurso) y el enemigo a la derecha; sin zona en el título. Toda tu tira es el botón `combat-body` (Heridas y necesidades; gota roja si hay heridas). Los enemigos bajan 26 px (`.foe`) para que la tira no los tape.

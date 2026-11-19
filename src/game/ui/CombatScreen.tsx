@@ -21,7 +21,7 @@ import { areaDef } from '../../core/data/zones';
 import { getEnemy } from '../../core/data/enemies';
 import { Bar, ItemIcon } from './inventory';
 import { BodyFigure, BodyPanel, woundsOf } from './BodyFigure';
-import { Modal } from './common';
+import { Modal, PlayerSprite } from './common';
 import { NeedsPanel } from './NeedsBars';
 import { TREATMENT_ITEM } from '../state/medicalActions';
 import { bestTreatment, isDisabled, painfulRegions, REGIONS, treatError, TREATMENT_NAME, urgencies, type Body, type Treatment } from '../../core/anatomy';
@@ -207,10 +207,10 @@ export function CombatScreen() {
     { label: 'Atacar', sub: `${player.basicAttack.name} · sin coste`, color: '#ff6a5a', icon: player.basicAttack.fx ?? 'slash', onUse: doAttack, testId: 'act-attack', disabled: false },
     { label: 'Ataque especial', sub: specials.length ? `${ready} listo${ready === 1 ? '' : 's'}${waiting ? ` · ${waiting} en recarga` : ''}` : 'Ninguno', color: '#a56bff', icon: specials[0]?.fx ?? 'slash', onUse: openSpecial, testId: 'act-special', disabled: !specials.length },
     { label: classSlot?.name ?? 'Habilidad', sub: !classSlot ? '—' : classCd ? `Recarga: ${classCd} turno${classCd > 1 ? 's' : ''}` : classSlot.cost ? `${classSlot.cost} ${res.toLowerCase()}` : 'sin coste', color: '#e8b33a', icon: classSlot?.fx ?? 'holy', onUse: () => classSlot && !classSlot.disabled && classSlot.onUse(), testId: 'act-class', disabled: !classSlot || classSlot.disabled },
-    { label: 'Mochila', sub: bagEntries.length ? `${bagEntries.length} usable${bagEntries.length > 1 ? 's' : ''}` : 'Nada', color: '#e8b33a', icon: 'bag', onUse: openBag, testId: 'act-bag', disabled: !bagEntries.length },
-    { label: 'Huir', sub: fleeTxt, color: '#8c8693', icon: 'flee', onUse: () => actions.combatAct({ type: 'flee' }), testId: 'act-flee', disabled: !cs.canFlee },
     // Guardia (Fase 8): la respuesta de cualquier clase a un ataque anunciado
-    { label: 'Guardia', sub: guardTxt, color: '#d9d3c1', icon: 'shield', onUse: () => actions.combatAct({ type: 'defend' }), testId: 'act-guard', disabled: false, alert: !!threat },
+    { label: 'Guardia', sub: guardTxt, color: '#5aa0ff', icon: 'shield', onUse: () => actions.combatAct({ type: 'defend' }), testId: 'act-guard', disabled: false, alert: !!threat },
+    { label: 'Mochila', sub: bagEntries.length ? `${bagEntries.length} usable${bagEntries.length > 1 ? 's' : ''}` : 'Nada', color: '#8c8693', icon: 'bag', onUse: openBag, testId: 'act-bag', disabled: !bagEntries.length },
+    { label: 'Huir', sub: fleeTxt, color: '#8c8693', icon: 'flee', onUse: () => actions.combatAct({ type: 'flee' }), testId: 'act-flee', disabled: !cs.canFlee },
   ];
   // Cirugía a medias: el primer botón la termina (cualquier otra acción la abandona y el equipo se pierde)
   if (player.surgery) mainCmds[0] = { label: 'Terminar cirugía', sub: `2 de 2 · ${REGION_NAME[player.surgery.region]}`, color: '#7fd65a', icon: 'holy', onUse: () => actions.combatAct({ type: 'surgery' }), testId: 'act-surgery', disabled: false };
@@ -255,6 +255,8 @@ export function CombatScreen() {
   const allies = sideA.filter((c) => c.control !== 'player');
   const playerX = allies.length > 1 ? 19 : allies.length ? 22 : 27;
   const lastLines = cs.log.slice(-2);
+  // Los avisos no tapan el combate: el último sale como una línea más del registro
+  const note = useGame((s) => s.toasts[s.toasts.length - 1]);
 
   return (
     <div className="absolute inset-0 z-40 flex flex-col fade-in bg-void" data-testid="combat">
@@ -263,8 +265,7 @@ export function CombatScreen() {
         {/* Pantalla completa también en combate (la pantalla de combate tapa el HUD de la mazmorra) */}
         <div className="absolute z-20" style={{ top: 'max(8px, env(safe-area-inset-top))', right: 'max(8px, env(safe-area-inset-right))' }}><FullscreenButton /></div>
         <div className="absolute left-1/2 -translate-x-1/2 top-[2.5%] text-center pointer-events-none">
-          <div className="font-display text-xs tracking-[0.25em] uppercase" style={{ color: zone.accent, textShadow: `0 0 12px ${zone.accent}` }}>◆ {zone.name} ◆</div>
-          <div className="font-display text-parchment text-lg md:text-xl mt-0.5 drop-shadow-[0_2px_0_#000]" data-testid="combat-title">{combat.title}</div>
+          <div className="font-display text-xs tracking-[0.25em] uppercase combat-zone" style={{ color: zone.accent, textShadow: `0 0 12px ${zone.accent}` }} data-testid="combat-title" title={combat.title}>◆ {zone.name} ◆</div>
           <div className="flex items-center justify-center gap-1 mt-1 text-[10px] text-stone-400 turnbar" aria-label="Orden de turnos">
             <span className="mr-1">Ronda {cs.round}</span>
             {cs.order.map((id, i) => {
@@ -296,7 +297,7 @@ export function CombatScreen() {
         </div>
         <div className="absolute right-[3%] bottom-[6%] flex flex-col items-end gap-2 info-stack info-stack-br">
           {allies.map((c) => <InfoFrame key={c.id} c={c} small />)}
-          <InfoFrame c={player} nums level={profile.character.level} sub={CLASS_NAME[profile.character.classId]} spend={spendPreview} onBody={player.body && !combat.state.outcome ? () => setBodyOpen(true) : undefined} />
+          <InfoFrame c={player} bust nums level={profile.character.level} sub={CLASS_NAME[profile.character.classId]} spend={spendPreview} onBody={player.body && !combat.state.outcome ? () => setBodyOpen(true) : undefined} />
         </div>
       </div>
 
@@ -312,17 +313,21 @@ export function CombatScreen() {
               ) : (
                 <>
                   {lastLines.map((l, i) => <div key={cs.log.length - 2 + i} className={i === lastLines.length - 1 ? 'text-parchment' : 'text-stone-400'}>{g(l)}</div>)}
-                  {playerTurn ? <div className="text-gold">¿Qué hará {player.name}?<span className="caret">▼</span></div> : <div className="text-stone-400 italic">{actor ? `${actor.name} está actuando…` : '…'}</div>}
+                  {!playerTurn && <div className="text-stone-400 italic">{actor ? `${actor.name} está actuando…` : '…'}</div>}
+                  {note && <div className="combat-note" data-testid="combat-note">{note.icon && <img src={iconUrl(note.icon, 2)} width={20} height={20} className="pixelated" alt="" />}<span>{note.text}</span></div>}
                 </>
               )}
             </div>
             <div className={`cmdgrid ${menu !== 'main' && playerTurn ? 'sub' : ''}`} data-testid={!playerTurn || menu === 'main' ? 'main-menu' : menu === 'special' ? 'special-menu' : 'bag-menu'}>
               {!playerTurn || menu === 'main' ? (
                 <>
-                  {mainCmds.slice(0, 3).map((c, i) => <Cmd key={c.testId} k={i + 1} label={c.label} sub={c.sub} color={c.color} icon={c.icon} disabled={!playerTurn || c.disabled} testId={c.testId} onClick={c.onUse} on={playerTurn && i === focus} onHover={() => setFocus(i)} />)}
-                  <div className="cmdsplit">
-                    {mainCmds.slice(3).map((c, i) => <Cmd key={c.testId} k={i + 4} label={c.label} sub={c.sub} color={c.color} icon={c.icon} disabled={!playerTurn || c.disabled} testId={c.testId} onClick={c.onUse} on={playerTurn && (i + 3 === focus || !!c.alert)} alert={playerTurn && c.alert} onHover={() => setFocus(i + 3)} half />)}
-                  </div>
+                  {mainCmds.slice(0, 2).map((c, i) => <Cmd key={c.testId} k={i + 1} label={c.label} sub={c.sub} color={c.color} icon={c.icon} disabled={!playerTurn || c.disabled} testId={c.testId} onClick={c.onUse} on={playerTurn && i === focus} onHover={() => setFocus(i)} />)}
+                  {/* Abajo, cada mitad partida en dos: Grito | Guardia y Mochila | Huir */}
+                  {[[2, 3], [4, 5]].map((pair) => (
+                    <div key={pair.join()} className="cmdpair">
+                      {pair.map((i) => { const c = mainCmds[i]; return <Cmd key={c.testId} k={i + 1} label={c.label} sub={c.sub} color={c.color} icon={c.icon} disabled={!playerTurn || c.disabled} testId={c.testId} onClick={c.onUse} on={playerTurn && (i === focus || !!c.alert)} alert={playerTurn && c.alert} onHover={() => setFocus(i)} half />; })}
+                    </div>
+                  ))}
                 </>
               ) : (
                 <>
@@ -367,7 +372,7 @@ function Cmd({ k, label, sub, color, icon, itemId, disabled, on, onClick, onHove
       onClick={() => { if (lp.consume() || disabled) return; onClick?.(); }} onPointerEnter={(e) => { if (e.pointerType === 'mouse') onHover?.(); }} data-testid={testId}>
       <span className="cur">▶</span><kbd>{k}</kbd>
       {itemId ? <ItemIcon itemId={itemId} size={24} /> : <ActionIcon fx={icon} size={24} color={color} />}
-      <span className="flex flex-col leading-tight min-w-0"><span className="cmd-label">{label}</span><span className="text-[11px] opacity-65 truncate">{cd ? `Recarga: ${cd} turno${cd > 1 ? 's' : ''}` : sub}</span></span>
+      <span className="flex flex-col leading-tight min-w-0"><span className="cmd-label">{label}</span><span className="cmd-sub">{cd ? `Recarga: ${cd} turno${cd > 1 ? 's' : ''}` : sub}</span></span>
       {cd ? <span className="cdturns" aria-label={`Faltan ${cd} turnos`}>{cd}</span> : null}
     </button>
   );
@@ -402,7 +407,7 @@ function intentLine(c: Combatant, all: Combatant[]): { text: string; hint: strin
   };
 }
 
-function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent, onBody }: { c: Combatant; nums?: boolean; sub?: string; small?: boolean; level?: number; spend?: number; target?: { on: boolean; pick: () => void }; duo?: boolean; intent?: { text: string; hint: string } | null; onBody?: () => void }) {
+function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent, onBody, bust }: { c: Combatant; bust?: boolean; nums?: boolean; sub?: string; small?: boolean; level?: number; spend?: number; target?: { on: boolean; pick: () => void }; duo?: boolean; intent?: { text: string; hint: string } | null; onBody?: () => void }) {
   const hurt = !!c.body && REGIONS.some((r) => woundsOf(c.body!, r).some((k) => k !== 'hurt'));
   const exposed = (c.exposed ?? 0) > 0 && c.hp > 0;
   const kind = c.boss ? 'boss' : c.side === 'A' && c.control !== 'player' ? 'ally' : '';
@@ -411,9 +416,10 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent,
   return (
     <div className={`frame ${kind} ${small ? 'frame-sm' : ''} ${duo ? 'frame-duo' : ''}`} data-testid={`info-${c.id}`} {...pick}>
       <div className="flex items-center gap-2.5">
-        {!small && level !== undefined && <span className={`lvl ${c.boss ? 'boss' : ''}`} title={`Nivel ${level}`}>{level}</span>}
+        {bust ? <span className="hud-bust frame-bust"><PlayerSprite scale={3} animate={false} />{level !== undefined && <span className="lvl frame-bust-lvl" title={`Nivel ${level}`}>{level}</span>}</span>
+          : !small && level !== undefined && <span className={`lvl ${c.boss ? 'boss' : ''}`} title={`Nivel ${level}`}>{level}</span>}
         <div className="flex-1 min-w-0">
-          <div className={`fname ${c.side === 'B' ? 'text-[#ffb3a8]' : ''}`}>{target?.on ? <span className="text-blood" data-testid={`target-${c.id}`} aria-label="Objetivo">▶ </span> : ''}{c.name}{kind === 'ally' ? <span className="text-heal text-xs"> · aliado</span> : ''}</div>
+          <div className={`fname ${c.side === 'B' ? 'text-[#ffb3a8]' : ''}`}>{target?.on ? <span className="text-blood" data-testid={`target-${c.id}`} aria-label="Objetivo">▶ </span> : ''}{c.name}{bust && level !== undefined && <span className="fname-lvl"> · Nv {level}</span>}{kind === 'ally' ? <span className="text-heal text-xs"> · aliado</span> : ''}</div>
           {sub && !small && <div className="text-[11px] text-stone-400 truncate">{sub}</div>}
         </div>
         {small && <span className="text-xs text-stone-400">{c.hp} / {c.stats.maxHp}</span>}
@@ -458,8 +464,8 @@ function StageFighter({ c, x, bottom, h, shadowW, shadowBottom, flip, anim, floa
   const src = hero ? heroBackUrl(hero.classId, hero.appearance, 8, pose, hero.equipment, hero.skin) : !flip ? allyBackUrl(c.sprite, 8, pose) : monsterUrl(c.sprite, 8, pose);
   return (
     <>
-      <div className="fighter-shadow" style={{ left: `${x}%`, bottom: `${shadowBottom}%`, width: `${shadowW}%`, opacity: dead ? 0.3 : 1 }} />
-      <div className={`absolute ${selectable ? 'cursor-pointer' : ''}`} style={{ left: `${x}%`, bottom: `${bottom}%`, height: `${h}%`, translate: '-50% 0' }} onClick={selectable ? onSelect : undefined} data-testid={`fighter-${c.id}`}>
+      <div className={`fighter-shadow ${flip ? 'foe' : ''}`} style={{ left: `${x}%`, bottom: `${shadowBottom}%`, width: `${shadowW}%`, opacity: dead ? 0.3 : 1 }} />
+      <div className={`absolute ${flip ? 'foe' : ''} ${selectable ? 'cursor-pointer' : ''}`} style={{ left: `${x}%`, bottom: `${bottom}%`, height: `${h}%`, translate: '-50% 0' }} onClick={selectable ? onSelect : undefined} data-testid={`fighter-${c.id}`}>
         {(active || selected) && !dead && <div className={`absolute left-1/2 -translate-x-1/2 -top-6 text-xl ${selected ? 'text-blood' : 'text-gold'} turn-arrow`}>▼</div>}
         <div key={dead ? `dead-${c.id}` : `${anim.step}-${c.id}`} className={`h-full ${dead ? 'death-fade' : motion || (fly ? 'bob' : 'breathe')}`}>
           <img src={src} alt={c.name} draggable={false} className={`h-full w-auto pixelated ${flip ? '-scale-x-100' : ''}`} style={dim ? { filter: 'brightness(.85)' } : undefined} />
