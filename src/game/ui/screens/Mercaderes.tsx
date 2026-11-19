@@ -291,7 +291,7 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
       {tabBar}
       {pendBox}
       <button type="button" className="panel vback-card flex-1" onClick={onBack} data-testid="vendor-back">
-        <span className="vback-art"><PixelIcon rows={BASTION_SKYLINE} size={layout === 'tablet' ? 128 : 192} color="currentColor" /></span>
+        <span className="vback-art"><PixelIcon rows={BASTION_SKYLINE} size={layout === 'tablet' ? 96 : 128} color="currentColor" /></span>
         <span className="vback-lbl">{layout === 'tablet' ? '◂ Bastión' : '◂ Volver al Bastión'}</span>
       </button>
     </div>
