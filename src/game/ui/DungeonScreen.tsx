@@ -36,6 +36,9 @@ import { RISK, GOLD_SHARE, SHARE_FAIR_RATIO, GRIZK_REP, type RiskLevel } from '.
 import { shareVerdict } from '../../core/social';
 import { pinnedQuests, questDef, questProgress } from '../../core/quests';
 import { planPayment } from '../../core/share';
+import { useLayout } from '../../config/ui';
+import { Panel } from './kit';
+import { ItemCard } from './screens/ItemCard';
 
 export function DungeonScreen() {
   const host = useRef<HTMLDivElement>(null);
@@ -355,6 +358,7 @@ function ShareMeter({ given, total, single, name }: { given: number; total: numb
 
 function LootModal() {
   const s = useGame((x) => x);
+  const layout = useLayout();
   const [sel, setSel] = useState<Loc | null>(null);
   const [splitGive, setSplitGive] = useState(false);
   useClearOnDrop(useCallback(() => setSel(null), []));
@@ -363,6 +367,47 @@ function LootModal() {
   const grid = s.chests[session.id] ?? s.bags[session.id]?.grid ?? [];
   const share = session.shareAsked && s.rival.disposition === 'allied';
   const selStack = sel?.kind === 'grid' && sel.container === 'loot' ? grid[sel.index] : null;
+  if (layout !== 'desktop') {
+    // Fase 3 (tableta y móvil): «Del saco» | «Tuyo» | ficha, y «Cogerlo todo» como acción principal abajo
+    const phone = layout === 'phone';
+    const who = getWanderer(s.rival.who).name.split(' ')[0];
+    return (
+      <div className="absolute inset-0 z-50 flex fade-in inv-full" data-testid="loot-modal">
+        <Panel className="min-h-0 shrink-0 loot-from" bodyClassName="overflow-y-auto scroll-thin">
+          <div className="panel-title mb-2">{session.title}</div>
+          <GridView grid={grid} container="loot" cols={phone ? 4 : 6} lootId={session.id} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel}
+            onQuick={(l) => actions.quickMove(l, 'backpack', session.id)} onAlt={(l) => actions.quickMove(l, 'backpack', session.id)} />
+          {grid.every((x) => !x) && <p className="text-muted text-sm mt-2">Vacío.</p>}
+        </Panel>
+        <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">
+          <div className="panel-title mb-2">Tuyo · {s.expedition.backpack.filter(Boolean).length}/{s.expedition.backpack.length}</div>
+          <GridView grid={s.expedition.backpack} container="backpack" cols={6} lootId={session.id} equipment={s.expedition.equipment} mode="dungeon"
+            onQuick={(l) => actions.quickMove(l, 'loot', session.id)} onAlt={(l) => actions.quickMove(l, 'loot', session.id)} />
+          {!s.tutorial && <CarryBar className="mt-2" />}
+        </Panel>
+        <Panel className="min-h-0 flex-1 min-w-0" bodyClassName="min-h-0 h-full flex flex-col">
+          <div className="flex justify-end mb-2"><button className="btn" onClick={() => actions.closeLoot()} data-testid="btn-close-loot">Cerrar ✕</button></div>
+          <div className="flex-1 min-h-0 overflow-y-auto scroll-thin">
+            {share && <div className="text-sm mb-2"><b className="text-heal">{who} espera su parte.</b> Elige algo y pulsa «Dar».<ShareMeter given={session.givenValue ?? 0} total={session.totalValue ?? 0} single={session.single} name={who} /></div>}
+            {selStack ? (
+              <div className="flex flex-col gap-2 items-start">
+                <ItemIcon itemId={selStack.itemId} size={44} />
+                <span className="font-display" style={{ color: RARITY_INFO[getItem(selStack.itemId).rarity].color }}>{getItem(selStack.itemId).name}{selStack.qty > 1 ? ` · ${selStack.qty}` : ''}</span>
+                <div className="flex gap-2 flex-wrap">
+                  <button className="btn" onClick={() => { actions.quickMove(sel!, 'backpack', session.id); setSel(null); }}>Coger</button>
+                  {share && <button className="btn" onClick={() => { actions.giveToRival(session.id, (sel as { index: number }).index); setSel(null); }} data-testid="btn-give">Dar a {who}</button>}
+                </div>
+              </div>
+            ) : <div className="text-muted text-sm">Toca un objeto del saco para verlo, o cógelo todo.</div>}
+          </div>
+          <div className="flex flex-col gap-2 mt-2">
+            {grid.some((x) => x?.itemId === 'gold_coins') && <button className="btn" onClick={() => actions.takeGold(session.id)} data-testid="btn-take-gold">Coger el oro ({gridGold(grid)})</button>}
+            <button className="btn btn-gold" style={{ minHeight: 52 }} onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
+          </div>
+        </Panel>
+      </div>
+    );
+  }
   return (
     <Modal onClose={() => actions.closeLoot()} wide testId="loot-modal">
       <div className="flex items-center justify-between mb-3 gap-2 sticky top-0 z-10 py-1" style={{ background: '#16151b' }}>
@@ -595,12 +640,39 @@ function ConfirmBetray() {
 
 function DungeonInventory() {
   const s = useGame((x) => x);
+  const layout = useLayout();
   const [sel, setSel] = useState<Loc | null>(null);
   useClearOnDrop(useCallback(() => setSel(null), []));
   const clear = useCallback(() => setSel(null), []);
   if (!s.expedition || !s.profile) return null;
   const ch = s.profile.character;
   const stats = computeStats(ch.classId, ch.level, s.expedition.equipment);
+  if (layout !== 'desktop') {
+    // Fase 3 (tableta y móvil): pantalla completa en tres columnas; la ficha a la derecha no tapa nada
+    const phone = layout === 'phone';
+    return (
+      <div className="absolute inset-0 z-50 flex fade-in inv-full" data-testid="dungeon-inventory">
+        <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">
+          <EquipmentView equipment={s.expedition.equipment} selected={sel} onSelect={setSel} mode="dungeon" portrait={<PlayerSprite scale={phone ? 2 : 4} />} />
+          <div className="mt-3"><StatsList stats={stats} resourceName={CLASSES[ch.classId].resourceName} /></div>
+        </Panel>
+        <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">
+          <div className="flex items-center justify-between gap-2 mb-2"><span className="panel-title">Mochila · {s.expedition.backpack.filter(Boolean).length}/{s.expedition.backpack.length}</span>
+            <span className="flex gap-1"><button className="btn text-sm" onClick={() => actions.groupGold('backpack')} data-testid="group-gold-dungeon">Agrupar oro</button><button className="btn text-sm" onClick={() => actions.sortContainer('backpack')}>Ordenar</button></span></div>
+          <GridView grid={s.expedition.backpack} container="backpack" cols={6} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel}
+            onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
+          {!s.tutorial && <CarryBar className="mt-2" />}
+          <div className="mt-3 text-sm text-gold mb-1">Bolsillo seguro · no se pierde al morir</div>
+          <GridView grid={s.expedition.pocket} container="pocket" cols={3} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} />
+        </Panel>
+        <Panel className="min-h-0 flex-1 min-w-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">
+          <div className="flex justify-end mb-2"><button className="btn" onClick={() => actions.closeModal()} data-testid="btn-close-inventory">Cerrar ✕</button></div>
+          {sel ? <ItemCard loc={sel} mode="dungeon" onClear={clear} compact={phone} stacked />
+            : <div className="flex-1 flex items-center justify-center text-center text-muted text-sm px-2">Toca un objeto para ver su ficha aquí.</div>}
+        </Panel>
+      </div>
+    );
+  }
   return (
     <Modal onClose={() => actions.closeModal()} wide testId="dungeon-inventory">
       <div className="flex items-center justify-between mb-3"><h2 className="panel-title text-xl">Inventario</h2><div className="flex gap-2">

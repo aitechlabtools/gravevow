@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useIsTouch } from '../../shared/device';
 import { FOOD } from '../../config/food';
 
-const SHORT: Record<Need, string> = { sat: 'Sac', hyd: 'Hid', rest: 'Des' };
+const SHORT: Record<Need, string> = { sat: 'Saciedad', hyd: 'Hidratación', rest: 'Descanso' };
 const EATS: Need[] = ['sat', 'hyd'];
 
 /** Lo que se puede comer (sat) o beber (hyd) de la mochila; los platos del Refugio se comen allí. */
@@ -103,7 +103,7 @@ export function NeedsPanel({ needs, body, backpack, onShowFood, note, atBase = f
               <b>{Math.floor(v)}</b>
             </div>
             <NeedBar v={v} color={NEED_COLOR[k]} big />
-            <div className="needs-hint">{atBase ? 'En el Bastión no se gasta.' : nextText(k, needs, body)}</div>
+            {!atBase && <div className="needs-hint">{nextText(k, needs, body)}</div>}
             {hint && (onShowFood
               ? <button className={`needs-food-hint ${touch ? 'touch' : ''}`} onClick={() => onShowFood(list.map((x) => x.id))} data-testid={`need-food-${k}`}>{hint} ›</button>
               : <div className="needs-food-hint static" data-testid={`need-food-${k}`}>{hint}.</div>)}
@@ -112,7 +112,7 @@ export function NeedsPanel({ needs, body, backpack, onShowFood, note, atBase = f
       })}
       <div className="needs-note">
         {loss > 0 ? `Tu Ímpetu o Maná máximo baja un ${Math.round(loss * 100)} %. ` : ''}
-        {note ?? 'Solo se gastan mientras exploras o combates; en el Bastión, no.'}
+        {note ?? (atBase ? 'En el Bastión no se gastan.' : 'Solo se gastan mientras exploras o combates; en el Bastión, no.')}
       </div>
     </div>
   );

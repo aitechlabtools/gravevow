@@ -55,7 +55,8 @@ const STASH = [['dread_blade', 1], ['chainmail', 1], ['mana_potion', 5], ['splin
         put('health_potion', 2); put('ration', 1); put('gold_coins', 85); put('iron_ore', 4); g.setState({ expedition: { ...e, backpack: bp } }); });
       await act('btn-inventory');
     });
-    await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+    await tryShot('5b-expedicion-ficha', async () => { const c = await p.$('[data-testid=dungeon-inventory] [data-item=knight_helm]'); if (!c) throw new Error('sin casilla'); if (s.touch) await c.tap(); else await c.click(); });
+    { const x = await p.$('[data-testid=btn-close-inventory]'); if (x) await x.click(); else await p.keyboard.press('Escape'); } await p.waitForTimeout(300);
     const ci = await p.$('[data-testid=dungeon-inventory]'); if (ci) { await p.keyboard.press('i'); await p.waitForTimeout(300); }
     await tryShot('6-saco', async () => {
       await G(() => { const g = window.__GRAVEVOW__; const grid = Array(24).fill(null);
@@ -63,6 +64,7 @@ const STASH = [['dread_blade', 1], ['chainmail', 1], ['mana_potion', 5], ['splin
         g.setState({ chests: { c1: grid }, modal: { type: 'loot', session: { id: 'c1', source: 'chest', title: 'Cofre de hierro', initialCount: 6, given: [], shareAsked: false, totalValue: 0, givenValue: 0, givenGold: 0 } } }); });
       await p.waitForSelector('[data-testid=loot-modal]');
     });
+    await tryShot('6b-saco-ficha', async () => { const c = await p.$('[data-testid=loot-modal] [data-item=iron_sword]'); if (!c) throw new Error('sin casilla'); if (s.touch) await c.tap(); else await c.click(); });
     await b.close();
   }
 })();

@@ -30,6 +30,10 @@ import { RecruitOffer } from '../RecruitOffer';
 import { baseBody } from '../../state/medicalActions';
 import { useLayout } from '../../../config/ui';
 import { ItemCard } from './ItemCard';
+import { PixelIcon } from '../../../shared/community';
+import { TAB_ICONS, VENDOR_TAB_ICONS } from '../kit/tabIcons';
+const HELM = ['...XXXXXX...', '..XXXXXXXX..', '.XXXXXXXXXX.', '.XXXXXXXXXX.', '.XX..XX..XX.', '.XX..XX..XX.', '.XX..XX..XX.', '.XXX.XX.XXX.', '.XXX.XX.XXX.', '.XXX....XXX.', '..XX....XX..', '............'];
+const SIDE_ICONS: Record<string, string[]> = { gear: HELM, storage: TAB_ICONS.stash, status: VENDOR_TAB_ICONS.infirmary };
 import { sfx } from '../../audio';
 import { SkinSlot, SkinPicker } from './Atuendos';
 import { HeroStats, LevelBar } from '../HeroStats';
@@ -130,17 +134,34 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
     <StashPanel cols={stashCols} sel={sel} onSelect={onSelect} onEmpty={onEmpty}
       onQuick={(l, st) => { if (getItem(st.itemId).use?.kind === 'need') actions.eat(l); else actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
   );
-  const card = <ItemCard loc={sel} mode={MODE} onClear={clear} compact={phone} />;
+  const card = <ItemCard loc={sel} mode={MODE} onClear={clear} compact={phone} stacked={(phone && view !== 'status') || (layout === 'tablet' && view === 'gear')} />;
   const status = <StatusView withNeeds={phone} />;
   const seg = (opts: { id: 'gear' | 'storage' | 'status'; label: string }[]) => (
     <Segmented options={opts} value={view} onChange={(v) => { setView(v); setSel(null); sfx('click'); }} testId="alijo-seg" />
   );
 
   if (phone) {
+    // Fase 3: pestañas en columna de iconos a la izquierda y ficha fija a la derecha (no tapa nada)
+    const opts = [{ id: 'gear', label: 'Equipo' }, { id: 'storage', label: 'Almacén' }, { id: 'status', label: 'Heridas' }] as const;
+    const tabs = (
+      <div className="vtabs-col alijo-side" role="tablist" aria-orientation="vertical" data-testid="alijo-seg">
+        {opts.map((o) => (
+          <button key={o.id} role="tab" aria-selected={view === o.id} aria-label={o.label} title={o.label} onClick={() => { setView(o.id); setSel(null); sfx('click'); }} data-testid={`seg-${o.id}`}>
+            <PixelIcon rows={SIDE_ICONS[o.id]} size={24} color={view === o.id ? '#1a1206' : 'currentColor'} />
+          </button>
+        ))}
+      </div>
+    );
+    const sheet = (
+      <Panel className="min-h-0 alijo-sheet" bodyClassName="overflow-y-auto scroll-thin" testId="item-sheet">
+        {sel ? <div className="relative"><button className="btn icon-btn absolute right-0 top-0" onClick={clear} aria-label="Cerrar la ficha">✕</button>{card}</div>
+          : <div className="h-full flex flex-col items-center justify-center text-center text-muted gap-2 px-2"><span className="font-display text-sm tracking-wide">{opts.find((o) => o.id === view)!.label}</span><span className="text-sm">Toca un objeto para ver su ficha aquí.</span></div>}
+      </Panel>
+    );
     return (
-      <div className="h-full flex flex-col items-center" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' }} data-testid="screen-stash">
-        {seg([{ id: 'gear', label: 'Equipo' }, { id: 'storage', label: 'Almacén' }, { id: 'status', label: 'Heridas' }])}
-        <div className="flex-1 min-h-0 w-full flex justify-center" style={{ gap: 'var(--gap)' }}>
+      <div className="h-full flex" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' }} data-testid="screen-stash">
+        {tabs}
+        <div className="flex-1 min-w-0 min-h-0 flex" style={{ gap: 'var(--gap)' }}>
           {view === 'status' ? (
             <>
               <Panel className="min-h-0 flex-[3]" bodyClassName="overflow-y-auto scroll-thin">{status}</Panel>
@@ -148,19 +169,20 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
             </>
           ) : view === 'gear' ? (
             <>
-              <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col items-center"><RecruitOffer />{equipment}<div className="w-full mt-3" data-testid="alijo-hero"><LevelBar compact /><div className="mt-1"><HeroStats /></div></div></Panel>
-              <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}{pocket}</Panel>
+              <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col items-center"><div style={{ ['--slot-big' as string]: '44px' }}><RecruitOffer /><EquipmentGrid sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} tight /></div><div className="w-full mt-3" data-testid="alijo-hero"><LevelBar compact /><div className="mt-1"><HeroStats /></div></div></Panel>
+              <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}{pocket}</Panel>
+              {sheet}
             </>
           ) : (
             <>
-              <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}</Panel>
               {storage}
+              {sel ? sheet : <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}</Panel>}
             </>
           )}
         </div>
         {pickerModal}
-        {sel && (
-          <div className="absolute left-0 right-0 bottom-0 z-30 panel panel-gold p-3" style={{ paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }} data-testid="item-sheet">
+        {view === 'status' && sel && (
+          <div className="absolute left-0 right-0 bottom-0 z-30 panel panel-gold p-3" data-testid="item-sheet-status">
             <button className="btn icon-btn absolute right-2 top-2" onClick={clear} aria-label="Cerrar la ficha">✕</button>
             <div className="pr-12">{card}</div>
           </div>
@@ -169,7 +191,7 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
     );
   }
 
-  const side = layout === 'tablet' ? 288 : compact ? 280 : 340;
+  const side = layout === 'tablet' ? 256 : compact ? 280 : 340;
   const goldBox = (
     <div className="panel p-3 mt-4 flex flex-col gap-1 text-sm" data-testid="gold-box">
       <div className="flex justify-between items-center"><span className="text-stone-300">Oro</span><GoldAmount value={profile.gold} /></div>
@@ -196,11 +218,18 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
     {deskSeg}
     <div className="flex-1 min-h-0 grid"
       style={{ gridTemplateColumns: `${side}px minmax(0,1fr) auto`, gap: 'var(--gap)' }}>
+      {sel && layout === 'tablet' ? (
+        // Fase 3 (tableta): la ficha ocupa la columna del aventurero; mochila y almacén siguen a la vista
+        <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="item-sheet">
+          <div className="relative"><button className="btn icon-btn absolute right-0 top-0" onClick={clear} aria-label="Cerrar la ficha">✕</button>{card}</div>
+        </Panel>
+      ) : (
       <Panel title={g("{Aventurero|Aventurera}")} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero">
         <HeroColumn />
       </Panel>
+      )}
       <Panel title="Equipo" className="min-h-0" bodyClassName="min-h-0 flex flex-col">
-        <div ref={eqRef} style={twoCols ? (compact ? { ['--slot' as string]: '44px', ['--slot-big' as string]: '60px' } : { ['--slot' as string]: '60px', ['--slot-big' as string]: '84px' }) : layout === 'tablet' ? { ['--slot' as string]: '46px' } : undefined} className={`flex-1 min-h-0 ${twoCols ? 'flex flex-col overflow-hidden' : 'overflow-y-auto scroll-thin'}`} data-testid="equip-body" data-cols={twoCols ? 2 : 1}>
+        <div ref={eqRef} style={twoCols ? (compact ? { ['--slot' as string]: '44px', ['--slot-big' as string]: '60px' } : { ['--slot' as string]: '60px', ['--slot-big' as string]: '84px' }) : layout === 'tablet' ? { ['--slot' as string]: '44px' } : undefined} className={`flex-1 min-h-0 ${twoCols ? 'flex flex-col overflow-hidden' : 'overflow-y-auto scroll-thin'}`} data-testid="equip-body" data-cols={twoCols ? 2 : 1}>
           <div className="mb-3 shrink-0"><RecruitOffer /></div>
           {twoCols ? (
             // Escritorio ancho: equipo a la izquierda, mochila + bolsillo + oro a la derecha (sin desplazar)
@@ -219,7 +248,7 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
           )}
         </div>
         {/* La ficha solo aparece al elegir un objeto (la ayuda de uso ya la enseñan el tutorial, la Intendencia y la Guía) */}
-        {sel && <div className="panel p-3 mt-3 shrink-0" data-testid="item-card-wrap">{card}</div>}
+        {sel && layout !== 'tablet' && <div className="panel p-3 mt-3 shrink-0" data-testid="item-card-wrap">{card}</div>}
       </Panel>
       {storage}
       {pickerModal}

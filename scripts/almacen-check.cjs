@@ -92,6 +92,7 @@ async function run(s) {
   await act('amt-confirm');
   let gold = await p.evaluate(() => window.__GRAVEVOW__.getState().profile.backpack.map((x) => x ? `${x.itemId}:${x.qty}:${x.gold ?? ''}` : '-').slice(0, 5).join());
   if (!gold.startsWith('gold_pouch:1:17,gold_coins:10:,gold_coins:10:,gold_coins:7:')) fail('sacar 20 monedas: ' + gold);
+  { const x = await p.$('[data-testid=item-sheet] [aria-label="Cerrar la ficha"]'); if (x) { if (s.touch) await x.tap(); else await x.click(); await p.waitForTimeout(200); } } // móvil: la ficha ocupa el sitio de la mochila
   await act('group-gold-backpack');
   gold = await p.evaluate(() => window.__GRAVEVOW__.getState().profile.backpack.filter(Boolean).map((x) => `${x.itemId}:${x.gold ?? x.qty}`).join());
   if (gold !== 'gold_pouch:44') fail('agrupar oro: ' + gold);

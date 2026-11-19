@@ -18,7 +18,7 @@ import { useIsTouch } from '../../../shared/device';
 
 const CATEGORY: Record<string, string> = { potion: 'Consumible', material: 'Material', relic: 'Reliquia', jewel: 'Joya', key: 'Llave', quest: 'Objeto de misión', coin: 'Moneda', gold: 'Oro', container: 'Saco de oro', weapon: 'Arma', shield: 'Escudo', tool: 'Herramienta' };
 
-export function ItemCard({ loc, mode, onClear, compact = false }: { loc: Loc | null; mode: InvMode; onClear: () => void; compact?: boolean }) {
+export function ItemCard({ loc, mode, onClear, compact = false, stacked = false }: { loc: Loc | null; mode: InvMode; onClear: () => void; compact?: boolean; stacked?: boolean }) {
   const s = useGame((x) => x);
   const touch = useIsTouch();
   const c = containersFor(s);
@@ -42,9 +42,9 @@ export function ItemCard({ loc, mode, onClear, compact = false }: { loc: Loc | n
   const cmp = loc.kind === 'grid' ? compareWithEquipped(st, s.profile?.equipment) : null;
   const wornSpecials = cmp?.worn && (def.slot === 'mainHand' || def.slot === 'offHand') ? itemSpecials(getItem(cmp.worn.itemId)) : [];
   return (
-    <div className="flex gap-3 items-start" data-testid="item-card">
+    <div className={stacked ? "flex flex-col gap-2 items-start" : "flex gap-3 items-start"} data-testid="item-card">
       <div className="slot shrink-0" style={{ borderColor: r.color + 'aa' }}><ItemIcon itemId={st.itemId} />{st.qty > 1 && <span className="qty">{st.qty}</span>}</div>
-      <div className="min-w-0 flex-1">
+      <div className={stacked ? "min-w-0 w-full" : "min-w-0 flex-1"}>
         <div className="font-display leading-tight" style={{ color: r.color, fontSize: compact ? 15 : 18 }} data-testid="item-card-name">{stackName(st, def)}</div>
         <div className="text-[11px] text-stone-400">
           {r.name} · {def.slot ? SLOT_LABELS[def.slot] : CATEGORY[def.category] ?? def.category}

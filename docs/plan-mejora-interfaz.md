@@ -1,6 +1,6 @@
 # Plan de mejora visual y de usabilidad de los menús y el HUD
 
-Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0, 1 y 2 hechas** (19/11). Siguiente: maqueta de la fase 3 (inventario).
+Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0, 1, 2 y 3 hechas** (19/11). Siguiente: maqueta de la fase 4 (HUD de exploración).
 
 Capturas del estado actual en los tres formatos, con los problemas marcados: `mockups/plan-interfaz/index.html`
 (carpeta `mockups/plan-interfaz/actual/`, script `mockups/plan-interfaz/capturar.cjs`). En el índice, cada número rojo es un
@@ -215,7 +215,8 @@ Hecho: paleta, paneles y botones planos, niveles de botón, desactivado legible,
 - **Riesgos:** comprar pasa de un toque a dos en táctil → se mide en la maqueta; si molesta, se deja el botón de precio pero en estilo secundario y solo el de la fila elegida en dorado. Economía y precios sin cambios.
 - **Capturas:** Tienda, Vender, Reparar y Curtiduría de Nira en los tres formatos, antes/después.
 
-### Fase 3 · Inventario (grande)
+### Fase 3 · Inventario (grande) — HECHA el 19/11
+- **Hecho:** la ficha del objeto nunca tapa la mochila. Móvil: pestañas Equipo/Almacén/Heridas en columna de iconos a la izquierda (`seg-*` iguales) y ficha fija a la derecha, apilada (icono, texto, botones; `ItemCard stacked`); en Almacén la ficha ocupa el sitio de la mochila (✕ la devuelve). Tableta: la ficha ocupa la columna del Aventurero. Inventario de la expedición y saco de botín en tableta y móvil: pantalla completa en tres columnas (saco: «Del saco» | «Tuyo» | acciones con «Cogerlo todo» dorado abajo). Necesidades con nombre completo a 12 px (P-09) y un solo aviso «En el Bastión no se gastan» al pie (P-19). Pendiente: `ContainerTools` común (P-18) e icono de «equipado». Maqueta y capturas: `mockups/fase3-inventario/`.
 - **Pantallas:** Alijo › Equipo, Almacén y Heridas; inventario de la expedición; saco de botín; ficha del objeto.
 - **Qué:** `ContainerTools` en los tres sitios (P-18); estado «equipado» con icono; saco de botín con «Tuyo / Del saco» y «Cogerlo todo» como principal abajo (P-26); avisos repetidos de Heridas en una sola línea al pie (P-19); necesidades con nombre completo e icono (P-09).
 - **Archivos:** `screens/Alijo.tsx`, `StashPanel.tsx`, `inventory.tsx`, `DungeonScreen.tsx` (modal de inventario y saco), `NeedsBars.tsx`, `BodyFigure.tsx`, `screens/ItemCard.tsx`.

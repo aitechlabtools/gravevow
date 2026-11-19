@@ -762,3 +762,8 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - 2026-11-15: /cookies.html bloqueada en robots.txt y retirada del sitemap.
 - 2026-11-15: cookies.html pasa a noindex (meta robots) y se quita su Disallow para que Google pueda leerlo y desindexarla.
 - 2026-11-15: favicon.ico, PNG 48/96/192 y apple-touch-icon generados desde favicon.svg (escalado nearest) y enlazados en index.html.
+
+## Novedades del 19/11 (4) · Fase 3 del plan de interfaz (inventario)
+- La ficha del objeto ya no tapa la mochila en tableta ni en móvil (ver `docs/plan-mejora-interfaz.md`, fase 3). Archivos: `screens/Alijo.tsx`, `screens/ItemCard.tsx` (`stacked`), `DungeonScreen.tsx` (inventario y saco en pantalla completa fuera del escritorio), `NeedsBars.tsx`, `game.css`.
+- Mercader en escritorio: tarjeta «Volver al Bastión» más pequeña (muralla a 128 px, 64 px en ventanas de menos de 960 px de alto) para que la columna no necesite barra de desplazamiento.
+- `scripts/almacen-check.cjs`: en el móvil cierra la ficha antes de «Agrupar oro». `arrastre-check.cjs` ya fallaba antes de este cambio (sin tocar).

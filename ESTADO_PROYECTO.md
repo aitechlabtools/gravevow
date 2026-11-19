@@ -191,3 +191,4 @@
 - 2026-11-15: /cookies.html bloqueada en robots.txt y retirada del sitemap.
 - 2026-11-15: cookies.html pasa a noindex (meta robots) y se quita su Disallow para que Google pueda leerlo y desindexarla.
 - 2026-11-15: favicon.ico, PNG 48/96/192 y apple-touch-icon generados desde favicon.svg (escalado nearest) y enlazados en index.html.
+- 19/11: fase 3 del plan de interfaz hecha (inventario: ficha que no tapa, saco de botín con «Cogerlo todo» abajo, necesidades con nombre completo).

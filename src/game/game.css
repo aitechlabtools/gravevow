@@ -575,7 +575,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 /* Necesidades (Fase 5) */
 .needs-strip{display:flex;gap:4px;margin-top:4px}
 .needs-cell{flex:1;min-width:0}
-.needs-lbl{display:flex;justify-content:space-between;font-size:10px;line-height:11px;color:#a8a29e}
+.needs-lbl{display:flex;justify-content:space-between;gap:4px;font-size:12px;line-height:14px;color:#a8a29e;white-space:nowrap}
 .needs-lbl b{font-weight:400;color:#e8b33a}
 .needs-cell.critical .needs-lbl b,.needs-cell.empty .needs-lbl b{color:#ff4050}
 .needs-cell.critical .needs-bar,.needs-cell.empty .needs-bar{animation:needs-blink 1.2s steps(2) infinite}
@@ -965,3 +965,8 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .vback-card:hover{background:var(--surface-hi);color:var(--color-stone-300)}
 .vback-art{display:flex;align-items:flex-end;justify-content:center}
 .vback-lbl{font-family:var(--font-display);font-size:17px;letter-spacing:.06em;color:var(--color-parchment)}
+/* Fase 3 del plan de interfaz (19/11): inventario sin ficha encima */
+.alijo-side{width:52px;flex-shrink:0;padding-top:4px}
+.alijo-side button{justify-content:center;padding:0;min-height:52px}
+.alijo-sheet{flex:1 1 0;min-width:0}
+.inv-full{background:var(--color-stone-950,#0e0d12);padding:max(var(--pad),env(safe-area-inset-top)) max(var(--pad),env(safe-area-inset-right)) var(--pad) max(var(--pad),env(safe-area-inset-left));gap:var(--gap)}
