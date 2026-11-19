@@ -77,7 +77,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'inventario', dev] = proces
   if (!(await p.textContent('body')).includes('Demasiado peso')) fail('no avisa del exceso de peso');
   // En la mazmorra: aviso de sobrecarga en el HUD y paso más corto
   await tap('[data-testid=tab-play]'); await tap('[data-testid=btn-enter-dungeon]'); await p.waitForTimeout(1200);
-  if (!(await p.$('[data-testid=hud-overload]'))) fail('no hay aviso de sobrecarga en el HUD');
+  if (!(await p.$('[data-testid=hud-overload], [data-testid=hud-load]:not([data-tier="0"])'))) fail('no hay aviso de sobrecarga en el HUD');
   await p.screenshot({ path: out + '-hud.png' });
   console.log(dev || 'escritorio', JSON.stringify({ peso: w0, tramo: tier }), 'errores', errs.length ? errs : 'ninguno');
   if (errs.length) process.exitCode = 1;

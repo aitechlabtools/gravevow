@@ -1,6 +1,7 @@
-import { NeedsPanel, NeedsStrip } from './NeedsBars';
+import { NeedsDots, NeedsPanel, NeedsStrip } from './NeedsBars';
+import { currentMini } from '../../core/tutorials';
 import { className } from '../../core/gender';
-import { CarryBar, OverloadChip, PactChip } from './CarryBar';
+import { CarryBar, HudLoad, OverloadChip, PactChip } from './CarryBar';
 import { effectiveMaxMp, needsOf } from '../../core/needs';
 import { getPact } from '../../core/data/altars';
 import { useClearOnDrop } from './pointerDrag';
@@ -130,60 +131,21 @@ export function DungeonScreen() {
 
 function Hud() {
   const s = useGame((x) => x);
-  const tutorial = s.tutorial;
   const touch = useIsTouch();
+  const size = useTouchSize();
   const exp = s.expedition;
   if (!exp || !s.profile) return null;
-  const ch = s.profile.character;
-  const stats = computeStats(ch.classId, ch.level, exp.equipment);
-  const needs = needsOf(exp.needs);
-  const left = timeLeft(exp, s.now);
-  const potions = countItem(exp.backpack, 'health_potion');
-  const urgent = left < 120000;
+  // Tres variantes: escritorio (ratón), tableta (dedo en pantalla grande) y móvil (tira compacta)
+  const variant: HudVariant = !touch ? 'desktop' : size === 'phone' ? 'phone' : 'tablet';
   return (
     <>
-      {touch ? <TouchTopHud /> : (
-        <>
-          <div className="absolute left-3 top-3 panel p-3 w-64 z-10" data-testid="hud-player">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-10 h-10 bg-[#0d0c11] border-2 border-stone-700 flex items-end justify-center overflow-hidden"><PlayerSprite scale={2} animate={false} /></div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate">{ch.name}</div>
-                <div className="text-xs text-stone-400">{className(ch.classId, ch.appearance.sex)} · Nv {ch.level}</div>
-              </div>
-              <BodyFigure body={exp.body} unit={3} onClick={() => actions.openModal({ type: 'body' })} testId="hud-body" />
-            </div>
-            <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label="Vida" testId="hud-hp" />
-            <div className="h-1" />
-            <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs, getPact(exp.pact)?.mpLoss ?? 0)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={CLASSES[ch.classId].resourceName} />
-            <NeedsStrip needs={needs} />
-            {!tutorial && <OverloadChip />}{!tutorial && <PactChip />}
-            <button className="btn w-full mt-2 text-sm flex items-center justify-center gap-2" onClick={() => actions.drinkPotion()} disabled={!potions} data-testid="btn-potion">
-              <ItemIcon itemId="health_potion" size={20} /> Poción ({potions}) <kbd className="text-xs opacity-60">Q</kbd>
-            </button>
-          </div>
-
-          <div className="absolute left-1/2 -translate-x-1/2 top-3 text-center z-10 pointer-events-none">
-            <div className={`panel px-5 py-1 font-display text-3xl ${urgent ? 'text-blood animate-pulse' : 'text-parchment'}`} data-testid="hud-timer">{tutorial ? 'Tutorial' : formatTime(left)}</div>
-            <div className="mt-1 text-sm text-stone-300 tracking-widest uppercase font-display" data-testid="hud-room">{s.hud.room}</div>
-            {s.dungeon && <div className="text-[11px] text-stone-500 mt-0.5" data-testid="hud-dungeon">{s.dungeon.name}{s.dungeon.seed !== undefined ? ` · mapa ${s.dungeon.seed}` : ''}</div>}
-          </div>
-
-          <div className="absolute right-3 top-3 flex flex-col items-end gap-2 z-10">
-            <div className="flex gap-2">
-              <button className="btn text-sm" onClick={() => actions.openModal({ type: 'inventory' })} data-testid="btn-inventory">Inventario <kbd className="opacity-60">I</kbd></button>
-              <button className="btn text-sm" onClick={() => actions.openModal({ type: 'pause' })} data-testid="btn-menu">Menú <kbd className="opacity-60">Esc</kbd></button>
-              <FullscreenButton />
-            </div>
-            <Companions width="w-52" />
-          </div>
-
-          <div className="absolute left-3 bottom-3 panel px-3 py-2 text-sm z-10 flex items-center gap-4 hud-loot">
-            <span>Botín: <span className="text-gold" data-testid="hud-loot-value">{gridValue(exp.backpack)}</span></span>
-            <span className="flex items-center gap-1" title="Oro que llevas encima: se pierde si mueres">Oro encima: <GoldAmount value={gridGold(exp.backpack)} /></span>
-          </div>
-        </>
-      )}
+      {variant === 'phone' ? <PhoneStrip /> : <PlayerPanel variant={variant} />}
+      {variant === 'desktop' && <DesktopPotion />}
+      <HudClock variant={variant} />
+      <div className="absolute z-10 flex flex-col items-end gap-2" style={variant === 'desktop' ? { right: 12, top: 12 } : { right: safe('right', TOUCH_CFG.edge[size]), top: safe('top', TOUCH_CFG.edge[size]) }}>
+        <HudButtons variant={variant} />
+        {variant === 'phone' ? <PhoneRight /> : <Companions width={variant === 'desktop' ? 'w-56' : 'w-48'} />}
+      </div>
 
       {/* Centro abajo: canalización del portal y lo que se puede usar (en táctil, sin tecla y sobre los pulgares) */}
       <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 pointer-events-none max-w-[44vw]"
@@ -262,57 +224,194 @@ function Companions({ width }: { width: string }) {
   );
 }
 
-/**
- * Barra superior en táctil: toda la información arriba y el centro libre para jugar.
- * Izquierda: retrato, vida, recurso y botín. Centro: reloj y sala. Derecha: inventario, menú y
- * pantalla completa (44 px) y, debajo, los aliados. Respeta la zona segura (notch, esquinas redondeadas).
- */
-function TouchTopHud() {
+type HudVariant = 'desktop' | 'tablet' | 'phone';
+
+/** Escritorio: la poción abajo a la derecha, en el mismo sitio que en tableta y móvil, con la tecla debajo. */
+function DesktopPotion() {
+  const potions = useGame((s) => (s.expedition ? countItem(s.expedition.backpack, 'health_potion') : 0));
+  return (
+    <div className="absolute z-10 flex flex-col items-center gap-1" style={{ right: 24, bottom: 20 }}>
+      <button className={`touch-btn ${potions ? '' : 'is-idle'}`} style={{ width: 64, height: 64 }} onClick={() => { if (potions) actions.drinkPotion(); }} aria-disabled={!potions} aria-label={`Beber poción (${potions})`} title="Beber poción (Q)" data-testid="btn-potion">
+        <ItemIcon itemId="health_potion" size={26} />
+        <span className="absolute -top-1 -right-1 text-xs bg-black/80 px-1 border border-stone-600">{potions}</span>
+        <kbd className="absolute -top-1 -left-1 text-xs bg-black/80 px-1 border border-stone-600 text-stone-300">Q</kbd>
+      </button>
+    </div>
+  );
+}
+
+function hudPos(variant: HudVariant, size: ReturnType<typeof useTouchSize>) {
+  return variant === 'desktop' ? { left: 12, top: 12 } : { left: safe('left', TOUCH_CFG.edge[size]), top: safe('top', TOUCH_CFG.edge[size]) };
+}
+
+/** Botín y oro encima, en una línea al pie del bloque del jugador. */
+function LootLine({ compact = false }: { compact?: boolean }) {
+  const exp = useGame((s) => s.expedition)!;
+  if (compact) {
+    return (
+      <span className="hud-loot-mini" title="Botín (valor) y oro encima: se pierde si mueres">
+        <span className="text-gold flex items-center gap-1"><HudIcon name="loot" px={12} /><span data-testid="hud-loot-value">{gridValue(exp.backpack)}</span></span>
+        <GoldAmount value={gridGold(exp.backpack)} />
+      </span>
+    );
+  }
+  return (
+    <div className="hud-row3">
+      <span className="text-gold flex items-center gap-1" title="Botín: valor de lo que llevas"><HudIcon name="loot" px={12} /><span data-testid="hud-loot-value">{gridValue(exp.backpack)}</span></span>
+      <span title="Oro que llevas encima: se pierde si mueres"><GoldAmount value={gridGold(exp.backpack)} /></span>
+      <HudLoad />
+    </div>
+  );
+}
+
+/** Escritorio y tableta: un solo bloque arriba a la izquierda con todo lo del jugador. */
+function PlayerPanel({ variant }: { variant: HudVariant }) {
   const s = useGame((x) => x);
-  const tutorial = s.tutorial;
   const size = useTouchSize();
   const exp = s.expedition!;
   const ch = s.profile!.character;
   const stats = computeStats(ch.classId, ch.level, exp.equipment);
   const needs = needsOf(exp.needs);
+  return (
+    <div className="absolute z-10 panel p-3" style={{ ...hudPos(variant, size), width: 296 }} data-testid="hud-player">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="hud-bust" aria-hidden><PlayerSprite scale={3} animate={false} /></div>
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="truncate">{ch.name}</div>
+          <div className="text-xs text-stone-300 truncate">{className(ch.classId, ch.appearance.sex)} · Nv {ch.level}</div>
+        </div>
+        <BodyFigure body={exp.body} unit={3} onClick={() => actions.openModal({ type: 'body' })} testId="hud-body" />
+      </div>
+      <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label="Vida" testId="hud-hp" />
+      <div className="h-1" />
+      <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs, getPact(exp.pact)?.mpLoss ?? 0)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={CLASSES[ch.classId].resourceName} />
+      <NeedsStrip needs={needs} />
+      <LootLine />
+      {!s.tutorial && <PactChip />}
+    </div>
+  );
+}
+
+/** Móvil: tira de 44 px con figura del cuerpo, vida y recurso con número, necesidades en iconos y botín. */
+function PhoneStrip() {
+  const s = useGame((x) => x);
+  const size = useTouchSize();
+  const exp = s.expedition!;
+  const ch = s.profile!.character;
+  const stats = computeStats(ch.classId, ch.level, exp.equipment);
+  const needs = needsOf(exp.needs);
+  const maxMp = effectiveMaxMp(stats.maxMp, needs, getPact(exp.pact)?.mpLoss ?? 0);
+  return (
+    <div className="absolute z-10 flex flex-col items-start gap-1.5" style={hudPos('phone', size)}>
+      <div className="panel hud-strip" data-testid="hud-player">
+        <BodyFigure body={exp.body} unit={2} onClick={() => actions.openModal({ type: 'body' })} testId="hud-body" label={`${ch.name} · ${className(ch.classId, ch.appearance.sex)} · Nv ${ch.level} · Heridas`} />
+        <div className="hud-strip-bars">
+          <ThinBar value={exp.hp} max={stats.maxHp} color="#c4283b" testId="hud-hp" />
+          <ThinBar value={exp.mp} max={maxMp} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} />
+        </div>
+        <NeedsDots needs={needs} />
+        <LootLine compact />
+      </div>
+      {!s.tutorial && <OverloadChip />}{!s.tutorial && <PactChip />}
+      <AllyIcons />
+    </div>
+  );
+}
+
+/** Barra fina con el número a la derecha (móvil). */
+function ThinBar({ value, max, color, testId }: { value: number; max: number; color: string; testId?: string }) {
+  const pct = Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100));
+  return (
+    <div className="hud-thin" data-testid={testId}>
+      <div className="hud-thin-bar"><div style={{ width: `${pct}%`, background: color }} /></div>
+      <span className="hud-thin-num">{Math.ceil(value)}</span>
+    </div>
+  );
+}
+
+/** Reloj arriba en el centro. En el móvil la sala sale solo 3 s al entrar, al tocar el reloj o si un aviso la señala. */
+function HudClock({ variant }: { variant: HudVariant }) {
+  const s = useGame((x) => x);
+  const size = useTouchSize();
+  const room = s.hud.room;
+  const tipRoom = useGame((x) => { const m = currentMini(x.miniQueue); return !!m && m.steps.some((st) => st.target === 'hud-room'); });
+  const [peek, setPeek] = useState(true);
+  useEffect(() => { setPeek(true); const t = window.setTimeout(() => setPeek(false), 3000); return () => window.clearTimeout(t); }, [room]);
+  const exp = s.expedition!;
   const left = timeLeft(exp, s.now);
   const urgent = left < 120000;
-  const edge = TOUCH_CFG.edge[size];
-  const phone = size === 'phone';
-  const icon = TOUCH_CFG.hudIcon;
+  const phone = variant === 'phone';
+  const showRoom = !phone || peek || tipRoom || !!s.tutorial;
+  const top = variant === 'desktop' ? 12 : safe('top', TOUCH_CFG.edge[size]);
+  return (
+    <div className="absolute left-1/2 -translate-x-1/2 z-10 text-center flex flex-col items-center" style={{ top }}>
+      <button className={`panel font-display ${phone ? 'px-3 text-xl' : variant === 'tablet' ? 'px-4 py-0.5 text-2xl' : 'px-5 py-1 text-3xl'} ${urgent ? 'text-blood animate-pulse' : 'text-parchment'}`}
+        style={{ minHeight: phone ? 44 : undefined, cursor: phone ? 'pointer' : 'default' }} onClick={phone ? () => setPeek((v) => !v) : undefined} aria-label="Tiempo restante" data-testid="hud-timer">{s.tutorial ? 'Tutorial' : formatTime(left)}</button>
+      <div className={`mt-1 text-stone-300 tracking-widest uppercase font-display pointer-events-none hud-room ${phone ? 'text-xs' : 'text-sm'} ${showRoom ? '' : 'is-hidden'}`} data-testid="hud-room">{room}</div>
+      {variant === 'desktop' && s.dungeon && <div className="text-xs text-stone-300 mt-0.5 pointer-events-none" data-testid="hud-dungeon">{s.dungeon.name}{s.dungeon.seed !== undefined ? ` · mapa ${s.dungeon.seed}` : ''}</div>}
+    </div>
+  );
+}
+
+/** Inventario, menú y pantalla completa: iconos en todos los formatos. Escritorio: la tecla debajo; tableta: el nombre. */
+function HudButtons({ variant }: { variant: HudVariant }) {
+  const cap = (desk: string, tab: string) => variant === 'desktop' ? <kbd className="hud-ibtn-cap">{desk}</kbd> : variant === 'tablet' ? <span className="hud-ibtn-cap">{tab}</span> : null;
+  return (
+    <div className="flex gap-2 items-start">
+      <div className="hud-ibtn">
+        <button className="btn hud-ibtn-b" onClick={() => actions.openModal({ type: 'inventory' })} aria-label="Inventario" title="Inventario" data-testid="btn-inventory"><HudIcon name="bag" px={24} /></button>
+        {cap('I', 'Mochila')}
+      </div>
+      <div className="hud-ibtn">
+        <button className="btn hud-ibtn-b" onClick={() => actions.openModal({ type: 'pause' })} aria-label="Menú" title="Menú" data-testid="btn-menu"><HudIcon name="menu" px={24} /></button>
+        {cap('Esc', 'Menú')}
+      </div>
+      <div className="hud-ibtn">
+        <FullscreenButton className="hud-ibtn-b" />
+        {cap('F', 'Pantalla')}
+      </div>
+    </div>
+  );
+}
+
+/** Móvil, derecha: misiones fijadas y avisos del errante (el aliado va a la izquierda, bajo la tira). */
+function PhoneRight() {
+  const rival = useGame((s) => s.rival);
   return (
     <>
-      <div className={`absolute z-10 panel ${phone ? 'p-2 w-48' : 'p-3 w-60'}`} style={{ left: safe('left', edge), top: safe('top', edge) }} data-testid="hud-player">
-        <div className="flex items-center gap-2 mb-1.5">
-          <div className={`${phone ? 'w-7 h-7' : 'w-9 h-9'} bg-[#0d0c11] border-2 border-stone-700 flex items-end justify-center overflow-hidden shrink-0`}><PlayerSprite scale={phone ? 1 : 2} animate={false} /></div>
-          <div className="min-w-0 leading-tight flex-1">
-            <div className="truncate text-sm">{ch.name}</div>
-            <div className="text-[11px] text-stone-400 truncate">{className(ch.classId, ch.appearance.sex)} · Nv {ch.level}</div>
-          </div>
-          <BodyFigure body={exp.body} unit={3} onClick={() => actions.openModal({ type: 'body' })} testId="hud-body" />
-        </div>
-        <Bar value={exp.hp} max={stats.maxHp} color="#c4283b" label={phone ? undefined : 'Vida'} testId="hud-hp" />
-        <div className="h-1" />
-        <Bar value={exp.mp} max={effectiveMaxMp(stats.maxMp, needs, getPact(exp.pact)?.mpLoss ?? 0)} color={CLASSES[ch.classId].resource === 'impetus' ? '#e08a3d' : '#3d7be0'} label={phone ? undefined : CLASSES[ch.classId].resourceName} />
-        <NeedsStrip needs={needs} />
-            {!tutorial && <OverloadChip />}{!tutorial && <PactChip />}
-        <div className="text-[11px] mt-1.5 flex items-center gap-1 flex-wrap">Botín: <span className="text-gold" data-testid="hud-loot-value">{gridValue(exp.backpack)}</span> · Oro encima: <GoldAmount value={gridGold(exp.backpack)} /></div>
-      </div>
-
-      <div className="absolute left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none" style={{ top: safe('top', edge) }}>
-        <div className={`panel font-display ${phone ? 'px-3 text-xl' : 'px-4 py-0.5 text-2xl'} ${urgent ? 'text-blood animate-pulse' : 'text-parchment'}`} data-testid="hud-timer">{tutorial ? 'Tutorial' : formatTime(left)}</div>
-        <div className={`mt-1 text-stone-300 tracking-widest uppercase font-display ${phone ? 'text-[10px]' : 'text-xs'}`} data-testid="hud-room">{s.hud.room}</div>
-      </div>
-
-      <div className="absolute z-10 flex flex-col items-end gap-2" style={{ right: safe('right', edge), top: safe('top', edge) }}>
-        <div className="flex gap-2">
-          <button className="btn flex items-center justify-center p-0" style={{ width: icon, height: icon, padding: 0 }} onClick={() => actions.openModal({ type: 'inventory' })} aria-label="Inventario" title="Inventario" data-testid="btn-inventory"><HudIcon name="bag" px={24} /></button>
-          <button className="btn flex items-center justify-center p-0" style={{ width: icon, height: icon, padding: 0 }} onClick={() => actions.openModal({ type: 'pause' })} aria-label="Menú" title="Menú" data-testid="btn-menu"><HudIcon name="menu" px={24} /></button>
-          <FullscreenButton />
-        </div>
-        <Companions width={phone ? 'w-40' : 'w-48'} />
-      </div>
+      <PinnedQuestsHud width="w-40" />
+      {rival.disposition === 'hostile' && <div className="panel px-3 py-1 text-sm text-blood border-blood" data-testid="hud-rival-hostile">{getWanderer(rival.who).name.split(' ')[0]} es hostil</div>}
+      {rival.disposition === 'fleeing' && <div className="panel px-3 py-1 text-sm text-ember border-blood" data-testid="hud-rival-fleeing">¡{getWanderer(rival.who).name.split(' ')[0]} huye con tu botín!</div>}
     </>
+  );
+}
+
+/** Móvil: aliado como icono de 44 px con su vida; al tocarlo, su tarjeta completa. */
+function AllyIcons() {
+  const rival = useGame((s) => s.rival);
+  const merc = useGame((s) => s.merc);
+  return (
+    <div className="flex gap-1.5">
+      {rival.disposition === 'allied' && (() => {
+        const w = getWanderer(rival.who);
+        return (
+          <button className="panel hud-ally-ico" onClick={() => actions.interactRival()} aria-label={`Aliado: ${w.name} · ${RISK[rival.risk].label}`} data-testid="hud-ally">
+            <span className="hud-ally-spr"><MonsterSprite sprite={w.sprite} scale={1} /></span>
+            <span className="hud-ally-risk"><RiskBadge risk={rival.risk} size={14} /></span>
+            <span className="hud-ally-hp"><span style={{ width: `${Math.max(0, Math.min(100, rival.hp / w.stats.maxHp * 100))}%` }} /></span>
+          </button>
+        );
+      })()}
+      {merc?.alive && (() => {
+        const m = getMerc(merc.id);
+        return (
+          <button className="panel hud-ally-ico" onClick={() => actions.interactMerc()} aria-label={`Aliado: ${m.name}`} data-testid="hud-merc">
+            <span className="hud-ally-spr"><MonsterSprite sprite={m.sprite} scale={1} /></span>
+            <span className="hud-ally-hp"><span style={{ width: `${Math.max(0, Math.min(100, merc.hp / mercBaseStats(m).maxHp * 100))}%` }} /></span>
+          </button>
+        );
+      })()}
+    </div>
   );
 }
 
@@ -710,8 +809,9 @@ function PauseModal() {
       <div className="flex flex-col gap-2">
         <button className="btn btn-gold" onClick={() => actions.closeModal()}>Continuar</button>
         <button className="btn" onClick={() => setSettings(true)}>Ajustes</button>
+        <div className="pause-sep" />
         {!giveUp ? (
-          <button className="btn btn-danger" onClick={() => setGiveUp(true)}>Rendirse…</button>
+          <button className="btn btn-danger" onClick={() => setGiveUp(true)} data-testid="btn-give-up">Abandonar la expedición…</button>
         ) : (
           <div className="panel p-3 border-blood">
             <p className="font-body text-lg mb-2">Rendirte cuenta como una muerte: <b className="text-blood">perderás todo lo que llevas encima</b>.</p>
@@ -722,7 +822,7 @@ function PauseModal() {
           </div>
         )}
       </div>
-      <div className="mt-4 text-sm text-stone-400 font-body text-base">Controles completos en Ajustes › Controles</div>
+      <div className="mt-4 text-sm text-stone-300">Controles completos en Ajustes › Controles</div>
     </Modal>
   );
 }

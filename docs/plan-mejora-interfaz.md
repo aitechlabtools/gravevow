@@ -1,6 +1,6 @@
 # Plan de mejora visual y de usabilidad de los menús y el HUD
 
-Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0, 1, 2 y 3 hechas** (19/11). Siguiente: maqueta de la fase 4 (HUD de exploración).
+Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0, 1, 2, 3 y 4 hechas** (19/11). Siguiente: maqueta de la fase 5 (combate).
 
 Capturas del estado actual en los tres formatos, con los problemas marcados: `mockups/plan-interfaz/index.html`
 (carpeta `mockups/plan-interfaz/actual/`, script `mockups/plan-interfaz/capturar.cjs`). En el índice, cada número rojo es un
@@ -224,7 +224,8 @@ Hecho: paleta, paneles y botones planos, niveles de botón, desactivado legible,
 - **Riesgos:** arrastrar y soltar (`pointerDrag`) depende de `data-drop` en las casillas: no se tocan. Reglas de inventario sin cambios.
 - **Capturas:** las 4 vistas del Alijo, inventario y saco en la mazmorra, ficha de objeto; tres formatos.
 
-### Fase 4 · HUD de exploración (grande)
+### Fase 4 · HUD de exploración (grande) · HECHA 19/11
+- **Resultado** (`mockups/fase4-hud`): bloque del jugador con retrato en busto, necesidades en una fila de tres columnas y debajo botín, oro y barra de carga (verde, amarilla, roja), solo con icono y número; poción en botón redondo abajo a la derecha también en escritorio (Q pequeña arriba); iconos con tecla (escritorio) o nombre (tableta) arriba a la derecha; tira de 44 px en el móvil; pausa con «Abandonar la expedición…» separado.
 - **Qué:**
   - Un solo bloque del jugador arriba a la izquierda: retrato, vida, recurso, necesidades con icono (P-09) y debajo botín y oro encima (P-11). Fuera la caja de abajo.
   - Arriba a la derecha, `IconButton` para Inventario, Menú y pantalla completa en **todos** los formatos (P-10); en escritorio con la tecla en una línea pequeña debajo («I», «Esc»).

@@ -970,3 +970,48 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .alijo-side button{justify-content:center;padding:0;min-height:52px}
 .alijo-sheet{flex:1 1 0;min-width:0}
 .inv-full{background:var(--color-stone-950,#0e0d12);padding:max(var(--pad),env(safe-area-inset-top)) max(var(--pad),env(safe-area-inset-right)) var(--pad) max(var(--pad),env(safe-area-inset-left));gap:var(--gap)}
+
+/* ===== Fase 4 · HUD de exploración ===== */
+/* Necesidades: icono + número + barra; al final, botín y oro (solo icono y número) */
+.needs-strip{align-items:flex-end;gap:8px;margin-top:6px}
+.needs-ico{display:flex;align-items:center;gap:3px;font-size:12px;line-height:14px}
+.needs-ico b{font-weight:400;color:#e8b33a}
+.needs-ico b.ok{color:#d6d0c4}
+.needs-cell.critical .needs-ico b,.needs-cell.empty .needs-ico b{color:#ff4050}
+.hud-loot-icons{display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:12px;line-height:14px;padding-left:8px;border-left:1px solid #34303a}
+/* Retrato tipo busto (cabeza y hombros), como en el Bastión */
+.hud-bust{width:52px;height:52px;flex-shrink:0;overflow:hidden;display:flex;justify-content:center;align-items:flex-start;background:#0d0c11;border:2px solid #3a3540}
+.hud-bust img{flex-shrink:0;max-width:none;height:auto;margin-top:-4px}
+/* Botones de icono de arriba a la derecha (tecla o nombre debajo) */
+.hud-ibtn{display:flex;flex-direction:column;align-items:center;gap:2px}
+.hud-ibtn:not(:has(button)){display:none}
+.hud-ibtn-b{width:44px;height:44px;min-width:44px;min-height:44px;padding:0!important;display:flex;align-items:center;justify-content:center}
+.hud-ibtn-cap{font-size:12px;line-height:14px;color:#d6d0c4;opacity:.85;font-family:inherit}
+/* Sala: en el móvil se oculta tras 3 s */
+.hud-room{transition:opacity .4s}
+.hud-room.is-hidden{opacity:0}
+/* Móvil: tira de 44 px */
+.hud-strip{display:flex;align-items:center;gap:8px;height:44px;padding:0 8px 0 6px}
+.hud-strip-bars{display:flex;flex-direction:column;gap:4px;width:116px}
+.hud-thin{display:flex;align-items:center;gap:6px}
+.hud-thin-bar{flex:1;height:6px;background:#0d0c11;border:1px solid #34303a}
+.hud-thin-bar>div{height:100%}
+.hud-thin-num{font-size:12px;line-height:12px;min-width:24px;text-align:right;color:#efe6d2}
+.needs-dots{display:flex;align-items:center;gap:5px;height:44px;min-width:44px;padding:0 2px;background:none;border:0}
+.needs-dot{display:flex;flex-direction:column;align-items:center;gap:2px;width:16px}
+.needs-dot .needs-bar{width:16px}
+.needs-dot.critical,.needs-dot.empty{animation:needs-blink 1.2s steps(2) infinite}
+.needs-pop{position:absolute;left:-60px;top:46px;width:240px;padding:8px;z-index:30}
+.hud-loot-mini{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:12px;line-height:14px}
+.hud-ally-ico{position:relative;width:44px;height:44px;padding:0;display:flex;align-items:flex-end;justify-content:center;border-color:#3f8f6a}
+.hud-ally-spr{display:flex;align-items:flex-end;justify-content:center;height:36px;overflow:hidden}
+.hud-ally-risk{position:absolute;top:-4px;right:-4px}
+.hud-ally-hp{position:absolute;left:3px;right:3px;bottom:3px;height:4px;background:#0d0c11}
+.hud-ally-hp>span{display:block;height:100%;background:#5fd19a}
+/* Pausa: «Abandonar» separado */
+.pause-sep{height:1px;background:#34303a;margin:10px 0 4px}
+/* Fila de botín, oro y carga bajo las necesidades (mismas 3 columnas) */
+.hud-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;font-size:12px;line-height:14px;align-items:center}
+.hud-load{display:flex;align-items:center;gap:4px}
+.hud-load-bar{flex:1;height:4px;background:#0d0c11;border:1px solid #34303a;position:relative}
+.hud-load-bar>span{position:absolute;inset:0 auto 0 0}

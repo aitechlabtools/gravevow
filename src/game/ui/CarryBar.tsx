@@ -4,6 +4,7 @@ import { fmtWeight, loadOf } from '../../core/carry';
 import { useGame } from '../state/store';
 import { getPact, pactPrice } from '../../core/data/altars';
 import { CLASSES } from '../../core/data/classes';
+import { HudIcon } from './hudIcons';
 
 const TIER_COLOR = ['#8fae6a', '#e8b33a', '#d0533f'];
 
@@ -56,4 +57,17 @@ export function PactChip() {
   const pact = getPact(id);
   if (!pact) return null;
   return <span className="font-pixel text-[10px] px-1.5 py-0.5 border" style={{ color: '#ff6a5a', borderColor: '#8e1c2c', background: '#0b0a0dcc' }} data-testid="hud-pact" title={`${pact.boon}. Precio: ${pactPrice(pact, CLASSES[cls].resourceName)}.`}>{pact.name}</span>;
+}
+
+/** HUD: icono de peso y barra de carga. Verde hasta el 80 % de la capacidad, amarillo hasta el 100 % y rojo con sobrecarga. */
+export function HudLoad() {
+  const l = useLoad();
+  if (!l) return null;
+  const color = l.tier ? TIER_COLOR[2] : l.pct >= 0.8 ? TIER_COLOR[1] : TIER_COLOR[0];
+  return (
+    <span className="hud-load" title={`Carga ${fmtWeight(l.weight)} / ${fmtWeight(l.capacity)}. ${loadText(l.tier)}`} data-testid="hud-load" data-tier={l.tier}>
+      <span style={{ color }}><HudIcon name="weight" px={12} /></span>
+      <span className="hud-load-bar"><span style={{ width: `${Math.min(100, (l.pct / CARRY_MAX) * 100)}%`, background: color }} /></span>
+    </span>
+  );
 }

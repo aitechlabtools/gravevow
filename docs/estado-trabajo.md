@@ -763,6 +763,14 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - 2026-11-15: cookies.html pasa a noindex (meta robots) y se quita su Disallow para que Google pueda leerlo y desindexarla.
 - 2026-11-15: favicon.ico, PNG 48/96/192 y apple-touch-icon generados desde favicon.svg (escalado nearest) y enlazados en index.html.
 
+## Novedades del 19/11 (5): fase 4 de la interfaz implementada (HUD de exploración)
+- Un solo bloque del jugador arriba a la izquierda (escritorio y tableta): retrato en busto (cabeza y hombros, `.hud-bust`), vida, recurso y dos filas de tres columnas: necesidades (icono, número y barra) y, debajo, botín, oro y carga (icono de peso y barra: verde hasta el 80 % de la capacidad, amarilla hasta el 100 %, roja con sobrecarga; `HudLoad` en `CarryBar.tsx`, `hud-load`). Fuera la caja de botín de abajo, el botón grande de poción y el aviso «Sobrecarga» en escritorio y tableta (sigue en el móvil). `inventario-check` acepta la barra roja como aviso.
+- Poción: en escritorio, botón redondo abajo a la derecha como en táctil, con «Q» pequeña arriba y el número de pociones (`btn-potion`).
+- Arriba a la derecha, Mochila, Menú y Pantalla completa como iconos de 44 px en los tres formatos; debajo la tecla (escritorio) o el nombre (tableta).
+- Móvil: tira de 44 px (figura del cuerpo `hud-body`, vida y recurso finos con número, necesidades en iconos que se abren al tocar `hud-needs`, botín y oro). Reloj solo en el centro; la sala (`hud-room`) sale 3 s al entrar, al tocar el reloj o si un aviso la señala. Aliado como icono de 44 px bajo la tira.
+- Pausa: «Continuar» dorado, «Ajustes» y, separado, «Abandonar la expedición…» (`btn-give-up`) con la confirmación de siempre.
+- Archivos: `DungeonScreen.tsx`, `NeedsBars.tsx` (`NeedsDots`), `hudIcons.tsx` (iconos de necesidades y botín), bloque «Fase 4» de `game.css`.
+
 ## Novedades del 19/11 (4) · Fase 3 del plan de interfaz (inventario)
 - La ficha del objeto ya no tapa la mochila en tableta ni en móvil (ver `docs/plan-mejora-interfaz.md`, fase 3). Archivos: `screens/Alijo.tsx`, `screens/ItemCard.tsx` (`stacked`), `DungeonScreen.tsx` (inventario y saco en pantalla completa fuera del escritorio), `NeedsBars.tsx`, `game.css`.
 - Mercader en escritorio: tarjeta «Volver al Bastión» más pequeña (muralla a 128 px, 64 px en ventanas de menos de 960 px de alto) para que la columna no necesite barra de desplazamiento.

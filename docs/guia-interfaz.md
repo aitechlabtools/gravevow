@@ -258,3 +258,11 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - Regla: la ficha nunca se pone encima de la mochila ni del contenedor del que sale el objeto. Ocupa una columna propia o la de algo secundario (Aventurero en tableta, la mochila en la vista Almacén del móvil).
 - En columnas estrechas, `ItemCard stacked`: icono arriba, texto a todo el ancho y botones debajo.
 - Fuera del escritorio, inventario de la expedición y saco de botín a pantalla completa, con «Cerrar ✕» arriba a la derecha y la acción principal dorada abajo.
+
+## HUD de exploración (fase 4)
+- **Escritorio y tableta:** un solo bloque arriba a la izquierda: busto (`.hud-bust`, 52 px, el sprite a ×3 recortado por el pecho), nombre y clase, figura del cuerpo, vida, recurso y dos filas de tres columnas: necesidades (icono, número y barra; el número en dorado si penaliza, rojo si es grave) y, debajo, botín, oro y carga (icono de peso y barra verde/amarilla/roja: <80 %, 80-100 %, sobrecarga). Solo iconos y números; el nombre sale en el `title`.
+- **Arriba a la derecha:** iconos de 44 px (Mochila, Menú, Pantalla completa) en todos los formatos; debajo, la tecla en escritorio (I, Esc, F) y el nombre en tableta. Debajo, los aliados.
+- **Poción:** botón redondo abajo a la derecha en los tres formatos; en escritorio, la «Q» pequeña arriba a la izquierda y el número arriba a la derecha.
+- **Móvil:** tira de 44 px (figura del cuerpo, dos barras finas con número, tres iconos de necesidades que abren la tira completa, botín y oro). Solo el reloj en el centro; la sala aparece 3 s al cambiar, al tocar el reloj o si un aviso la señala (`hud-room`). Aliado: icono de 44 px con su vida bajo la tira.
+- **Pausa:** «Continuar» dorado, «Ajustes» secundario y, tras una línea, «Abandonar la expedición…» en rojo con confirmación.
+- Retratos pequeños de personaje: siempre en busto (cabeza y hombros), no la figura entera.

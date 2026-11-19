@@ -1,3 +1,4 @@
+import type React from 'react';
 // Necesidades en pantalla (Fase 5): tira compacta del HUD y panel con el tiempo hasta el siguiente efecto.
 // El color va siempre con texto: el estado («Sed», «Hambre grave»…) se escribe cuando penaliza.
 import { NEED_CFG, NEED_COLOR, NEED_LOW, NEED_NAME, NEEDS, type Need } from '../../config/needs';
@@ -9,6 +10,7 @@ import type { Grid } from '../../core/types';
 import { useEffect, useRef, useState } from 'react';
 import { useIsTouch } from '../../shared/device';
 import { FOOD } from '../../config/food';
+import { HudIcon } from './hudIcons';
 
 const SHORT: Record<Need, string> = { sat: 'Saciedad', hyd: 'Hidratación', rest: 'Descanso' };
 const EATS: Need[] = ['sat', 'hyd'];
@@ -50,19 +52,41 @@ export function needState(need: Need, v: number): string {
 }
 
 /** Tira del HUD: tres barras finas con su abreviatura; parpadea la que penaliza. */
-export function NeedsStrip({ needs }: { needs: Needs }) {
+export function NeedsStrip({ needs, testId = 'hud-needs', extra }: { needs: Needs; testId?: string; extra?: React.ReactNode }) {
   return (
-    <div className="needs-strip" data-testid="hud-needs">
+    <div className="needs-strip" data-testid={testId}>
       {NEEDS.map((k) => {
         const v = needs[k], l = needLevel(v);
         return (
           <div key={k} className={`needs-cell ${l}`} title={`${needState(k, v)}: ${Math.floor(v)} / 100`} data-testid={`hud-need-${k}`}>
-            <span className="needs-lbl">{SHORT[k]}{l !== 'ok' && <b>{Math.floor(v)}</b>}</span>
+            <span className="needs-ico" aria-label={SHORT[k]}><span style={{ color: NEED_COLOR[k] }}><HudIcon name={k} px={12} /></span><b className={l === 'ok' ? 'ok' : ''}>{Math.floor(v)}</b></span>
             <NeedBar v={v} color={NEED_COLOR[k]} />
           </div>
         );
       })}
+      {extra}
     </div>
+  );
+}
+
+/** Móvil: tres iconos de color con su barra mínima; al tocarlos se abre la tira completa con los nombres. */
+export function NeedsDots({ needs }: { needs: Needs }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative">
+      <button className="needs-dots" onClick={() => setOpen((o) => !o)} aria-label="Necesidades" aria-expanded={open} data-testid="hud-needs">
+        {NEEDS.map((k) => {
+          const v = needs[k], l = needLevel(v);
+          return (
+            <span key={k} className={`needs-dot ${l}`} data-testid={`hud-need-${k}`} title={`${needState(k, v)}: ${Math.floor(v)} / 100`}>
+              <span style={{ color: NEED_COLOR[k] }}><HudIcon name={k} px={12} /></span>
+              <NeedBar v={v} color={NEED_COLOR[k]} />
+            </span>
+          );
+        })}
+      </button>
+      {open && <span className="needs-pop panel" onClick={() => setOpen(false)}><NeedsStrip needs={needs} testId="hud-needs-full" /></span>}
+    </span>
   );
 }
 
