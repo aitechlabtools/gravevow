@@ -76,7 +76,7 @@ export function SettingsModal({ onClose, onExit, initialTab, guideOnly = false }
               <button key={t.id} className={`set-tab ${t.id === tab ? 'on' : ''}`} onClick={() => setTab(t.id)} aria-current={t.id === tab ? 'page' : undefined}
                 aria-label={t.label} title={phone ? t.label : undefined} data-testid={`settings-tab-${t.id}`}>
                 <span className="set-ic" aria-hidden>{t.icon}</span>
-                {!phone && <span>{t.label}</span>}
+                <span className="set-lbl">{t.label}</span>
                 {t.id === 'game' && remind && <span className="set-dot" aria-label="Copia de seguridad recomendada" />}
               </button>
             ))}
@@ -112,7 +112,7 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
 function Slider({ label, value, onChange, testId, soon = false }: { label: string; value: number; onChange: (v: number) => void; testId: string; soon?: boolean }) {
   return (
     <label className={`set-row ${soon ? 'opacity-50' : ''}`}>
-      <span>{label}{soon && <span className="block text-[11px] text-stone-400" data-testid={`${testId}-soon`}>(Próximamente)</span>}</span>
+      <span>{label}{soon && <span className="block text-[12px] text-stone-400" data-testid={`${testId}-soon`}>(Próximamente)</span>}</span>
       <input type="range" min={0} max={1} step={0.05} value={value} onChange={(e) => onChange(+e.target.value)} disabled={soon} className={soon ? 'grayscale cursor-not-allowed' : 'accent-[#e8b33a]'} data-testid={testId} />
       <span className="set-val">{soon ? '—' : `${Math.round(value * 100)} %`}</span>
     </label>
@@ -256,7 +256,7 @@ function GuideBlock({ onClose, scrollTo }: { onClose: () => void; scrollTo: bool
                           </button>
                           {known && isOpen && (
                             <div className="px-3 py-2 text-sm border-l-2 border-gold/60 bg-black/30" data-testid={`guide-text-${m.id}`}>
-                              <div className="font-display text-gold text-[11px] uppercase tracking-wider mb-1">{narratorName(m.narrator ?? 'intendant')}</div>
+                              <div className="font-display text-gold text-[12px] uppercase tracking-wider mb-1">{narratorName(m.narrator ?? 'intendant')}</div>
                               {m.steps.map((st, i) => <p key={i} className="mb-1">{rich(touch && st.touch ? st.touch : st.text)}</p>)}
                             </div>
                           )}

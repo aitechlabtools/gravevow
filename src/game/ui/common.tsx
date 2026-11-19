@@ -63,10 +63,12 @@ export function Modal({ children, onClose, wide = false, testId }: { children: R
 export function Toasts() {
   const toasts = useGame((s) => s.toasts);
   const inCombat = useGame((s) => !!s.combat);
+  const inSummary = useGame((s) => s.screen === 'summary');
   const touch = useIsTouch();
   // En táctil, abajo a la derecha están los botones de poción y «Usar»: los avisos van arriba, bajo Inventario/Menú.
   // En combate los avisos salen dentro del registro (CombatScreen), no encima de la escena
-  if (inCombat) return null;
+  // En resultados tampoco: lo que pasó en la expedición ya está resumido en la propia pantalla (fase 6, P-17)
+  if (inCombat || inSummary) return null;
   const place = touch ? 'top-16' : 'bottom-4';
   const color = { loot: 'border-gold text-gold', info: 'border-stone-500', danger: 'border-blood text-[#ff8a7a]', social: 'border-heal text-heal', good: 'border-heal' };
   return (

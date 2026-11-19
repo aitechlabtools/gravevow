@@ -61,7 +61,7 @@ function HeroCard({ r, active, onDelete }: { r: RosterEntry; active: boolean; on
   const play = () => { sfx('click'); void actions.selectCharacter(r.id); };
   return (
     <div className={`panel ${active ? 'panel-gold' : ''} flex flex-col items-center text-center relative`} style={{ padding: 'var(--gap)' }} data-testid={`slot-char-${r.slot}`}>
-      {active && <span className="absolute left-2 top-2 text-[10px] font-display tracking-wider text-gold uppercase">Último</span>}
+      {active && <span className="absolute left-2 top-2 text-[12px] font-display tracking-wider text-gold uppercase">Último</span>}
       <button className="btn icon-btn text-stone-300" onClick={onDelete} aria-label={`Borrar a ${r.name}`} title="Borrar personaje"
         style={{ position: 'absolute', right: 6, top: 6, zIndex: 2 }} data-testid={`btn-delete-char-${r.slot}`}><IconTrash /></button>
       <button className="w-full flex flex-col items-center" onClick={play} aria-label={`Jugar con ${r.name}`}>
@@ -70,9 +70,9 @@ function HeroCard({ r, active, onDelete }: { r: RosterEntry; active: boolean; on
         </div>
         <div className="font-display text-parchment mt-2 truncate max-w-full" style={{ fontSize: layout === 'phone' ? 14 : 18 }}>{r.name}</div>
         <div className="text-xs md:text-sm text-stone-300">{className(r.classId, r.appearance.sex)} · Nv {r.level}</div>
-        <div className="text-[11px] md:text-[13px] text-stone-400 leading-tight mt-0.5" data-testid={`char-record-${r.slot}`}>{recordLine(r.record)}</div>
+        <div className="text-[12px] md:text-[13px] text-stone-400 leading-tight mt-0.5" data-testid={`char-record-${r.slot}`}>{recordLine(r.record)}</div>
         <div className="mt-1 text-xs md:text-sm"><GoldAmount value={r.gold} /></div>
-        <div className="text-[11px] text-stone-400 mt-0.5">{lastPlayedLabel(r.lastPlayedAt)}</div>
+        <div className="text-[12px] text-stone-400 mt-0.5">{lastPlayedLabel(r.lastPlayedAt)}</div>
       </button>
       <div className="flex-1" />
       <button className={`btn ${active ? 'btn-gold' : ''} w-full mt-2`} style={{ minHeight: 44 }} onClick={play} data-testid={`btn-play-char-${r.slot}`}>Jugar</button>
@@ -86,7 +86,7 @@ function EmptyCard({ slot }: { slot: number }) {
       onClick={() => { sfx('click'); actions.newCharacter(slot); }} data-testid={`btn-new-char-${slot}`}>
       <span className="font-display text-4xl md:text-6xl text-stone-500 leading-none">+</span>
       <span className="font-display text-parchment text-sm md:text-base">Nuevo personaje</span>
-      <span className="text-[11px] text-stone-400">Hueco {slot + 1} de {MAX_CHARACTERS}</span>
+      <span className="text-[12px] text-stone-400">Hueco {slot + 1} de {MAX_CHARACTERS}</span>
     </button>
   );
 }

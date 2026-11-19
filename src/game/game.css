@@ -1081,3 +1081,63 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .cmdpair>.cmd.half{padding:4px 6px 4px 16px;gap:0}.cmdpair>.cmd.half>svg,.cmdpair>.cmd.half>img{display:none}
 .cmdpair>.cmd.half .cmd-label{letter-spacing:.02em;font-size:clamp(11px,1.05vw,15px)}.cmdpair>.cmd.half kbd{right:3px}
 @media (max-height:560px){.cmdpair{gap:6px}}
+
+/* ── Fase 6 · Menús, fichas, resultados y ajustes ── */
+/* Habilidades: Ataques · Clase en columna al lateral (tableta con nombre, móvil solo icono) */
+.pj-side{padding-top:4px}
+.pj-side button{font-size:16px}
+.pj-side.is-icon button{justify-content:center;padding:0;min-height:52px;position:relative}
+.pj-side.is-icon .vtab-dot{position:absolute;right:3px;top:2px;font-size:12px}
+/* Bestiario y título: nada por debajo de 12 px */
+.btile-threat{font-size:12px}
+@media (max-width:1300px),(max-height:820px){ .btile-name{font-size:12px} .btile-threat{font-size:12px} }
+.tm-foot{font-size:12px !important}
+/* Móvil (raíz de 11 px): botones, selectores y accesos rápidos a 12 px como mínimo */
+@media (pointer:coarse) and (max-height:540px){
+  .btn:not([class*="text-lg"]):not([class*="text-xl"]):not([class*="text-2xl"]):not([class*="text-3xl"]):not([class*="text-[1"]):not([class*="text-[2"]){font-size:12px}
+  .ui-seg button{font-size:12px}
+  .quick{width:62px;height:50px;font-size:12px;gap:2px}
+  /* Ajustes: una sola columna con icono y nombre corto */
+  .set-panel.is-phone .set-body{grid-template-columns:132px minmax(0,1fr)}
+  .set-panel.is-phone .set-nav{display:flex;flex-direction:column;gap:2px;padding:4px}
+  .set-panel.is-phone .set-tab{justify-content:flex-start;gap:6px;padding:0 6px;min-height:44px;font-size:13px}
+  .set-panel.is-phone .set-ic{width:24px;height:24px;font-size:12px}
+  .set-panel.is-phone .set-dot{right:4px;top:50%;margin-top:-5px}
+  .set-panel.is-phone .set-row{font-size:12px}
+  .set-panel.is-phone .panel-title,.set-panel.is-phone .set-cur{font-size:13px}
+}
+.quick{font-size:12px}
+@media (pointer:coarse) and (max-height:540px){
+  .min12{font-size:12px}
+  .set-panel.is-phone .set-content{font-size:12px}
+}
+/* Fase 6 (revisión): selector de zona del Bestiario como pestañas con nombre y barra de progreso */
+.bzone{gap:8px;min-height:48px;padding:0 12px 0 6px;background:#15131a;border:0;border-bottom:3px solid transparent;color:#a8a29e}
+.bzone:hover{background:#1c1a22;color:#e9e1cc}
+.bzone.on{background:#221e28;color:var(--color-gold);border-bottom-color:var(--color-gold)}
+.bzone-txt{display:flex;flex-direction:column;gap:4px;min-width:72px;text-align:left}
+.bzone-name{display:block !important;font-size:13px;line-height:1;white-space:nowrap}
+.bzone-bar{display:block;height:4px;background:#2a2730}
+.bzone-bar i{display:block;height:100%;background:currentColor}
+.bzone-n{font-size:12px;color:#d9d3c1}
+.bzone.on .bzone-n{color:var(--color-gold)}
+@media (max-height:520px){ .bzone{padding:0 8px 0 4px;gap:6px} .bzone-sw{width:24px;height:24px} .bzone-txt{min-width:0} .bzone-name{font-size:12px} }
+/* Ajustes: iconos de sección sin recuadro discontinuo */
+.set-ic{border:0;width:24px;font-size:18px;color:#c9a35a}
+.set-tab.on .set-ic{color:#e8b33a}
+/* Copia de seguridad (fase 6): acción grande + alternativas discretas */
+.bk-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.bk-alt{display:flex;gap:6px;flex-wrap:wrap}
+.bk-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;color:#d9d3c1;font-family:var(--font-pixel);font-size:14px;border:1px solid #3a3741;background:transparent}
+.bk-link:hover:not(:disabled){background:#1c1a22}
+.bk-link:disabled{opacity:.5}
+.bk-link svg{width:18px;height:18px}
+.bk-state{font-size:13px;color:#a8a29e;font-family:var(--font-body)}
+@media (pointer:coarse) and (max-height:540px){ .bk-link{font-size:12px} .bk-state{font-size:12px} }
+.bk-alt{justify-content:center}
+.bk-state{text-align:center}
+.bk-col.panel{padding:12px;gap:8px}
+.bk-state{display:flex;align-items:flex-start;justify-content:center;gap:6px}
+.bk-info{flex:none;margin-top:2px;color:#c9a35a}
+.bk-state>span{text-align:left}
+.bk-alt{justify-content:flex-start}.bk-state{justify-content:flex-start;text-align:left}

@@ -1,0 +1,121 @@
+{
+ "size": {
+  "width": 1180,
+  "height": 820
+ },
+ "report": {
+  "01-crear": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 2,
+   "wide": false
+  },
+  "02-jugar": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 3,
+   "wide": false
+  },
+  "03-habilidades": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 1,
+   "wide": false
+  },
+  "04-habilidades-ataques": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 1,
+   "wide": false
+  },
+  "05-bestiario": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 0,
+   "wide": false
+  },
+  "06-tienda": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 3,
+   "wide": false
+  },
+  "07-ajustes-sonido": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 3,
+   "wide": false
+  },
+  "08-ajustes-pantalla": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 3,
+   "wide": false
+  },
+  "09-ajustes-controles": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 3,
+   "wide": false
+  },
+  "10-ajustes-partida": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 3,
+   "wide": false
+  },
+  "11-ajustes-info": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 3,
+   "wide": false
+  },
+  "12-titulo": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 4,
+   "wide": false
+  },
+  "13-elegir": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 2,
+   "wide": false
+  },
+  "14-copia": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 0,
+   "wide": false
+  },
+  "15-resultados": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 1,
+   "wide": false
+  },
+  "16-resultados-botin": {
+   "small": [],
+   "tiny": [],
+   "cut": [],
+   "gradients": 1,
+   "wide": false
+  }
+ },
+ "errors": []
+}

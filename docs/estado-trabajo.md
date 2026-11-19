@@ -782,3 +782,12 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - La ficha del objeto ya no tapa la mochila en tableta ni en móvil (ver `docs/plan-mejora-interfaz.md`, fase 3). Archivos: `screens/Alijo.tsx`, `screens/ItemCard.tsx` (`stacked`), `DungeonScreen.tsx` (inventario y saco en pantalla completa fuera del escritorio), `NeedsBars.tsx`, `game.css`.
 - Mercader en escritorio: tarjeta «Volver al Bastión» más pequeña (muralla a 128 px, 64 px en ventanas de menos de 960 px de alto) para que la columna no necesite barra de desplazamiento.
 - `scripts/almacen-check.cjs`: en el móvil cierra la ficha antes de «Agrupar oro». `arrastre-check.cjs` ya fallaba antes de este cambio (sin tocar).
+
+## Novedades del 19/11 (7): fase 6 de la interfaz implementada (menús, fichas, resultados y ajustes)
+- **Habilidades** (`Personaje.tsx`): en tableta y móvil, Ataques · Clase es una columna de iconos de 52 px al lateral (`character-seg`, `seg-atk`, `seg-class`; el ◆ marca hito pendiente). Fuera «Mano izquierda/derecha», el rótulo «Clase» y la frase de abajo; rombos y círculo más grandes (panel de tableta a 400 px).
+- **Ajustes** (`Settings.tsx`): iconos de sección sin borde discontinuo; en el móvil una columna con icono y nombre (`.set-lbl`).
+- **Bestiario** (`BestiaryTab.tsx`): pestañas de zona con nombre siempre visible, barra de progreso y cuenta; la elegida en dorado con línea inferior.
+- **Copia de seguridad** (`CopiaSeguridad.tsx`): centrada; dos recuadros con «Guardar copia» (dorado) y «Cargar copia», debajo «Copiar como texto» / «Compartir» / «Pegar texto» y el estado con icono «i», alineado a la izquierda. La línea de contenido de la copia pasa a «Más información» (`backup-contents`). Mismos `data-testid` de botones.
+- **Resultados**: `Toasts` no se muestra en `summary`; fondo sin violeta.
+- **12 px mínimo** en Jugar (accesos rápidos), Crear y Elegir personaje, Tienda, título y botones del móvil (bloque «Fase 6» de `game.css`).
+- Pruebas: tsc, 512 tests, e2e, e2e-tutorial, e2e-guia, e2e-skins, e2e-bienvenida, copia-check, ajustes-check, bestiario-check, creacion-check, menus-check, touch-check y mobile-check. Capturas: `mockups/fase6-menus/index.html` (antes | real).

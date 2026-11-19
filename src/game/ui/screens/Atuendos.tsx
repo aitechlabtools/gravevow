@@ -28,7 +28,7 @@ export function SkinSlot({ onClick }: { onClick: () => void }) {
           : <img src={iconUrl('robe_gold', 3)} width={30} height={30} className="pixelated opacity-25" alt="" />}
         <span className="slot-skin-gem" aria-hidden>◆</span>
       </button>
-      <span className="text-[10px] uppercase tracking-wider text-[#c79bff]">Atuendo</span>
+      <span className="text-[12px] uppercase tracking-wider text-[#c79bff]">Atuendo</span>
     </div>
   );
 }
@@ -46,7 +46,7 @@ export function SkinPicker({ onClose, onShop }: { onClose: () => void; onShop?: 
     <button key={id ?? 'none'} className={`skin-tile ${worn === id ? 'on' : ''}`} onClick={() => pick(id)} aria-pressed={worn === id} data-testid={`pick-${id ?? 'none'}`}>
       <HeroSprite classId={ch.classId} appearance={ch.appearance} equipment={profile.equipment} skin={id} scale={scale} animate={false} />
       <span className="font-display text-sm text-parchment text-center leading-tight">{name}</span>
-      <span className="text-[11px] text-stone-400">{worn === id ? 'Puesto' : sub}</span>
+      <span className="text-[12px] text-stone-400">{worn === id ? 'Puesto' : sub}</span>
     </button>
   );
   return (
@@ -97,7 +97,7 @@ export function Tienda() {
                 </div>
                 <div className="text-center">
                   <div className="font-display text-parchment leading-tight" style={{ fontSize: phone ? 14 : 20 }}>{s.name}</div>
-                  <div className="text-[11px] uppercase tracking-[0.15em]" style={{ color: r.color }}>{r.name}{s.sprites ? '' : <span className="text-stone-500 normal-case tracking-normal"> · arte provisional</span>}</div>
+                  <div className="text-[12px] uppercase tracking-[0.15em]" style={{ color: r.color }}>{r.name}{s.sprites ? '' : <span className="text-stone-500 normal-case tracking-normal"> · arte provisional</span>}</div>
                 </div>
                 {!phone && <p className="font-body text-stone-300 text-[15px] leading-snug text-center">{s.description}</p>}
                 <div className="mt-auto flex flex-col gap-1.5">
@@ -118,7 +118,7 @@ export function Tienda() {
             );
           })}
         </div>
-        <p className="text-[11px] text-stone-500 mt-3 text-center">Pagas con el oro que ganas jugando. No hay pagos con dinero real.</p>
+        <p className="text-[12px] text-stone-500 mt-3 text-center">Pagas con el oro que ganas jugando. No hay pagos con dinero real.</p>
       </div>
 
       {confirm && (

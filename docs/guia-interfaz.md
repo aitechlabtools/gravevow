@@ -274,3 +274,10 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - Botones: el nombre y el subtítulo pasan a dos líneas en vez de cortarse (`.cmd-sub`).
 - Ficha del jugador con busto (`.frame-bust`) y el nivel en la esquina.
 - Móvil (alto ≤ 560 px): dos tiras finas arriba, tú a la izquierda (busto, «Nv N» junto al nombre, PV y recurso) y el enemigo a la derecha; sin zona en el título. Toda tu tira es el botón `combat-body` (Heridas y necesidades; gota roja si hay heridas). Los enemigos bajan 26 px (`.foe`) para que la tira no los tape.
+
+## Menús y fichas (fase 6)
+- Ningún texto por debajo de 12 px en el móvil (raíz de 11 px: botones y selectores fijados a 12 px; clase `.min12` para casos sueltos).
+- Selectores secundarios en tableta y móvil: columna de iconos al lateral (`.vtabs-col.is-icon`, 52 px).
+- Iconos de sección sin recuadros discontinuos.
+- Pantallas de una sola tarea (Copia de seguridad): una acción grande por columna dentro de su recuadro; alternativas pequeñas debajo; notas con icono «i»; todo alineado a la izquierda y el bloque centrado en la pantalla.
+- Pestañas de zona: nombre + barra de progreso + cuenta; la activa en dorado con línea inferior.

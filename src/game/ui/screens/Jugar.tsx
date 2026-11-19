@@ -115,7 +115,7 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
       <section className="panel panel-gold" data-testid="expedition-panel" onClickCapture={(e) => { if (consume()) { e.stopPropagation(); e.preventDefault(); } }}>
         <div className={phone ? 'p-2.5' : 'p-4'}>
           <h2 className="panel-title text-sm">Expedición</h2>
-          <div className="font-body text-parchment leading-tight mt-1">{phone ? sub.name : zone.name} · Nv {sub.levels[0]}–{sub.levels[1]}</div>
+          <div className="font-body text-parchment leading-tight mt-1 min12">{phone ? sub.name : zone.name} · Nv {sub.levels[0]}–{sub.levels[1]}</div>
           {easy && <div className="text-xs text-ember mt-1" data-testid="zone-easy-note">Demasiado fácil para ti: {Math.round(easy.xp * 100)} % de experiencia y {Math.round(easy.gold * 100)} % de oro.</div>}
           {lock && <div className="text-xs text-blood mt-1" data-testid="zone-lock">{lock}</div>}
           {!profile.equipment.mainHand && <div className="text-xs text-ember mt-1">Vas sin arma. Revisa tu equipo en el Alijo.</div>}
@@ -260,11 +260,11 @@ function ZoneMap({ current, onPick, onClose }: { current: SubzoneId; onPick: (z:
         {!phone && (
           <div className="flex items-baseline justify-between gap-2 px-0.5">
             <span className="font-display text-lg text-parchment">{z.name}</span>
-            <span className="text-[11px] text-gold">Nv {z.levels[0]}–{z.levels[1]}</span>
+            <span className="text-[12px] text-gold">Nv {z.levels[0]}–{z.levels[1]}</span>
           </div>
         )}
         {subzonesOf(id).map((s) => <SubzoneRow key={s.id} sub={s} on={s.id === current} onPick={onPick} />)}
-        <div className="text-[11px] text-stone-400 leading-snug px-0.5">
+        <div className="text-[12px] text-stone-400 leading-snug px-0.5">
           Jefe de la zona: {getEnemy(z.boss).name}{profile.bossesDefeated.includes(z.boss) ? ' ✓' : ''}
           {zl && <span className="block text-blood">{zl}</span>}
         </div>
@@ -294,7 +294,7 @@ function SubzoneRow({ sub, on, onPick }: { sub: SubzoneDef; on: boolean; onPick:
       <span className="subzone-num font-display">{sub.index}</span>
       <span className="flex-1 min-w-0">
         <span className="block font-display text-parchment leading-tight truncate">{sub.name}</span>
-        <span className="block text-[11px] leading-tight text-stone-300">
+        <span className="block text-[12px] leading-tight text-stone-300">
           Nv {sub.levels[0]}–{sub.levels[1]}
           {l ? <span className="text-blood"> · {l.replace(/^Necesitas /, 'necesitas ').replace(/\.$/, '')}</span> : easy ? <span className="text-ember"> · demasiado fácil</span> : null}
         </span>

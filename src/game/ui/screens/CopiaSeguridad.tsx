@@ -6,7 +6,6 @@ import { actions, useGame } from '../../state/store';
 import { backupAgoLabel, parseBackup, summarize, type BackupSummaryEntry } from '../../../core/backup';
 import type { SaveData } from '../../../core/save';
 import { Modal } from '../common';
-import { Panel } from '../kit';
 import { useLayout } from '../../../config/ui';
 import { sfx } from '../../audio';
 import { FullscreenButton } from '../FullscreenButton';
@@ -20,7 +19,6 @@ export function CopiaSeguridad() {
   const roster = useGame((s) => s.roster);
   const undoAt = useGame((s) => s.undoAt);
   const persisted = useGame((s) => s.persisted);
-  const focus = useGame((s) => s.backupFocus);
   const ios = isIosSafari();
   const [more, setMore] = useState(!phone || ios);
   const [code, setCode] = useState<string | null>(null);
@@ -75,14 +73,14 @@ export function CopiaSeguridad() {
   const canShare = isTouchNow && typeof navigator !== 'undefined' && !!navigator.canShare && (() => { try { return navigator.canShare({ files: [new File(['{}'], 'x.json', { type: 'application/json' })] }); } catch { return false; } })();
 
   return (
-    <div className="h-full flex flex-col relative" style={{ background: 'radial-gradient(ellipse at 50% 30%, #1a1520 0%, #0d0b11 55%, #07060a 100%)' }} data-testid="screen-backup">
+    <div className="h-full flex flex-col relative" style={{ background: '#0b0a0d' }} data-testid="screen-backup">
       <header className="ui-nav" style={{ display: 'flex', justifyContent: 'space-between' }}>
         <button className="btn" style={{ minHeight: 44 }} onClick={() => { sfx('click'); actions.goto('title'); }} data-testid="btn-backup-back">‹ Menú</button>
         <h1 className="font-display text-parchment tracking-[0.14em] uppercase" style={{ fontSize: phone ? 15 : 22 }}>Copia de seguridad</h1>
         <div className="flex justify-end" style={{ minWidth: 96 }}><FullscreenButton className="icon-btn" /></div>
       </header>
-      <div className="flex-1 min-h-0 overflow-y-auto scroll-thin">
-        <div className="mx-auto w-full flex flex-col" style={{ maxWidth: 980, padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' }}>
+      <div className="flex-1 min-h-0 overflow-y-auto scroll-thin flex flex-col">
+        <div className="m-auto w-full flex flex-col" style={{ maxWidth: 980, padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' }}>
           {/* Aviso destacado */}
           <div className="panel panel-gold" style={{ padding: phone ? '8px 12px' : '14px 18px' }} data-testid="backup-notice">
             <div className="flex items-center gap-3">
@@ -95,6 +93,8 @@ export function CopiaSeguridad() {
                 <li>Si borras los datos del navegador o cambias de dispositivo, <b>pierdes la partida</b>.</li>
                 <li>Con una copia la guardas fuera y puedes llevarla a otro ordenador, tableta o móvil.</li>
                 <li>La copia es tuya: no se envía a ningún servidor.</li>
+                <li data-testid="backup-contents">{roster.length ? `${roster.length} ${roster.length === 1 ? 'personaje' : 'personajes'}` : 'Sin personajes'} · La copia incluye también los atuendos, la página «Compartido», el tutorial y los ajustes.
+            {persisted === true && ' · El navegador conservará los datos.'}</li>
                 {ios && (
                   <li className="text-ember" data-testid="backup-ios"><b>iPhone y iPad:</b> Safari puede borrar los datos de una web si pasan unos 7 días sin abrirla.
                     {isStandalone() ? ' Ya tienes el juego en la pantalla de inicio, que lo evita; aun así, haz copias de vez en cuando.' : ' Añade el juego a la pantalla de inicio (botón Compartir → «Añadir a pantalla de inicio») y haz copias a menudo.'}</li>
@@ -103,37 +103,33 @@ export function CopiaSeguridad() {
             )}
           </div>
 
+          {/* Fase 6: dos acciones grandes y directas; las alternativas (texto, compartir) debajo, más discretas */}
           <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)' }}>
-            <Panel title="Guardar mi partida" gold testId="backup-save">
-              <div className="flex flex-col gap-2">
-                <BigBtn icon={<IconDown />} label="Exportar archivo" sub="Descarga un archivo .json con toda tu partida" gold onClick={exportFile} disabled={!hasGame} testId="btn-export-file" phone={phone} />
-                {canShare && <BigBtn icon={<IconShare />} label="Compartir archivo" sub="Envíalo por WhatsApp, correo o a tus archivos" onClick={shareFile} disabled={!hasGame} testId="btn-share-file" phone={phone} />}
-                <BigBtn icon={<IconCopy />} label="Copiar código" sub="Un texto para pegar en otro dispositivo" onClick={copyCode} disabled={!hasGame} testId="btn-copy-code" phone={phone} />
+            <div className="bk-col panel" data-testid="backup-save">
+              <BigBtn icon={<IconDown />} label="Guardar copia" sub="Descarga un archivo con toda tu partida" gold onClick={exportFile} disabled={!hasGame} testId="btn-export-file" phone={phone} />
+              <div className="bk-alt">
+                <button className="bk-link" onClick={copyCode} disabled={!hasGame} data-testid="btn-copy-code"><IconCopy /> Copiar como texto</button>
+                {canShare && <button className="bk-link" onClick={shareFile} disabled={!hasGame} data-testid="btn-share-file"><IconShare /> Compartir</button>}
               </div>
-              <p className="text-xs text-stone-300 mt-3 text-center" data-testid="backup-last">
-                {status ? <>{status.remind ? <span className="text-ember">{backupAgoLabel(status)}</span> : backupAgoLabel(status)}{status.lastAt !== null && status.expeditionsSince > 0 ? ` · ${status.expeditionsSince} expediciones desde entonces` : ''}</> : 'Aún no tienes ninguna partida.'}
-              </p>
-            </Panel>
-            <Panel title="Cargar una partida" gold={focus === 'load' || !hasGame} testId="backup-load">
-              <div className="flex flex-col gap-2">
-                <BigBtn icon={<IconUp />} label="Importar archivo" sub="Elige un archivo de copia (.json)" onClick={() => { sfx('click'); fileInput.current?.click(); }} testId="btn-import-file" phone={phone} />
-                <BigBtn icon={<IconPaste />} label="Pegar código" sub="Pega el texto que copiaste en otro dispositivo" onClick={() => { sfx('click'); setError(null); setPaste(true); }} testId="btn-paste-code" phone={phone} />
+              <p className="bk-state" data-testid="backup-last"><IconInfo /><span>{status ? <>{status.remind ? <span className="text-ember">{backupAgoLabel(status)}</span> : backupAgoLabel(status)}{status.lastAt !== null && status.expeditionsSince > 0 ? ` · ${status.expeditionsSince} expediciones desde entonces` : ''}</> : 'Aún no tienes ninguna partida.'}</span></p>
+            </div>
+            <div className="bk-col panel" data-testid="backup-load">
+              <BigBtn icon={<IconUp />} label="Cargar copia" sub="Abre un archivo de copia (.json)" gold={!hasGame} onClick={() => { sfx('click'); fileInput.current?.click(); }} testId="btn-import-file" phone={phone} />
+              <div className="bk-alt">
+                <button className="bk-link" onClick={() => { sfx('click'); setError(null); setPaste(true); }} data-testid="btn-paste-code"><IconPaste /> Pegar texto</button>
               </div>
               <input ref={fileInput} type="file" accept=".json,application/json,text/plain" className="hidden" onChange={(e) => void onFile(e.target.files?.[0])} data-testid="input-import-file" />
-              <p className="text-xs text-stone-400 mt-3 text-center">Antes de cargar te enseñamos qué contiene y guardamos tu partida actual por si quieres deshacerlo.</p>
+              <p className="bk-state"><IconInfo /><span>Antes de cargar verás qué contiene; tu partida actual se guarda por si quieres deshacerlo.</span></p>
               {undoAt && (
                 <button className="btn w-full mt-2 text-sm" style={{ minHeight: 44 }} onClick={() => { sfx('click'); void actions.undoImport(); }} data-testid="btn-undo-import">
                   Deshacer la última carga (volver a tu partida de antes)
                 </button>
               )}
-            </Panel>
+            </div>
           </div>
           {info && <p className="panel p-3 text-gold font-body text-lg" role="status" data-testid="backup-info">{info}</p>}
           {error && !paste && <p className="panel p-3 text-blood font-body text-lg" role="alert" data-testid="backup-error">{error}</p>}
-          <p className="text-center text-xs text-stone-400">
-            {roster.length ? `${roster.length} ${roster.length === 1 ? 'personaje' : 'personajes'}` : 'Sin personajes'} · La copia incluye también los atuendos, la página «Compartido», el tutorial y los ajustes.
-            {persisted === true && ' · El navegador conservará los datos.'}
-          </p>
+
         </div>
       </div>
 
@@ -146,11 +142,11 @@ export function CopiaSeguridad() {
 
 function BigBtn({ icon, label, sub, onClick, gold = false, disabled = false, testId, phone }: { icon: ReactNode; label: string; sub: string; onClick: () => void; gold?: boolean; disabled?: boolean; testId: string; phone: boolean }) {
   return (
-    <button className={`btn ${gold ? 'btn-gold' : ''} w-full flex items-center gap-3 text-left`} style={{ minHeight: phone ? 52 : 64, padding: '6px 14px' }} onClick={onClick} disabled={disabled} data-testid={testId}>
+    <button className={`btn ${gold ? 'btn-gold' : ''} w-full flex items-center gap-3 text-left`} style={{ minHeight: phone ? 64 : 104, padding: phone ? '6px 14px' : '10px 22px' }} onClick={onClick} disabled={disabled} data-testid={testId}>
       <span className="shrink-0">{icon}</span>
       <span className="leading-tight min-w-0">
-        <span className="block font-display">{label}</span>
-        {!phone && <span className={`block text-[11px] ${gold ? 'text-[#3a2a08]' : 'text-stone-400'} font-body normal-case tracking-normal`}>{sub}</span>}
+        <span className="block font-display" style={{ fontSize: phone ? 17 : 24 }}>{label}</span>
+        <span className={`block text-[12px] md:text-[14px] ${gold ? 'text-[#3a2a08]' : 'text-stone-400'} font-body normal-case tracking-normal`}>{sub}</span>
       </span>
     </button>
   );
@@ -168,7 +164,7 @@ function CodeModal({ code, onClose }: { code: string; onClose: () => void }) {
     <Modal onClose={onClose} testId="code-modal">
       <h2 className="panel-title text-lg mb-2">Tu código de partida</h2>
       <p className="font-body text-base text-stone-200">Cópialo y pégalo en el otro dispositivo, en <b>Copia de seguridad → Pegar código</b>. Guárdalo donde quieras: un mensaje a ti mismo, una nota o un correo.</p>
-      <textarea ref={ref} readOnly value={code} className="mt-3 w-full bg-[#0d0c11] border-2 border-stone-700 p-2 text-[11px] text-stone-300 font-mono break-all" style={{ height: 96, resize: 'none' }} onFocus={(e) => e.target.select()} data-testid="code-text" />
+      <textarea ref={ref} readOnly value={code} className="mt-3 w-full bg-[#0d0c11] border-2 border-stone-700 p-2 text-[12px] text-stone-300 font-mono break-all" style={{ height: 96, resize: 'none' }} onFocus={(e) => e.target.select()} data-testid="code-text" />
       <p className="text-xs text-stone-400 mt-1">{code.length.toLocaleString('es-ES')} caracteres. Tiene que copiarse entero.</p>
       {copied === true && <p className="text-heal text-sm mt-2" data-testid="code-copied">Copiado. Ya puedes pegarlo donde quieras.</p>}
       {copied === false && <p className="text-ember text-sm mt-2">No se ha podido copiar solo: mantén pulsado el texto, elige «Seleccionar todo» y «Copiar».</p>}
@@ -260,3 +256,13 @@ const IconCopy = () => <Px d="M3 1h6v1H4v7H3zM5 3h6v8H5zm1 1v6h4V4z" />;
 const IconPaste = () => <Px d="M4 1h4v1h2v10H2V2h2zm1 1v1h2V2zM3 3v8h6V3H8v1H4V3zm1 3h4v1H4zm0 2h4v1H4z" />;
 const IconShare = () => <Px d="M8 1h3v3H8V3H6v2H5V2h3zM1 4h3v1H2v5h6V8h1v3H1z" />;
 const IconWarn = () => <Px s={30} c="#e8b33a" d="M5 1h2v1h1v2h1v2h1v2h1v3H1V8h1V6h1V4h1V2h1zm0 3v4h2V4zm0 5v1h2V9z" />;
+
+/** Icono de información: círculo con una «i», en pixel art (fase 6). */
+function IconInfo() {
+  return (
+    <svg className="bk-info" width={16} height={16} viewBox="0 0 8 8" shapeRendering="crispEdges" aria-hidden>
+      <path d="M2 0h4v1h1v1h1v4H7v1H6v1H2V7H1V6H0V2h1V1h1zM2 1v1H1v4h1v1h4V6h1V2H6V1z" fill="currentColor" />
+      <path d="M3.5 2h1v1h-1zM3.5 3.5h1V6h-1z" fill="currentColor" />
+    </svg>
+  );
+}

@@ -16,7 +16,7 @@ import { CLASS_UNLOCK_LEVELS, skillCost } from '../../../config/progression';
 import { PlayerSprite } from '../common';
 import { ActionIcon } from '../combatActions';
 import { ItemIcon } from '../inventory';
-import { Panel, Segmented, usePixelScale } from '../kit';
+import { Panel, usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
 
 // Mismos colores que la barra de combate (combatActions.tsx → SOURCE)
@@ -80,20 +80,27 @@ export function Personaje({ onStash }: { onStash?: () => void }) {
         <div className="min-h-0 flex" data-testid="character-panels"><Panel title="Ataques" className="flex-1 min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="character-atk">{attacks}</Panel></div>
         <div className="min-h-0 flex flex-col">
           <div className="flex-1 min-h-0 relative">{arc}</div>
-          <p className="font-body text-stone-400 text-center text-[16px] leading-snug max-w-lg mx-auto pt-2">Tus ataques salen de tus armas. Tu habilidad de clase la eliges tú.</p>
         </div>
         <Panel title={classTitle} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="character-class">{path}</Panel>
       </div>
     );
   }
   return (
-    <div className={`h-full grid ${phone ? '' : 'pj-wide'}`} style={{ ...pad, gridTemplateColumns: phone ? 'minmax(0,1fr) minmax(0,1.15fr)' : 'minmax(0,1fr) 440px' }} data-testid="screen-character">
+    <div className={`h-full grid ${phone ? '' : 'pj-wide'}`} style={{ ...pad, gridTemplateColumns: phone ? 'minmax(0,1fr) 52px minmax(0,1.15fr)' : 'minmax(0,1fr) 52px 400px' }} data-testid="screen-character">
       <div className="min-h-0 flex flex-col">
         <div className="flex-1 min-h-0 relative">{arc}</div>
-        {!phone && <p className="font-body text-stone-400 text-center text-[16px] leading-snug max-w-lg mx-auto pt-2">Tus ataques salen de tus armas. Tu habilidad de clase la eliges tú.</p>}
+      </div>
+      {/* Fase 6: Ataques · Clase en columna vertical al lateral (móvil: solo icono; tableta: icono y nombre) */}
+      <div className="vtabs-col pj-side is-icon" role="tablist" aria-orientation="vertical" data-testid="character-seg">
+        {([{ id: 'atk', label: 'Ataques', fx: k.right.items[0].fx }, { id: 'class', label: 'Clase', fx: k.cs.fx }] as const).map((o) => (
+          <button key={o.id} role="tab" aria-selected={tab === o.id} aria-label={o.label} title={o.label} onClick={() => setTab(o.id)} data-testid={`seg-${o.id}`}>
+            <ActionIcon fx={o.fx} size={24} color={tab === o.id ? '#1a1206' : undefined} />
+            
+            {o.id === 'class' && pending && <span className="vtab-dot gold">◆</span>}
+          </button>
+        ))}
       </div>
       <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }} data-testid="character-panels">
-        <Segmented full options={[{ id: 'atk', label: 'Ataques' }, { id: 'class', label: classTitle }]} value={tab} onChange={setTab} testId="character-seg" />
         <Panel className="flex-1 min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId={tab === 'class' ? 'character-class' : 'character-atk'}>{tab === 'class' ? path : attacks}</Panel>
       </div>
     </div>
@@ -110,8 +117,8 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
     const upd = () => { const r = el.getBoundingClientRect(); setDim({ w: r.width, h: r.height }); };
     upd(); const ro = new ResizeObserver(upd); ro.observe(el); return () => ro.disconnect();
   }, []);
-  const node = compact ? 44 : 56, big = compact ? 52 : 70, label = compact ? 0 : 22;
-  const R = Math.max(64, Math.min((dim.h - big - label - 12) / 1.62, dim.w / 2 - node / 2 - (compact ? 4 : 60)));
+  const node = compact ? 44 : 64, big = compact ? 52 : 80, label = compact ? 0 : 22;
+  const R = Math.max(64, Math.min((dim.h - big - label - 12) / 1.62, dim.w / 2 - node / 2 - (compact ? 4 : 18)));
   // Si lo que limita es el ancho, se centra en vertical (tableta)
   const usedH = big / 2 + 6 + R * 1.62 + label;
   const cx = dim.w / 2, cy = big / 2 + 6 + R + Math.max(0, (dim.h - usedH) / 2);
@@ -126,11 +133,6 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
     ...k.right.items.map((a, i) => ({ ...a, p: at(rA[i]), size: node })),
     ...k.left.items.map((a, i) => ({ ...a, p: at(lA[i]), size: node })),
   ];
-  const sideLabel = (txt: string, sub: string, x: number, align: 'left' | 'right', color: string) => !compact && (
-    <div className="absolute text-[11px] leading-tight" style={{ [align]: x, bottom: 4, textAlign: align, color }}>
-      <div className="tracking-[0.15em] uppercase">{txt}</div><div className="text-stone-400 normal-case">{sub}</div>
-    </div>
-  );
   return (
     <div ref={box} className="absolute inset-0" data-testid="skill-arc">
       <svg className="absolute inset-0 pointer-events-none" width={dim.w} height={dim.h} aria-hidden>
@@ -149,13 +151,10 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
           <button key={n.id} className="absolute grid place-items-center" style={{ left: n.p.x, top: n.p.y, width: Math.max(44, n.size), height: Math.max(44, n.size), transform: 'translate(-50%, -50%)' }}
             onClick={() => onFocus(on ? null : n.id)} onPointerEnter={(e) => e.pointerType === 'mouse' && onFocus(n.id)} aria-label={`${n.name}: ${n.desc}`} aria-pressed={on} data-testid={`arc-${n.src === 'class' ? 'class' : n.id}`}>
             <span style={{ filter: on ? `drop-shadow(0 0 10px ${C[n.src]})` : undefined }}><Diamond fx={n.fx} color={on ? '#f2c75a' : C[n.src]} size={Math.round(n.size * 0.72)} strong={n.src === 'class' || on} /></span>
-            {!compact && <span className={`absolute left-1/2 -translate-x-1/2 top-full text-[11px] whitespace-nowrap ${on ? 'text-gold' : n.src === 'class' ? 'text-gold' : 'text-stone-300'}`}>{n.src === 'basic' ? `${n.name} · básico` : n.name}</span>}
+            {!compact && <span className={`absolute left-1/2 -translate-x-1/2 top-full text-[12px] whitespace-nowrap ${on ? 'text-gold' : n.src === 'class' ? 'text-gold' : 'text-stone-300'}`}>{n.src === 'basic' ? `${n.name} · básico` : n.name}</span>}
           </button>
         );
       })}
-      {sideLabel('Mano izquierda', k.left.label, 6, 'left', C.offhand)}
-      {sideLabel('Mano derecha', k.right.label, 6, 'right', C.weapon)}
-      {!compact && <div className="absolute left-1/2 -translate-x-1/2 text-[11px] tracking-[0.15em] uppercase text-gold" style={{ top: cy - R + big / 2 + 22 }}>Clase</div>}
     </div>
   );
 }
@@ -165,7 +164,7 @@ function HandHead({ hand, label, itemId, color }: { hand: string; label: string;
   return (
     <h3 className="flex items-center gap-2 mb-1">
       <span className="w-9 h-9 grid place-items-center bg-[#0d0c11] border border-stone-700 shrink-0">{itemId ? <ItemIcon itemId={itemId} size={28} /> : null}</span>
-      <span className="leading-tight"><span className="block text-[11px] tracking-[0.15em] uppercase" style={{ color }}>{hand}</span><span className="text-parchment font-display text-[15px]">{label}</span></span>
+      <span className="leading-tight"><span className="block text-[12px] tracking-[0.15em] uppercase" style={{ color }}>{hand}</span><span className="text-parchment font-display text-[15px]">{label}</span></span>
     </h3>
   );
 }
@@ -175,8 +174,8 @@ function AtkRow({ a, res, focus, onFocus, compact }: { a: Atk; res: string; focu
     <button className={`w-full text-left flex gap-3 items-start p-2 border-2 min-h-[44px] ${on ? 'border-gold bg-[#2a2116]' : 'border-transparent'}`} onClick={() => onFocus(on ? null : a.id)} data-testid={`atk-${a.id}`}>
       <span className="mt-1"><Diamond fx={a.fx} color={C[a.src]} size={24} /></span>
       <span className="min-w-0 flex-1">
-        <span className="flex justify-between gap-2 items-baseline"><span className="font-display text-parchment">{a.name}</span>
-          <span className="text-[11px] text-stone-400 whitespace-nowrap">{a.src === 'basic' ? 'Básico · sin coste' : costText(a, res)}</span></span>
+        <span className="flex justify-between gap-2 items-baseline"><span className="font-display text-parchment min12">{a.name}</span>
+          <span className="text-[12px] text-stone-400 whitespace-nowrap">{a.src === 'basic' ? 'Básico · sin coste' : costText(a, res)}</span></span>
         {(!compact || on) && <span className="block text-[14px] text-stone-300 leading-snug">{a.desc}</span>}
       </span>
     </button>
@@ -227,10 +226,10 @@ function ClassPath({ focus, onFocus }: { focus: string | null; onFocus: (id: str
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">
             <span className={`font-display text-[15px] leading-tight ${locked ? 'text-stone-400' : 'text-parchment'}`}>{s.name}</span>
-            {locked ? <Lock size={12} /> : <span className="text-[11px] text-stone-400 whitespace-nowrap">{costText({ cost: skillCost(s.cost, maxMp, cls.resource), cd: s.cooldown ?? 0 }, res)}</span>}
+            {locked ? <Lock size={12} /> : <span className="text-[12px] text-stone-400 whitespace-nowrap">{costText({ cost: skillCost(s.cost, maxMp, cls.resource), cd: s.cooldown ?? 0 }, res)}</span>}
           </span>
           <span className={`block text-[14px] leading-snug mt-0.5 ${locked ? 'text-stone-500' : 'text-stone-300'}`}>{s.description}</span>
-          {locked && <span className="block text-[11px] text-stone-500 mt-1">{costText({ cost: skillCost(s.cost, maxMp, cls.resource), cd: s.cooldown ?? 0 }, res)}</span>}
+          {locked && <span className="block text-[12px] text-stone-500 mt-1">{costText({ cost: skillCost(s.cost, maxMp, cls.resource), cd: s.cooldown ?? 0 }, res)}</span>}
           {state === 'owned' && <span className="block text-[12px] text-stone-400 mt-1">Toca para equiparla</span>}
           {state === 'choose' && <button className="btn btn-gold py-1 px-3 text-xs min-h-[44px] mt-2" onClick={(e) => { e.stopPropagation(); actions.unlockClassSkill(id); }} data-testid={`btn-unlock-class-${id}`}>Elegir esta</button>}
         </span>
@@ -246,16 +245,16 @@ function ClassPath({ focus, onFocus }: { focus: string | null; onFocus: (id: str
     return { lv, i, st };
   });
   const COLOR: Record<St, string> = { done: C.class, choose: C.class, next: '#a56bff', later: '#3a3741' };
-  const chip = (txt: string, color: string) => <span className="text-[11px] tracking-[0.12em] uppercase whitespace-nowrap" style={{ color }}>{txt}</span>;
+  const chip = (txt: string, color: string) => <span className="text-[12px] tracking-[0.12em] uppercase whitespace-nowrap" style={{ color }}>{txt}</span>;
   return (
     <div className="font-body" data-testid="class-path">
-      <h3 className="text-[11px] tracking-[0.15em] uppercase text-gold mb-1.5">Equipada</h3>
+      <h3 className="text-[12px] tracking-[0.15em] uppercase text-gold mb-1.5">Equipada</h3>
       {card(equipped, 'equipped')}
       <p className="text-[13px] text-stone-400 mt-2">Solo llevas una. Toca otra de las que tengas para cambiarla.</p>
 
       <div className="flex items-baseline justify-between mt-6 mb-3 border-b border-stone-800 pb-1.5">
-        <h3 className="text-[11px] tracking-[0.15em] uppercase text-gold">Camino de hitos</h3>
-        <span className="text-[11px] text-stone-400">{unlocked.length} de {cls.classSkills.length} habilidades</span>
+        <h3 className="text-[12px] tracking-[0.15em] uppercase text-gold">Camino de hitos</h3>
+        <span className="text-[12px] text-stone-400">{unlocked.length} de {cls.classSkills.length} habilidades</span>
       </div>
       <ol className="relative">
         {rows.map(({ lv, i, st }, k) => {
@@ -267,7 +266,7 @@ function ClassPath({ focus, onFocus }: { focus: string | null; onFocus: (id: str
           const marker = (
             <span className="absolute grid place-items-center" style={{ left: 0, top: 1, width: RAIL, height: RAIL }} aria-hidden>
               <span className="absolute rotate-45 border-2" style={{ width: 20, height: 20, borderColor: COLOR[st], background: st === 'done' || st === 'choose' ? '#2a2116' : '#0d0c11', boxShadow: st === 'next' ? '0 0 10px #a56bff88' : undefined }} />
-              <span className={`relative font-display text-[10px] leading-none ${st === 'later' ? 'text-stone-500' : 'text-parchment'}`}>{lv}</span>
+              <span className={`relative font-display text-[12px] leading-none ${st === 'later' ? 'text-stone-500' : 'text-parchment'}`}>{lv}</span>
             </span>
           );
           const head = (txt: ReactNode, right?: ReactNode) => (

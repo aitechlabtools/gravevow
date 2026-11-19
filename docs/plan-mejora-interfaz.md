@@ -1,6 +1,6 @@
 # Plan de mejora visual y de usabilidad de los menús y el HUD
 
-Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0 a 5 hechas** (19/11). Siguiente: maqueta de la fase 6 (menús, fichas, resultados y ajustes).
+Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0 a 6 hechas** (19/11). Siguiente: fase 7 (revisión del conjunto).
 
 Capturas del estado actual en los tres formatos, con los problemas marcados: `mockups/plan-interfaz/index.html`
 (carpeta `mockups/plan-interfaz/actual/`, script `mockups/plan-interfaz/capturar.cjs`). En el índice, cada número rojo es un

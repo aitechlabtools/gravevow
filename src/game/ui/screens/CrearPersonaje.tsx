@@ -124,7 +124,7 @@ export function CrearPersonaje() {
 
         {/* La clase elegida, en grande */}
         <div className="min-h-0 flex flex-col items-center text-center overflow-hidden">
-          <div className="text-[11px] tracking-[0.3em] uppercase text-stone-400">Elige tu clase</div>
+          <div className="text-[12px] tracking-[0.3em] uppercase text-stone-400">Elige tu clase</div>
           <h1 className="font-display text-parchment leading-none mt-1" style={{ fontSize: phone ? 24 : 40 }} data-testid="create-class-name">
             <span className="text-gold">{cname(cls)[0]}</span>{cname(cls).slice(1)}
           </h1>
@@ -148,14 +148,14 @@ export function CrearPersonaje() {
             </div>
             <div className="absolute left-0 right-0 bottom-0 flex justify-center gap-3 pointer-events-none" aria-hidden>
               {(['front', 'back'] as const).map((v) => (
-                <span key={v} className={`text-[10px] tracking-[0.2em] uppercase ${view === v ? 'text-gold' : 'text-stone-500'}`}>{v === 'front' ? 'Frente' : 'Espalda'}</span>
+                <span key={v} className={`text-[12px] tracking-[0.2em] uppercase ${view === v ? 'text-gold' : 'text-stone-500'}`}>{v === 'front' ? 'Frente' : 'Espalda'}</span>
               ))}
             </div>
           </div>
         </div>
 
         {/* Sobre la clase */}
-        <Panel title="Sobre la clase" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin font-body" testId="class-about">
+        <Panel title="Sobre la clase" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin font-body min12" testId="class-about">
           <p className="text-parchment leading-snug" style={{ fontSize: phone ? 13 : 16 }}>{def.description}</p>
           <div className="mt-3">
             <div className="font-display text-gold text-sm">Arma preferida</div>
@@ -184,7 +184,7 @@ export function CrearPersonaje() {
       <div className="grid items-end" style={{ gridTemplateColumns: `${side}px minmax(0,1fr) ${side}px`, gap: 'var(--gap)' }}>
         <button className="btn cta text-base self-stretch" style={{ fontSize: phone ? 14 : 18, letterSpacing: '.1em' }} onClick={() => (hasRoster ? void actions.openSelect() : actions.goto('title'))} data-testid="btn-create-back">Volver</button>
         <label className="flex flex-col items-center justify-self-center w-full max-w-sm">
-          {!phone && <span className="text-[11px] tracking-[0.25em] uppercase text-stone-400 mb-1">Nombre del personaje</span>}
+          {!phone && <span className="text-[12px] tracking-[0.25em] uppercase text-stone-400 mb-1">Nombre del personaje</span>}
           <div className="flex w-full gap-1">
             <input data-testid="name-input" value={name} maxLength={18} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && create()}
               placeholder={phone ? 'Nombre del personaje' : 'Escribe un nombre'} aria-label="Nombre del personaje"
@@ -231,7 +231,7 @@ function useFitScale(ref: React.RefObject<HTMLDivElement | null>, min: number): 
 function Swatches({ label, names, colors, value, onChange, testId }: { label: string; names: string[]; colors: string[]; value: number; onChange: (i: number) => void; testId: string }) {
   return (
     <div className="mt-2">
-      <div className="text-[11px] tracking-[0.2em] uppercase text-stone-400 mb-1">{label}: <span className="text-stone-200 normal-case tracking-normal">{names[value]}</span></div>
+      <div className="text-[12px] tracking-[0.2em] uppercase text-stone-400 mb-1">{label}: <span className="text-stone-200 normal-case tracking-normal">{names[value]}</span></div>
       <div className="flex flex-wrap gap-1.5">
         {colors.map((c, i) => (
           <button key={c} aria-label={`${label}: ${names[i]}`} aria-pressed={value === i} onClick={() => onChange(i)} data-testid={`${testId}-${i}`}
@@ -258,7 +258,7 @@ function StartingSkills({ classId }: { classId: ClassId }) {
 function Heads({ label, names, value, onChange, make, testId, extra }: { label: string; names: string[]; value: number; onChange: (i: number) => void; make: (i: number) => string; testId: string; extra?: React.ReactNode }) {
   return (
     <div className="mt-2">
-      <div className="text-[11px] tracking-[0.2em] uppercase text-stone-400 mb-1">{label}: <span className="text-stone-200 normal-case tracking-normal">{names[value]}</span></div>
+      <div className="text-[12px] tracking-[0.2em] uppercase text-stone-400 mb-1">{label}: <span className="text-stone-200 normal-case tracking-normal">{names[value]}</span></div>
       <div className="flex flex-wrap gap-1.5">
         {names.map((n, i) => (
           <button key={n} aria-label={`${label}: ${n}`} aria-pressed={value === i} onClick={() => onChange(i)} data-testid={`${testId}-${i}`}

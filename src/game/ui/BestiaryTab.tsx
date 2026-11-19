@@ -64,8 +64,11 @@ export function BestiaryTab() {
               <button key={g.zone} role="tab" aria-selected={zone === g.zone} className={`bzone ${zone === g.zone ? 'on' : ''}`} onClick={() => { setZone(g.zone); sfx('click'); }}
                 aria-label={ZONES[g.zone].name} data-testid={`bestiary-zone-${g.zone}`}>
                 <span className="bzone-sw" style={{ backgroundImage: `url(${tile})` }} />
-                <span className="bzone-name">{ZONES[g.zone].name}</span>
-                <span className="text-[12px] opacity-70">{known}/{g.ids.length}</span>
+                <span className="bzone-txt">
+                  <span className="bzone-name">{ZONES[g.zone].name}</span>
+                  <span className="bzone-bar" aria-hidden><i style={{ width: `${(known / g.ids.length) * 100}%` }} /></span>
+                </span>
+                <span className="bzone-n">{known}/{g.ids.length}</span>
               </button>
             );
           })}

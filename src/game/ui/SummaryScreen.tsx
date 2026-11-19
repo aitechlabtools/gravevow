@@ -61,13 +61,13 @@ export function SummaryScreen() {
   const last = page === pages;
   return (
     <div className="h-full flex flex-col select-none" data-testid="summary" data-page={page} data-pages={pages}
-      style={{ background: ok ? 'radial-gradient(ellipse at 50% 20%, #2a2140 0%, #0b0910 60%)' : 'radial-gradient(ellipse at 50% 20%, #3a1018 0%, #0b0608 60%)',
+      style={{ background: ok ? 'radial-gradient(ellipse at 50% 20%, #24211c 0%, #0b0a0d 60%)' : 'radial-gradient(ellipse at 50% 20%, #3a1018 0%, #0b0608 60%)',
         padding: 'max(var(--pad), env(safe-area-inset-top)) max(var(--pad), env(safe-area-inset-right)) max(var(--pad), env(safe-area-inset-bottom)) max(var(--pad), env(safe-area-inset-left))', touchAction: 'pan-y' }}
       onPointerDown={(e) => { sx.current = e.clientX; }}
       onPointerUp={(e) => { if (sx.current !== null) { const d = e.clientX - sx.current; if (d < -60) next(); else if (d > 60) prev(); } sx.current = null; }}
       onPointerCancel={() => { sx.current = null; }}>
       <div className="flex items-center justify-between" style={{ minHeight: 44 }}>
-        <span className="text-[11px] tracking-[0.25em] uppercase text-stone-400 w-44 whitespace-nowrap">{page > 1 ? title : ''}</span>
+        <span className="text-[12px] tracking-[0.25em] uppercase text-stone-400 w-44 whitespace-nowrap">{page > 1 ? title : ''}</span>
         <div className="flex gap-2 items-center" role="status" aria-label={`Página ${page} de ${pages}`} data-testid="summary-dots">
           {Array.from({ length: pages }, (_, i) => <span key={i} className={`inline-block w-2.5 h-2.5 rotate-45 ${i + 1 === page ? 'bg-gold' : 'bg-stone-600'}`} />)}
         </div>
@@ -134,7 +134,7 @@ function PageRun({ phone, title, ok }: { phone: boolean; title: string; ok: bool
         )}
         {kills.length > 0 && (
           <div className={phone ? 'mt-2' : 'mt-5'}>
-            <div className="text-[11px] tracking-[0.2em] uppercase text-stone-400 mb-1">Criaturas abatidas</div>
+            <div className="text-[12px] tracking-[0.2em] uppercase text-stone-400 mb-1">Criaturas abatidas</div>
             <div className={`flex flex-wrap gap-2 ${phone ? '' : 'justify-center'}`} data-testid="summary-kills">
               {kills.map(([id, n]) => {
                 const e = getEnemy(id); const big = e.boss || e.elite;
@@ -195,7 +195,7 @@ function PageLoot({ phone, ok }: { phone: boolean; ok: boolean }) {
         <div>
           {!!summary.saved?.length && (
             <>
-              <div className="text-[11px] tracking-[0.2em] uppercase text-heal mb-1">A salvo en el bolsillo</div>
+              <div className="text-[12px] tracking-[0.2em] uppercase text-heal mb-1">A salvo en el bolsillo</div>
               <div className="flex gap-2 justify-center" data-testid="summary-saved">
                 {summary.saved.map((s) => <div key={s.uid} className="slot" style={{ borderColor: RARITY_INFO[stackRarity(s, getItem(s.itemId))].color }} title={getItem(s.itemId).name}><ItemIcon itemId={s.itemId} size={32} />{s.qty > 1 && <span className="qty">{s.qty}</span>}</div>)}
               </div>
