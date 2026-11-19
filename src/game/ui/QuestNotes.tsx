@@ -130,16 +130,15 @@ export function QuestNote({ p, mode, selected, onOpen, showVendor = true }: { p:
 }
 
 /** Hueco libre del tablón (llevas menos de 5): lleva al Bastión, donde los mercaderes dan encargos. */
-export function EmptySlot({ onGo }: { onGo?: () => void }) {
+export function EmptySlot() {
   return (
-    <button type="button" className="qnote empty" onClick={() => { onGo?.(); sfx('click'); }} data-testid="quest-empty">
+    <div className="qnote empty" data-testid="quest-empty">
       <span className="qn-hold"><Px src={nailIcon(2)} /></span>
-      <span className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-3 py-4">
+      <span className="flex-1 flex flex-col items-center justify-center gap-2 text-center px-3 py-3">
         <span className="font-display text-[15px] text-stone-300 tracking-[0.06em] uppercase">Hueco libre</span>
-        <span className="qe-hint font-body text-[15px] text-stone-400 leading-snug">Habla con un mercader del Bastión</span>
-        {onGo && <span className="btn text-[13px] font-display tracking-[0.1em] uppercase" style={{ minHeight: 44, display: 'inline-grid', placeItems: 'center', padding: '0 14px' }}>Ir al Bastión ▸</span>}
+        <span className="qe-hint font-body text-[14px] text-stone-400 leading-snug">Acepta un encargo del tablón</span>
       </span>
-    </button>
+    </div>
   );
 }
 
@@ -215,7 +214,7 @@ export function BoardNotes({ vendor, showVendor = true }: { vendor: VendorId; sh
           </button>
         )}
       </div>
-      {!fresh.length && !stale.length && <p className="font-body text-lg text-stone-400 italic">No tiene encargos para ti ahora mismo. Vuelve cuando seas más fuerte.</p>}
+      {!fresh.length && !stale.length && <p className="qboard-none font-body text-stone-400 italic" data-testid={`quests-none-${vendor}`}>Sin encargos para ti ahora mismo. Vuelve más adelante o cuando seas más fuerte.</p>}
     </div>
   );
 }

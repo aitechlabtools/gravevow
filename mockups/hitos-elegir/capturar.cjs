@@ -1,0 +1,2 @@
+const {chromium}=require('playwright');const p=require('path');
+(async()=>{const b=await chromium.launch();for(const[s,w,h]of[['escritorio',1280,900],['tableta',1180,820],['movil',390,844]])for(const q of['','?sel=0']){const pg=await b.newPage({viewport:{width:w,height:h}});await pg.goto('file://'+p.join(__dirname,'index.html')+q);await pg.screenshot({path:p.join(__dirname,'capturas',`${s}${q?'-elegida':''}.png`),fullPage:true});await pg.close();}await b.close();})();

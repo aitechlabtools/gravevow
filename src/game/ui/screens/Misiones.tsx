@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useGame } from '../../state/store';
 import { VENDORS, VENDOR_ORDER, type VendorId } from '../../../core/data/vendors';
-import { MAX_ACTIVE_QUESTS } from '../../../core/data/quests';
+import { MAX_ACTIVE_QUESTS, QUESTS } from '../../../core/data/quests';
 import { activeQuests, boardQuests, isComplete, isOldQuest } from '../../../core/quests';
 import { useLayout } from '../../../config/ui';
 import { Modal } from '../common';
@@ -13,7 +13,7 @@ import { BoardNotes, EmptySlot, MiniBust, QuestDetail, QuestDetailOverlay, Quest
 
 export const QUESTS_HELP = 'Las misiones de caza, cofres y extracción avanzan al terminar cada expedición. Las entregas se cobran con lo que tengas en la mochila y el alijo. Fija una para tenerla presente en la mazmorra. Si dejas una misión, pierdes lo que llevabas.';
 
-export function Misiones({ onBastion }: { onBastion?: () => void }) {
+export function Misiones(_props: { onBastion?: () => void }) {
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
@@ -24,10 +24,11 @@ export function Misiones({ onBastion }: { onBastion?: () => void }) {
   const openP = active.find((p) => p.id === open) ?? null;
   useEffect(() => { if (open && !openP) setOpen(null); }, [open, openP]); // cobrada o dejada: se cierra
   const side = !!openP && !phone;
+  const fit = layout !== 'tablet'; // escritorio: todo cabe sin desplazar; móvil: dos columnas, cada una con su desplazamiento; tableta: la pantalla se desplaza
   return (
-    <div className="h-full overflow-y-auto scroll-thin qscreen" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-quests">
-      <div className="mx-auto max-w-[1800px] flex flex-col" style={{ gap: 'var(--gap)' }}>
-        <div className={`grid ${side ? 'qwrap-side' : ''}`} style={{ gap: 'var(--gap)' }}>
+    <div className={`h-full qscreen ${fit ? 'fit' : 'overflow-y-auto scroll-thin'}`} style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-quests">
+      <div className={`mx-auto w-full max-w-[1800px] flex flex-col ${fit ? 'flex-1 min-h-0' : ''}`} style={{ gap: 'var(--gap)' }}>
+        <div className={`grid flex-none ${side ? 'qwrap-side' : ''}`} style={{ gap: 'var(--gap)' }}>
           <section className="panel qboard" data-testid="quests-active">
             <div className="phead">
               <span className="phead-t">Tus misiones</span>
@@ -37,13 +38,13 @@ export function Misiones({ onBastion }: { onBastion?: () => void }) {
             <div className="qboard-in">
               <div className={`qgrid ${side ? 'narrow' : ''}`}>
                 {active.map((p) => <QuestNote key={p.id} p={p} mode="active" selected={open === p.id} onOpen={() => setOpen(open === p.id ? null : p.id)} />)}
-                {Array.from({ length: Math.max(0, MAX_ACTIVE_QUESTS - active.length) }, (_, i) => <EmptySlot key={i} onGo={onBastion} />)}
+                {Array.from({ length: Math.max(0, MAX_ACTIVE_QUESTS - active.length) }, (_, i) => <EmptySlot key={i} />)}
               </div>
             </div>
           </section>
           {side && <QuestDetail p={openP!} side onClose={() => setOpen(null)} />}
         </div>
-        <Available />
+        <Available fit={fit} />
       </div>
       {openP && phone && <QuestDetailOverlay p={openP} onClose={() => setOpen(null)} />}
       {help && (
@@ -57,31 +58,33 @@ export function Misiones({ onBastion }: { onBastion?: () => void }) {
   );
 }
 
-/** Tablón de encargos: un selector de mercader y sus encargos como notas con «Aceptar». */
-function Available() {
+/** Tablón de encargos: siempre visible, con todos los mercaderes que dan encargos (los que no tienen ahora salen apagados). */
+const QUEST_VENDORS = VENDOR_ORDER.filter((id) => QUESTS.some((q) => q.vendor === id));
+function Available({ fit }: { fit: boolean }) {
   const profile = useGame((s) => s.profile)!;
-  const order = VENDOR_ORDER.filter((id) => boardQuests(profile, id).length > 0);
-  const [vid, setVid] = useState<VendorId | null>(order[0] ?? null);
-  const cur = vid && order.includes(vid) ? vid : order[0];
-  if (!cur) return null;
+  const lv = profile.character.level;
+  const count = (id: VendorId) => boardQuests(profile, id).filter((p) => !isOldQuest(p.id, lv)).length;
+  const total = (id: VendorId) => boardQuests(profile, id).length;
+  const first = QUEST_VENDORS.find((id) => count(id) > 0) ?? QUEST_VENDORS.find((id) => total(id) > 0) ?? QUEST_VENDORS[0];
+  const [vid, setVid] = useState<VendorId>(first);
   return (
-    <section className="panel qboard" data-testid="quests-board">
-      <div className="phead">
+    <section className={`panel qboard flex flex-col ${fit ? 'flex-1 min-h-0' : ''}`} data-testid="quests-board">
+      <div className="phead flex-none">
         <span className="phead-t">Tablón de encargos</span>
         <span className="text-[14px] text-stone-400 font-body hidden md:inline">Lo que ofrece cada mercader</span>
       </div>
-      <div className="flex gap-2 flex-wrap px-3 pt-3" role="tablist">
-        {order.map((id) => {
-          const v = VENDORS[id];
-          const n = boardQuests(profile, id).filter((p) => !isOldQuest(p.id, profile.character.level)).length;
+      <div className="qvchips flex-none" role="tablist">
+        {QUEST_VENDORS.map((id) => {
+          const v = VENDORS[id]; const n = count(id); const none = total(id) === 0;
           return (
-            <button key={id} role="tab" aria-selected={cur === id} className={`qvchip ${cur === id ? 'on' : ''}`} onClick={() => { setVid(id); sfx('click'); }} data-testid={`quests-${id}`}>
-              <MiniBust sprite={v.sprite} scale={2} /><span className="font-display text-[14px] tracking-[0.06em]" style={{ color: cur === id ? '#120f0a' : v.color }}>{v.name}</span><span className="qvchip-n">{n}</span>
+            <button key={id} role="tab" aria-selected={vid === id} className={`qvchip ${vid === id ? 'on' : ''} ${none ? 'none' : ''}`} onClick={() => { setVid(id); sfx('click'); }} data-testid={`quests-${id}`} title={none ? `${v.name}: sin encargos` : v.name}>
+              <MiniBust sprite={v.sprite} scale={2} /><span className="qvchip-name font-display text-[14px] tracking-[0.06em]" style={{ color: vid === id ? '#120f0a' : none ? '#78716c' : v.color }}>{v.name}</span>
+              {none ? <span className="qvchip-none">sin encargos</span> : <span className="qvchip-n">{n}</span>}
             </button>
           );
         })}
       </div>
-      <BoardNotes vendor={cur} />
+      <div className={fit ? 'flex-1 min-h-0 overflow-y-auto scroll-thin' : ''}><BoardNotes vendor={vid} /></div>
     </section>
   );
 }

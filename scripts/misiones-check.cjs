@@ -58,10 +58,10 @@ require('fs').mkdirSync(OUT, { recursive: true });
   await tap('[data-testid=quests-help]');
   ok(/Si dejas una misión/.test(await p.textContent('[data-testid=quests-help-modal]')), 'el «?» explica cómo funcionan');
   await tap('[data-testid=quests-help-ok]');
-  // Hueco libre: lleva al Bastión
-  await tap('[data-testid=quest-empty]');
-  await p.waitForSelector('[data-testid=screen-merchants]');
-  ok(true, '«Ir al Bastión» abre el Bastión');
+  // El tablón sigue a la vista con todos los mercaderes que dan encargos
+  ok(!!(await p.$('[data-testid=quests-board]')) && !!(await p.$('[data-testid=quests-active]')), 'tus misiones y el tablón se ven juntos');
+  if (!DEV) ok(!(await p.$eval('[data-testid=screen-quests]', (e) => e.scrollHeight > e.clientHeight + 2)), 'en escritorio la pantalla no necesita desplazarse');
+  await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=screen-merchants]');
   // Pestaña Misiones del mercader: las mismas notas
   await tap('[data-testid=vendor-vesper]');
   await tap('[data-testid=vendor-view-quests]');

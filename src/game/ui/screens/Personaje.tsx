@@ -181,22 +181,13 @@ function AtkRow({ a, res, focus, onFocus, compact }: { a: Atk; res: string; focu
     </button>
   );
 }
-function StashLink({ onStash }: { onStash?: () => void }) {
-  return (
-    <div className="border-t border-stone-700 pt-3 mt-1 flex items-center justify-between gap-3 flex-wrap">
-      <span className="text-[13px] text-stone-400 italic">Los ataques dependen de tus armas.</span>
-      <button className="btn py-1 px-3 text-sm min-h-[44px]" onClick={onStash} data-testid="btn-change-weapons">Cambiar armas en el Alijo</button>
-    </div>
-  );
-}
-function Attacks({ k, focus, onFocus, onStash }: { k: ReturnType<typeof useKit>; focus: string | null; onFocus: (id: string | null) => void; onStash?: () => void }) {
+function Attacks({ k, focus, onFocus }: { k: ReturnType<typeof useKit>; focus: string | null; onFocus: (id: string | null) => void; onStash?: () => void }) {
   return (
     <div className="font-body space-y-4" data-testid="character-attacks">
       <section><HandHead hand="Mano derecha" label={k.right.label} itemId={k.right.itemId} color={C.weapon} />{k.right.items.map((a) => <AtkRow key={a.id} a={a} res={k.res} focus={focus} onFocus={onFocus} />)}</section>
       <section><HandHead hand="Mano izquierda" label={k.left.label} itemId={k.left.itemId} color={C.offhand} />
         {k.left.two ? <p className="text-[14px] text-stone-400 italic px-2">Ocupada por el arma a dos manos: sus cuatro ataques están arriba.</p> : k.left.items.map((a) => <AtkRow key={a.id} a={a} res={k.res} focus={focus} onFocus={onFocus} />)}
       </section>
-      <StashLink onStash={onStash} />
     </div>
   );
 }
@@ -217,21 +208,27 @@ function ClassPath({ focus, onFocus }: { focus: string | null; onFocus: (id: str
   const frac = nextLv ? Math.min(1, (ch.level - prevLv + ch.xp / xpForNextLevel(ch.level)) / (nextLv - prevLv)) : 1;
 
   // Tarjeta de una habilidad: equipada (grande), desbloqueada (toca para equiparla), candidata a elegir o bloqueada (gris)
+  const [pick, setPick] = useState<string | null>(null);
+  const tags = (s: ReturnType<typeof getSkill>) => (
+    <span className="flex gap-1.5 shrink-0" aria-label={costText({ cost: skillCost(s.cost, maxMp, cls.resource), cd: s.cooldown ?? 0 }, res)}>
+      <span className="text-[12px] text-stone-400 border border-stone-700 px-1.5 leading-[20px] whitespace-nowrap">⚡ {skillCost(s.cost, maxMp, cls.resource)}</span>
+      {(s.cooldown ?? 0) > 0 && <span className="text-[12px] text-stone-400 border border-stone-700 px-1.5 leading-[20px] whitespace-nowrap">⟳ {s.cooldown}</span>}
+    </span>
+  );
   const card = (id: string, state: 'equipped' | 'owned' | 'choose' | 'locked') => {
-    const s = getSkill(id); const on = focus === id; const locked = state === 'locked';
+    const s = getSkill(id); const on = focus === id; const locked = state === 'locked'; const sel = state === 'choose' && pick === id;
     return (
-      <div key={id} className={`flex gap-3 items-start p-2.5 border-2 ${state === 'equipped' ? 'border-gold bg-[#2a2116]' : state === 'choose' ? 'border-[#a56bff] bg-[#1a1424]' : on ? 'border-stone-500' : locked ? 'border-[#1f1d24] bg-[#0b0a0e]' : 'border-stone-700 bg-[#0d0c11]'} ${state === 'owned' ? 'cursor-pointer hover:border-stone-500' : ''}`}
-        onClick={() => { if (state === 'owned') actions.equipClassSkill(id); onFocus(id); }} data-testid={`class-skill-${id}`} data-state={state}>
+      <div key={id} className={`flex gap-3 items-start p-2.5 border-2 ${state === 'equipped' || sel ? 'border-gold bg-[#2a2116]' : state === 'choose' ? 'border-[#a56bff] bg-[#1a1424] cursor-pointer min-h-[44px]' : on ? 'border-stone-500' : locked ? 'border-[#1f1d24] bg-[#0b0a0e]' : 'border-stone-700 bg-[#0d0c11]'} ${state === 'owned' ? 'cursor-pointer hover:border-stone-500' : ''}`}
+        onClick={() => { if (state === 'owned') actions.equipClassSkill(id); if (state === 'choose') { setPick(id); return; } onFocus(id); }} role={state === 'choose' ? 'button' : undefined} aria-pressed={state === 'choose' ? sel : undefined} data-testid={`class-skill-${id}`} data-state={state}>
         <span className={`grid place-items-center shrink-0 ${state === 'equipped' ? 'w-11 h-11 my-0.5' : 'w-8 h-8'} ${locked ? 'grayscale opacity-45' : ''}`}><Diamond fx={s.fx ?? 'holy'} color={C.class} size={state === 'equipped' ? 22 : 20} strong={state === 'equipped'} /></span>
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">
             <span className={`font-display text-[15px] leading-tight ${locked ? 'text-stone-400' : 'text-parchment'}`}>{s.name}</span>
-            {locked ? <Lock size={12} /> : <span className="text-[12px] text-stone-400 whitespace-nowrap">{costText({ cost: skillCost(s.cost, maxMp, cls.resource), cd: s.cooldown ?? 0 }, res)}</span>}
+            {locked ? <Lock size={12} /> : tags(s)}
           </span>
           <span className={`block text-[14px] leading-snug mt-0.5 ${locked ? 'text-stone-500' : 'text-stone-300'}`}>{s.description}</span>
           {locked && <span className="block text-[12px] text-stone-500 mt-1">{costText({ cost: skillCost(s.cost, maxMp, cls.resource), cd: s.cooldown ?? 0 }, res)}</span>}
           {state === 'owned' && <span className="block text-[12px] text-stone-400 mt-1">Toca para equiparla</span>}
-          {state === 'choose' && <button className="btn btn-gold py-1 px-3 text-xs min-h-[44px] mt-2" onClick={(e) => { e.stopPropagation(); actions.unlockClassSkill(id); }} data-testid={`btn-unlock-class-${id}`}>Elegir esta</button>}
         </span>
       </div>
     );
@@ -250,11 +247,10 @@ function ClassPath({ focus, onFocus }: { focus: string | null; onFocus: (id: str
     <div className="font-body" data-testid="class-path">
       <h3 className="text-[12px] tracking-[0.15em] uppercase text-gold mb-1.5">Equipada</h3>
       {card(equipped, 'equipped')}
-      <p className="text-[13px] text-stone-400 mt-2">Solo llevas una. Toca otra de las que tengas para cambiarla.</p>
 
       <div className="flex items-baseline justify-between mt-6 mb-3 border-b border-stone-800 pb-1.5">
         <h3 className="text-[12px] tracking-[0.15em] uppercase text-gold">Camino de hitos</h3>
-        <span className="text-[12px] text-stone-400">{unlocked.length} de {cls.classSkills.length} habilidades</span>
+        <span className="text-[12px] text-stone-400">{unlocked.length} de {cls.classSkills.length}</span>
       </div>
       <ol className="relative">
         {rows.map(({ lv, i, st }, k) => {
@@ -277,17 +273,19 @@ function ClassPath({ focus, onFocus }: { focus: string | null; onFocus: (id: str
           let body: ReactNode = null;
           if (st === 'done') {
             body = <>
-              {head(<>Nivel {lv}</>, chip(id === equipped ? 'Elegida · equipada' : 'Elegida', C.class))}
               {id === equipped
-                ? <div className="flex items-center gap-2 px-2.5 py-2 border border-[#3a2f1c] bg-[#15120d]"><Diamond fx={getSkill(id).fx ?? 'holy'} color={C.class} size={14} /><span className="font-display text-[14px] text-gold">{getSkill(id).name}</span><span className="text-[12px] text-stone-400 ml-auto">arriba</span></div>
-                : card(id, 'owned')}
+                ? head(<>Nivel {lv} <span className="font-body text-[14px] text-gold">· {getSkill(id).name} ✓</span></>)
+                : <>{head(<>Nivel {lv}</>, chip('Elegida', C.class))}{card(id, 'owned')}</>}
             </>;
           } else if (st === 'choose') {
             body = i > unlocked.length
               ? <>{head(<>Nivel {lv}</>, chip('Por elegir', C.class))}<p className="text-[14px] text-stone-400 italic">Elige primero la del hito anterior; luego te tocará esta.</p></>
               : <>{head(<>Nivel {lv}</>, chip('¡Elige ya!', C.class))}
-                  <p className="text-[14px] text-gold mb-2">{remaining.length > 1 ? 'Hito alcanzado. Elige 1; las demás seguirán esperando al próximo hito.' : 'Hito alcanzado. La última habilidad de tu clase te espera.'}</p>
-                  <div className="space-y-2">{remaining.map((r) => card(r, 'choose'))}</div></>;
+                  <p className="text-[13px] text-stone-400 mb-2">{remaining.length > 1 ? 'Elige 1 · las demás no se pierden' : 'La última habilidad de tu clase'}</p>
+                  <div className="space-y-2">{remaining.map((r) => card(r, 'choose'))}</div>
+                  <button className="btn btn-gold w-full min-h-[44px] mt-3 sticky bottom-0 disabled:opacity-60 disabled:bg-stone-700 disabled:text-stone-400" disabled={!pick || !remaining.includes(pick)}
+                    onClick={() => { if (pick) { actions.unlockClassSkill(pick); setPick(null); } }} data-testid={pick ? `btn-unlock-class-${pick}` : 'btn-unlock-class'}>
+                    {pick && remaining.includes(pick) ? `Elegir ${getSkill(pick).name}` : 'Toca una habilidad'}</button></>;
           } else if (st === 'next') {
             body = <>
               {head(<>Nivel {lv}</>, chip(lv - ch.level === 1 ? 'Te falta 1 nivel' : `Te faltan ${lv - ch.level} niveles`, '#c79bff'))}

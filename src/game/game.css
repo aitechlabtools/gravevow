@@ -838,7 +838,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .qn-rewards[data-big] { font-size: 20px; }
 .qn-rw { font-family: var(--font-body); font-size: 15px; color: #8c8693; }
 .qn-cta { margin: 0 10px 14px; min-height: 48px; letter-spacing: .1em; text-transform: uppercase; }
-.qnote.empty { background: transparent; border: 2px dashed #3a3741; box-shadow: none; cursor: pointer; clip-path: none; min-height: 280px; }
+.qnote.empty { background: transparent; border: 2px dashed #3a3741; box-shadow: none; cursor: pointer; clip-path: none; min-height: 140px; align-self: stretch; }
 .qnote.empty::after { display: none; }
 .qnote.empty.old { min-height: 160px; align-self: stretch; }
 .qdetail { display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 2px solid var(--color-gold); box-shadow: inset 0 0 0 1px #07060a, 0 0 0 1px #07060a; }
@@ -847,6 +847,14 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .qd-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #2a2830; }
 .qvchip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px 0 6px; background: #0d0c11b3; border: 1px solid #ffffff1a; }
 .qvchip.on { background: var(--color-parchment); border-color: var(--color-parchment); }
+.qvchips { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 12px 0; }
+.qvchip.none { opacity: .7; border-style: dashed; }
+.qvchip.none.on { opacity: 1; }
+.qvchip-none { font-family: var(--font-body); font-size: 12px; color: #a8a29e; font-style: italic; }
+.qvchip.on .qvchip-none { color: #3a3330; }
+.qboard-none { font-size: 16px; padding: 8px 0; }
+.qnote.empty { cursor: default; }
+.qnote.empty:not(.old):hover { filter: none; }
 .qvchip-n { font-family: var(--font-display); font-size: 12px; min-width: 20px; height: 20px; display: grid; place-items: center; background: #07060a; color: var(--color-gold); }
 @media (max-height: 520px) {
   .phead { min-height: 44px; padding: 0 8px; }
@@ -1158,3 +1166,23 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 
 body:has([data-detail-built]) [data-testid=vendor-side],body:has([data-detail-built]) [data-testid=vendor-side-open]{display:none}
 body:has([data-craft-built]) [data-testid=vendor-side],body:has([data-craft-built]) [data-testid=vendor-side-open]{display:none}
+/* Misiones: el selector de mercaderes en una sola fila con desplazamiento lateral en móvil */
+.qnote.empty.old { cursor: pointer; }
+@media (max-height: 500px) { .qvchips { flex-wrap: nowrap; overflow-x: auto; padding: 8px 8px 0; } .qvchip { flex: none; } }
+/* Misiones (escritorio): tus misiones y el tablón en una pantalla; el tablón ocupa el resto y desplaza solo sus notas */
+.qscreen.fit { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+/* Misiones (móvil): Tus misiones a la izquierda y el tablón a la derecha, cada columna con su desplazamiento */
+@media (max-height: 520px) {
+  .qscreen.fit > div { flex-direction: row !important; }
+  .qscreen.fit > div > .grid { flex: 1 1 0; min-height: 0; min-width: 0; display: flex; }
+  .qscreen.fit [data-testid=quests-active] { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .qscreen.fit [data-testid=quests-active] .qboard-in { flex: 1; min-height: 0; overflow-y: auto; }
+  .qscreen.fit [data-testid=quests-active] .qgrid, .qscreen.fit [data-testid=quests-board] .qgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .qscreen.fit [data-testid=quests-active] .qn-art { display: none; }
+  .qscreen.fit [data-testid=quests-board] { flex: 1 1 0; min-width: 0; }
+  .qscreen.fit [data-testid=quests-board] .qn-art { display: none; }
+  .qscreen.fit .qvchips { flex-wrap: nowrap; overflow-x: auto; padding: 8px 8px 0; }
+  .qscreen.fit .qvchip { flex: none; }
+  .qscreen.fit .qvchip-name, .qscreen.fit .qnote.empty .qe-hint { display: none; }
+  .qscreen.fit .qnote.empty { min-height: 90px; }
+}

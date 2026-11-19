@@ -1,0 +1,54 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hitos · elegir habilidad</title>
+<style>
+:root{--gold:#d8a531;--parch:#e8dcc0;--s3:#d6d3d1;--s4:#a8a29e;--s5:#78716c;--arc:#a56bff}
+*{box-sizing:border-box}body{margin:0;background:#0d0c11;color:var(--parch);font-family:Georgia,serif;padding:16px}
+.wrap{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.col{flex:1 1 340px;max-width:440px}.lbl{font:600 12px sans-serif;letter-spacing:.15em;color:var(--s4);text-transform:uppercase;margin-bottom:8px}
+.panel{border:1px solid #2e2b35;background:#121016;padding:14px}
+h3{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin:0 0 6px;font-weight:400}
+.disp{font-variant:small-caps;font-size:17px}
+.card{display:flex;gap:10px;border:1px solid #3a2f1c;background:#15120d;padding:10px}
+.eq{border-color:var(--gold);background:#2a2116}
+.dia{width:20px;height:20px;transform:rotate(45deg);border:2px solid var(--gold);margin:6px;flex:none}
+.cost{font-size:12px;color:var(--s4);white-space:nowrap}.desc{font-size:14px;color:var(--s3);margin-top:2px}
+.tags{display:flex;gap:6px}.tag{font:12px sans-serif;color:var(--s4);border:1px solid #3a3741;padding:2px 6px;white-space:nowrap}
+.rail{position:relative;padding-left:40px}.mk{position:absolute;left:4px;top:4px;width:20px;height:20px;transform:rotate(45deg);border:2px solid var(--gold);background:#2a2116}
+.mk span{display:block;transform:rotate(-45deg);font-size:12px;text-align:center;line-height:16px}
+.line{position:absolute;left:13px;top:28px;bottom:-16px;width:2px;background:var(--gold)}
+.row{display:flex;justify-content:space-between;align-items:center;min-height:30px}.chip{font:12px sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.pick{border:1px solid #6b4bb0;background:#15121c;padding:10px;display:flex;gap:10px;cursor:pointer;min-height:44px;width:100%;text-align:left;color:inherit;font:inherit}
+.pick.sel{border:2px solid var(--gold);background:#2a2116;box-shadow:0 0 12px #d8a53155}
+.btn{background:var(--gold);color:#1a1205;border:0;font:600 14px sans-serif;padding:0 16px;min-height:44px}
+.cta{position:sticky;bottom:0;margin-top:12px;width:100%}.cta:disabled{background:#3a3741;color:var(--s5)}
+.mini{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--gold);min-height:30px}
+.tip{font:13px sans-serif;color:var(--s4);margin-top:6px}
+.stack>*+*{margin-top:8px}.mb{margin-bottom:14px}
+</style></head><body><div class="wrap">
+
+<div class="col"><div class="lbl">Antes</div><div class="panel">
+<h3>Equipada</h3><div class="card eq"><div class="dia"></div><div style="flex:1"><div class="row"><span class="disp">Grito de guerra</span><span class="cost">4 ímpetu · recarga 4</span></div><div class="desc">Tu rabia sube: causas un 30% más de daño durante 3 turnos.</div></div></div>
+<p class="tip">Solo llevas una. Toca otra de las que tengas para cambiarla.</p>
+<h3 style="margin-top:18px">Camino de hitos</h3>
+<div class="rail mb"><div class="mk"><span>1</span></div><div class="line"></div><div class="row"><span class="disp">Nivel 1</span><span class="chip">Elegida · equipada</span></div><div class="card"><span class="disp" style="font-size:14px;color:var(--gold)">Grito de guerra</span><span class="cost" style="margin-left:auto">arriba</span></div></div>
+<div class="rail"><div class="mk"><span>20</span></div><div class="row"><span class="disp">Nivel 20</span><span class="chip">¡Elige ya!</span></div>
+<p style="font-size:14px;color:var(--gold);margin:0 0 8px">Hito alcanzado. Elige 1; las demás seguirán esperando al próximo hito.</p>
+<div class="stack" id="old"></div></div></div></div>
+
+<div class="col"><div class="lbl">Después</div><div class="panel">
+<h3>Equipada</h3><div class="card eq"><div class="dia"></div><div style="flex:1"><div class="row"><span class="disp">Grito de guerra</span><span class="tags"><span class="tag">⚡ 4</span><span class="tag">⟳ 4</span></span></div><div class="desc">Tu rabia sube: causas un 30% más de daño durante 3 turnos.</div></div></div>
+<h3 style="margin-top:18px">Camino de hitos <span style="float:right;color:var(--s4);letter-spacing:0;text-transform:none">1 de 5</span></h3>
+<div class="rail mb"><div class="mk"><span>1</span></div><div class="line"></div><div class="mini"><span class="disp" style="color:var(--parch)">Nivel 1</span> · Grito de guerra ✓</div></div>
+<div class="rail"><div class="mk"><span>20</span></div><div class="row"><span class="disp">Nivel 20</span><span class="chip">¡Elige ya!</span></div>
+<p class="tip" style="margin:0 0 8px">Elige 1 · las demás no se pierden</p>
+<div class="stack" id="new"></div>
+<button class="btn cta" id="cta" disabled>Toca una habilidad</button></div></div></div>
+</div>
+<script>
+const S=[["Sed de sangre",8,3,"Golpe (x1.3) que te cura la mitad del daño hecho."],["Aguantar la línea",8,6,"Durante 2 turnos recibes un 40% menos de daño y no puedes bajar de 1 de vida."],["Torbellino de acero",9,4,"Golpeas a todos los enemigos cercanos (x0.8)."]];
+old.innerHTML=S.map(s=>`<div class="pick" style="display:block"><div style="display:flex;gap:10px"><div class="dia" style="border-color:var(--arc)"></div><div style="flex:1"><div class="row"><span class="disp">${s[0]}</span><span class="cost">${s[1]} ímpetu · recarga ${s[2]}</span></div><div class="desc">${s[3]}</div><button class="btn" style="margin-top:8px">Elegir esto</button></div></div></div>`).join('');
+const sel=new URLSearchParams(location.search).get('sel');
+const draw=i=>{document.getElementById('new').innerHTML=S.map((s,k)=>`<button class="pick ${k==i?'sel':''}" onclick="draw(${k})"><div class="dia" style="border-color:${k==i?'var(--gold)':'var(--arc)'}"></div><div style="flex:1"><div class="row"><span class="disp">${s[0]}</span><span class="tags"><span class="tag">⚡ ${s[1]}</span><span class="tag">⟳ ${s[2]}</span></span></div><div class="desc">${s[3]}</div></div></button>`).join('');
+ if(i!=null){cta.disabled=false;cta.textContent='Elegir '+S[i][0];}};
+draw(sel);
+</script></body></html>

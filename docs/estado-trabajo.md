@@ -797,3 +797,16 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - **Resultados**: `Toasts` no se muestra en `summary`; fondo sin violeta.
 - **12 px mínimo** en Jugar (accesos rápidos), Crear y Elegir personaje, Tienda, título y botones del móvil (bloque «Fase 6» de `game.css`).
 - Pruebas: tsc, 512 tests, e2e, e2e-tutorial, e2e-guia, e2e-skins, e2e-bienvenida, copia-check, ajustes-check, bestiario-check, creacion-check, menus-check, touch-check y mobile-check. Capturas: `mockups/fase6-menus/index.html` (antes | real).
+
+## Novedades del 19/11 (9) — Habilidades: elegir hito más simple
+- Pestaña Habilidades › Clase: en un hito por elegir, la tarjeta entera se toca para marcarla (borde dorado) y un único botón fijo abajo confirma («Elegir <habilidad>»; apagado con «Toca una habilidad» hasta marcar una). Fuera los «Elegir esta» de cada tarjeta.
+- El hito ya elegido y equipado se muestra en una línea («Nivel 1 · Grito de guerra ✓»). Coste como etiquetas ⚡ y ⟳. Textos acortados («Elige 1 · las demás no se pierden»); quitado «Solo llevas una…».
+- Ataques: quitados «Los ataques dependen de tus armas» y el botón «Cambiar armas en el Alijo».
+- Maqueta y capturas: mockups/hitos-elegir (real.cjs captura el juego a nivel 20).
+
+## Novedades del 19/11 (10) — Misiones en una pantalla
+- Escritorio: «Tus misiones» y el «Tablón de encargos» caben a la vez sin desplazar la pantalla; el tablón ocupa el resto y, si hay muchas notas, solo se desplaza él.
+- Móvil: dos columnas (Tus misiones a la izquierda, tablón a la derecha), cada una con su desplazamiento. Tableta: la pantalla se desplaza como antes.
+- El tablón siempre se ve, con todos los mercaderes que dan encargos; el que no tiene ahora sale con borde discontinuo y «sin encargos», y al tocarlo lo explica.
+- Huecos libres: sin botón «Ir al Bastión»; dicen «Acepta un encargo del tablón».
+- Capturas: mockups/misiones-pantalla (capturar.cjs). misiones-check ajustado (escritorio y móvil pasan).
