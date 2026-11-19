@@ -71,7 +71,7 @@ fs.mkdirSync(out, { recursive: true });
   await G(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; const bp = [...pr.backpack]; const i = bp.findIndex((x) => !x); bp[i] = { uid: 'pots', itemId: 'health_potion', qty: 3 }; g.setState({ profile: { ...pr, backpack: bp } }); });
   const gold0 = await G(() => window.__GRAVEVOW__.getState().profile.gold);
   await tap('[data-testid=tab-merchants]'); await tap('[data-testid=vendor-vesper]');
-  await tap('[data-testid=buy-bandage]'); await p.waitForTimeout(150);
+  await tap('[data-testid=shop-row-bandage]'); await tap('[data-testid=buy-bandage]'); await p.$('[data-testid=shop-card-close]').then((c) => c && c.tap()); await p.waitForTimeout(150);
   if (!((await G(() => window.__GRAVEVOW__.getState().profile.gold)) < gold0)) fail('la venda no costó oro');
   if ((await count('base', 'bandage')) < 1) fail('no hay venda tras comprarla');
   await tap('[data-testid=vendor-back]');

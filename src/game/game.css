@@ -721,6 +721,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 /* ── Bastión unificado (14/11): tarjetas de mercader con primer plano de medio pecho ── */
 .vtile { display: flex; flex-direction: column; min-height: 0; padding: 0; cursor: pointer; overflow: hidden; transition: filter .1s; }
 .vtile:hover { filter: brightness(1.15); }
+.vtile.vcard:hover { filter: none; }
 .vtile:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
 .vtile-name { display: block; text-align: center; padding: 8px; font-size: clamp(15px, 1.15vw, 22px); letter-spacing: .08em; color: var(--color-parchment);
   background: linear-gradient(180deg, #26232c, #15131a); border-bottom: 2px solid #3a3741; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -926,3 +927,40 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
   .bcard-right { padding: 8px; gap: 6px; }
 }
 @media (max-height: 520px) { .bsec-t { font-size: 11px; letter-spacing: .04em; gap: 4px; } .bsec.locked .font-body { font-size: 13px; } }
+
+/* ===== Fase 2 del plan de interfaz (19/11): interior del mercader ===== */
+.vback{width:100%;min-height:48px;font-size:16px;font-family:var(--font-display);letter-spacing:.06em;white-space:nowrap}
+.vtabs{flex-wrap:nowrap}
+.vtabs-col{display:flex;flex-direction:column;gap:6px;width:100%}
+.vtabs-col button{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;background:var(--color-stone-800);border:2px solid var(--color-stone-600);color:var(--color-parchment);font-family:var(--font-display);font-size:16px;letter-spacing:.04em;text-align:left;cursor:pointer}
+.vtabs-col button:hover{background:var(--surface-hi)}
+.vtabs-col button[aria-selected=true]{background:var(--gold-fill);border-color:var(--gold-fill);color:#1a1205}
+.vtabs-col .vtab-lbl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vtabs-col .vtab-dot{margin-left:0}
+.vtabs-col button[aria-selected=true] .vtab-dot{color:#1a1205}
+.shop-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px}
+.shop-row{display:flex;align-items:center;gap:12px;padding:6px 12px 6px 6px;background:var(--color-stone-800);border:2px solid var(--color-stone-700);min-height:64px;cursor:pointer}
+.shop-row:hover{background:var(--surface-hi)}
+.shop-row.on{border-color:var(--color-gold)}
+.shop-row.locked .shop-ico,.shop-row.locked .shop-name,.shop-row.other .shop-ico{opacity:.5}
+.shop-name{font-size:16px}
+.shop-sub{font-size:14px;color:var(--color-stone-300)}
+.price-tag{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-size:17px;color:var(--color-gold);white-space:nowrap}
+.price-tag.short{color:var(--danger-tx)}
+.shop-lock{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--color-stone-300);white-space:nowrap}
+.text-danger{color:var(--danger-tx)}
+@media (max-height:520px){
+  .shop-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+  .shop-row{min-height:52px;gap:8px;padding:4px 8px 4px 4px}
+  .shop-row .shop-ico{width:40px;height:40px}
+  .shop-row .shop-ico img{width:32px;height:32px}
+  .shop-name{font-size:14px}
+  .shop-sub{font-size:13px}
+  .price-tag{font-size:15px}
+  .vtabs-col{gap:4px}
+  .vtabs-col button{min-height:44px;padding:0 8px;gap:8px;font-size:14px}
+}
+.vback-card{cursor:pointer;color:var(--color-stone-500);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:14px;margin-top:8px;min-height:160px}
+.vback-card:hover{background:var(--surface-hi);color:var(--color-stone-300)}
+.vback-art{display:flex;align-items:flex-end;justify-content:center}
+.vback-lbl{font-family:var(--font-display);font-size:17px;letter-spacing:.06em;color:var(--color-parchment)}

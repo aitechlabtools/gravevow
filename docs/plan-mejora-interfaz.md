@@ -1,6 +1,6 @@
 # Plan de mejora visual y de usabilidad de los menús y el HUD
 
-Fecha: 19/11/2026 · Estado: plan aprobado. **Fase 0 y fase 1 hechas** (19/11). Siguiente: maqueta de la fase 2.
+Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0, 1 y 2 hechas** (19/11). Siguiente: maqueta de la fase 3 (inventario).
 
 Capturas del estado actual en los tres formatos, con los problemas marcados: `mockups/plan-interfaz/index.html`
 (carpeta `mockups/plan-interfaz/actual/`, script `mockups/plan-interfaz/capturar.cjs`). En el índice, cada número rojo es un
@@ -202,7 +202,8 @@ Hecho: paleta, paneles y botones planos, niveles de botón, desactivado legible,
 - **Riesgos:** cambio de color en muchos sitios a la vez → capturas de todas las pestañas con `menus-check` antes y después. Sin efecto en guardados.
 - **Capturas:** las 19 pantallas del índice (antes/después) y la barra en el móvil con las dos opciones.
 
-### Fase 2 · Piloto: interior del mercader (media)
+### Fase 2 · Piloto: interior del mercader (media) — HECHA el 19/11
+- **Hecho:** filas de tienda que se tocan + ficha con un solo «Comprar · N oro» dorado (móvil: ficha encima con Cerrar; escritorio: doble clic compra). Columna izquierda = tarjeta del Bastión (nombre, busto, lugar, estación, reputación, sin frase) + pestañas en columna con icono pixel art (`VENDOR_TAB_ICONS`) en los tres formatos + tarjeta «◂ Volver al Bastión» con la muralla (`BASTION_SKYLINE`); en el móvil, botón normal. Sin títulos de panel. Mochila con carga, sin oro. Maqueta y capturas: `mockups/fase2-mercader/`.
 - **Qué:**
   - Fuera el título «Tienda de N» (P-05); el nombre del mercader queda solo en la columna izquierda.
   - Lista de la tienda: fila = icono 32 (×1 o ×2) + nombre + datos, precio con `PriceTag` en texto dorado (P-06). Tocar la fila abre la ficha (`ItemCard`) con **un** botón dorado «Comprar · N oro». En escritorio, doble clic compra directamente (como hoy el botón). Los de otra clase o bloqueados: atenuados con candado y motivo, sin botón.

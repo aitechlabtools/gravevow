@@ -247,3 +247,9 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
   nombre solo en la activa. Móvil: centradas, nombre solo en la activa; con ≤ 800 px de ancho, retrato sin nombre (`.nav-chip-txt`) y sin pantalla completa
   en la barra (`.nav-fs`; sigue en Ajustes › Pantalla y con F). Cada pestaña lleva `aria-label` con su nombre (y las novedades). Mismos `data-testid` (`tab-*`).
 - Pestaña nueva: añade su icono a `TAB_ICONS` con la misma clave que su id.
+
+
+## Interior del mercader (fase 2 del plan de interfaz, 19/11)
+- **Columna izquierda (los tres formatos):** tarjeta del mercader igual que en la página Bastión (`vtile vcard`: nombre, busto, lugar, estado de la estación, reputación y descuento), debajo las pestañas en columna (`.vtabs-col`, botones de 48 px —44 en móvil— con icono 12×12 a ×2 de `VENDOR_TAB_ICONS`; la activa en dorado), el aviso «Pendiente» y, al final, la tarjeta «◂ Volver al Bastión» (`.vback-card`, silueta `BASTION_SKYLINE` a ×6 en escritorio y ×4 en tableta; en tableta el rótulo es «◂ Bastión»). En el móvil: retrato pequeño y nombre, pestañas y el botón `.vback`. El `data-testid` `vendor-back` está en la tarjeta o el botón.
+- **Tienda:** `ShopStock` pinta filas `.shop-row` (`shop-row-<id>`); tocar elige (borde dorado). La ficha es `ShopCard`, con el único botón dorado `buy-<id>` («Comprar · N oro»; si no llega el oro, botón secundario «Te faltan N de oro»). En escritorio y tableta va en la columna derecha encima de «Tu mochila · n/24»; en el móvil sale encima (`shop-card-overlay`, cerrar con `shop-card-close`). Doble clic en una fila compra. Precio: `PriceTag` (texto dorado con moneda; rojo si no llega). Bloqueado: atenuado con candado y rango; «Otra clase» en rojo.
+- **Sin título de panel** en el centro (el nombre ya está en la tarjeta). Los scripts que compran tocan antes `shop-row-<id>`.

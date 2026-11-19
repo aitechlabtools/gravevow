@@ -4,6 +4,12 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 19/11 (3): fase 2 de la interfaz implementada (interior del mercader)
+- Tienda con filas y ficha con un único «Comprar» dorado; columna del mercader con la tarjeta del Bastión, pestañas en columna con icono y tarjeta «Volver al Bastión» con la muralla. Detalle en `docs/guia-interfaz.md` y `docs/plan-mejora-interfaz.md`.
+- Archivos: `ui/screens/Mercaderes.tsx`, `ui/VendorsTab.tsx` (`ShopStock`, `ShopCard`, `PriceTag`), `ui/kit/tabIcons.ts` (`VENDOR_TAB_ICONS`, `BASTION_SKYLINE`), `game.css`.
+- Scripts adaptados (tocan la fila antes de comprar): `e2e`, `ciclo-check`, `fuentes-check`, `e2e-mine`, `screenshots`.
+- Pruebas: tsc, 512 tests, `menus-check` (3 formatos), `e2e`, `ciclo-check`, `fuentes-check`, `e2e-mine`, `e2e-bastion-minis`: todo bien.
+
 ## Novedades del 19/11 (2): fase 1 de la interfaz implementada (paleta, botones planos y pestañas con icono)
 - **Decisiones del usuario:** paleta «piedra fría»; pestañas con icono y nombre solo en la activa en el móvil; comprar tocando el objeto y «Comprar» en su ficha (fase 2); iconos hechos por Claude en la línea de Apoyar y Discord; piloto = interior del mercader; barra del móvil centrada; menús horizontales secundarios a los laterales en móvil y tableta (cuando toque cada pantalla).
 - **Hecho:** paleta en `game.css` (solo el juego), paneles y botones planos, tres niveles de botón, desactivado legible, texto secundario de 2,9 a 7,5 de contraste, fondo del lobby sin degradado, pestañas con icono (`kit/tabIcons.ts`, `PixelIcon` exportado de `shared/community.tsx`), barra del móvil centrada y compacta en móviles estrechos, tableta con icono encima del nombre.

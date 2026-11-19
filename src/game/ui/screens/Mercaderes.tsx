@@ -29,17 +29,19 @@ import { isCoins } from '../../../core/gold';
 import { stackRarity } from '../../../core/data/rarity';
 import { RARITY_INFO } from '../../../core/data/items';
 import type { ItemStack, Profile } from '../../../core/types';
-import { RepBar, ShopStock, VendorQuests, type VendorTarget, type VendorView } from '../VendorsTab';
+import { RepBar, ShopStock, ShopCard, VendorQuests, type VendorTarget, type VendorView } from '../VendorsTab';
 import { RepairPanel } from '../RepairPanel';
 import { InfirmaryPanel } from '../InfirmaryPanel';
 import { ContractsPanel } from '../ContractsPanel';
 import { Dishes, ScrapPanel } from '../RefugePanels';
 import { ReceptionSection } from '../WorkshopPanels';
 import { ItemCard } from './ItemCard';
-import { Drawer, Panel, SubHead, usePixelScale } from '../kit';
+import { Drawer, Panel, SubHead } from '../kit';
 import { useLayout } from '../../../config/ui';
 import { sfx } from '../../audio';
 import { TutDot } from '../MiniTutorial';
+import { PixelIcon } from '../../../shared/community';
+import { VENDOR_TAB_ICONS, BASTION_SKYLINE } from '../kit/tabIcons';
 
 /** Orden de las tarjetas del Bastión. */
 const BASTION_ORDER: VendorId[] = ['nira', 'vesper', 'garth', 'orik', 'grizk', 'brand', 'valerius', 'eldrin'];
@@ -207,13 +209,15 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
-  const scale = usePixelScale('vendor');
   const tabs = servicesOf(vendor);
   const [view, setView] = useState<VendorView>(tabs.includes(initial) ? initial : tabs[0]);
   const [sel, setSel] = useState<Loc | null>(null);
   useEffect(() => { actions.tutorialEvent(`vendor:${vendor}`); }, [vendor]);
   useClearOnDrop(useCallback(() => setSel(null), []));
   const [marks, setMarks] = useState<string[]>([]);
+  const [shopSel, setShopSel] = useState<string | null>(null);
+  const [shopOpen, setShopOpen] = useState(false);
+  const side_tabs = true;
   const v = VENDORS[vendor];
   const st = STATION_OF[vendor];
   const rep = profile.reputation[vendor] ?? 0;
@@ -225,9 +229,8 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
   const ready = readyQuestCount(profile, vendor);
   const pend = pendingOf(profile, vendor);
 
-  const title = view === 'station' && st ? MODULES[st].name : view === 'scrap' ? `Desguace de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'infirmary' ? `Enfermería de ${v.name}` : view === 'contracts' ? 'Contratos de Grizk' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
   const center: ReactNode =
-    view === 'shop' ? <ShopStock vid={vendor} cols={`grid gap-2 ${phone ? 'grid-cols-1' : 'grid-cols-2 2xl:grid-cols-3'}`} />
+    view === 'shop' ? <ShopStock vid={vendor} sel={shopSel} onSel={(id) => { setShopSel(id); if (phone) setShopOpen(true); sfx('click'); }} />
       : view === 'quests' ? <VendorQuests vendor={vendor} />
         : view === 'station' && st ? <StationTab id={st} onGo={onGo} />
           : view === 'repair' ? <RepairPanel />
@@ -241,23 +244,29 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
         <SalePanel vendor={vendor} marks={marks} setMarks={setMarks} onSold={() => setSel(null)} />
         <div className="panel p-3 mt-3"><ItemCard loc={sel} mode="merchant" onClear={() => setSel(null)} compact /></div>
       </Panel>
+    : view === 'shop'
+      ? <div className="min-h-0 h-full flex flex-col" style={{ gap: 'var(--gap)' }}>
+          <Panel title="Ficha" className="shrink-0" bodyClassName="flex flex-col" testId="shop-card-panel"><ShopCard vid={vendor} itemId={shopSel} /></Panel>
+          <Panel title={<>Tu mochila · {profile.backpack.filter((x) => !!x && !isCover(x)).length}/{profile.backpack.length}</>} className="min-h-0 flex-1" bodyClassName="overflow-y-auto scroll-thin"><GridView grid={profile.backpack} container="backpack" cols={layout === 'tablet' ? 4 : 5} equipment={profile.equipment} mode="lobby" /></Panel>
+        </div>
     : crafting
       ? <Panel title="Tus materiales" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col"><Materials /></Panel>
       : <Panel title="Tu mochila" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col"><BagSummary /></Panel>;
 
   const tabBar = (
-    <div className="ui-seg vtabs" role="tablist" data-testid="vendor-tabs">
+    <div className="vtabs-col" role="tablist" aria-orientation={side_tabs ? 'vertical' : 'horizontal'} data-testid="vendor-tabs">
       {tabs.map((x) => (
         <button key={x} type="button" role="tab" aria-selected={view === x} className={view === x ? 'on' : ''} onClick={() => go(x)} data-testid={`vendor-view-${x}`}>
-          {label(x)}{x === 'quests' && ready > 0 && <span className="vtab-dot" aria-label="Misión lista">●</span>}
+          <PixelIcon rows={VENDOR_TAB_ICONS[x]} size={24} color={view === x ? '#1a1206' : 'currentColor'} /><span className="vtab-lbl">{label(x)}</span>{x === 'quests' && ready > 0 && <span className="vtab-dot" aria-label="Misión lista">●</span>}
           {x === 'station' && pend && pend.kind !== 'quest' && <span className={`vtab-dot ${pend.kind === 'upgrade' ? 'gold' : ''}`} aria-label={pend.text}>{pend.kind === 'upgrade' ? '▲' : '●'}</span>}
         </button>
       ))}
-      <button type="button" onClick={onBack} data-testid="vendor-back">◂ Bastión</button>
     </div>
   );
-  const pendBox = pend && (
-    <div className="panel p-3 mt-3 text-left" data-testid="vendor-pending">
+  const backBtn = <button type="button" className="btn vback" onClick={onBack} data-testid="vendor-back">◂ Bastión</button>;
+  // En la propia pestaña de la estación no se repite: la acción ya está junto a sus requisitos (18/11)
+  const pendBox = pend && !(view === 'station' && pend.kind !== 'quest') && (
+    <div className="panel p-3 text-left" data-testid="vendor-pending">
       <div className="text-[13px] uppercase tracking-[0.12em] text-stone-400">Pendiente</div>
       <div className="text-[15px] text-parchment mt-1">{pend.kind === 'quest' ? (ready === 1 ? 'Una misión lista para entregar' : `${ready} misiones listas para entregar`) : pend.kind === 'rebuild' ? `${MODULES[st!].name}: ya puedes reconstruirla` : `${MODULES[st!].name}: mejora disponible`}</div>
       <button className="btn btn-gold w-full mt-2 font-display tracking-[0.1em] uppercase text-xs" style={{ minHeight: 44 }} onClick={() => go(pend.kind === 'quest' ? 'quests' : 'station')} data-testid="vendor-pending-go">
@@ -266,30 +275,49 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
     </div>
   );
   const left = (
-    <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="vendor-panel">
-      <div className="ui-arch shrink-0" style={{ height: 26 * scale + 30 }}><div className="pb-1"><MonsterSprite sprite={v.sprite} scale={scale} /></div></div>
-      <div className="text-center font-display text-parchment text-[20px] mt-2" data-testid="vendor-name">{v.name}</div>
-      <div className="text-center text-[13px] uppercase tracking-[0.1em] text-gold">{PLACES[v.place].name}</div>
-      <div className="text-center text-[14px]" style={{ color: v.color }}>{v.role}</div>
-      <p className="font-body italic text-stone-300 text-center text-[15px] leading-snug mt-2">«{v.blurb}»</p>
+    <div className="min-h-0 flex flex-col overflow-y-auto scroll-thin" style={{ gap: 'var(--gap)' }} data-testid="vendor-panel">
+      <div className="panel vtile vcard shrink-0" style={{ height: layout === 'tablet' ? 300 : 380, cursor: 'default' }}>
+        <span className="vtile-name font-display" data-testid="vendor-name">{v.name}</span>
+        <span className="vtile-port"><Bust sprite={v.sprite} /></span>
+        <span className="vtile-info">
+          {st && <img src={stationArtUrl(st, refugeOf(profile)[st] < 1)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: 40, height: 52 }} />}
+          <span className="min-w-0">
+            <span className="block text-gold uppercase tracking-[0.12em] text-[13px] truncate">{PLACES[v.place].name}</span>
+            <span className="block text-[14px] text-stone-300 truncate">{st ? `${MODULES[st].name} · ${refugeOf(profile)[st] < 1 ? 'En ruinas' : `Nv ${refugeOf(profile)[st]}/3`}` : v.role}</span>
+          </span>
+        </span>
+        <span className="vtile-rep"><RepBar rep={rep} />{discount > 0 && <span className="block text-[13px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento</span>}</span>
+      </div>
+      {tabBar}
       {pendBox}
-      <div className="flex-1" />
-      <div className="mt-3"><RepBar rep={rep} /></div>
-      {discount > 0 && <div className="text-[13px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento por tu reputación</div>}
-    </Panel>
+      <button type="button" className="panel vback-card flex-1" onClick={onBack} data-testid="vendor-back">
+        <span className="vback-art"><PixelIcon rows={BASTION_SKYLINE} size={layout === 'tablet' ? 128 : 192} color="currentColor" /></span>
+        <span className="vback-lbl">{layout === 'tablet' ? '◂ Bastión' : '◂ Volver al Bastión'}</span>
+      </button>
+    </div>
   );
-  const main = <Panel title={title} className="min-h-0 flex-1" bodyClassName={`overflow-y-auto scroll-thin ${view === 'sell' ? 'flex flex-col' : ''}`} testId={`vendor-main-${view}`}>{center}</Panel>;
+  const main = <Panel className="min-h-0 flex-1" bodyClassName={`overflow-y-auto scroll-thin ${view === 'sell' ? 'flex flex-col' : ''}`} testId={`vendor-main-${view}`}>{center}</Panel>;
   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
 
   if (phone) {
     return (
       <div className="h-full flex flex-col relative min-h-0" style={{ ...pad, paddingRight: 'calc(max(var(--pad), env(safe-area-inset-right)) + 40px)' }} data-testid="vendor-interior">
-        <div className="flex items-center gap-2 shrink-0 min-w-0" data-testid="vendor-panel">
-          <MonsterSprite sprite={v.sprite} scale={1} />
-          <span className="font-display text-parchment shrink-0" data-testid="vendor-name">{v.name}</span>
-          <div className="min-w-0 overflow-x-auto scroll-thin">{tabBar}</div>
+        <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: '150px minmax(0,1fr)', gap: 'var(--gap)' }}>
+          <div className="min-h-0 flex flex-col overflow-y-auto scroll-thin" style={{ gap: 6 }} data-testid="vendor-panel">
+            <div className="flex items-center gap-2 px-1"><MonsterSprite sprite={v.sprite} scale={1} /><span className="font-display text-parchment truncate text-[15px]" data-testid="vendor-name">{v.name}</span></div>
+            {tabBar}
+            <div className="mt-1">{backBtn}</div>
+          </div>
+          {main}
         </div>
-        {main}
+        {shopOpen && shopSel && (
+          <div className="fixed inset-0 z-50 bg-black/75 flex fade-in" onMouseDown={(e) => e.target === e.currentTarget && setShopOpen(false)} data-testid="shop-card-overlay">
+            <div className="panel m-auto p-4 flex flex-col gap-3" style={{ width: 'min(520px, calc(100% - 24px))', maxHeight: 'calc(100% - 16px)', overflowY: 'auto' }}>
+              <ShopCard vid={vendor} itemId={shopSel} />
+              <button className="btn text-[15px]" style={{ minHeight: 44 }} onClick={() => setShopOpen(false)} data-testid="shop-card-close">Cerrar</button>
+            </div>
+          </div>
+        )}
         <Drawer label={crafting ? 'Materiales' : view === 'sell' ? (marks.length ? `Vender (${marks.length})` : 'A vender') : 'Mochila'} side="right" testId="vendor-side">{side}</Drawer>
       </div>
     );
@@ -298,7 +326,7 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
   return (
     <div className="h-full grid" style={{ ...pad, gridTemplateColumns: `${layout === 'tablet' ? 220 : 300}px minmax(0,1fr) ${sideW}px` }} data-testid="vendor-interior">
       {left}
-      <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }}>{tabBar}{main}</div>
+      <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }}>{side_tabs ? null : <div className="flex items-center gap-2 shrink-0">{backBtn}{tabBar}</div>}{main}</div>
       <div className="min-h-0">{side}</div>
     </div>
   );

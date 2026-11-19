@@ -1,0 +1,353 @@
+diff -ruN /home/claude/aitechlabtools/gravevow/src/game/game.css src/game/game.css
+--- /home/claude/aitechlabtools/gravevow/src/game/game.css	2026-11-19 10:37:30.934335445 +0100
++++ src/game/game.css	2026-11-19 11:11:08.275957176 +0100
+@@ -721,6 +721,7 @@
+ /* ── Bastión unificado (14/11): tarjetas de mercader con primer plano de medio pecho ── */
+ .vtile { display: flex; flex-direction: column; min-height: 0; padding: 0; cursor: pointer; overflow: hidden; transition: filter .1s; }
+ .vtile:hover { filter: brightness(1.15); }
++.vtile.vcard:hover { filter: none; }
+ .vtile:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+ .vtile-name { display: block; text-align: center; padding: 8px; font-size: clamp(15px, 1.15vw, 22px); letter-spacing: .08em; color: var(--color-parchment);
+   background: linear-gradient(180deg, #26232c, #15131a); border-bottom: 2px solid #3a3741; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@@ -926,3 +927,36 @@
+   .bcard-right { padding: 8px; gap: 6px; }
+ }
+ @media (max-height: 520px) { .bsec-t { font-size: 11px; letter-spacing: .04em; gap: 4px; } .bsec.locked .font-body { font-size: 13px; } }
++
++/* ===== Fase 2 (maqueta): interior del mercader ===== */
++.vback{width:100%;min-height:48px;font-size:16px;font-family:var(--font-display);letter-spacing:.06em;white-space:nowrap}
++.vtabs{flex-wrap:nowrap}
++.vtabs-col{display:flex;flex-direction:column;gap:6px;width:100%}
++.vtabs-col button{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;background:var(--color-stone-800);border:2px solid var(--color-stone-600);color:var(--color-parchment);font-family:var(--font-display);font-size:16px;letter-spacing:.04em;text-align:left;cursor:pointer}
++.vtabs-col button:hover{background:var(--surface-hi)}
++.vtabs-col button[aria-selected=true]{background:var(--gold-fill);border-color:var(--gold-fill);color:#1a1205}
++.vtabs-col .vtab-lbl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
++.vtabs-col .vtab-dot{margin-left:0}
++.vtabs-col button[aria-selected=true] .vtab-dot{color:#1a1205}
++.shop-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px}
++.shop-row{display:flex;align-items:center;gap:12px;padding:6px 12px 6px 6px;background:var(--color-stone-800);border:2px solid var(--color-stone-700);min-height:64px;cursor:pointer}
++.shop-row:hover{background:var(--surface-hi)}
++.shop-row.on{border-color:var(--color-gold)}
++.shop-row.locked .shop-ico,.shop-row.locked .shop-name,.shop-row.other .shop-ico{opacity:.5}
++.shop-name{font-size:16px}
++.shop-sub{font-size:14px;color:var(--color-stone-300)}
++.price-tag{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-size:17px;color:var(--color-gold);white-space:nowrap}
++.price-tag.short{color:var(--danger-tx)}
++.shop-lock{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--color-stone-300);white-space:nowrap}
++.text-danger{color:var(--danger-tx)}
++@media (max-height:520px){
++  .shop-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
++  .shop-row{min-height:52px;gap:8px;padding:4px 8px 4px 4px}
++  .shop-row .shop-ico{width:40px;height:40px}
++  .shop-row .shop-ico img{width:32px;height:32px}
++  .shop-name{font-size:14px}
++  .shop-sub{font-size:13px}
++  .price-tag{font-size:15px}
++  .vtabs-col{gap:4px}
++  .vtabs-col button{min-height:44px;padding:0 8px;gap:8px;font-size:14px}
++}
+diff -ruN /home/claude/aitechlabtools/gravevow/src/game/ui/VendorsTab.tsx src/game/ui/VendorsTab.tsx
+--- /home/claude/aitechlabtools/gravevow/src/game/ui/VendorsTab.tsx	2026-11-18 12:55:32.337411371 +0100
++++ src/game/ui/VendorsTab.tsx	2026-11-19 10:50:07.091854571 +0100
+@@ -7,6 +7,8 @@
+ import { REP_RANKS, rankOf } from '../../config/reputation';
+ import { VendorQuestNotes } from './QuestNotes';
+ import { Bar, ItemIcon } from './inventory';
++import { iconUrl } from '../../shared/art';
++import { lockIcon } from './uiIcons';
+ 
+ export function RepBar({ rep }: { rep: number }) {
+   const r = rankOf(rep);
+@@ -24,8 +26,9 @@
+ export type VendorView = 'shop' | 'quests' | 'sell' | 'repair' | 'contracts' | 'infirmary' | 'scrap' | 'station';
+ export interface VendorTarget { vendor: VendorId; view: VendorView }
+ 
+-/** Mercancía de un mercader, con el precio según tu reputación y lo que está bloqueado por rango. */
+-export function ShopStock({ vid, cols = 'grid sm:grid-cols-2 xl:grid-cols-3 gap-2' }: { vid: VendorId; cols?: string }) {
++/** Mercancía de un mercader (fase 2): filas que se tocan para ver la ficha; el precio es texto dorado con moneda.
++ *  En escritorio, doble clic compra. Lo bloqueado por rango va atenuado con candado. */
++export function ShopStock({ vid, cols = 'shop-list', sel, onSel }: { vid: VendorId; cols?: string; sel?: string | null; onSel?: (id: string) => void }) {
+   const profile = useGame((s) => s.profile)!;
+   const v = VENDORS[vid];
+   const rep = profile.reputation[vid] ?? 0;
+@@ -33,31 +36,69 @@
+   const ch = profile.character;
+   return (
+     <div className={cols} data-testid="merchant-stock">
+-            {v.stock.map(({ itemId, rank: need }) => {
+-              const d = getItem(itemId);
+-              const locked = rank < need;
+-              const price = buyPrice(itemId, rep);
+-              const usable = !d.classes || d.classes.includes(ch.classId);
+-              return (
+-                <div key={itemId} className={`flex items-center gap-2 bg-black/30 p-2 border border-stone-800 ${locked ? 'opacity-60' : ''}`}>
+-                  <div className="slot" style={{ borderColor: RARITY_INFO[d.rarity].color + 'aa' }}><ItemIcon itemId={itemId} /></div>
+-                  <div className="flex-1 min-w-0">
+-                    <div className="truncate" style={{ color: RARITY_INFO[d.rarity].color }}>{d.name}</div>
+-                    <div className="text-xs text-stone-400 truncate">
+-                      {d.slot && d.levelReq ? <span className={ch.level < d.levelReq ? 'text-blood' : 'text-heal'}>Nv {d.levelReq} · </span> : null}
+-                      {d.stats ? Object.entries(d.stats).map(([k, val]) => `${val! > 0 ? '+' : ''}${val} ${k}`).join(' ') : d.description}
+-                      {!usable && <span className="text-blood"> · otra clase</span>}
+-                    </div>
+-                  </div>
+-                  {locked ? (
+-                    <span className="text-[11px] text-stone-400 text-right leading-tight w-20" data-testid={`locked-${itemId}`}>🔒 {REP_RANKS[need].name}</span>
+-                  ) : (
+-                    <button className="btn btn-gold text-sm whitespace-nowrap" disabled={profile.gold < price} onClick={() => actions.buy(itemId, vid)} data-testid={`buy-${itemId}`}>{profile.gold < price ? `Oro insuficiente · ${price}` : `${price} oro`}</button>
+-                  )}
+-                </div>
+-              );
+-            })}
+-          </div>
++      {v.stock.map(({ itemId, rank: need }) => {
++        const d = getItem(itemId);
++        const locked = rank < need;
++        const price = buyPrice(itemId, rep);
++        const usable = !d.classes || d.classes.includes(ch.classId);
++        return (
++          <button type="button" key={itemId} className={`shop-row ${locked ? 'locked' : ''} ${!usable ? 'other' : ''} ${sel === itemId ? 'on' : ''}`} aria-pressed={sel === itemId}
++            onClick={() => onSel?.(itemId)} onDoubleClick={() => !locked && profile.gold >= price && actions.buy(itemId, vid)} data-testid={`shop-row-${itemId}`}>
++            <span className="slot shop-ico" style={{ borderColor: RARITY_INFO[d.rarity].color + 'aa' }}><ItemIcon itemId={itemId} /></span>
++            <span className="flex-1 min-w-0 text-left">
++              <span className="block truncate shop-name" style={{ color: RARITY_INFO[d.rarity].color }}>{d.name}</span>
++              <span className="block truncate shop-sub">
++                {d.slot && d.levelReq ? <span className={ch.level < d.levelReq ? 'text-danger' : ''}>Nv {d.levelReq} · </span> : null}
++                {!usable ? <span className="text-danger">Otra clase</span> : d.stats ? Object.entries(d.stats).map(([k, val]) => `${val! > 0 ? '+' : ''}${val} ${k}`).join(' ') : d.description}
++              </span>
++            </span>
++            {locked
++              ? <span className="shop-lock" data-testid={`locked-${itemId}`}><img src={lockIcon(2)} className="pixelated" alt="" /> {REP_RANKS[need].name}</span>
++              : <PriceTag value={price} short={profile.gold < price} />}
++          </button>
++        );
++      })}
++    </div>
++  );
++}
++
++/** Precio en texto dorado con la moneda (rojo si no llega el oro). */
++export function PriceTag({ value, short = false }: { value: number; short?: boolean }) {
++  return <span className={`price-tag ${short ? 'short' : ''}`}><img src={iconUrl('coin', 2)} width={18} height={18} className="pixelated" alt="" />{value}</span>;
++}
++
++/** Ficha de un objeto de la tienda con un único botón dorado «Comprar · N oro». */
++export function ShopCard({ vid, itemId }: { vid: VendorId; itemId: string | null }) {
++  const profile = useGame((s) => s.profile)!;
++  if (!itemId) return <p className="font-body text-stone-400 italic text-[15px] leading-snug" data-testid="shop-card-empty">Toca un objeto para ver su ficha y comprarlo.</p>;
++  const d = getItem(itemId);
++  const rep = profile.reputation[vid] ?? 0;
++  const need = VENDORS[vid].stock.find((x) => x.itemId === itemId)?.rank ?? 0;
++  const locked = rankOf(rep) < need;
++  const price = buyPrice(itemId, rep);
++  const ch = profile.character;
++  const usable = !d.classes || d.classes.includes(ch.classId);
++  const low = !!(d.slot && d.levelReq && ch.level < d.levelReq);
++  const poor = profile.gold < price;
++  return (
++    <div className="flex flex-col gap-2" data-testid="shop-card">
++      <div className="flex gap-3 items-start">
++        <span className="slot shrink-0" style={{ borderColor: RARITY_INFO[d.rarity].color + 'aa' }}><ItemIcon itemId={itemId} /></span>
++        <span className="min-w-0">
++          <span className="block font-display text-[18px] leading-tight" style={{ color: RARITY_INFO[d.rarity].color }}>{d.name}</span>
++          <span className="block text-[13px] text-stone-400">{RARITY_INFO[d.rarity].name}{d.slot && d.levelReq ? ` · Nv ${d.levelReq}` : ''}</span>
++        </span>
++      </div>
++      {d.stats && <div className="text-[14px] text-heal">{Object.entries(d.stats).map(([k, val]) => `${val! > 0 ? '+' : ''}${val} ${k}`).join(' · ')}</div>}
++      {d.description && <p className="font-body text-[15px] text-stone-300 leading-snug">{d.description}</p>}
++      {!usable && <div className="text-[14px] text-danger">No es para tu clase: no podrás equiparlo.</div>}
++      {low && <div className="text-[14px] text-danger">Necesitas nivel {d.levelReq}.</div>}
++      {locked
++        ? <div className="text-[14px] text-stone-300 flex items-center gap-2"><img src={lockIcon(2)} className="pixelated" alt="" />Hace falta el rango «{REP_RANKS[need].name}».</div>
++        : <button className={`btn ${poor ? '' : 'btn-gold'} w-full font-display text-[16px]`} style={{ minHeight: 48 }} disabled={poor} onClick={() => actions.buy(itemId, vid)} data-testid={`buy-${itemId}`}>
++            {poor ? `Te faltan ${price - profile.gold} de oro` : `Comprar · ${price} oro`}
++          </button>}
++    </div>
+   );
+ }
+ 
+diff -ruN /home/claude/aitechlabtools/gravevow/src/game/ui/kit/tabIcons.ts src/game/ui/kit/tabIcons.ts
+--- /home/claude/aitechlabtools/gravevow/src/game/ui/kit/tabIcons.ts	2026-11-19 10:24:52.941482423 +0100
++++ src/game/ui/kit/tabIcons.ts	2026-11-19 11:07:41.065948867 +0100
+@@ -17,3 +17,23 @@
+   // Tienda (atuendos): túnica
+   shop: ['...XX..XX...', '..XXXXXXXX..', 'XXXXXXXXXXXX', 'XXXXXXXXXXXX', 'XX.XXXXXX.XX', '...XXXXXX...', '...XXXXXX...', '...XXXXXX...', '..XXXXXXXX..', '..XXXXXXXX..', '.XXXXXXXXXX.', '.XXXXXXXXXX.'],
+ };
++
++/** Pestañas del interior de un mercader (fase 2). Mismo estilo: 12×12, un color. */
++export const VENDOR_TAB_ICONS: Record<string, string[]> = {
++  // Tienda: bolsa con cordón
++  shop: ['....XXXX....', '.....XX.....', '....XXXX....', '...XX..XX...', '..XXXXXXXX..', '.XXXXXXXXXX.', 'XXXXX..XXXXX', 'XXXX.XX.XXXX', 'XXXXX..XXXXX', 'XXXXXXXXXXXX', '.XXXXXXXXXX.', '..XXXXXXXX..'],
++  // Vender: monedas apiladas
++  sell: ['....XXXXXX..', '...XXXXXXXX.', '....XXXXXX..', '...XXXXXXXX.', '............', '..XXXXXX....', '.XXXXXXXX...', '..XXXXXX....', '.XXXXXXXX...', '..XXXXXX....', '.XXXXXXXX...', '............'],
++  // Misiones: nota clavada
++  quests: TAB_ICONS.quests,
++  // Contratos: pergamino enrollado
++  contracts: ['.XXXXXXXXX..', 'XX.......XX.', '.XXXXXXXXXX.', '..X......X..', '..X.XXXX.X..', '..X......X..', '..X.XXXX.X..', '..X......X..', '..X.XXX..X..', '.XXXXXXXXXX.', 'XX.......XX.', '.XXXXXXXXX..'],
++  // Reparar: martillo
++  repair: ['.XXXXXXX....', 'XXXXXXXXX...', 'XXXXXXXXX...', '.XXXXXXX....', '....XX......', '.....XX.....', '......XX....', '.......XX...', '........XX..', '.........XX.', '..........XX', '...........X'],
++  // Enfermería: cruz
++  infirmary: ['....XXXX....', '....XXXX....', '....XXXX....', '....XXXX....', 'XXXXXXXXXXXX', 'XXXXXXXXXXXX', 'XXXXXXXXXXXX', 'XXXXXXXXXXXX', '....XXXX....', '....XXXX....', '....XXXX....', '....XXXX....'],
++  // Desguace: engranaje
++  scrap: ['.....XX.....', '..X.XXXX.X..', '.XXXXXXXXXX.', '..XXX..XXX..', '.XXX....XXX.', 'XXX......XXX', 'XXX......XXX', '.XXX....XXX.', '..XXX..XXX..', '.XXXXXXXXXX.', '..X.XXXX.X..', '.....XX.....'],
++  // Estación: yunque
++  station: ['............', 'XXXXXXXXXXX.', '.XXXXXXXXXXX', '..XXXXXXXXX.', '....XXXXX...', '.....XXX....', '.....XXX....', '....XXXXX...', '...XXXXXXX..', '..XXXXXXXXX.', '..XXXXXXXXX.', '............'],
++};
+diff -ruN /home/claude/aitechlabtools/gravevow/src/game/ui/screens/Mercaderes.tsx src/game/ui/screens/Mercaderes.tsx
+--- /home/claude/aitechlabtools/gravevow/src/game/ui/screens/Mercaderes.tsx	2026-11-18 15:37:20.428517872 +0100
++++ src/game/ui/screens/Mercaderes.tsx	2026-11-19 11:11:08.269973022 +0100
+@@ -29,17 +29,19 @@
+ import { stackRarity } from '../../../core/data/rarity';
+ import { RARITY_INFO } from '../../../core/data/items';
+ import type { ItemStack, Profile } from '../../../core/types';
+-import { RepBar, ShopStock, VendorQuests, type VendorTarget, type VendorView } from '../VendorsTab';
++import { RepBar, ShopStock, ShopCard, VendorQuests, type VendorTarget, type VendorView } from '../VendorsTab';
+ import { RepairPanel } from '../RepairPanel';
+ import { InfirmaryPanel } from '../InfirmaryPanel';
+ import { ContractsPanel } from '../ContractsPanel';
+ import { Dishes, ScrapPanel } from '../RefugePanels';
+ import { ReceptionSection } from '../WorkshopPanels';
+ import { ItemCard } from './ItemCard';
+-import { Drawer, Panel, SubHead, usePixelScale } from '../kit';
++import { Drawer, Panel, SubHead } from '../kit';
+ import { useLayout } from '../../../config/ui';
+ import { sfx } from '../../audio';
+ import { TutDot } from '../MiniTutorial';
++import { PixelIcon } from '../../../shared/community';
++import { VENDOR_TAB_ICONS } from '../kit/tabIcons';
+ 
+ /** Orden de las tarjetas del Bastión. */
+ const BASTION_ORDER: VendorId[] = ['nira', 'vesper', 'garth', 'orik', 'grizk', 'brand', 'valerius', 'eldrin'];
+@@ -207,13 +209,15 @@
+   const profile = useGame((s) => s.profile)!;
+   const layout = useLayout();
+   const phone = layout === 'phone';
+-  const scale = usePixelScale('vendor');
+   const tabs = servicesOf(vendor);
+   const [view, setView] = useState<VendorView>(tabs.includes(initial) ? initial : tabs[0]);
+   const [sel, setSel] = useState<Loc | null>(null);
+   useEffect(() => { actions.tutorialEvent(`vendor:${vendor}`); }, [vendor]);
+   useClearOnDrop(useCallback(() => setSel(null), []));
+   const [marks, setMarks] = useState<string[]>([]);
++  const [shopSel, setShopSel] = useState<string | null>(null);
++  const [shopOpen, setShopOpen] = useState(false);
++  const side_tabs = true;
+   const v = VENDORS[vendor];
+   const st = STATION_OF[vendor];
+   const rep = profile.reputation[vendor] ?? 0;
+@@ -225,9 +229,8 @@
+   const ready = readyQuestCount(profile, vendor);
+   const pend = pendingOf(profile, vendor);
+ 
+-  const title = view === 'station' && st ? MODULES[st].name : view === 'scrap' ? `Desguace de ${v.name}` : view === 'repair' ? `Yunque de ${v.name}` : view === 'infirmary' ? `Enfermería de ${v.name}` : view === 'contracts' ? 'Contratos de Grizk' : view === 'sell' ? `Vender a ${v.name}` : view === 'quests' ? `Encargos de ${v.name}` : `Tienda de ${v.name}`;
+   const center: ReactNode =
+-    view === 'shop' ? <ShopStock vid={vendor} cols={`grid gap-2 ${phone ? 'grid-cols-1' : 'grid-cols-2 2xl:grid-cols-3'}`} />
++    view === 'shop' ? <ShopStock vid={vendor} sel={shopSel} onSel={(id) => { setShopSel(id); if (phone) setShopOpen(true); sfx('click'); }} />
+       : view === 'quests' ? <VendorQuests vendor={vendor} />
+         : view === 'station' && st ? <StationTab id={st} onGo={onGo} />
+           : view === 'repair' ? <RepairPanel />
+@@ -241,24 +244,29 @@
+         <SalePanel vendor={vendor} marks={marks} setMarks={setMarks} onSold={() => setSel(null)} />
+         <div className="panel p-3 mt-3"><ItemCard loc={sel} mode="merchant" onClear={() => setSel(null)} compact /></div>
+       </Panel>
++    : view === 'shop'
++      ? <div className="min-h-0 h-full flex flex-col" style={{ gap: 'var(--gap)' }}>
++          <Panel title="Ficha" className="shrink-0" bodyClassName="flex flex-col" testId="shop-card-panel"><ShopCard vid={vendor} itemId={shopSel} /></Panel>
++          <Panel title={<>Tu mochila · {profile.backpack.filter((x) => !!x && !isCover(x)).length}/{profile.backpack.length}</>} className="min-h-0 flex-1" bodyClassName="overflow-y-auto scroll-thin"><GridView grid={profile.backpack} container="backpack" cols={layout === 'tablet' ? 4 : 5} equipment={profile.equipment} mode="lobby" /></Panel>
++        </div>
+     : crafting
+       ? <Panel title="Tus materiales" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col"><Materials /></Panel>
+       : <Panel title="Tu mochila" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col"><BagSummary /></Panel>;
+ 
+   const tabBar = (
+-    <div className="ui-seg vtabs" role="tablist" data-testid="vendor-tabs">
++    <div className="vtabs-col" role="tablist" aria-orientation={side_tabs ? 'vertical' : 'horizontal'} data-testid="vendor-tabs">
+       {tabs.map((x) => (
+         <button key={x} type="button" role="tab" aria-selected={view === x} className={view === x ? 'on' : ''} onClick={() => go(x)} data-testid={`vendor-view-${x}`}>
+-          {label(x)}{x === 'quests' && ready > 0 && <span className="vtab-dot" aria-label="Misión lista">●</span>}
++          <PixelIcon rows={VENDOR_TAB_ICONS[x]} size={24} color={view === x ? '#1a1206' : 'currentColor'} /><span className="vtab-lbl">{label(x)}</span>{x === 'quests' && ready > 0 && <span className="vtab-dot" aria-label="Misión lista">●</span>}
+           {x === 'station' && pend && pend.kind !== 'quest' && <span className={`vtab-dot ${pend.kind === 'upgrade' ? 'gold' : ''}`} aria-label={pend.text}>{pend.kind === 'upgrade' ? '▲' : '●'}</span>}
+         </button>
+       ))}
+-      <button type="button" onClick={onBack} data-testid="vendor-back">◂ Bastión</button>
+     </div>
+   );
++  const backBtn = <button type="button" className="btn vback" onClick={onBack} data-testid="vendor-back">◂ Bastión</button>;
+   // En la propia pestaña de la estación no se repite: la acción ya está junto a sus requisitos (18/11)
+   const pendBox = pend && !(view === 'station' && pend.kind !== 'quest') && (
+-    <div className="panel p-3 mt-3 text-left" data-testid="vendor-pending">
++    <div className="panel p-3 text-left" data-testid="vendor-pending">
+       <div className="text-[13px] uppercase tracking-[0.12em] text-stone-400">Pendiente</div>
+       <div className="text-[15px] text-parchment mt-1">{pend.kind === 'quest' ? (ready === 1 ? 'Una misión lista para entregar' : `${ready} misiones listas para entregar`) : pend.kind === 'rebuild' ? `${MODULES[st!].name}: ya puedes reconstruirla` : `${MODULES[st!].name}: mejora disponible`}</div>
+       <button className="btn btn-gold w-full mt-2 font-display tracking-[0.1em] uppercase text-xs" style={{ minHeight: 44 }} onClick={() => go(pend.kind === 'quest' ? 'quests' : 'station')} data-testid="vendor-pending-go">
+@@ -267,30 +275,46 @@
+     </div>
+   );
+   const left = (
+-    <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="vendor-panel">
+-      <div className="ui-arch shrink-0" style={{ height: 26 * scale + 30 }}><div className="pb-1"><MonsterSprite sprite={v.sprite} scale={scale} /></div></div>
+-      <div className="text-center font-display text-parchment text-[20px] mt-2" data-testid="vendor-name">{v.name}</div>
+-      <div className="text-center text-[13px] uppercase tracking-[0.1em] text-gold">{PLACES[v.place].name}</div>
+-      <div className="text-center text-[14px]" style={{ color: v.color }}>{v.role}</div>
+-      <p className="font-body italic text-stone-300 text-center text-[15px] leading-snug mt-2">«{v.blurb}»</p>
++    <div className="min-h-0 flex flex-col overflow-y-auto scroll-thin" style={{ gap: 'var(--gap)' }} data-testid="vendor-panel">
++      <div className="panel vtile vcard shrink-0" style={{ height: layout === 'tablet' ? 300 : 380, cursor: 'default' }}>
++        <span className="vtile-name font-display" data-testid="vendor-name">{v.name}</span>
++        <span className="vtile-port"><Bust sprite={v.sprite} /></span>
++        <span className="vtile-info">
++          {st && <img src={stationArtUrl(st, refugeOf(profile)[st] < 1)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: 40, height: 52 }} />}
++          <span className="min-w-0">
++            <span className="block text-gold uppercase tracking-[0.12em] text-[13px] truncate">{PLACES[v.place].name}</span>
++            <span className="block text-[14px] text-stone-300 truncate">{st ? `${MODULES[st].name} · ${refugeOf(profile)[st] < 1 ? 'En ruinas' : `Nv ${refugeOf(profile)[st]}/3`}` : v.role}</span>
++          </span>
++        </span>
++        <span className="vtile-rep"><RepBar rep={rep} />{discount > 0 && <span className="block text-[13px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento</span>}</span>
++      </div>
++      {tabBar}
++      <div className="shrink-0 mt-2">{backBtn}</div>
+       {pendBox}
+-      <div className="flex-1" />
+-      <div className="mt-3"><RepBar rep={rep} /></div>
+-      {discount > 0 && <div className="text-[13px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento por tu reputación</div>}
+-    </Panel>
++    </div>
+   );
+-  const main = <Panel title={title} className="min-h-0 flex-1" bodyClassName={`overflow-y-auto scroll-thin ${view === 'sell' ? 'flex flex-col' : ''}`} testId={`vendor-main-${view}`}>{center}</Panel>;
++  const main = <Panel className="min-h-0 flex-1" bodyClassName={`overflow-y-auto scroll-thin ${view === 'sell' ? 'flex flex-col' : ''}`} testId={`vendor-main-${view}`}>{center}</Panel>;
+   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
+ 
+   if (phone) {
+     return (
+       <div className="h-full flex flex-col relative min-h-0" style={{ ...pad, paddingRight: 'calc(max(var(--pad), env(safe-area-inset-right)) + 40px)' }} data-testid="vendor-interior">
+-        <div className="flex items-center gap-2 shrink-0 min-w-0" data-testid="vendor-panel">
+-          <MonsterSprite sprite={v.sprite} scale={1} />
+-          <span className="font-display text-parchment shrink-0" data-testid="vendor-name">{v.name}</span>
+-          <div className="min-w-0 overflow-x-auto scroll-thin">{tabBar}</div>
++        <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: '150px minmax(0,1fr)', gap: 'var(--gap)' }}>
++          <div className="min-h-0 flex flex-col overflow-y-auto scroll-thin" style={{ gap: 6 }} data-testid="vendor-panel">
++            <div className="flex items-center gap-2 px-1"><MonsterSprite sprite={v.sprite} scale={1} /><span className="font-display text-parchment truncate text-[15px]" data-testid="vendor-name">{v.name}</span></div>
++            {tabBar}
++            <div className="mt-1">{backBtn}</div>
++          </div>
++          {main}
+         </div>
+-        {main}
++        {shopOpen && shopSel && (
++          <div className="fixed inset-0 z-50 bg-black/75 flex fade-in" onMouseDown={(e) => e.target === e.currentTarget && setShopOpen(false)} data-testid="shop-card-overlay">
++            <div className="panel m-auto p-4 flex flex-col gap-3" style={{ width: 'min(520px, calc(100% - 24px))', maxHeight: 'calc(100% - 16px)', overflowY: 'auto' }}>
++              <ShopCard vid={vendor} itemId={shopSel} />
++              <button className="btn text-[15px]" style={{ minHeight: 44 }} onClick={() => setShopOpen(false)} data-testid="shop-card-close">Cerrar</button>
++            </div>
++          </div>
++        )}
+         <Drawer label={crafting ? 'Materiales' : view === 'sell' ? (marks.length ? `Vender (${marks.length})` : 'A vender') : 'Mochila'} side="right" testId="vendor-side">{side}</Drawer>
+       </div>
+     );
+@@ -299,7 +323,7 @@
+   return (
+     <div className="h-full grid" style={{ ...pad, gridTemplateColumns: `${layout === 'tablet' ? 220 : 300}px minmax(0,1fr) ${sideW}px` }} data-testid="vendor-interior">
+       {left}
+-      <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }}>{tabBar}{main}</div>
++      <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }}>{side_tabs ? null : <div className="flex items-center gap-2 shrink-0">{backBtn}{tabBar}</div>}{main}</div>
+       <div className="min-h-0">{side}</div>
+     </div>
+   );

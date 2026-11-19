@@ -1,6 +1,6 @@
 # Gravevow · Estado del proyecto
 
-Última actualización: 19/11/2026 (fase 1 de la mejora de la interfaz: paleta piedra fría, botones planos y pestañas con icono). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
+Última actualización: 19/11/2026 (fases 1 y 2 de la mejora de la interfaz: paleta piedra fría, botones planos, pestañas con icono e interior del mercader). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
 
 ## Cómo retomar el trabajo
 - En un ordenador nuevo o en otra sesión: haz pull en GitHub Desktop y escribe a Claude «Lee CLAUDE.md y ESTADO_PROYECTO.md» seguido de la tarea.
@@ -51,7 +51,7 @@
 - **Legal:** aviso legal, privacidad y cookies. Los datos del titular solo van en imagen y el correo de contacto también.
 
 ## En curso / por verificar
-- **19/11, mejora de la interfaz:** plan en `docs/plan-mejora-interfaz.md`. **Fase 1 hecha** (paleta piedra fría, botones planos, pestañas con icono; `mockups/fase1-base`). Siguiente: maqueta de la fase 2 (interior del mercader: tienda con ficha y «Comprar», pestañas al lateral en móvil y tableta).
+- **19/11, mejora de la interfaz:** plan en `docs/plan-mejora-interfaz.md`. **Fases 1 y 2 hechas** (fase 1: paleta piedra fría, botones planos, pestañas con icono, `mockups/fase1-base`; fase 2: interior del mercader con tarjeta del Bastión, pestañas en columna con icono, tienda con ficha y un solo «Comprar», tarjeta «Volver al Bastión», `mockups/fase2-mercader`). Siguiente: maqueta de la fase 3 (inventario), con los menús laterales en móvil y tableta donde toque.
 - **12/11, tutoriales fase 5:** mini tutoriales de la expedición: reloj, necesidades, sangrado, fractura, zona vital, pieza rota, mochila llena, triángulo del errante y Kael (encima de su ventana), élite, jefe y habilidad de clase (en combate) y uno por subzona desde la segunda. Los lanza `ExpeditionMinis.tsx`. Prueba: `scripts/e2e-exp-minis.cjs`.
 - **12/11, tutoriales, cierre:** mini tutoriales de los desbloqueos `unlock.stash-page` y `unlock.shared-page` (al comprar la página) y `unlock.class-skill` (al elegir la habilidad en el aviso de hito); la migración también los da por vistos si ya había página comprada, Compartido o habilidad elegida. Script nuevo `scripts/migracion-minis-check.cjs` (partida antigua con historia: sin «!» en lo usado, con «!» en lo nuevo), pasa en 3 tamaños. Arreglados `menus-check` (entra por «Mercaderes» del Bastión) y `e2e.cjs` (kit de recluta nuevo: vendas, pan, agua y espada de recluta); los dos pasan.
 - **12/11, tutoriales fase 8 (bloque 3 terminado):** migración de jugadores con partida (opción a). `core/tutorialsMigration.ts` (`seenFromHistory`) da por vistos, al cargar una partida sin `account.tutorials` (también el perfil antiguo y las copias de antes), los mini tutoriales de lo ya usado: pestañas y reloj si hay expediciones, mercaderes con reputación, estaciones construidas y sus niveles, primera muerte, venta y rango, jefe, élite, Kael, atuendo, copia, Ajustes y subzonas hasta la más honda. Lo demás queda pendiente; sin expediciones no se marca nada. Test `tests/tutorials-migracion.test.ts` (6); suite 484.

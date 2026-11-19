@@ -19,7 +19,7 @@ const OUT = process.argv[3] || 'public/screenshots';
   });
   await page.click('[data-testid=tab-merchants]');
   await page.click('[data-testid=vendor-orvel]');
-  for (const id of ['iron_helm', 'gauntlets', 'chainmail', 'iron_sword', 'health_potion', 'copper_ring', 'antidote']) await page.click(`[data-testid=buy-${id}]`);
+  for (const id of ['iron_helm', 'gauntlets', 'chainmail', 'iron_sword', 'health_potion', 'copper_ring', 'antidote']) { await page.click(`[data-testid=shop-row-${id}]`); await page.click(`[data-testid=buy-${id}]`); }
   await page.click('[data-testid=tab-stash]');
   for (const id of ['iron_helm', 'gauntlets', 'chainmail', 'iron_sword', 'copper_ring']) {
     const el = await page.$(`[data-testid^=slot-backpack][data-item=${id}]`);

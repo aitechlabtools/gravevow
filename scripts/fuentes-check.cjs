@@ -21,22 +21,22 @@ const [,, url = 'http://localhost:5173/play/', out = 'fuentes', dev] = process.a
     g.setState({ profile: { ...pr, character: { ...pr.character, level: 12 }, gold: 5000, reputation: { ...pr.reputation, brand: 400 } } }); });
   await tap('[data-testid=tab-merchants]'); // Garth vende harina; Nira, madera
   await p.waitForSelector('[data-testid=vendor-garth]'); await tap('[data-testid=vendor-garth]');
-  await p.waitForSelector('[data-testid=buy-flour]'); await small('[data-testid=buy-flour]', 'Comprar harina');
-  await tap('[data-testid=buy-flour]'); await p.waitForTimeout(150);
+  await p.waitForSelector('[data-testid=shop-row-flour]'); await small('[data-testid=shop-row-flour]', 'Fila de la harina');
+  await tap('[data-testid=shop-row-flour]'); await tap('[data-testid=buy-flour]'); await p.$('[data-testid=shop-card-close]').then((c) => c && c.tap()); await p.waitForTimeout(150);
   await tap('[data-testid=vendor-back]');
-  await tap('[data-testid=vendor-nira]'); await p.waitForSelector('[data-testid=buy-old_wood]');
-  await tap('[data-testid=buy-old_wood]'); await p.waitForTimeout(150);
+  await tap('[data-testid=vendor-nira]'); await p.waitForSelector('[data-testid=shop-row-old_wood]');
+  await tap('[data-testid=shop-row-old_wood]'); await tap('[data-testid=buy-old_wood]'); await p.$('[data-testid=shop-card-close]').then((c) => c && c.tap()); await p.waitForTimeout(150);
   const has = await G(() => { const pr = window.__GRAVEVOW__.getState().profile; const all = [...pr.backpack, ...pr.stash]; return ['flour', 'old_wood'].map((id) => all.some((x) => x && x.itemId === id)); });
   if (!has[0] || !has[1]) fail('no se compraron harina y madera: ' + has);
   await tap('[data-testid=vendor-back]');
 
   // Brand: plano raro con reputación «De confianza»; comprarlo lo aprende
-  await tap('[data-testid=vendor-brand]'); await p.waitForSelector('[data-testid=buy-bp_tempered_sword]');
-  await p.$eval('[data-testid=buy-bp_tempered_sword]', (e) => e.scrollIntoView({ block: 'center' }));
-  await small('[data-testid=buy-bp_tempered_sword]', 'Comprar plano');
+  await tap('[data-testid=vendor-brand]'); await p.waitForSelector('[data-testid=shop-row-bp_tempered_sword]');
+  await p.$eval('[data-testid=shop-row-bp_tempered_sword]', (e) => e.scrollIntoView({ block: 'center' }));
+  await small('[data-testid=shop-row-bp_tempered_sword]', 'Fila del plano');
   await wide('Tienda de Brand');
   await p.screenshot({ path: out + '-brand.png' });
-  await tap('[data-testid=buy-bp_tempered_sword]'); await p.waitForTimeout(150);
+  await tap('[data-testid=shop-row-bp_tempered_sword]'); await tap('[data-testid=buy-bp_tempered_sword]'); await p.$('[data-testid=shop-card-close]').then((c) => c && c.tap()); await p.waitForTimeout(150);
   const st = await G(() => { const pr = window.__GRAVEVOW__.getState().profile; return { known: (pr.blueprints || []).includes('bp_tempered_sword'), left: [...pr.backpack, ...pr.stash].some((x) => x && x.itemId === 'bp_tempered_sword') }; });
   if (!st.known || st.left) fail('el plano comprado no se aprendió: ' + JSON.stringify(st));
   await tap('[data-testid=vendor-back]');
