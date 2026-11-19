@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gravevow · Fase 1: base común (antes y después)</title>
+<style>
+  body { margin:0; background:#0a090c; color:#e6e0d2; font:15px/1.5 Georgia, serif; }
+  header { position:sticky; top:0; z-index:5; background:#0a090cf0; border-bottom:1px solid #3a3841; padding:8px 20px; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; }
+  h1 { font-size:18px; margin:0; color:#e8b33a; font-weight:600; }
+  .seg button { min-height:44px; min-width:44px; padding:0 14px; background:#151419; color:#e6e0d2; border:1px solid #3a3841; cursor:pointer; font:inherit; }
+  .seg button.on { background:#cf9a2c; color:#1a1206; border-color:#cf9a2c; }
+  main { padding:12px 20px 60px; }
+  p, li { color:#c9c4b8; max-width:1050px; }
+  h2 { font-size:16px; margin:26px 0 6px; border-top:1px solid #3a3841; padding-top:14px; }
+  h2 small { color:#a7a4ae; font-weight:400; font-family:monospace; font-size:12px; margin-left:8px; }
+  .row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  figcaption { font-size:13px; color:#a7a4ae; margin-bottom:4px; } figcaption b { color:#e6e0d2; }
+  figure { margin:0; }
+  img { display:block; width:100%; height:auto; border:1px solid #3a3841; cursor:zoom-in; }
+  .zoom { position:fixed; inset:0; background:#000e; z-index:20; display:none; align-items:center; justify-content:center; padding:10px; }
+  .zoom.on { display:flex; } .zoom img { max-width:100%; max-height:100%; width:auto; cursor:zoom-out; }
+  @media (max-width:900px) { .row { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Fase 1 · Base común</h1>
+  <div class="seg" id="fmt"></div>
+</header>
+<main>
+  <p>Maqueta sobre el juego real (estilos inyectados solo para las capturas; el código no se ha tocado). Tres columnas: antes (<code>mockups/plan-interfaz/actual</code>), la maqueta aprobada y el juego real ya implementado (<code>node mockups/fase1-base/capturar-real.cjs http://localhost:5173/play/</code>). Toca una imagen para verla en grande. Se rehace con <code>node mockups/fase1-base/capturar.cjs http://localhost:5173/play/</code>.</p>
+  <ul>
+    <li><b>Paleta piedra fría</b> en todo el juego: fondo #0a090c, paneles #151419, bordes #3a3841, texto #e6e0d2.</li>
+    <li><b>Texto secundario legible:</b> el gris que se usa 156 veces pasa de 2,9 a 7,5 de contraste; el desactivado, de 3,2 a 4,7 (color fijo en lugar de transparencia).</li>
+    <li><b>Paneles y botones planos:</b> sin degradados ni sombras (de unos 310 elementos con degradado por formato a unos 105; los que quedan son barras, retratos del Bastión y escena de combate, que se tratan en sus fases).</li>
+    <li><b>Dorado relleno solo en el botón principal</b> y en la pestaña activa. Botón de peligro en rojo de contorno.</li>
+    <li><b>Pestañas con icono</b> (12×12, un color, como Apoyar y Discord). En el móvil, nombre solo en la activa: ya no se corta «Jugar» ni «Tienda».</li>
+    <li>No cambia nada más: textos, posiciones, botones y tutoriales siguen igual. La tienda nueva es la fase 2.</li>
+  </ul>
+  <h2>Barra de pestañas en distintos anchos (juego real)</h2>
+  <p>Móvil 844, 740 y 667 px: centrada; en los estrechos, retrato sin nombre y sin el botón de pantalla completa en la barra (sigue en Ajustes › Pantalla y con F).
+  Tableta 1279, 1180, 1100, 1024 y 900 px: icono encima del nombre; por debajo de 1100 px, nombre solo en la activa. Iconos siempre a 24 px (×2).</p>
+  <div class="row" style="grid-template-columns:1fr 1fr"><figure><figcaption><b>Móvil</b></figcaption><img src="real/barra-movil-anchos.png" alt="Barra en el móvil"></figure>
+  <figure><figcaption><b>Tableta</b></figcaption><img src="real/barra-tableta-anchos.png" alt="Barra en la tableta"></figure></div>
+  <div id="list"></div>
+</main>
+<div class="zoom" id="zoom"><img alt=""></div>
+<script>
+const F = { escritorio: 'Escritorio 1920×1080', tableta: 'Tableta 1180×820', movil: 'Móvil 844×390' };
+const S = [
+  ['01-titulo', 'Menú principal'], ['02-jugar', 'Jugar'], ['03-habilidades', 'Habilidades'], ['04-alijo', 'Alijo › Equipo'],
+  ['05-alijo-heridas', 'Alijo › Heridas'], ['06-bastion', 'Bastión'], ['07-mercader-nira', 'Mercader › Tienda'], ['08-mercader-vender', 'Mercader › Vender'],
+  ['09-estacion-forja', 'Estación en ruinas'], ['10-misiones', 'Misiones'], ['11-bestiario', 'Bestiario'], ['12-tienda', 'Tienda de atuendos'],
+  ['13-ajustes', 'Ajustes'], ['14-mazmorra', 'HUD de exploración'], ['15-mazmorra-inventario', 'Inventario en la expedición'], ['16-combate', 'Combate'],
+  ['17-combate-especial', 'Combate › Ataque especial'], ['18-resultados', 'Resultados'], ['19-resultados-botin', 'Resultados › Botín'],
+];
+let fmt = 'movil';
+function render() {
+  const el = document.getElementById('fmt'); el.innerHTML = '';
+  for (const [k, v] of Object.entries(F)) { const b = document.createElement('button'); b.textContent = v; if (k === fmt) b.className = 'on'; b.onclick = () => { fmt = k; render(); }; el.append(b); }
+  document.getElementById('list').innerHTML = S.map(([id, n]) => `<h2>${id.slice(0, 2)} · ${n}</h2><div class="row">
+    <figure><figcaption><b>Antes</b></figcaption><img src="../plan-interfaz/actual/${fmt}-${id}.png" alt="${n}, antes" loading="lazy"></figure>
+    <figure><figcaption><b>Maqueta</b> aprobada</figcaption><img src="despues/${fmt}-${id}.png" alt="${n}, maqueta" loading="lazy"></figure>
+    <figure><figcaption><b>Juego real</b> (implementado)</figcaption><img src="real/${fmt}-${id}.png" alt="${n}, juego real" loading="lazy"></figure></div>`).join('');
+}
+document.addEventListener('click', (e) => {
+  const z = document.getElementById('zoom');
+  if (e.target.matches('main img')) { z.querySelector('img').src = e.target.src; z.classList.add('on'); }
+  else if (z.contains(e.target)) z.classList.remove('on');
+});
+render();
+</script>
+</body>
+</html>

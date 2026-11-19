@@ -43,6 +43,7 @@ const VIEWS = [
 async function run(s) {
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: s.vp, hasTouch: s.touch, isMobile: s.touch, deviceScaleFactor: 1 });
+  await ctx.addInitScript(() => { try { localStorage.setItem('gv-consent', '{"analytics":false}'); } catch {} }); // el aviso de cookies tapa botones en el móvil
   const p = await ctx.newPage();
   const errs = [];
   p.on('pageerror', (e) => errs.push(e.message));

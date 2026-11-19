@@ -37,7 +37,8 @@ const DISCORD = [
   '..X......X..',
 ];
 
-function PixelIcon({ rows, size, color, label }: { rows: string[]; size: number; color: string; label?: string }) {
+/** Icono en pixel art de un color: filas de texto con «X» donde hay píxel. Se escala sin difuminar. Lo usan también las pestañas del juego. */
+export function PixelIcon({ rows, size, color, label }: { rows: string[]; size: number; color: string; label?: string }) {
   const w = rows[0].length;
   const h = rows.length;
   const rects: ReactElement[] = [];
@@ -53,7 +54,7 @@ function PixelIcon({ rows, size, color, label }: { rows: string[]; size: number;
   });
   return (
     <svg width={size} height={Math.round((size * h) / w)} viewBox={`0 0 ${w} ${h}`} fill={color} shapeRendering="crispEdges"
-      aria-hidden={label ? undefined : true} role={label ? 'img' : undefined} aria-label={label} style={{ display: 'block', flex: 'none' }}>
+      aria-hidden={label ? undefined : true} role={label ? 'img' : undefined} aria-label={label} className="pxi" style={{ display: 'block', flex: 'none' }}>
       {rects}
     </svg>
   );

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gravevow · Paleta, pestañas con icono y tienda del mercader (maqueta)</title>
+<style>
+  body { margin:0; background:#0a0a0a; color:#e4dfd4; font:15px/1.5 Georgia, serif; }
+  header { position:sticky; top:0; z-index:5; background:#0a0a0af0; border-bottom:1px solid #3a3a3a; padding:8px 20px; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; }
+  h1 { font-size:18px; margin:0; color:#e8b33a; font-weight:600; }
+  .seg button { min-height:44px; min-width:44px; padding:0 14px; background:#151515; color:#e4dfd4; border:1px solid #3a3a3a; cursor:pointer; font:inherit; }
+  .seg button.on { background:#cf9a2c; color:#1a1206; border-color:#cf9a2c; }
+  .seg span { color:#a6a6a6; font-size:13px; margin-right:6px; }
+  main { padding:12px 20px 60px; }
+  h2 { font-size:17px; margin:30px 0 4px; border-top:1px solid #3a3a3a; padding-top:16px; color:#e8b33a; font-weight:600; }
+  h3 { font-size:15px; margin:18px 0 6px; }
+  p, li { color:#c9c4b8; max-width:1000px; }
+  .row { display:grid; gap:10px; }
+  .row.c3 { grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .row.c2 { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  figure { margin:0; }
+  figcaption { font-size:13px; color:#a6a6a6; margin-bottom:4px; }
+  figcaption b { color:#e4dfd4; }
+  img { display:block; width:100%; height:auto; border:1px solid #3a3a3a; cursor:zoom-in; }
+  table { border-collapse:collapse; font-size:14px; margin-top:8px; }
+  td, th { border:1px solid #3a3a3a; padding:5px 10px; text-align:left; }
+  th { color:#a6a6a6; font-weight:400; }
+  .ok { color:#5fd19a; } .ko { color:#ff6a5a; }
+  .zoom { position:fixed; inset:0; background:#000e; z-index:20; display:none; align-items:center; justify-content:center; padding:10px; }
+  .zoom.on { display:flex; } .zoom img { max-width:100%; max-height:100%; width:auto; cursor:zoom-out; }
+  @media (max-width:900px) { .row.c3, .row.c2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Maqueta: paleta, pestañas y tienda</h1>
+  <div class="seg" id="fmt"><span>Formato</span></div>
+  <div class="seg" id="pal"><span>Paleta de la propuesta</span></div>
+</header>
+<main>
+  <p>Hecha sobre el juego real inyectando estilos solo para las capturas: el código del juego no se ha tocado. Guerrero de nivel 45 con 4860 de oro. Toca una imagen para verla en grande. Se rehace con <code>node mockups/propuesta-paleta/capturar.cjs http://localhost:5173/play/</code>.</p>
+  <p>Límite de la maqueta: los colores escritos directamente en algunos componentes (barras, escena de combate, retratos) no cambian con la paleta; en la implementación sí pasarían a variables.</p>
+
+  <h2>1 · Paleta: actual, gris neutro y piedra fría</h2>
+  <p><b>Gris neutro</b> son los valores de la propuesta externa. <b>Piedra fría</b> tiene la misma luminosidad con un poco de tinte violeta, como la piedra actual. Las dos van planas (sin degradados ni sombras en paneles y botones), con el texto secundario más claro y el dorado relleno para el botón principal.</p>
+  <table>
+    <tr><th>Contraste (mínimo 4,5)</th><th>Actual</th><th>Gris neutro</th><th>Piedra fría</th></tr>
+    <tr><td>Texto principal</td><td class="ok">14,0</td><td class="ok">13,7</td><td class="ok">13,9</td></tr>
+    <tr><td>Texto secundario (el gris más usado)</td><td class="ko">2,9</td><td class="ok">7,5</td><td class="ok">7,5</td></tr>
+    <tr><td>Desactivado</td><td class="ko">3,2</td><td class="ok">4,6</td><td class="ok">4,7</td></tr>
+    <tr><td>Dorado</td><td class="ok">9,5</td><td class="ok">9,5</td><td class="ok">9,5</td></tr>
+  </table>
+  <div id="pal-shots"></div>
+
+  <h2>2 · Pestañas con icono</h2>
+  <p>Iconos de 12×12 de un solo color, como Apoyar y Discord, a ×2: Jugar (puerta con escalones), Habilidades (rombo), Alijo (cofre), Bastión (torre), Misiones (nota clavada), Bestiario (calavera) y Tienda (túnica). En escritorio y tableta, icono y nombre; en el móvil, <b>solo la pestaña activa lleva el nombre</b> y ya no se corta nada.</p>
+  <div id="tab-shots"></div>
+
+  <h2>3 · Tienda del mercader (pantalla piloto)</h2>
+  <ul>
+    <li>Fuera el título «Tienda de Nira» (repetía la pestaña) y el oro del pie de la mochila (ya está arriba).</li>
+    <li>El precio pasa a texto dorado con moneda; no hay un botón por fila. Si no llega el oro, el precio sale gris.</li>
+    <li>Los de otra clase llevan el nombre apagado; los bloqueados, candado pixel y el rango que falta (antes, un emoji).</li>
+    <li>Tocar una fila la elige (borde dorado y rombo) y abre su ficha con <b>un solo botón dorado: «Comprar · 5 oro»</b>. En escritorio y tableta la ficha va encima de la mochila; en el móvil, a pantalla completa con «◂ Volver».</li>
+    <li>Móvil: dos columnas y letra de 13 px (antes 10-11 px y solo cuatro filas).</li>
+  </ul>
+  <div id="shop-shots"></div>
+</main>
+<div class="zoom" id="zoom"><img alt=""></div>
+<script>
+const F = { escritorio: 'Escritorio 1920×1080', tableta: 'Tableta 1180×820', movil: 'Móvil 844×390' };
+const P = { piedra: 'Piedra fría', neutro: 'Gris neutro' };
+let fmt = 'escritorio', pal = 'piedra';
+const fig = (src, cap) => `<figure><figcaption>${cap}</figcaption><img src="capturas/${src}.png" alt="${cap.replace(/<[^>]+>/g, '')}" loading="lazy"></figure>`;
+function seg(id, obj, cur, set) {
+  const el = document.getElementById(id); el.querySelectorAll('button').forEach((b) => b.remove());
+  for (const [k, v] of Object.entries(obj)) { const b = document.createElement('button'); b.textContent = v; if (k === cur) b.className = 'on'; b.onclick = () => { set(k); render(); }; el.append(b); }
+}
+function render() {
+  seg('fmt', F, fmt, (k) => (fmt = k)); seg('pal', P, pal, (k) => (pal = k));
+  const S = [['a-bastion', 'Bastión'], ['b-tienda', 'Tienda de Nira'], ['c-alijo', 'Alijo'], ['g-combate', 'Combate']];
+  document.getElementById('pal-shots').innerHTML = S.map(([k, n]) => `<h3>${n}</h3><div class="row c3">${fig(`${fmt}-actual-${k}`, '<b>Actual</b>')}${fig(`${fmt}-neutro-${k}`, '<b>Gris neutro</b>')}${fig(`${fmt}-piedra-${k}`, '<b>Piedra fría</b>')}</div>`).join('');
+  document.getElementById('tab-shots').innerHTML = `<div class="row c2">${fig(`${fmt}-actual-d-pestanas`, '<b>Antes</b>')}${fig(`${fmt}-${pal}-d-pestanas`, `<b>Propuesta</b> · ${P[pal]}`)}</div>`;
+  document.getElementById('shop-shots').innerHTML = `<div class="row c3">${fig(`${fmt}-actual-b-tienda`, '<b>Antes</b>')}${fig(`${fmt}-${pal}-e-tienda-nueva`, `<b>Propuesta: lista</b> · ${P[pal]}`)}${fig(`${fmt}-${pal}-f-tienda-ficha`, `<b>Propuesta: objeto elegido</b> · ${P[pal]}`)}</div>`;
+}
+document.addEventListener('click', (e) => {
+  const z = document.getElementById('zoom');
+  if (e.target.matches('main img')) { z.querySelector('img').src = e.target.src; z.classList.add('on'); }
+  else if (z.contains(e.target)) z.classList.remove('on');
+});
+render();
+</script>
+</body>
+</html>

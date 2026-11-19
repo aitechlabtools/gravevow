@@ -65,7 +65,7 @@ export function Lobby() {
   const xpPct = Math.round((ch.xp / xpForNextLevel(ch.level)) * 100);
 
   return (
-    <div className="h-full flex flex-col relative" style={{ background: 'radial-gradient(ellipse at 50% 30%, #1a1520 0%, #0d0b11 55%, #07060a 100%)' }}>
+    <div className="h-full flex flex-col relative" style={{ background: 'var(--color-void)' }}>
       {/* Barra superior: quién eres, pestañas en píldora, oro, pantalla completa y ajustes */}
       <header className="ui-nav" data-testid="lobby-nav">
         <div className="flex items-center min-w-0">
@@ -73,7 +73,7 @@ export function Lobby() {
         <button className={`flex items-center shrink-0 text-left ${layout === 'phone' ? 'gap-1.5' : 'gap-2'}`} style={{ minHeight: 44 }} data-testid="nav-chip"
           onClick={() => { sfx('click'); setSwitcher(!switcher); }} aria-label="Cambiar de personaje" aria-expanded={switcher}>
           <div className={`${layout === 'phone' ? 'w-8 h-8' : 'w-10 h-10'} flex items-end justify-center overflow-hidden bg-[#0d0c11] border-2 ${switcher ? 'border-gold' : 'border-stone-700'}`}><PlayerSprite scale={layout === 'phone' ? 1 : 2} animate={false} /></div>
-          <div className={`min-w-0 ${layout === 'phone' ? 'w-[74px]' : 'w-28'} leading-tight`}>
+          <div className={`nav-chip-txt min-w-0 ${layout === 'phone' ? 'w-[74px]' : 'w-28'} leading-tight`}>
             <div className={`font-display truncate ${layout === 'phone' ? 'text-xs' : 'text-sm'}`}><span data-testid="hero-name">{ch.name}</span> <span className="text-gold">▾</span></div>
             <div className="text-[11px] text-stone-300 truncate">{layout === 'phone' ? 'Nv' : `${className(ch.classId, ch.appearance.sex)} · Nv`} <span data-testid="hero-level">{ch.level}</span></div>
             <div className="h-1 bg-stone-800 mt-1"><div className="h-full bg-arcane" style={{ width: `${xpPct}%` }} /></div>
@@ -83,7 +83,7 @@ export function Lobby() {
         <PillBar tabs={tabs} active={tab} onChange={go} />
         <div className={`flex items-center justify-end min-w-0 ${layout === 'phone' ? 'gap-1.5' : 'gap-2.5'}`}>
         <GoldAmount value={profile.gold} className={layout === 'phone' ? 'text-sm' : 'text-lg'} />
-        <FullscreenButton className="icon-btn" />
+        <FullscreenButton className="icon-btn nav-fs" />
         <button className="btn icon-btn" onClick={() => { sfx('click'); setSettings('guide'); }} style={{ minWidth: 44, minHeight: 44 }}
           aria-label="Guía" title={touch ? undefined : 'Guía'} data-testid="btn-lobby-guide"><span className="font-display text-lg leading-none" aria-hidden>?</span></button>
         <button className="btn icon-btn relative" onClick={() => { sfx('click'); setSettings('menu'); }} style={{ minWidth: 44, minHeight: 44 }}

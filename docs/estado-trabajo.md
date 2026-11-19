@@ -4,6 +4,20 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 19/11 (2): fase 1 de la interfaz implementada (paleta, botones planos y pestañas con icono)
+- **Decisiones del usuario:** paleta «piedra fría»; pestañas con icono y nombre solo en la activa en el móvil; comprar tocando el objeto y «Comprar» en su ficha (fase 2); iconos hechos por Claude en la línea de Apoyar y Discord; piloto = interior del mercader; barra del móvil centrada; menús horizontales secundarios a los laterales en móvil y tableta (cuando toque cada pantalla).
+- **Hecho:** paleta en `game.css` (solo el juego), paneles y botones planos, tres niveles de botón, desactivado legible, texto secundario de 2,9 a 7,5 de contraste, fondo del lobby sin degradado, pestañas con icono (`kit/tabIcons.ts`, `PixelIcon` exportado de `shared/community.tsx`), barra del móvil centrada y compacta en móviles estrechos, tableta con icono encima del nombre.
+- **Maquetas y capturas:** `mockups/propuesta-paleta` (comparación de paletas y tienda), `mockups/fase1-base/index.html` (antes, maqueta y juego real; 19 pantallas × 3 formatos y la barra en varios anchos).
+- **Pruebas:** tsc, 512 tests, `menus-check` en los tres formatos, `e2e-bienvenida` (escritorio, iPhone e iPad), `e2e-bastion-minis`, `e2e-guia`. Arreglos en pruebas: `menus-check` da por contestado el aviso de cookies (lo tapaba en el móvil) y `e2e-bastion-minis` busca `seg-status` en vez del texto «Estado» (ahora «Heridas»). Otras pruebas e2e también chocan con el aviso de cookies si no lo contestan; conviene añadirles lo mismo.
+- Tutoriales: revisados, sin cambios (mismos `data-testid`; el resaltado de las pestañas se ve igual).
+
+## Novedades del 19/11: plan de mejora visual y de usabilidad de la interfaz (solo plan)
+- **Plan:** `docs/plan-mejora-interfaz.md` (diagnóstico con 27 problemas P-xx, valoración de la propuesta externa, base común de variables, botones, estados y familia de iconos, piloto, fases 0-7, arte nuevo y contraste medido). **Pendiente de aprobación**: no se ha cambiado código del juego.
+- **Capturas del estado actual:** `mockups/plan-interfaz/index.html` (19 pantallas × 3 formatos, con los problemas marcados y la revisión automática de textos < 12 px, zonas < 44 px y textos cortados). Rehacerlas: `node mockups/plan-interfaz/capturar.cjs http://localhost:5173/play/ [formato]`.
+- **Indicación del usuario:** el dorado relleno se mantiene para el botón principal y la pestaña o elemento activo, sin abusar (uno por zona).
+- **Regla para las fases siguientes:** maqueta y capturas en los tres formatos → aprobación → implementación → capturas reales.
+- Tutoriales: revisados, sin cambios.
+
 ## Novedades del 18/11: Misiones (tablón de notas) y Bestiario (galería de trofeos)
 - **Maquetas:** `mockups/misiones-bestiario-visual` (v1, v2 corregida con la paleta del juego y comparación con el juego real). Prototipo en `proto.html`; capturas con `capturar.cjs` (maqueta) y `capturar-juego.cjs` (juego).
 - **Misiones** (`screens/Misiones.tsx`, piezas en `ui/QuestNotes.tsx`): «Tus misiones N/5» como notas oscuras con clavo (chincheta roja si está fijada), retrato del mercader, el objetivo en grande (criatura, objeto, veta, cofre o portal; corona si es jefe), título, progreso grande con barra fina y recompensas en iconos (moneda, XP y blasón de reputación del color del mercader). Repetible: icono de flechas en circuito. Lista: borde dorado, aviso «● Cumplida/Lista» y Cobrar/Entregar en la propia nota (único botón visible). Al tocar una nota, detalle con descripción, Fijar, Dejar (con confirmación) y Cobrar: panel a la derecha en escritorio y tableta, pantalla completa en el móvil. Huecos libres con «Ir al Bastión». El párrafo explicativo pasa al «?» (`quests-help`). Debajo, «Tablón de encargos» con selector de mercader (`quests-<id>`) y notas con «Aceptar»/«Tablón lleno»; «Encargos antiguos» plegados al final.

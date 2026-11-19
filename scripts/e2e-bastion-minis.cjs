@@ -105,7 +105,7 @@ const DEVICE = process.argv[4];
 
   // Intendencia › Estado
   await tap('[data-testid=tab-stash]');
-  const seg = await page.$('[data-testid=alijo-seg] button:has-text("Estado")');
+  const seg = await page.$('[data-testid=seg-status]'); // «Heridas» (antes «Estado»)
   if (touch) await seg.tap(); else await seg.click();
   await walk('tab.intendencia');
 

@@ -234,3 +234,16 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - **Bestiario** (`ui/BestiaryTab.tsx`, CSS «Bestiario»): el nivel de conocimiento es el color del borde, no un texto. Jefes en casilla doble (`.btile.boss`), avisos rectos en la esquina superior izquierda para no tapar el sprite.
 - **Estilo plano:** en estas dos pantallas los paneles y botones van sin degradado (`.qscreen`, `.qdetail`, `.bscreen`). Usa solo colores de `theme.css`/`game.css`; la única luz permitida es la cálida de las tarjetas del Bastión detrás de los personajes.
 - Iconos pequeños nuevos (XP, reputación, repetible, clavo, chincheta, candado, corona, calavera, libro, sombra): `ui/uiIcons.ts`, a escala entera.
+
+## Paleta, botones y pestañas con icono (fase 1 del plan de interfaz, 19/11)
+- **Paleta «piedra fría»**: bloque al principio de `src/game/game.css` (solo el juego; la web usa `theme.css` sin cambios). Fondo #0a090c, panel
+  `stone-900` #151419, botón `stone-800` #1b1a20, borde `stone-600` #3a3841, texto `parchment` #e6e0d2, secundario `stone-300/400` #a7a4ae (7,5:1),
+  desactivado `stone-500` #82808a (4,7:1). Para cambiar la paleta, cambia esos valores. No escribas grises sueltos: usa estas clases o variables.
+- **Paneles y botones planos**, sin degradados ni sombras. Tres niveles de botón: `.btn-gold` principal (relleno dorado `--gold-fill`; **uno por zona**,
+  y en la pestaña activa), `.btn` secundario, `.btn-danger` con consecuencias (contorno y texto `--danger-tx`). Desactivado: texto `stone-500`, no transparencia;
+  un `.btn-gold` desactivado se ve como secundario. `.ui-seg button.on` también es dorado plano.
+- **Pestañas con icono** (`kit/PillBar.tsx`, iconos en `kit/tabIcons.ts`): siluetas de un color en 12×12 dibujadas con `PixelIcon` (`shared/community.tsx`,
+  la misma línea que Apoyar y Discord), siempre a 24 px (×2). Escritorio: icono y nombre al lado. Tableta: icono encima del nombre; por debajo de 1100 px,
+  nombre solo en la activa. Móvil: centradas, nombre solo en la activa; con ≤ 800 px de ancho, retrato sin nombre (`.nav-chip-txt`) y sin pantalla completa
+  en la barra (`.nav-fs`; sigue en Ajustes › Pantalla y con F). Cada pestaña lleva `aria-label` con su nombre (y las novedades). Mismos `data-testid` (`tab-*`).
+- Pestaña nueva: añade su icono a `TAB_ICONS` con la misma clave que su id.
