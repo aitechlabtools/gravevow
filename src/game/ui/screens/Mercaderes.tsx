@@ -8,13 +8,12 @@ import { StashPanel } from '../StashPanel';
 import { useEffect, useRef, useState, type ReactNode, useCallback } from 'react';
 import { actions, useGame } from '../../state/store';
 import { PLACES, VENDORS, type VendorId } from '../../../core/data/vendors';
-import { QUESTS } from '../../../core/data/quests';
 import { prepText, refugeOf, upgradeBlock } from '../../../core/refuge';
 import { CotPanel, CraftPanel, RunePanel, StationDetail, UpgradeButton } from '../StationPanels';
 import { MODULES, MODULE_ORDER, type ModuleId } from '../../../core/data/refuge';
 import { stationArtUrl } from '../stationArt';
 import { REP_RANKS, rankOf } from '../../../config/reputation';
-import { readyQuestCount } from '../../../core/quests';
+import { readyQuestCount, boardQuests, activeQuests, isOldQuest } from '../../../core/quests';
 import { getItem } from '../../../core/data/items';
 import { owned } from '../../../core/forge';
 import type { Loc } from '../../../core/inventory';
@@ -56,7 +55,6 @@ function servicesOf(id: VendorId): VendorView[] {
   if (VENDORS[id].stock.length) v.push('shop');
   if (VENDORS[id].buysItems) v.push('sell');
   if (id === 'grizk') v.push('contracts');
-  if (QUESTS.some((q) => q.vendor === id)) v.push('quests');
   if (id === 'vesper') v.push('infirmary');
   if (id === 'brand' || id === 'nira' || id === 'orik') v.push('repair');
   if (id === 'orik') v.push('scrap');
@@ -74,12 +72,12 @@ function pendingOf(p: Profile, id: VendorId): { kind: 'quest' | 'rebuild' | 'upg
   return null;
 }
 
-export function Mercaderes({ target, onConsumed }: { target: VendorTarget | null; onConsumed: () => void }) {
+export function Mercaderes({ target, onConsumed, onQuests }: { target: VendorTarget | null; onConsumed: () => void; onQuests?: (v: VendorId) => void }) {
   const [open, setOpen] = useState<VendorTarget | null>(target);
   useEffect(() => { if (target) { setOpen(target); onConsumed(); } }, [target]); // eslint-disable-line react-hooks/exhaustive-deps
   const goTo = (vendor: VendorId, view: VendorView) => setOpen({ vendor, view });
   return open
-    ? <VendorInterior key={`${open.vendor}-${open.view}`} vendor={open.vendor} initial={open.view} onBack={() => { setOpen(null); sfx('click'); }} onGo={goTo} />
+    ? <VendorInterior key={`${open.vendor}-${open.view}`} vendor={open.vendor} initial={open.view} onBack={() => { setOpen(null); sfx('click'); }} onGo={goTo} onQuests={onQuests} />
     : <BastionGrid onTalk={(vendor) => { setOpen({ vendor, view: servicesOf(vendor)[0] }); sfx('click'); }} />;
 }
 
@@ -199,7 +197,7 @@ function StationTab({ id, onGo, extraTop }: { id: ModuleId; onGo: (v: VendorId, 
   );
 }
 
-function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; initial: VendorView; onBack: () => void; onGo: (v: VendorId, x: VendorView) => void }) {
+function VendorInterior({ vendor, initial, onBack, onGo, onQuests }: { vendor: VendorId; initial: VendorView; onBack: () => void; onGo: (v: VendorId, x: VendorView) => void; onQuests?: (v: VendorId) => void }) {
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
@@ -222,6 +220,19 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
   const label = (x: VendorView) => (x === 'station' && st ? MODULES[st].name : VIEW_LABEL[x]);
   const ready = readyQuestCount(profile, vendor);
   const pend = pendingOf(profile, vendor);
+  // Encargos de este mercader: un aviso que lleva a la pestaña Misiones con él elegido (ya no hay pestaña propia)
+  const offers = boardQuests(profile, vendor).filter((p) => !isOldQuest(p.id, profile.character.level)).length;
+  const taken = activeQuests(profile, vendor).length;
+  const questLink = (offers > 0 || taken > 0) && (
+    <button type="button" className="panel vquest-link" onClick={() => { sfx('click'); onQuests?.(vendor); }} data-testid="vendor-quests-link">
+      <PixelIcon rows={VENDOR_TAB_ICONS.quests} size={22} color="currentColor" />
+      <span className="min-w-0 flex-1 text-left">
+        <span className="vq-t block font-display text-[14px] tracking-[0.08em] text-parchment">{offers > 0 ? (phone ? (offers === 1 ? '1 encargo' : `${offers} encargos`) : offers === 1 ? '1 encargo nuevo' : `${offers} encargos nuevos`) : 'Encargos'}</span>
+        <span className="vq-s block text-[13px] text-stone-400">{ready > 0 ? (ready === 1 ? '1 lista para entregar' : `${ready} listas para entregar`) : taken > 0 ? (taken === 1 ? '1 aceptada' : `${taken} aceptadas`) : 'Míralos en Misiones'}</span>
+      </span>
+      <span className="text-gold" aria-hidden>▸</span>
+    </button>
+  );
 
   const center: ReactNode =
     view === 'shop' ? <ShopStock vid={vendor} sel={shopSel} onSel={(id) => { setShopSel(id); if (phone) setShopOpen(true); sfx('click'); }} />
@@ -263,7 +274,7 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
     <div className="panel p-3 text-left" data-testid="vendor-pending">
       <div className="text-[13px] uppercase tracking-[0.12em] text-stone-400">Pendiente</div>
       <div className="text-[15px] text-parchment mt-1">{pend.kind === 'quest' ? (ready === 1 ? 'Una misión lista para entregar' : `${ready} misiones listas para entregar`) : pend.kind === 'rebuild' ? `${MODULES[st!].name}: ya puedes reconstruirla` : `${MODULES[st!].name}: mejora disponible`}</div>
-      <button className="btn btn-gold w-full mt-2 font-display tracking-[0.1em] uppercase text-xs" style={{ minHeight: 44 }} onClick={() => go(pend.kind === 'quest' ? 'quests' : 'station')} data-testid="vendor-pending-go">
+      <button className="btn btn-gold w-full mt-2 font-display tracking-[0.1em] uppercase text-xs" style={{ minHeight: 44 }} onClick={() => { if (pend.kind === 'quest') { sfx('click'); onQuests?.(vendor); } else go('station'); }} data-testid="vendor-pending-go">
         {pend.kind === 'quest' ? 'Entregar' : pend.kind === 'rebuild' ? 'Reconstruir' : '▲ Mejorar'}
       </button>
     </div>
@@ -282,6 +293,7 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
         </span>
         <span className="vtile-rep"><RepBar rep={rep} />{discount > 0 && <span className="block text-[13px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento</span>}</span>
       </div>
+      {questLink}
       {tabBar}
       {pendBox}
       <button type="button" className="panel vback-card flex-1" onClick={onBack} data-testid="vendor-back">
@@ -293,12 +305,15 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
   const main = <Panel className="min-h-0 flex-1" bodyClassName={`overflow-y-auto scroll-thin ${view === 'sell' ? 'flex flex-col' : ''}`} testId={`vendor-main-${view}`}>{center}</Panel>;
   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
 
+  // Móvil: el cajón lateral solo para vender y para fabricar; la mochila se mira en el Alijo
+  const drawer = (crafting || view === 'sell') && !(view === 'station' && st && refugeOf(profile)[st] < 1);
   if (phone) {
     return (
-      <div className="h-full flex flex-col relative min-h-0" style={{ ...pad, paddingRight: 'calc(max(var(--pad), env(safe-area-inset-right)) + 40px)' }} data-testid="vendor-interior">
+      <div className="h-full flex flex-col relative min-h-0" style={{ ...pad, paddingRight: drawer ? 'calc(max(var(--pad), env(safe-area-inset-right)) + 40px)' : 'max(var(--pad), env(safe-area-inset-right))' }} data-testid="vendor-interior">
         <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: '150px minmax(0,1fr)', gap: 'var(--gap)' }}>
           <div className="min-h-0 flex flex-col overflow-y-auto scroll-thin" style={{ gap: 6 }} data-testid="vendor-panel">
             <div className="flex items-center gap-2 px-1"><MonsterSprite sprite={v.sprite} scale={1} /><span className="font-display text-parchment truncate text-[15px]" data-testid="vendor-name">{v.name}</span></div>
+            {questLink}
             {tabBar}
             <div className="mt-1">{backBtn}</div>
           </div>
@@ -312,7 +327,7 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
             </div>
           </div>
         )}
-        {!(view === 'station' && st && refugeOf(profile)[st] < 1) && <Drawer label={crafting ? 'Materiales' : view === 'sell' ? (marks.length ? `Vender (${marks.length})` : 'A vender') : 'Mochila'} side="right" testId="vendor-side">{side}</Drawer>}
+        {drawer && <Drawer label={crafting ? 'Materiales' : view === 'sell' ? (marks.length ? `Vender (${marks.length})` : 'A vender') : 'Mochila'} side="right" testId="vendor-side">{side}</Drawer>}
       </div>
     );
   }

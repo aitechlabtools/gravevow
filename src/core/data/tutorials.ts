@@ -234,7 +234,7 @@ function VENDOR_MINIS(): MiniTutorial[] {
     v('nira', [
       { text: 'Cuero, comida, saquitos para tu oro. Lo que necesites para no morir de tont{o|a}.', target: 'vendor-view-shop' },
       { text: 'Y si traes chatarra, la compro: **márcala y pulsa Vender**.', touch: 'Y si traes chatarra, la compro: **márcala y toca Vender**.', target: 'vendor-view-sell' },
-      { text: 'Te iré pidiendo cosas. Cúmplelas y subirá tu **reputación** conmigo.', target: 'vendor-view-quests' },
+      { text: 'Te iré pidiendo cosas: aquí ves **cuántos encargos** tengo para ti. Cúmplelos y subirá tu **reputación** conmigo.', target: 'vendor-quests-link' },
       { text: 'Y en mi **Curtiduría** te enseño a trabajar el cuero y la tela.', target: 'vendor-view-station' },
     ]),
     v('vesper', [

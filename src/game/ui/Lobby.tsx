@@ -1,3 +1,4 @@
+import type { VendorId } from '../../core/data/vendors';
 import { Tienda } from './screens/Atuendos';
 import { className } from '../../core/gender';
 import { BestiaryTab } from './BestiaryTab';
@@ -44,6 +45,7 @@ export function Lobby() {
   const [switcher, setSwitcher] = useState(false);
   /** Acceso directo a un mercader concreto (p. ej., «Contrato» en Jugar abre los contratos de Grizk). */
   const [vendorTarget, setVendorTarget] = useState<VendorTarget | null>(null);
+  const [questVendor, setQuestVendor] = useState<VendorId | null>(null);
   const layout = useLayout();
   const ch = profile.character;
   const questsReady = readyQuestCount(profile);
@@ -98,8 +100,8 @@ export function Lobby() {
           {tab === 'play' && <Jugar onNavigate={(t) => { if (t === 'contracts') setVendorTarget({ vendor: 'grizk', view: 'contracts' }); go(t === 'contracts' ? 'merchants' : t); }} />}
           {tab === 'character' && <Personaje onStash={() => go('stash')} />}
           {tab === 'stash' && <Alijo onShop={() => go('shop')} />}
-          {tab === 'merchants' && <Mercaderes target={vendorTarget} onConsumed={() => setVendorTarget(null)} />}
-          {tab === 'quests' && <Misiones onBastion={() => go('merchants')} />}
+          {tab === 'merchants' && <Mercaderes target={vendorTarget} onConsumed={() => setVendorTarget(null)} onQuests={(v) => { setQuestVendor(v); go('quests'); }} />}
+          {tab === 'quests' && <Misiones vendor={questVendor} />}
           {tab === 'shop' && <Tienda />}
           {tab === 'bestiary' && <BestiaryTab />}
         </div>

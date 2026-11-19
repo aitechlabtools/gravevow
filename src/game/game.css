@@ -1186,3 +1186,8 @@ body:has([data-craft-built]) [data-testid=vendor-side],body:has([data-craft-buil
   .qscreen.fit .qvchip-name, .qscreen.fit .qnote.empty .qe-hint { display: none; }
   .qscreen.fit .qnote.empty { min-height: 90px; }
 }
+
+/* Mercader: aviso de encargos (lleva a Misiones) */
+.vquest-link { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; color: var(--color-gold); border: 1px solid #c48f2266; cursor: pointer; flex: none; }
+.vquest-link:hover { filter: brightness(1.15); }
+@media (max-height: 520px) { .vquest-link { gap: 6px; padding: 6px 8px; min-height: 44px; } .vquest-link .vq-t { font-size: 12px !important; letter-spacing: .04em !important; white-space: nowrap; } .vquest-link .vq-s { font-size: 12px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .vquest-link svg { width: 16px; height: 16px; } }

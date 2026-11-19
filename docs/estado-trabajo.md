@@ -810,3 +810,9 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - El tablón siempre se ve, con todos los mercaderes que dan encargos; el que no tiene ahora sale con borde discontinuo y «sin encargos», y al tocarlo lo explica.
 - Huecos libres: sin botón «Ir al Bastión»; dicen «Acepta un encargo del tablón».
 - Capturas: mockups/misiones-pantalla (capturar.cjs). misiones-check ajustado (escritorio y móvil pasan).
+
+## Novedades del 19/11 (11) — Mercaderes sin pestaña Misiones ni cajón Mochila
+- Dentro del mercader ya no hay pestaña «Misiones». Debajo de su ficha sale un aviso «2 encargos nuevos · 1 aceptada ▸» (o «1 lista para entregar»); al tocarlo abre la pestaña Misiones con ese mercader elegido. Sin encargos ni misiones suyas, no sale. «Pendiente → Entregar» también lleva a Misiones. En móvil el aviso va en 12 px y en una línea («2 encargos»).
+- Móvil: el cajón lateral «Mochila» ya no sale en la tienda ni en otras pestañas; solo queda para vender («A vender») y para fabricar («Materiales»). La mochila se mira en el Alijo.
+- Tutorial vendor.nira: el paso de encargos señala el aviso (vendor-quests-link) con texto nuevo; mismo id.
+- misiones-check ajustado. Capturas: mockups/mercader-encargos.

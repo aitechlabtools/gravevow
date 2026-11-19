@@ -62,12 +62,13 @@ require('fs').mkdirSync(OUT, { recursive: true });
   ok(!!(await p.$('[data-testid=quests-board]')) && !!(await p.$('[data-testid=quests-active]')), 'tus misiones y el tablón se ven juntos');
   if (!DEV) ok(!(await p.$eval('[data-testid=screen-quests]', (e) => e.scrollHeight > e.clientHeight + 2)), 'en escritorio la pantalla no necesita desplazarse');
   await tap('[data-testid=tab-merchants]'); await p.waitForSelector('[data-testid=screen-merchants]');
-  // Pestaña Misiones del mercader: las mismas notas
+  // El mercader ya no tiene pestaña Misiones: su aviso de encargos lleva a Misiones con él elegido
   await tap('[data-testid=vendor-vesper]');
-  await tap('[data-testid=vendor-view-quests]');
-  await p.waitForSelector('[data-testid=vendor-quests] [data-testid=quest-q_bones][data-mode=active]');
-  ok(true, 'el mercader enseña sus misiones con las mismas notas'); await p.waitForTimeout(400);
+  ok(!(await p.$('[data-testid=vendor-view-quests]')), 'el mercader no tiene pestaña Misiones');
   await shot('03b-mercader');
+  await tap('[data-testid=vendor-quests-link]');
+  await p.waitForSelector('[data-testid=screen-quests]');
+  ok((await p.getAttribute('[data-testid=quests-vesper]', 'aria-selected')) === 'true', 'el aviso abre Misiones con Hermana Vesper elegida');
   await tap('[data-testid=tab-quests]');
   await p.waitForTimeout(300);
   await shot('02-aceptadas');

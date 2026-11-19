@@ -13,7 +13,7 @@ import { BoardNotes, EmptySlot, MiniBust, QuestDetail, QuestDetailOverlay, Quest
 
 export const QUESTS_HELP = 'Las misiones de caza, cofres y extracción avanzan al terminar cada expedición. Las entregas se cobran con lo que tengas en la mochila y el alijo. Fija una para tenerla presente en la mazmorra. Si dejas una misión, pierdes lo que llevabas.';
 
-export function Misiones(_props: { onBastion?: () => void }) {
+export function Misiones({ vendor }: { vendor?: VendorId | null }) {
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
@@ -44,7 +44,7 @@ export function Misiones(_props: { onBastion?: () => void }) {
           </section>
           {side && <QuestDetail p={openP!} side onClose={() => setOpen(null)} />}
         </div>
-        <Available fit={fit} />
+        <Available fit={fit} initial={vendor ?? null} />
       </div>
       {openP && phone && <QuestDetailOverlay p={openP} onClose={() => setOpen(null)} />}
       {help && (
@@ -60,13 +60,13 @@ export function Misiones(_props: { onBastion?: () => void }) {
 
 /** Tablón de encargos: siempre visible, con todos los mercaderes que dan encargos (los que no tienen ahora salen apagados). */
 const QUEST_VENDORS = VENDOR_ORDER.filter((id) => QUESTS.some((q) => q.vendor === id));
-function Available({ fit }: { fit: boolean }) {
+function Available({ fit, initial }: { fit: boolean; initial: VendorId | null }) {
   const profile = useGame((s) => s.profile)!;
   const lv = profile.character.level;
   const count = (id: VendorId) => boardQuests(profile, id).filter((p) => !isOldQuest(p.id, lv)).length;
   const total = (id: VendorId) => boardQuests(profile, id).length;
   const first = QUEST_VENDORS.find((id) => count(id) > 0) ?? QUEST_VENDORS.find((id) => total(id) > 0) ?? QUEST_VENDORS[0];
-  const [vid, setVid] = useState<VendorId>(first);
+  const [vid, setVid] = useState<VendorId>(initial && QUEST_VENDORS.includes(initial) ? initial : first);
   return (
     <section className={`panel qboard flex flex-col ${fit ? 'flex-1 min-h-0' : ''}`} data-testid="quests-board">
       <div className="phead flex-none">
