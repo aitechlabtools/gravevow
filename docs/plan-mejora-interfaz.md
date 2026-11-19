@@ -1,6 +1,6 @@
 # Plan de mejora visual y de usabilidad de los menús y el HUD
 
-Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0 a 6 hechas** (19/11). Siguiente: fase 7 (revisión del conjunto).
+Fecha: 19/11/2026 · Estado: plan aprobado. **Fases 0 a 7 hechas** (19/11). Plan terminado; además, estaciones de fabricar en una sola página (`mockups/forja-reconstruir`).
 
 Capturas del estado actual en los tres formatos, con los problemas marcados: `mockups/plan-interfaz/index.html`
 (carpeta `mockups/plan-interfaz/actual/`, script `mockups/plan-interfaz/capturar.cjs`). En el índice, cada número rojo es un

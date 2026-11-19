@@ -97,7 +97,7 @@ const DEVICE = process.argv[4];
 
   // Subida a nivel 2 con los mini tutoriales desactivados: el aviso sale igual
   await G(() => window.__GRAVEVOW__.actions.setMinisDisabled(true));
-  await tap('[data-testid=upgrade-open-kitchen]');
+  if (!(await page.$('[data-testid=upgrade-kitchen]'))) await tap('[data-testid=station-upgrade-kitchen]');
   await tap('[data-testid=upgrade-kitchen]');
   ok(await G(() => window.__GRAVEVOW__.getState().profile.refuge.kitchen === 2), 'cocina a nivel 2');
   await walk('station.kitchen.lv2');

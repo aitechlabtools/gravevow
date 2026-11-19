@@ -266,7 +266,7 @@ export function CombatScreen() {
         <div className="absolute z-20" style={{ top: 'max(8px, env(safe-area-inset-top))', right: 'max(8px, env(safe-area-inset-right))' }}><FullscreenButton /></div>
         <div className="absolute left-1/2 -translate-x-1/2 top-[2.5%] text-center pointer-events-none">
           <div className="font-display text-xs tracking-[0.25em] uppercase combat-zone" style={{ color: zone.accent, textShadow: `0 0 12px ${zone.accent}` }} data-testid="combat-title" title={combat.title}>◆ {zone.name} ◆</div>
-          <div className="flex items-center justify-center gap-1 mt-1 text-[10px] text-stone-400 turnbar" aria-label="Orden de turnos">
+          <div className="flex items-center justify-center gap-1 mt-1 text-[12px] text-stone-400 turnbar" aria-label="Orden de turnos">
             <span className="mr-1">Ronda {cs.round}</span>
             {cs.order.map((id, i) => {
               const c = cs.combatants.find((x) => x.id === id)!;
@@ -333,7 +333,7 @@ export function CombatScreen() {
                 <>
                   <div className="cmdback">
                     <button className="cmd back" style={{ ['--c' as string]: '#8c8693' }} onClick={back} data-testid="btn-menu-back"><span className="text-xl leading-none">◂</span><span className="cmd-label">Volver</span><kbd>Esc</kbd></button>
-                    {menu === 'bag' && pages > 1 && <button className="cmd back" style={{ ['--c' as string]: '#e8b33a' }} onClick={nextPage} data-testid="btn-page-next"><span className="cmd-label">{page + 1} / {pages} ▸</span><span className="text-[11px] opacity-65">Página</span><kbd>Tab</kbd></button>}
+                    {menu === 'bag' && pages > 1 && <button className="cmd back" style={{ ['--c' as string]: '#e8b33a' }} onClick={nextPage} data-testid="btn-page-next"><span className="cmd-label">{page + 1} / {pages} ▸</span><span className="text-[12px] opacity-65">Página</span><kbd>Tab</kbd></button>}
                   </div>
                   {list.map((e, i) => (
                     <Cmd key={e.id} k={i + 1} label={e.name} sub={e.itemId ? e.sourceLabel ?? '' : e.cost ? `${e.cost} ${res.toLowerCase()}` : 'sin coste'}
@@ -385,7 +385,7 @@ function EntryInfo({ e, res }: { e: Slot; res: string }) {
         <span className="font-display text-parchment text-lg">{e.name}</span>
         <span className="font-pixel text-xs text-[#9cc3ff] whitespace-nowrap">{e.itemId ? e.sourceLabel : e.cost ? `${e.cost} ${res.toLowerCase()}` : 'sin coste'}</span>
       </div>
-      {e.lines.length > 0 && <div className="font-pixel text-[11px]" style={{ color: SRC_COLOR[e.source] }}>{[e.sourceLabel && !e.itemId ? e.sourceLabel : '', ...e.lines].filter(Boolean).join(' · ')}</div>}
+      {e.lines.length > 0 && <div className="font-pixel text-[12px]" style={{ color: SRC_COLOR[e.source] }}>{[e.sourceLabel && !e.itemId ? e.sourceLabel : '', ...e.lines].filter(Boolean).join(' · ')}</div>}
       <div className="text-base text-stone-200 leading-snug">{e.desc}</div>
       {e.reason && <div className="font-pixel text-xs text-[#ff7a6a]">{e.reason}</div>}
     </div>
@@ -420,7 +420,7 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent,
           : !small && level !== undefined && <span className={`lvl ${c.boss ? 'boss' : ''}`} title={`Nivel ${level}`}>{level}</span>}
         <div className="flex-1 min-w-0">
           <div className={`fname ${c.side === 'B' ? 'text-[#ffb3a8]' : ''}`}>{target?.on ? <span className="text-blood" data-testid={`target-${c.id}`} aria-label="Objetivo">▶ </span> : ''}{c.name}{bust && level !== undefined && <span className="fname-lvl"> · Nv {level}</span>}{kind === 'ally' ? <span className="text-heal text-xs"> · aliado</span> : ''}</div>
-          {sub && !small && <div className="text-[11px] text-stone-400 truncate">{sub}</div>}
+          {sub && !small && <div className="text-[12px] text-stone-400 truncate">{sub}</div>}
         </div>
         {small && <span className="text-xs text-stone-400">{c.hp} / {c.stats.maxHp}</span>}
         {onBody && (
@@ -431,7 +431,7 @@ function InfoFrame({ c, nums, sub, small, level, spend = 0, target, duo, intent,
       {c.body && !small && (
         <div className="frame-body">
           <BodyFigure body={c.body} unit={duo ? 2 : 3} testId={`body-${c.id}`} />
-          <span className="text-[11px] leading-tight text-stone-300">{bodyNote(c.body)}</span>
+          <span className="text-[12px] leading-tight text-stone-300">{bodyNote(c.body)}</span>
         </div>
       )}
       <div className="hprow"><span className="text-[#ff7a6a]">PV</span><Bar value={c.hp} max={c.stats.maxHp} color="#c4283b" testId={`hp-${c.id}`} />{nums && <b className="hpnum" data-testid={`hpnum-${c.id}`}>{c.hp}<i> / {c.stats.maxHp}</i></b>}</div>

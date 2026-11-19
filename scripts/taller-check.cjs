@@ -39,7 +39,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'taller', dev] = process.ar
   await wide('Bastión');
   await p.screenshot({ path: out + '-bastion.png' });
   // 2 · Forja de Brand: en ruinas se reconstruye en su pestaña; reconstruida, menú común sin yunque
-  await station('brand'); await p.waitForSelector('[data-testid=craft-locked-forge]');
+  await station('brand'); await p.waitForSelector('[data-testid=craft-locked-forge]', { state: 'attached' });
   await wide('Forja en ruinas');
   await p.screenshot({ path: out + '-forja-cerrada.png' });
   await tap('[data-testid=upgrade-forge]'); await p.waitForSelector('[data-testid=craft-forge]');

@@ -7,6 +7,8 @@ import { needsOf } from '../../core/needs';
 import { canSleepForPrep, cotGold, missingFor, nextCost, ownedQty, refugeOf, upgradeBlock } from '../../core/refuge';
 import { Card, usePixelScale } from './kit';
 import { useLayout } from '../../config/ui';
+import { STAT_LABELS } from '../../core/data/classes';
+import { SLOT_LABELS } from './inventory';
 import { MonsterSprite } from './common';
 import { stationArtUrl, STATION_ART_W, STATION_ART_H } from './stationArt';
 import { MATERIAL_SOURCES, STATION_FX } from '../../config/stations';
@@ -29,7 +31,7 @@ const BAD = '#d0605a';
 export type GoTo = (vendor: VendorId, view: VendorView) => void;
 
 /** Coste con lo que tienes en verde y lo que falta en rojo; debajo, dónde conseguir lo que falta. */
-function CostLines({ id, onGo }: { id: ModuleId; onGo?: GoTo }) {
+function CostLines({ id, onGo, hints = true }: { id: ModuleId; onGo?: GoTo; hints?: boolean }) {
   const profile = useGame((s) => s.profile)!;
   const cost = nextCost(profile, id);
   if (!cost) return null;
@@ -43,7 +45,7 @@ function CostLines({ id, onGo }: { id: ModuleId; onGo?: GoTo }) {
         })}
         {cost.gold > 0 && <span style={{ color: profile.gold >= cost.gold ? OK : BAD }}>{cost.gold} oro</span>}
       </div>
-      {miss.map((m) => {
+      {hints && miss.map((m) => {
         const src = MATERIAL_SOURCES[m.itemId];
         if (!src) return null;
         return (
@@ -87,7 +89,7 @@ export function StationCard({ id, onGo, onEnter }: { id: ModuleId; onGo?: GoTo; 
       {next ? (
         <div className="border-t border-stone-800 pt-2 mt-auto flex flex-col gap-2">
           <div className="text-sm"><span className="text-stone-400">{locked ? 'Reconstrucción' : `Nivel ${lvl + 1}`}: </span><span className="text-parchment">{next.name}.</span> <span className="text-stone-300">{next.effect}</span></div>
-          <CostLines id={id} onGo={onGo} />
+          <CostLines id={id} onGo={onGo} hints={locked || id === 'cot'} />
           <button className="btn btn-gold" style={BTN} disabled={!!block} onClick={() => actions.upgradeModule(id)} data-testid={`upgrade-${id}`}>
             {locked ? 'Reconstruir' : `Mejorar · nivel ${lvl + 1}`}
           </button>
@@ -152,7 +154,7 @@ export function StationTile({ id, onUse, onDetails }: { id: ModuleId; onUse: (id
   return (
     <Card title={m.name} testId={`module-${id}`} tutDot={lvl >= 1} art={<StationArt id={id} scale={scale} />} className="cursor-pointer"
       onClick={() => { if (lvl < 1) { sfx('click'); onDetails(id); } else main.run(); }}>
-      <div className={`text-center text-[11px] uppercase tracking-[0.12em] ${lvl < 1 ? 'text-stone-500' : 'text-gold'}`} data-testid={`module-level-${id}`}>
+      <div className={`text-center text-[12px] uppercase tracking-[0.12em] ${lvl < 1 ? 'text-stone-500' : 'text-gold'}`} data-testid={`module-level-${id}`}>
         {lvl < 1 ? 'En ruinas' : lvl >= 3 ? 'Nivel 3/3 · máximo' : `Nivel ${lvl}/3`}
       </div>
       <div className="text-center text-[12px]" style={{ color: by.color }}>Encargado: {by.name}</div>
@@ -166,8 +168,23 @@ export function StationTile({ id, onUse, onDetails }: { id: ModuleId; onUse: (id
   );
 }
 
+/** Presentación de la estación en su detalle: nombre, arte, estado y marcas de nivel. Sin acciones: la única va a la derecha, junto a sus requisitos. */
+function StationPresent({ id }: { id: ModuleId }) {
+  const profile = useGame((s) => s.profile)!;
+  const scale = usePixelScale('vendor');
+  const lvl = refugeOf(profile)[id];
+  return (
+    <Card title={MODULES[id].name} testId={`module-${id}`} tutDot={false} art={<StationArt id={id} scale={scale} />} className="w-full">
+      <div className={`text-center text-[12px] uppercase tracking-[0.12em] ${lvl < 1 ? 'text-stone-500' : 'text-gold'}`} data-testid={`module-level-${id}`}>
+        {lvl < 1 ? 'En ruinas' : lvl >= 3 ? 'Nivel 3/3 · máximo' : `Nivel ${lvl}/3`}
+      </div>
+      <LevelMarks lvl={lvl} />
+    </Card>
+  );
+}
+
 /** Detalle de una estación: reconstruirla o mejorarla, con los tres niveles, el coste y el retrato del encargado. */
-export function StationDetail({ id, onUse, onGo, children }: { id: ModuleId; onUse: (id: ModuleId) => void; onGo?: GoTo; children?: React.ReactNode }) {
+export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (id: ModuleId) => void; onGo?: GoTo; children?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
   const phone = useLayout() === 'phone';
   const m = MODULES[id];
@@ -176,36 +193,104 @@ export function StationDetail({ id, onUse, onGo, children }: { id: ModuleId; onU
   const block = next ? upgradeBlock(profile, id) : null;
   const by = VENDORS[m.by];
   const locked = lvl < 1;
+  const tablet = useLayout() === 'tablet';
+  const [open, setOpen] = useState(Math.min(3, lvl + 1));
+  const [showSide, setShowSide] = useState(false);
+  const cost = next ? (
+            <div className="panel p-3 flex flex-col gap-2" data-testid={`station-cost-${id}`}>
+              <div className="font-display text-gold text-[13px] tracking-[0.1em] uppercase">{locked ? 'Para reconstruirla' : `Mejora · nivel ${lvl + 1}`}</div>
+              <CostLines id={id} onGo={onGo} hints={locked || id === 'cot'} />
+              <button className={`btn font-display tracking-[0.12em] uppercase ${block ? '' : 'btn-gold'}`} style={{ minHeight: 'max(44px, var(--btn-h))' }} disabled={!!block}
+                onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`} aria-describedby={block ? `upgrade-block-${id}` : undefined}>
+                {locked ? 'Reconstruir' : `▲ Mejorar · nivel ${lvl + 1}`}
+              </button>
+              {block
+                ? <div className="text-[13px] text-[#d0905a]" id={`upgrade-block-${id}`} data-testid={`upgrade-block-${id}`}>{block}</div>
+                : <div className="text-[13px] text-[#7fbf6a]" data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
+            </div>
+          ) : <div className="panel p-3 text-[13px] text-gold" data-testid={`upgrade-max-${id}`}>Nivel 3/3 · está al máximo.</div>;
+  if (!locked && (phone || tablet)) return (
+    <div className="flex flex-col w-full" style={{ gap: 'var(--gap)' }} data-testid={`station-detail-${id}`} data-detail-built="">
+      <button type="button" className="btn flex items-center gap-3 text-left" style={{ minHeight: 44 }} aria-expanded={showSide} onClick={() => { sfx('click'); setShowSide(!showSide); }} data-testid={`station-upgrade-${id}`}>
+        <span style={{ lineHeight: 0 }}><StationArt id={id} scale={1} /></span>
+        <span className="font-display text-parchment text-[14px] flex-1">{m.name} · Nivel {lvl}/3</span>
+        <span className={`text-[13px] font-display ${block ? 'text-stone-300' : 'text-gold'}`}>{next ? 'Niveles y mejora' : 'Niveles'} {showSide ? '▴' : '▾'}</span>
+      </button>
+      {showSide && <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)' }}>
+        <div className="flex flex-col gap-2">{[1, 2, 3].map((k) => {
+            const isOpen = k === open;
+            return (
+              <button key={k} type="button" aria-expanded={isOpen} onClick={() => { sfx('click'); setOpen(isOpen ? 0 : k); }}
+                className={`text-left border px-3 py-2 bg-[#19171f] text-[13px] leading-snug ${k === lvl ? 'border-gold' : 'border-stone-700'}`} style={{ minHeight: 44 }} data-testid={`station-level-${id}-${k}`}>
+                <span className="flex items-center gap-2"><b className="font-display text-gold text-[13px] flex-1">Nivel {k} · {m.levels[k].name}{k <= lvl ? ' ✓' : ''}</b><span className="text-stone-400 text-[12px]">{isOpen ? '▴' : '▾'}</span></span>
+                {isOpen && <span className="block text-stone-300 mt-1">{m.levels[k].effect}</span>}
+              </button>
+            );
+          })}</div>
+        {cost}
+      </div>}
+      <div className="min-w-0 min-h-0" style={{ height: tablet && !showSide ? 'calc(100vh - 190px)' : undefined }}>{children}</div>
+    </div>
+  );
+  if (!locked) return (
+    <div className="grid w-full" style={{ gridTemplateColumns: phone ? '190px minmax(0,1fr)' : tablet ? '230px minmax(0,1fr)' : '280px minmax(0,1fr)', gap: 'var(--gap)', height: !phone && !tablet ? 'calc(100vh - 128px)' : undefined }} data-testid={`station-detail-${id}`} data-detail-built="">
+      <div className="flex flex-col min-w-0 min-h-0" style={{ gap: 'var(--gap)' }}>
+        <div className="flex flex-col" style={{ gap: 'var(--gap)' }}>
+          <StationPresent id={id} />
+          <div className="flex flex-col gap-2 min-w-0">
+            <div className="flex flex-col gap-2">
+              {[1, 2, 3].map((k) => {
+                const isOpen = true;
+                return (
+                  <div key={k}
+                    className={`text-left border px-3 py-2 bg-[#19171f] text-[13px] leading-snug ${k === lvl ? 'border-gold' : 'border-stone-700'}`} data-testid={`station-level-${id}-${k}`}>
+                    <span className="flex items-center gap-2"><b className="font-display text-gold text-[13px] flex-1">Nivel {k} · {m.levels[k].name}{k <= lvl ? ' ✓' : ''}</b></span>
+                    {isOpen && <span className="block text-stone-300 mt-1">{m.levels[k].effect}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <div className="mt-auto" data-testid={`station-upgrade-${id}`}>{cost}</div>
+      </div>
+      <div className="min-w-0 min-h-0 h-full">{children}</div>
+    </div>
+  );
   return (
-    <div className="grid w-full" style={{ gridTemplateColumns: phone ? '170px minmax(0,1fr)' : '300px minmax(0,1fr)', gap: 'var(--gap)' }} data-testid={`station-detail-${id}`}>
-      <StationTile id={id} onUse={onUse} onDetails={() => {}} />
+    <div className="grid w-full" style={{ gridTemplateColumns: phone ? '170px minmax(0,1fr)' : tablet ? '240px minmax(0,1fr)' : '300px minmax(0,1fr)', gap: 'var(--gap)' }} data-testid={`station-detail-${id}`}>
+      <div className="flex flex-col min-w-0" style={{ gap: 'var(--gap)' }}>
+        <StationPresent id={id} />
+          {!locked && cost}
+      </div>
       <div className="panel p-3 flex flex-col gap-2 min-w-0">
         <div className="flex gap-3 items-center">
           <div className="ui-arch shrink-0" style={{ width: phone ? 60 : 96, height: phone ? 70 : 112 }}><div className="pb-1"><MonsterSprite sprite={by.sprite} scale={phone ? 2 : 3} /></div></div>
           <div className="min-w-0">
-            <div className="font-display text-parchment">Encargado: <span style={{ color: by.color }}>{by.name}</span></div>
+            <div className="font-display text-parchment text-[14px]">Encargado: <span style={{ color: by.color }}>{by.name}</span></div>
             <div className="text-[14px] text-stone-300 italic leading-snug">{m.purpose}</div>
-            {locked && <div className="text-[12px] text-stone-400">Mientras siga en ruinas: {m.fallback}</div>}
           </div>
         </div>
-        <div className="grid gap-2" style={{ gridTemplateColumns: phone ? '1fr' : 'repeat(3, minmax(0,1fr))' }}>
-          {[1, 2, 3].map((k) => (
-            <div key={k} className={`border p-2 bg-[#19171f] text-[13px] leading-snug ${k === lvl ? 'border-gold' : 'border-stone-700'}`} data-testid={`station-level-${id}-${k}`}>
-              <b className="block font-display text-gold text-[12px]">Nivel {k} · {m.levels[k].name}{k <= lvl ? ' ✓' : ''}</b>
-              <span className="text-stone-300">{m.levels[k].effect}</span>
+        {locked ? (
+          <>
+            <div className="border border-stone-700 px-3 py-2 bg-[#19171f] text-[13px] leading-snug" data-testid={`station-level-${id}-1`}>
+              <b className="block font-display text-gold text-[13px]">Al reconstruirla · Nivel 1 · {m.levels[1].name}</b>
+              <span className="text-stone-300">{m.levels[1].effect}</span>
             </div>
-          ))}
-        </div>
-        {next ? (
-          <div className="flex flex-col gap-2 border-t border-stone-800 pt-2">
-            <div className="font-display text-gold text-[13px] tracking-[0.1em] uppercase">{locked ? 'Para reconstruirla' : `Siguiente mejora · ${next.name}`}</div>
-            <CostLines id={id} onGo={onGo} />
-            <button className="btn btn-gold" style={BTN} disabled={!!block} onClick={() => actions.upgradeModule(id)} data-testid={`upgrade-${id}`}>
-              {locked ? 'Reconstruir' : `▲ Mejorar · nivel ${lvl + 1}`}
-            </button>
-            {block && <div className="text-xs text-[#d0905a]" data-testid={`upgrade-block-${id}`}>{block}</div>}
-          </div>
-        ) : <div className="text-xs text-gold" data-testid={`upgrade-max-${id}`}>Nivel 3/3 · está al máximo.</div>}
+            <div className="mt-auto">{cost}</div>
+          </>
+        ) : <div className="flex flex-col gap-2">
+          {[1, 2, 3].map((k) => {
+            const isOpen = k === open;
+            return (
+              <button key={k} type="button" aria-expanded={isOpen} onClick={() => { sfx('click'); setOpen(isOpen ? 0 : k); }}
+                className={`text-left border px-3 py-2 bg-[#19171f] text-[13px] leading-snug ${k === lvl ? 'border-gold' : 'border-stone-700'}`} style={{ minHeight: 44 }} data-testid={`station-level-${id}-${k}`}>
+                <span className="flex items-center gap-2"><b className="font-display text-gold text-[13px] flex-1">Nivel {k} · {m.levels[k].name}{k <= lvl ? ' ✓' : ''}</b><span className="text-stone-400 text-[12px]">{isOpen ? '▴' : '▾'}</span></span>
+                {isOpen && <span className="block text-stone-300 mt-1">{m.levels[k].effect}</span>}
+              </button>
+            );
+          })}
+        </div>}
         {children}
       </div>
     </div>
@@ -280,6 +365,10 @@ const groupOf = (r: CraftRecipe) => GROUPS.find((g) => g.test(r))!.id;
 
 export function CraftPanel({ station, onBack, extra }: { station: CraftStation; onBack?: () => void; extra?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
+  const craftLayout = useLayout();
+  const bigIcon = craftLayout === 'phone' ? 64 : craftLayout === 'tablet' ? 128 : 192;
+  const statLbl = craftLayout === 'phone' ? 12 : 14;
+  const statVal = craftLayout === 'desktop' ? 24 : craftLayout === 'tablet' ? 20 : 15;
   const all = useMemo(() => stationRecipes(station).sort((a, b) => a.level - b.level || getItem(a.result).value - getItem(b.result).value), [station]);
   const [onlyCan, setOnlyCan] = useState(false);
   const [sel, setSel] = useState<string>(all[0]?.id ?? '');
@@ -297,16 +386,16 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
   // Primera vez en la estación: su encargado la explica (data/tutorials.ts, «station.<id>»)
   useEffect(() => { if (lvl >= 1) actions.tutorialEvent(`station:${station}`); }, [station, lvl >= 1]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className="flex flex-col gap-2" data-testid={`craft-${station}`}>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-display text-parchment tracking-[0.08em]">{MODULES[station].name} · Nivel {lvl}/3</span>
-        <span className="text-[12px] text-stone-400">Lotes de hasta {batchLimit(profile, station)}</span>
-        <button className={`btn text-xs ml-auto ${onlyCan ? 'btn-gold' : ''}`} style={BTN} onClick={() => setOnlyCan(!onlyCan)} data-testid="craft-only-can">Solo las que puedo hacer</button>
+    <div className={`flex flex-col gap-2 ${craftLayout !== 'phone' ? 'h-full min-h-0' : ''}`} data-testid={`craft-${station}`}>
+      {(extra || onBack) && <div className="flex flex-wrap items-center gap-2 justify-end">
         {extra}
         {onBack && <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="craft-back">◂ Volver</button>}
-      </div>
-      <div className="grid gap-2" style={{ gridTemplateColumns: 'minmax(200px, 34%) minmax(0, 1fr)' }}>
-        <div className="panel p-2 overflow-y-auto scroll-thin" style={{ maxHeight: 'min(62vh, 560px)' }}>
+      </div>}
+      <div className={`grid gap-2 ${craftLayout !== 'phone' ? 'flex-1 min-h-0' : ''}`} style={{ gridTemplateColumns: 'minmax(200px, 34%) minmax(0, 1fr)' }}>
+        <div className="panel p-2 overflow-y-auto scroll-thin" style={{ maxHeight: craftLayout !== 'phone' ? undefined : 'min(74vh, 860px)' }}>
+          <button type="button" role="checkbox" aria-checked={onlyCan} className="w-full flex items-center gap-2 text-left text-[13px] text-stone-300 px-1 mb-1" style={{ minHeight: 44 }} onClick={() => { sfx('click'); setOnlyCan(!onlyCan); }} data-testid="craft-only-can">
+            <span className={`inline-flex items-center justify-center w-5 h-5 border ${onlyCan ? 'border-gold bg-gold text-black' : 'border-stone-500'}`}>{onlyCan ? '✓' : ''}</span>Solo las que puedo hacer
+          </button>
           {GROUPS.map((g) => {
             const rs = shown.filter((x) => groupOf(x) === g.id);
             if (!rs.length) return null;
@@ -322,7 +411,7 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
                       <button key={x.id} className={`flex items-center gap-2 px-2 text-left border ${x.id === r?.id ? 'border-parchment bg-stone-800' : 'border-stone-800 bg-black/30'} ${lk ? 'opacity-55' : ''}`} style={BTN} onClick={() => pick(x.id)} data-testid={`recipe-${x.id}`}>
                         <ItemIcon itemId={x.result} size={22} />
                         <span className="truncate text-sm" style={{ color: RARITY_INFO[it.rarity].color }}>{it.name}</span>
-                        {lk ? <span className="ml-auto text-[11px] text-stone-400 whitespace-nowrap">🔒 {lk.includes('plano') ? 'Plano' : `Nv ${x.level}`}</span>
+                        {lk ? <span className="ml-auto text-[12px] text-stone-400 whitespace-nowrap">🔒 {lk.includes('plano') ? 'Plano' : `Nv ${x.level}`}</span>
                           : <span className="ml-auto w-2.5 h-2.5 rounded-full shrink-0" style={{ background: can ? OK : '#3a3530' }} />}
                       </button>
                     );
@@ -336,14 +425,23 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
         {r && def && (
           <div className="panel p-3 flex flex-col gap-2 min-w-0" data-testid="craft-detail">
             <div className="flex items-start gap-3">
-              <div className="slot shrink-0" style={{ borderColor: RARITY_INFO[def.rarity].color + 'aa' }}><ItemIcon itemId={def.id} /></div>
-              <div className="min-w-0">
-                <div className="font-display text-parchment">{def.name}{r.qty > 1 ? ` ×${r.qty}` : ''}</div>
-                <div className="text-[12px]" style={{ color: RARITY_INFO[def.rarity].color }}>{RARITY_INFO[def.rarity].name} · receta de nivel {r.level}</div>
-                <div className="text-sm text-stone-300">{def.description}</div>
+              <div className="slot shrink-0 flex items-center justify-center" style={{ borderColor: RARITY_INFO[def.rarity].color + 'aa', width: bigIcon + 24, height: bigIcon + 24 }}><ItemIcon itemId={def.id} size={bigIcon} /></div>
+              <div className="min-w-0 self-center">
+                <div className="font-display text-parchment leading-tight" style={{ fontSize: craftLayout === 'desktop' ? 28 : craftLayout === 'tablet' ? 22 : 17 }}>{def.name}{r.qty > 1 ? ` ×${r.qty}` : ''}</div>
+                <div style={{ color: RARITY_INFO[def.rarity].color, fontSize: craftLayout === 'phone' ? 12 : 16 }}>{RARITY_INFO[def.rarity].name} · receta de nivel {r.level}</div>
                 {fineChance(profile, r, fine) > 0 && <div className="text-[12px] text-stone-400">Acabado fino: {Math.round(fineChance(profile, r, fine) * 100)} % de salir con una rareza más.</div>}
               </div>
             </div>
+            {(def.stats || def.slot) && (
+              <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${craftLayout === 'phone' ? 3 : 4}, minmax(0,1fr))` }} data-testid="craft-stats">
+                {def.slot && <div className="border border-stone-700 bg-[#19171f] px-3 py-2"><div className="text-stone-400" style={{ fontSize: statLbl }}>Hueco</div><div className="font-display text-parchment" style={{ fontSize: statVal }}>{SLOT_LABELS[def.slot]}{def.hands === 2 ? ' · 2 manos' : ''}</div></div>}
+                {def.levelReq ? <div className="border border-stone-700 bg-[#19171f] px-3 py-2"><div className="text-stone-400" style={{ fontSize: statLbl }}>Nivel</div><div className="font-display text-parchment" style={{ fontSize: statVal }}>{def.levelReq}</div></div> : null}
+                {Object.entries(def.stats ?? {}).map(([k, v]) => (
+                  <div key={k} className="border border-stone-700 bg-[#19171f] px-3 py-2"><div className="text-stone-400" style={{ fontSize: statLbl }}>{STAT_LABELS[k as keyof typeof STAT_LABELS]}</div><div className={`font-display ${(v as number) >= 0 ? 'text-heal' : 'text-blood'}`} style={{ fontSize: statVal }}>{(v as number) > 0 ? '+' : ''}{v as number}</div></div>
+                ))}
+              </div>
+            )}
+            <div className="mt-auto flex flex-col gap-2">
             <div className="font-display text-[13px] text-stone-300">Necesitas</div>
             <div className="flex flex-col gap-1">
               {needs(r, n, fine).map((m) => {
@@ -367,7 +465,8 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
               })}
             </div>
             {r.fine && <label className="flex items-center gap-2 text-sm" style={BTN}><input type="checkbox" className="w-5 h-5" checked={fine} onChange={(e) => setFine(e.target.checked)} data-testid="craft-fine" />Añadir {getItem(r.fine).name.toLowerCase()} (más acabado fino)</label>}
-            <div className="flex flex-wrap items-center gap-2 border-t border-stone-800 pt-2 mt-auto">
+            </div>
+            <div className="flex flex-wrap items-center gap-2 border-t border-stone-800 pt-2">
               <div className="flex items-center border border-stone-700">
                 <button className="btn w-11" style={BTN} onClick={() => setQty(Math.max(1, n - 1))} disabled={n <= 1} aria-label="Menos">−</button>
                 <b className="w-11 text-center" data-testid="craft-qty">{n}</b>
@@ -410,14 +509,14 @@ export function RunePanel({ onBack, extra }: { onBack: () => void; extra?: React
         <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="runes-back">◂ Volver</button>
       </div>
       <div className="grid gap-2" style={{ gridTemplateColumns: 'minmax(200px, 38%) minmax(0, 1fr)' }}>
-        <div className="panel p-2 overflow-y-auto scroll-thin flex flex-col gap-1" style={{ maxHeight: 'min(62vh, 560px)' }}>
+        <div className="panel p-2 overflow-y-auto scroll-thin flex flex-col gap-1" style={{ maxHeight: 'min(74vh, 860px)' }}>
           {targets.map(({ loc, st }) => {
             const def = getItem(st.itemId);
             return (
               <button key={st.uid} className={`flex items-center gap-2 px-2 text-left border ${st.uid === uid ? 'border-parchment bg-stone-800' : 'border-stone-800 bg-black/30'}`} style={BTN} onClick={() => { setUid(st.uid); setHole(0); sfx('click'); }} data-testid={`rune-target-${st.uid}`}>
                 <ItemIcon itemId={st.itemId} size={22} />
                 <span className="truncate text-sm" style={{ color: RARITY_INFO[stackRarity(st, def)].color }}>{stackName(st, def)}</span>
-                <span className="ml-auto text-[11px] text-stone-400">{where(loc)} · {(st.runes ?? []).filter(Boolean).length}/{runeSlots(st)}</span>
+                <span className="ml-auto text-[12px] text-stone-400">{where(loc)} · {(st.runes ?? []).filter(Boolean).length}/{runeSlots(st)}</span>
               </button>
             );
           })}
@@ -444,7 +543,7 @@ export function RunePanel({ onBack, extra }: { onBack: () => void; extra?: React
                 return (
                   <button key={id} className="border border-stone-800 bg-black/30 px-2 flex items-center gap-2 text-left disabled:opacity-50" style={BTN} disabled={!!why} title={why ?? ''} onClick={() => actions.applyRune(t.loc, hole, id)} data-testid={`rune-apply-${id}`}>
                     <ItemIcon itemId={id} size={22} />
-                    <span className="min-w-0 flex-1"><span className="block text-sm truncate">{getItem(id).name} ×{have}</span><span className="block text-[11px] text-stone-400 truncate">{why ?? getItem(id).description}</span></span>
+                    <span className="min-w-0 flex-1"><span className="block text-sm truncate">{getItem(id).name} ×{have}</span><span className="block text-[12px] text-stone-400 truncate">{why ?? getItem(id).description}</span></span>
                   </button>
                 );
               })}

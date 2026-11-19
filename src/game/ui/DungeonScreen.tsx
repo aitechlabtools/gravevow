@@ -196,7 +196,7 @@ function Companions({ width }: { width: string }) {
             <span className="w-9 h-9 bg-black/40 border border-stone-700 overflow-hidden flex items-end justify-center shrink-0"><MonsterSprite sprite={getWanderer(rival.who).sprite} scale={2} /></span>
             <span className="min-w-0">
               <span className="text-xs text-heal block truncate">Aliado · {getWanderer(rival.who).name}</span>
-              <span className="text-[11px] flex items-center gap-1" style={{ color: RISK[rival.risk].color }}><RiskBadge risk={rival.risk} size={14} />{rival.who === 'kael' && rival.risk === 'mid' ? 'Confianza baja' : RISK[rival.risk].label}
+              <span className="text-[12px] flex items-center gap-1" style={{ color: RISK[rival.risk].color }}><RiskBadge risk={rival.risk} size={14} />{rival.who === 'kael' && rival.risk === 'mid' ? 'Confianza baja' : RISK[rival.risk].label}
                 {rival.witnessed && <span className="text-blood ml-1" title="Te vio traicionar a tu aliado anterior: se fía menos" data-testid="hud-ally-witness">👁</span>}</span>
             </span>
           </div>
@@ -211,7 +211,7 @@ function Companions({ width }: { width: string }) {
               <span className="w-9 h-9 bg-black/40 border border-stone-700 overflow-hidden flex items-end justify-center shrink-0"><MonsterSprite sprite={m.sprite} scale={2} /></span>
               <span className="min-w-0">
                 <span className="text-xs text-heal block truncate">Aliado · {m.name}</span>
-                <span className="text-[11px] text-stone-400">⛨ {merc.rescued ? 'Rescatado' : 'Contrato de Grizk'} · {STANCE_NAME[merc.stance]}</span>
+                <span className="text-[12px] text-stone-400">⛨ {merc.rescued ? 'Rescatado' : 'Contrato de Grizk'} · {STANCE_NAME[merc.stance]}</span>
               </span>
             </div>
             <Bar value={merc.hp} max={mercBaseStats(m).maxHp} color="#5fd19a" />
@@ -346,7 +346,7 @@ function HudClock({ variant }: { variant: HudVariant }) {
   return (
     <div className="absolute left-1/2 -translate-x-1/2 z-10 text-center flex flex-col items-center" style={{ top }}>
       <button className={`panel font-display ${phone ? 'px-3 text-xl' : variant === 'tablet' ? 'px-4 py-0.5 text-2xl' : 'px-5 py-1 text-3xl'} ${urgent ? 'text-blood animate-pulse' : 'text-parchment'}`}
-        style={{ minHeight: phone ? 44 : undefined, cursor: phone ? 'pointer' : 'default' }} onClick={phone ? () => setPeek((v) => !v) : undefined} aria-label="Tiempo restante" data-testid="hud-timer">{s.tutorial ? 'Tutorial' : formatTime(left)}</button>
+        style={{ minHeight: variant === 'desktop' ? undefined : 44, cursor: phone ? 'pointer' : 'default' }} onClick={phone ? () => setPeek((v) => !v) : undefined} aria-label="Tiempo restante" data-testid="hud-timer">{s.tutorial ? 'Tutorial' : formatTime(left)}</button>
       <div className={`mt-1 text-stone-300 tracking-widest uppercase font-display pointer-events-none hud-room ${phone ? 'text-xs' : 'text-sm'} ${showRoom ? '' : 'is-hidden'}`} data-testid="hud-room">{room}</div>
       {variant === 'desktop' && s.dungeon && <div className="text-xs text-stone-300 mt-0.5 pointer-events-none" data-testid="hud-dungeon">{s.dungeon.name}{s.dungeon.seed !== undefined ? ` · mapa ${s.dungeon.seed}` : ''}</div>}
     </div>

@@ -164,30 +164,19 @@ function VendorTile({ id, onTalk }: { id: VendorId; onTalk: (v: VendorId) => voi
   );
 }
 
-/** Lo que dice cada encargado si su estación sigue en ruinas. */
-const RUINED_LINE: Partial<Record<ModuleId, string>> = {
-  forge: 'Esta forja sigue en ruinas. Reconstrúyela y la haré cantar.',
-  armory: 'La vieja armería está llena de escombros. Reconstrúyela y forjaremos placas de verdad.',
-  kitchen: 'La cocina del Bastión sigue en ruinas. Reconstrúyela y volverá a oler a guiso.',
-  alchemy: 'Mi laboratorio sigue entre escombros. Reconstrúyelo y destilaremos juntos.',
-  infirmary: 'El rincón de cura sigue en ruinas. Reconstrúyelo y podré prepararte vendas.',
-  tannery: 'Las tinas están rotas. Reconstruye la curtiduría y te curtiré lo que traigas.',
-  bench: 'El banco del taller está bajo los cascotes. Levántalo y desguazar rendirá más.',
-};
-
 /** La estación de un mercader dentro de su pestaña: reconstruirla (en ruinas), usarla y mejorarla. */
 function StationTab({ id, onGo, extraTop }: { id: ModuleId; onGo: (v: VendorId, x: VendorView) => void; extraTop?: ReactNode }) {
   const profile = useGame((s) => s.profile)!;
   const lvl = refugeOf(profile)[id];
   const [detail, setDetail] = useState(false);
+  const stLayout = useLayout();
   const [runes, setRunes] = useState(false);
   useEffect(() => { actions.tutorialEvent('bastion:station'); }, []);
   if (lvl < 1 || detail) {
     return (
-      <div className="flex flex-col gap-2" data-testid="station-panel">
-        {lvl < 1 && <p className="font-body text-base text-stone-300" data-testid={`craft-locked-${id}`}>«{RUINED_LINE[id] ?? 'Esta estación sigue en ruinas. Reconstrúyela.'}»</p>}
+      <div className="flex flex-col gap-2" data-testid="station-panel">{lvl < 1 && <span hidden data-testid={`craft-locked-${id}`} />}
         {detail && <div><button className="btn font-display tracking-[0.1em] uppercase" style={{ minHeight: 44 }} onClick={() => { setDetail(false); sfx('click'); }} data-testid="detail-back">◂ Volver</button></div>}
-        <StationDetail id={id} onUse={() => setDetail(false)} onGo={onGo} />
+        <StationDetail id={id} onUse={() => setDetail(false)} onGo={onGo}>{lvl >= 1 && <Panel title="Tus materiales" className="min-h-0 h-full" bodyClassName="overflow-y-auto scroll-thin flex flex-col"><Materials /></Panel>}</StationDetail>
       </div>
     );
   }
@@ -197,9 +186,14 @@ function StationTab({ id, onGo, extraTop }: { id: ModuleId; onGo: (v: VendorId, 
   const runeBtn = id === 'alchemy' && lvl >= 3
     ? <button className="btn btn-gold text-xs font-display" style={{ minHeight: 44 }} onClick={() => { setRunes(true); sfx('click'); }} data-testid="runic-runes">Grabar runas</button> : null;
   return (
-    <div className="flex flex-col gap-2" data-testid="station-panel">
+    <div className="flex flex-col gap-2" data-testid="station-panel">{lvl < 1 && <span hidden data-testid={`craft-locked-${id}`} />}
       {extraTop}
-      <CraftPanel station={id} extra={<>{runeBtn}{up}</>} />
+      <StationDetail id={id} onGo={onGo}>
+        <div className={`grid ${stLayout !== 'phone' ? 'h-full' : 'items-start'}`} style={{ gridTemplateColumns: stLayout !== 'phone' ? 'minmax(0,1fr)' : 'minmax(0,1fr) minmax(150px,24%)', gap: 'var(--gap)' }}>
+          <CraftPanel station={id} extra={runeBtn} />
+          {stLayout === 'phone' && <div className="min-h-0 flex flex-col" style={{ maxHeight: 'min(72vh, 620px)' }}><Panel title="Tus materiales" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col"><Materials /></Panel></div>}
+        </div>
+      </StationDetail>
       {id === 'kitchen' && <div className="panel p-3 mt-2"><Dishes /></div>}
     </div>
   );
@@ -318,7 +312,7 @@ function VendorInterior({ vendor, initial, onBack, onGo }: { vendor: VendorId; i
             </div>
           </div>
         )}
-        <Drawer label={crafting ? 'Materiales' : view === 'sell' ? (marks.length ? `Vender (${marks.length})` : 'A vender') : 'Mochila'} side="right" testId="vendor-side">{side}</Drawer>
+        {!(view === 'station' && st && refugeOf(profile)[st] < 1) && <Drawer label={crafting ? 'Materiales' : view === 'sell' ? (marks.length ? `Vender (${marks.length})` : 'A vender') : 'Mochila'} side="right" testId="vendor-side">{side}</Drawer>}
       </div>
     );
   }

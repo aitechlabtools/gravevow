@@ -281,3 +281,10 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - Iconos de sección sin recuadros discontinuos.
 - Pantallas de una sola tarea (Copia de seguridad): una acción grande por columna dentro de su recuadro; alternativas pequeñas debajo; notas con icono «i»; todo alineado a la izquierda y el bloque centrado en la pantalla.
 - Pestañas de zona: nombre + barra de progreso + cuenta; la activa en dorado con línea inferior.
+
+## Estaciones de fabricar (fase 7)
+- Una sola página por estación (`StationDetail` envuelve a `CraftPanel`): no hay «Usar» ni pantalla aparte de «Mejorar». En ruinas, la estación a la izquierda y a la derecha encargado, nivel 1, lo que falta (con pistas e «Ir») y «Reconstruir».
+- Escritorio: columna de la estación (280 px) con los tres niveles abiertos y la mejora abajo; recetas y ficha llegan al borde inferior. Tableta y móvil: la estación se pliega en la barra `station-upgrade-<id>` («Niveles y mejora ▾»). En el móvil «Tus materiales» va en una columna dentro de la página; la pestaña lateral `vendor-side` se oculta con CSS (`[data-detail-built]`, `[data-craft-built]`).
+- Ficha de receta: objeto a 192/128/64 px, nombre a 28/22/17 px, estadísticas en casillas (Hueco, Nivel y cada estadística, en verde o rojo) y «Necesitas» pegado a los botones de fabricar. Sin la descripción del objeto. «Solo las que puedo hacer» es una casilla (`craft-only-can`) al principio de la lista.
+- Textos: 12 px como mínimo en toda la interfaz; solo se aceptan más pequeños los signos ◆ y ▶ y el número de nivel del escudo en combate.
+

@@ -296,7 +296,7 @@ function STATION_MINIS(): MiniTutorial[] {
       { text: what[st], target: `craft-${st}` },
       { text: 'Te he dejado los materiales justos para la primera. **Elige la receta** señalada: en verde lo que tienes.', touch: 'Te he dejado los materiales justos para la primera. **Toca la receta** señalada: en verde lo que tienes.', target: `recipe-${STATION_FIRST_RECIPE[st]}`, action: 'click' },
       { text: 'Ahora haz clic en **Craftear al almacén**.', touch: 'Ahora toca **Craftear al almacén**.', target: 'craft-go', action: 'click' },
-      { text: `${after[st]} Para seguir reconstruyéndola, pulsa **▲ Mejorar** arriba.`, target: `upgrade-open-${st}` },
+      { text: `${after[st]} Para seguir reconstruyéndola, aquí tienes lo que pide la **mejora** y su botón.`, touch: `${after[st]} Para seguir reconstruyéndola, toca **Niveles y mejora**: ahí está lo que pide y su botón.`, target: `station-upgrade-${st}` },
     ],
   }));
 }

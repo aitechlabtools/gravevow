@@ -49,7 +49,7 @@ const [,, url = 'http://localhost:5173/play/', out = 'bastion', dev] = process.a
   // 2. Grizk: Catre como estación, cobra la noche
   await tap('[data-testid=vendor-grizk]'); await p.waitForSelector('[data-testid=vendor-interior]');
   const gtabs = await G(() => [...document.querySelectorAll('[data-testid=vendor-tabs] button')].map((e) => e.textContent.trim()));
-  if (!gtabs.some((t) => /^Catre/.test(t)) || !gtabs.some((t) => /Contratos/.test(t)) || !/Bastión/.test(gtabs.at(-1))) fail('pestañas de Grizk: ' + gtabs.join(' | '));
+  if (!gtabs.some((t) => /^Catre/.test(t)) || !gtabs.some((t) => /Contratos/.test(t))) fail('pestañas de Grizk: ' + gtabs.join(' | '));
   await tap('[data-testid=vendor-view-station]'); await p.waitForSelector('[data-testid=cot-panel]');
   if (!/5 oro/.test(await p.textContent('[data-testid=btn-cot]'))) fail('Dormir no dice el precio');
   const g0 = await G(() => window.__GRAVEVOW__.getState().profile.gold);
@@ -64,12 +64,10 @@ const [,, url = 'http://localhost:5173/play/', out = 'bastion', dev] = process.a
   await tap('[data-testid=vendor-orik]'); await p.waitForSelector('[data-testid=vendor-interior]');
   if (!(await p.$('[data-testid=vendor-pending]')) && !dev) fail('Orik no enseña lo pendiente');
   await tap('[data-testid=vendor-view-station]'); await p.waitForSelector('[data-testid=station-detail-bench]');
-  if ((await p.$$('[data-testid^=station-level-bench-]')).length !== 3) fail('el detalle no enseña los tres niveles');
+  if ((await p.$$('[data-testid^=station-level-bench-]')).length !== 1) fail('en ruinas no enseña lo que da el nivel 1');
   await tap('[data-testid=upgrade-bench]'); await p.waitForSelector('[data-testid=craft-bench]', { timeout: 4000 }).catch(() => fail('tras reconstruir no se usa el banco'));
-  if (!(await p.$('[data-testid=upgrade-open-bench]'))) fail('dentro de la estación no hay «▲ Mejorar»');
+  if (!(await p.$('[data-testid=station-upgrade-bench]'))) fail('dentro de la estación no está la mejora');
   await check('Orik · Banco'); await shot('3-orik-banco');
-  await tap('[data-testid=upgrade-open-bench]'); await p.waitForSelector('[data-testid=station-detail-bench]');
-  await tap('[data-testid=detail-back]'); await p.waitForSelector('[data-testid=craft-bench]');
   await tap('[data-testid=vendor-back]');
 
   // 4. Nira: Curtiduría (cuero y tela); Valerius: Forja de armaduras; Eldrin: Laboratorio

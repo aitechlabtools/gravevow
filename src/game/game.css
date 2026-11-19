@@ -1141,3 +1141,20 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .bk-info{flex:none;margin-top:2px;color:#c9a35a}
 .bk-state>span{text-align:left}
 .bk-alt{justify-content:flex-start}.bk-state{justify-content:flex-start;text-align:left}
+
+/* ── Fase 7 · Revisión del conjunto: textos de 12 px como mínimo en lo que quedaba ── */
+.body-tag-state,.body-tag-name b{font-size:12px;line-height:14px}
+.body-kit-title,.body-legend,.body-box-head{font-size:12px}
+.body-kit-item b{font-size:12px}
+@media (max-height:560px){.body-kit-title{font-size:12px}}
+.combat-stage .frame .hpnum,.hprow>.hpnum{font-size:12px}
+.fname-lvl{font-size:12px}
+.cmdsplit>.cmd.half .cmd-label,.cmdpair>.cmd.half .cmd-label{font-size:clamp(12px,1.05vw,15px)}
+.cmd kbd{font-size:12px}
+.combat-bar [data-testid=combat-log] > div{font-size:12px}
+.panel-title{font-size:max(12px,1em)}
+.body-note,.body-detail-title{font-size:max(12px,1em)}
+.needs-note{font-size:12px}
+
+body:has([data-detail-built]) [data-testid=vendor-side],body:has([data-detail-built]) [data-testid=vendor-side-open]{display:none}
+body:has([data-craft-built]) [data-testid=vendor-side],body:has([data-craft-built]) [data-testid=vendor-side-open]{display:none}

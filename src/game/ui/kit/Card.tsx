@@ -11,7 +11,7 @@ export function Card({ title, art, children, on = false, badge, className = '', 
 }) {
   return (
     <article className={`panel ui-card ${on ? 'ui-card on' : ''} ${className}`} data-testid={testId} onClick={onClick}>
-      <h3 className="font-display text-parchment text-center leading-tight min-h-[1.5em]">{title}</h3>
+      <h3 className="font-display text-parchment text-center leading-tight min-h-[1.5em] text-[max(12px,1rem)]">{title}</h3>
       <div className="ui-arch relative">
         {art}
         {tutDot && testId && <TutDot testId={testId} inset />}

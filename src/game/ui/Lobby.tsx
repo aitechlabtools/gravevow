@@ -75,7 +75,7 @@ export function Lobby() {
           <div className={`${layout === 'phone' ? 'w-8 h-8' : 'w-10 h-10'} flex items-end justify-center overflow-hidden bg-[#0d0c11] border-2 ${switcher ? 'border-gold' : 'border-stone-700'}`}><PlayerSprite scale={layout === 'phone' ? 1 : 2} animate={false} /></div>
           <div className={`nav-chip-txt min-w-0 ${layout === 'phone' ? 'w-[74px]' : 'w-28'} leading-tight`}>
             <div className={`font-display truncate ${layout === 'phone' ? 'text-xs' : 'text-sm'}`}><span data-testid="hero-name">{ch.name}</span> <span className="text-gold">▾</span></div>
-            <div className="text-[11px] text-stone-300 truncate">{layout === 'phone' ? 'Nv' : `${className(ch.classId, ch.appearance.sex)} · Nv`} <span data-testid="hero-level">{ch.level}</span></div>
+            <div className="text-[12px] text-stone-300 truncate">{layout === 'phone' ? 'Nv' : `${className(ch.classId, ch.appearance.sex)} · Nv`} <span data-testid="hero-level">{ch.level}</span></div>
             <div className="h-1 bg-stone-800 mt-1"><div className="h-full bg-arcane" style={{ width: `${xpPct}%` }} /></div>
           </div>
         </button>
@@ -121,13 +121,13 @@ function CharacterSwitcher({ onClose }: { onClose: () => void }) {
       <div className="absolute inset-0 z-30" onClick={onClose} />
       <div className="absolute z-40 panel panel-gold p-2 flex flex-col gap-1 fade-in" data-testid="char-switcher"
         style={{ left: 'max(var(--pad), env(safe-area-inset-left))', top: 'calc(var(--nav-h) - 4px)', width: 280, maxHeight: 'calc(100% - var(--nav-h))', overflowY: 'auto' }}>
-        <div className="text-[11px] font-display uppercase tracking-wider text-stone-400 px-1">Cambiar de personaje</div>
+        <div className="text-[12px] font-display uppercase tracking-wider text-stone-400 px-1">Cambiar de personaje</div>
         {roster.map((r) => (
           <button key={r.id} className={`flex items-center gap-2 px-2 text-left ${r.id === activeId ? 'bg-[#2a2216]' : 'hover:bg-[#1c1920]'}`} style={{ minHeight: 48 }}
             onClick={() => { onClose(); if (r.id !== activeId) { sfx('click'); void actions.selectCharacter(r.id); } }} data-testid={`switch-char-${r.slot}`}>
             <div className="w-9 h-9 flex items-end justify-center overflow-hidden bg-[#0d0c11] border border-stone-700"><HeroSprite classId={r.classId} appearance={r.appearance} equipment={r.equipment} skin={r.skin} scale={1} animate={false} /></div>
-            <div className="flex-1 min-w-0 leading-tight"><div className="font-display text-sm truncate">{r.name}</div><div className="text-[11px] text-stone-300">{className(r.classId, r.appearance.sex)} · Nv {r.level}</div></div>
-            {r.id === activeId ? <span className="text-[11px] text-gold">ahora</span> : <span className="text-stone-400">›</span>}
+            <div className="flex-1 min-w-0 leading-tight"><div className="font-display text-sm truncate">{r.name}</div><div className="text-[12px] text-stone-300">{className(r.classId, r.appearance.sex)} · Nv {r.level}</div></div>
+            {r.id === activeId ? <span className="text-[12px] text-gold">ahora</span> : <span className="text-stone-400">›</span>}
           </button>
         ))}
         <button className="btn text-sm mt-1" style={{ minHeight: 44 }} onClick={() => { onClose(); void actions.openSelect(); }} data-testid="btn-all-chars">

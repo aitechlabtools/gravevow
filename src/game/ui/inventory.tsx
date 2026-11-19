@@ -247,7 +247,7 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
       {stack && stack.qty > 1 && <span className="qty">{stack.qty}</span>}
       {stack && (() => { const w = wearLevel(stack); return w === 'ok' ? null : <span className="slot-wear" data-testid="slot-wear" data-wear={w} style={{ background: WEAR_COLOR[w], width: w === 'broken' ? '100%' : `${Math.max(8, Math.round((durability(stack) / maxDurability(stack)) * 100))}%` }} title={w === 'broken' ? 'Rota' : 'Desgastada'} />; })()}
       {marked && <span className="mark-coin" aria-label="Marcado para vender" data-testid="slot-marked" />}
-      {stack && capacityOf(stack) > 0 && <span className="qty" data-testid="slot-gold" style={{ color: stack.gold ? '#f2c75a' : '#a8a29e', fontSize: cell && cell.w > 1 ? 13 : 10 }}>{stack.gold ?? 0}/{capacityOf(stack)}</span>}
+      {stack && capacityOf(stack) > 0 && <span className="qty" data-testid="slot-gold" style={{ color: stack.gold ? '#f2c75a' : '#a8a29e', fontSize: cell && cell.w > 1 ? 13 : 12 }}>{stack.gold ?? 0}/{capacityOf(stack)}</span>}
       {stack && loc.kind === 'grid' && !tooHigh && !wrongClass && upgrade && <span className="slot-up" title="Mejor que lo que llevas puesto" data-testid="slot-upgrade">▲</span>}
       {stack && loc.kind === 'grid' && (tooHigh || wrongClass) && (
         <span className="absolute left-0.5 top-0 text-[10px] leading-none px-0.5 bg-black/80 text-blood" data-testid="slot-locked" title={wrongClass ? 'Tu clase no puede usarlo' : `Requiere nivel ${sdef!.levelReq}`}>
