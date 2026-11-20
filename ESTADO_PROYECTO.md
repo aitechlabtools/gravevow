@@ -1,6 +1,6 @@
 # Gravevow · Estado del proyecto
 
-Última actualización: 19/11/2026 (fases 1 y 2 de la mejora de la interfaz: paleta piedra fría, botones planos, pestañas con icono e interior del mercader). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
+Última actualización: 20/11/2026 (botones desactivados legibles en todo el juego y arreglado el dorado desactivado en Misiones; antes, fases 1 y 2 de la mejora de la interfaz). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
 
 ## Cómo retomar el trabajo
 - En un ordenador nuevo o en otra sesión: haz pull en GitHub Desktop y escribe a Claude «Lee CLAUDE.md y ESTADO_PROYECTO.md» seguido de la tarea.

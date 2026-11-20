@@ -4,6 +4,10 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 20/11: botón dorado desactivado ilegible
+- En Misiones, notas y detalle, «Cobrar/Entregar/Aceptar» desactivados salían en dorado con texto gris. La regla de `game.css` (bloque «Notas de misión») forzaba el fondo dorado también en desactivado; ahora usa `:not(:disabled)` y el botón sale gris piedra como el resto de desactivados.
+- Además, el texto de todos los botones desactivados (`.btn:disabled` y `.btn-gold:disabled`) pasa de `stone-500` a `stone-300` (#8c8693): se lee bien y sigue pareciendo inactivo.
+
 ## Novedades del 19/11 (3): fase 2 de la interfaz implementada (interior del mercader)
 - Tienda con filas y ficha con un único «Comprar» dorado; columna del mercader con la tarjeta del Bastión, pestañas en columna con icono y tarjeta «Volver al Bastión» con la muralla. Detalle en `docs/guia-interfaz.md` y `docs/plan-mejora-interfaz.md`.
 - Archivos: `ui/screens/Mercaderes.tsx`, `ui/VendorsTab.tsx` (`ShopStock`, `ShopCard`, `PriceTag`), `ui/kit/tabIcons.ts` (`VENDOR_TAB_ICONS`, `BASTION_SKYLINE`), `game.css`.

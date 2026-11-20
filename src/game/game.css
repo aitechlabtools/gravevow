@@ -65,7 +65,7 @@ html, body, #root {
 }
 .btn:hover:not(:disabled) { background: var(--surface-hi); }
 .btn:active:not(:disabled) { transform: translateY(1px); }
-.btn:disabled { color: var(--color-stone-500); cursor: not-allowed; }
+.btn:disabled { color: var(--color-stone-300); cursor: not-allowed; }
 .btn:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
 .btn-gold {
   background: var(--gold-fill);
@@ -74,7 +74,7 @@ html, body, #root {
   font-weight: 600;
 }
 .btn-gold:hover:not(:disabled) { background: var(--gold-fill-hi); }
-.btn-gold:disabled { background: var(--color-stone-800); border-color: var(--color-stone-600); color: var(--color-stone-500); }
+.btn-gold:disabled { background: var(--color-stone-800); border-color: var(--color-stone-600); color: var(--color-stone-300); }
 .btn-danger {
   background: transparent;
   border-color: var(--danger-tx);
@@ -798,7 +798,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
    destacado. El papel se insinúa con la esquina doblada y el clavo. La única luz es la de las tarjetas del Bastión. */
 .qscreen .panel, .qdetail { background: #15131a; }
 .qscreen .btn, .qnote .btn, .qdetail .btn { background: #26232c; }
-.qscreen .btn-gold, .qnote .btn-gold, .qdetail .btn-gold { background: #c48f22; }
+.qscreen .btn-gold:not(:disabled), .qnote .btn-gold:not(:disabled), .qdetail .btn-gold:not(:disabled) { background: #c48f22; }
 .qscreen .btn-danger, .qdetail .btn-danger { background: #a3232f; }
 .bar.thin { display: block; height: 8px; border-width: 1px; }
 .phead { display: flex; align-items: center; gap: 12px; padding: 4px 14px; min-height: 52px; background: #1b1920; border-bottom: 2px solid #3a3741; }
