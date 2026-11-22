@@ -1,6 +1,6 @@
 // Contratos de Grizk: rejilla de bustos por zona y ficha del elegido (duración, actitud y contratar).
 // Rediseño visual del 22/11 (maqueta en mockups/contratos). Estilos: bloque «Contratos de Grizk» de game.css.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { getMerc, MERC_ORDER } from '../../core/data/mercenaries';
 import { contractPrice, hireBlock, isUnlocked, mercBaseStats, STANCE_DESC, STANCE_NAME } from '../../core/mercenaries';
@@ -15,14 +15,29 @@ import type { MercStance } from '../../core/types';
 
 const ZONES = ['mazmorra', 'cripta', 'infierno'] as const;
 
-/** Busto cuadrado (cabeza y pecho del sprite), a escala entera. Oscuro si aún no se conoce. */
+/** Recorte del busto (de pecho para arriba) dentro del sprite de 20 × 26: un cuadrado de 14 × 14 desde (3, 1). */
+const CROP = { x: 3, y: 1, side: 14 };
+
+/** Busto cuadrado de pecho para arriba, como el retrato de Grizk, a escala entera. Oscuro si aún no se conoce. */
 function Bust({ sprite, scale, dark, dim }: { sprite: string; scale: number; dark?: boolean; dim?: boolean }) {
-  const side = 20 * scale;
+  const side = CROP.side * scale;
   return (
     <span className={`ct-bust ${dark ? 'ct-dark' : dim ? 'ct-dim' : ''}`} style={{ width: side + 4, height: side + 4 }} aria-hidden>
-      <img src={monsterUrl(sprite, scale)} className="pixelated" alt="" draggable={false} />
+      <img src={monsterUrl(sprite, scale)} className="pixelated" alt="" draggable={false} style={{ marginLeft: -CROP.x * scale, marginTop: -CROP.y * scale }} />
     </span>
   );
+}
+
+/** Tamaño de una caja, al día al cambiar de tamaño. */
+function useBoxSize() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [sz, setSz] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const ro = new ResizeObserver(() => setSz({ w: el.clientWidth, h: el.clientHeight }));
+    ro.observe(el); return () => ro.disconnect();
+  }, []);
+  return [ref, sz] as const;
 }
 
 const STAT_ICONS = [['amulet_heart', 'Vida', 'maxHp'], ['sword', 'Ataque', 'atk'], ['shield', 'Defensa', 'def'], ['boots_swift', 'Velocidad', 'spd']] as const;
@@ -40,11 +55,14 @@ export function ContractsPanel() {
   const contract = profile.contract;
   const unlocked = isUnlocked(profile, m);
   const price = contractPrice(profile, m.id, exps);
-  const k = phone ? 2 : layout === 'tablet' ? 3 : 5;
-  const kb = phone ? 3 : layout === 'tablet' ? 4 : 12;
-  const compact = layout !== 'desktop';
+  // En ordenador, los bustos se ajustan al hueco de la página: si es estrecha, ficha compacta como en tableta
+  const [box, sz] = useBoxSize();
+  const narrow = layout === 'desktop' && sz.w > 0 && sz.w < 1000;
+  const k = phone ? 3 : layout === 'tablet' || narrow ? 4 : sz.h >= 740 ? 8 : 6;
+  const kb = phone ? 4 : layout === 'tablet' ? 6 : narrow ? (sz.h >= 740 ? 14 : sz.h >= 700 ? 9 : 6) : sz.h >= 740 ? 21 : sz.h >= 680 ? 16 : 11;
+  const compact = layout !== 'desktop' || narrow;
   return (
-    <div className="ct" data-testid="contracts">
+    <div ref={box} className={`ct ${narrow ? 'ct-narrow' : ''}`} data-testid="contracts">
       {contract && (
         <div className="ct-active" data-testid="contract-active">
           <MonsterSprite sprite={getMerc(contract.mercId).sprite} scale={2} />
@@ -105,8 +123,8 @@ export function ContractsPanel() {
                   {CONTRACT_OPTIONS.map((o) => (
                     <button key={o.expeditions} className={`btn ct-len ${exps === o.expeditions ? 'btn-gold' : ''}`} onClick={() => setExps(o.expeditions)} data-testid={`contract-len-${o.expeditions}`}>
                       <b>{o.expeditions}</b>
-                      <span><img src={iconUrl('coin', 1)} className="pixelated" alt="" />{contractPrice(profile, m.id, o.expeditions)}</span>
-                      {o.mult < 1 && <i className="ct-disc">−{Math.round((1 - o.mult) * 100)} %</i>}
+                      <span><img src={iconUrl('coin', 1)} className="pixelated" alt="" />{contractPrice(profile, m.id, o.expeditions)}{o.mult < 1 && <i className="ct-disc">−{Math.round((1 - o.mult) * 100)} %</i>}</span>
+                      
                     </button>
                   ))}
                 </div>

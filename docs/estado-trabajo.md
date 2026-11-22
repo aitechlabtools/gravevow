@@ -8,6 +8,8 @@ Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 - `ContractsPanel.tsx` rehecho según `mockups/contratos`: rejilla de bustos (cabeza y pecho, escala entera) por zona, con 🔒 y el rango necesario en los bloqueados y silueta «¿?» en los desconocidos; ficha con busto grande, oficio, frase y habilidades como chips (descripción al pasar el ratón); cuatro cifras grandes con icono (vida, ataque, defensa, velocidad); duración en tres botones grandes con precio y descuento; actitud en dos botones (la explicación en el título); botón final que dice lo que falta. Fuera la nota que decía que caben mercenario y errante a la vez.
 - Ordenador, tableta y móvil: en tableta y móvil se ocultan la frase y las habilidades y los bustos son más pequeños; en tableta las cifras van en 2 × 2. Estilos: bloque «Contratos de Grizk» de `game.css`. Se mantienen todos los `data-testid`.
 - Probado: `e2e-merc` (contratar, Lysa bloqueada) y capturas en los tres tamaños.
+- Retoque: bustos de pecho para arriba (recorte 14 × 14 del sprite, como el retrato de Grizk) y más grandes; botones de duración, actitud y contratar más bajos; el descuento ya no es una etiqueta verde, va junto al precio («15 −15 %»); en tableta y móvil el candado va en la esquina sin tapar la cara.
+- Los bustos de Contratos se ajustan al hueco real de la página (`ResizeObserver` sobre `.ct`): con altura, el busto de la ficha llena el espacio sobre «Expediciones»; si la página es estrecha (menos de 1000 px, p. ej. 1440 × 900 o 1366 × 768), ficha compacta como en tableta (`.ct-narrow`). Probado sin desbordar en 1903 × 897, 1920 × 1080, 1440 × 900 y 1366 × 768.
 
 ## Novedades del 22/11: reparto con el aliado y conversación con busto
 - **Reparto (ventana del botín)**, maqueta en `mockups/reparto`:
