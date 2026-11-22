@@ -1,0 +1,105 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reparto con Kael · maqueta</title>
+<link rel="stylesheet" href="/node_modules/@fontsource/cinzel/latin-600.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/crimson-pro/latin-400.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/crimson-pro/latin-600.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/grenze/latin-400.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/grenze/latin-600.css">
+<style>
+:root{--bg:#0b0a0e;--panel:#16151b;--line:#3a3741;--stone:#26232c;--tx:#e9e1cc;--mute:#8c8693;--gold:#e8b33a;--goldf:#c48f22;--heal:#5fd19a;--amber:#e8913a;--red:#e05a5a}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#050407;color:var(--tx);font-family:"Crimson Pro",Georgia,serif;overflow:hidden}
+.scene{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#1b1820 0,#08070b 70%)}
+.hud{position:absolute;left:12px;top:12px;width:295px;height:205px;border:1px solid #2a2830;background:#0f0d14cc}
+.btn{font-family:Grenze,Georgia,serif;background:var(--stone);border:2px solid var(--line);color:var(--tx);padding:0 14px;min-height:44px;font-size:16px;cursor:pointer}
+.btn.gold{background:var(--goldf);border-color:var(--goldf);color:#1a1206;font-weight:600}
+.btn.kael{border-color:var(--heal);color:var(--heal)}
+.btn.sm{min-height:38px;padding:0 10px;font-size:15px}
+.btn.on{border-color:var(--gold);color:var(--gold)}
+h2{font-family:Cinzel,serif;color:var(--gold);font-weight:600;letter-spacing:.12em;margin:0;font-size:17px}
+.lbl{font-family:Grenze,serif;font-size:15px;color:#c9c2b2;margin:0 0 6px;display:flex;justify-content:space-between;align-items:center}
+.grid{display:grid;gap:4px}
+.slot{width:52px;height:52px;background:#0f0e13;border:2px solid #24222a;position:relative;display:grid;place-items:center}
+.slot img{image-rendering:pixelated;width:46px;height:46px}
+.slot.sel{border-color:#4f86d6}.slot.k{border-color:#2d5a43;background:#0e1a14}
+.slot .n{position:absolute;right:1px;bottom:1px;background:#0f0e13;font:600 12px Grenze;padding:0 3px;min-width:20px;text-align:right;color:var(--tx)}
+.slot.k .n{background:#0e1a14}
+.modal{position:absolute;background:var(--panel);border:2px solid #8a6a1e}
+/* franja de Kael */
+.kstrip{display:flex;align-items:center;gap:12px;border:2px solid #2d5a43;background:#101a15;padding:6px 12px}
+.kstrip img{image-rendering:pixelated;width:32px;height:54px}
+.mood{font-family:Grenze;font-weight:600;font-size:17px;min-width:84px}
+.bar{position:relative;flex:1;height:12px;background:#0b0a0e;border:1px solid var(--line)}
+.bar i{position:absolute;left:0;top:0;bottom:0}
+.bar b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--tx)}
+.val{font-family:Grenze;font-size:15px;color:var(--mute);white-space:nowrap}
+.q{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font:600 14px Grenze;color:var(--mute)}
+/* selector de cantidad */
+.pick{border:2px solid var(--line);background:#121117;padding:10px}
+.stepper{display:flex;align-items:center;gap:8px}
+.num{font:600 26px Grenze;min-width:48px;text-align:center;color:var(--gold)}
+.split{display:flex;align-items:center;gap:6px;font:15px Grenze;color:var(--mute)}
+.toast{position:absolute;right:12px;bottom:12px;border:2px solid var(--line);background:#16151b;padding:8px 14px;font-size:17px}
+.tag{position:absolute;left:12px;top:12px;background:#e8b33a;color:#1a1206;font:600 13px Grenze;padding:2px 8px}
+</style></head><body>
+<div class="scene"></div>
+<div id="app"></div>
+<script>
+const P=new URLSearchParams(location.search), S=P.get('s')||'inicio', phone=innerWidth<1000;
+const I=(k,n)=>`<div class="slot${n&&n.c?' '+n.c:''}"><img src="img/${k}.png">${n&&n.q?`<span class="n">${n.q}</span>`:''}</div>`;
+const E=(c='')=>`<div class="slot ${c}"></div>`;
+const rep=(a,n)=>Array.from({length:n},()=>a).join('');
+// estados: inicio (nada dado), dividir (selector sobre 4 monedas), dado (2 monedas a Kael), justo (Reparto justo), portal
+const st={
+ inicio:{saco:[['espada'],['monedas',{q:4}],['pocion',{q:2}]],kael:[],pct:0,mood:['Molesto','var(--red)'],v:'0 de 34'},
+ dividir:{saco:[['espada'],['monedas',{q:4,c:'sel'}],['pocion',{q:2}]],kael:[],pct:0,mood:['Molesto','var(--red)'],v:'0 de 34',pick:true},
+ dado:{saco:[['espada'],['monedas',{q:2}],['pocion',{q:2}]],kael:[['monedas',{q:2,c:'k'}]],pct:.06,mood:['Conforme','var(--amber)'],v:'2 de 34'},
+ justo:{saco:[['espada'],['pocion',{q:1}]],kael:[['monedas',{q:4,c:'k'}],['pocion',{q:1,c:'k'}]],pct:.29,mood:['Contento','var(--heal)'],v:'10 de 34'},
+}[S];
+const strip=(s)=>`<div class="kstrip"><img src="img/kael.png"><div class="mood" style="color:${s.mood[1]}">${s.mood[0]}</div>
+ <div class="bar"><i style="width:${Math.max(s.pct*100,0)}%;background:${s.mood[1]}"></i><b style="left:25%"></b></div>
+ <span class="q">?</span></div>`;
+const pick=()=>`<div class="pick"><div class="lbl" style="margin-bottom:8px"><span>Monedas · 4</span></div>
+ <div class="stepper"><button class="btn sm">−</button><span class="num">2</span><button class="btn sm">+</button>
+ <span style="flex:1"></span><button class="btn sm">1</button><button class="btn sm on">Mitad</button><button class="btn sm">Todo</button></div>
+ <div style="height:10px"></div>
+ <div style="display:flex;gap:8px"><button class="btn" style="flex:1">Para mí</button><button class="btn kael" style="flex:1">Para Kael</button></div></div>`;
+const app=document.getElementById('app');
+if(S==='portal'){
+ const w=phone?560:520;
+ app.innerHTML=`<div class="modal" style="left:50%;top:50%;transform:translate(-50%,-50%);width:${w}px;padding:${phone?'12px 16px':'20px 22px'}">
+ <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><img src="img/kael.png" style="image-rendering:pixelated;width:32px;height:54px"><h2>Kael quiere su parte</h2>
+ <span style="flex:1"></span><span style="font:600 26px Grenze;color:var(--gold);margin-right:14px">2 monedas</span><button class="btn sm" title="Todavía no">✕</button></div>
+ <p style="font-style:italic;margin:8px 0 14px;font-size:18px">«Antes de cruzar, lo mío. Como acordamos.»</p>
+ <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+  <button class="btn gold" style="min-height:52px">Pagar y cruzar</button>
+  <button class="btn" style="min-height:52px;border-color:var(--red);color:var(--red)">Negarte</button>
+  <button class="btn" style="min-height:52px;border-color:var(--red);color:var(--red)">Atacarle</button>
+ </div></div>`;
+} else if(!phone){
+ const s=st;
+ app.innerHTML=`<div class="modal" style="left:50%;top:50%;transform:translate(-50%,-50%);width:756px;padding:20px 22px 22px">
+ <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><h2 style="font-size:16px">Saco de esqueleto</h2><span style="flex:1"></span>
+  <button class="btn kael">Reparto justo</button><button class="btn gold">Cogerlo todo</button><button class="btn">✕</button></div>
+ ${strip(s)}
+ <div style="display:grid;grid-template-columns:220px 108px 1fr;column-gap:24px;row-gap:16px;margin-top:16px;align-items:start">
+  <div><div class="lbl">Saco</div><div class="grid" style="grid-template-columns:repeat(4,52px)">${s.saco.map(x=>I(...x)).join('')}${rep(E(),12-s.saco.length)}</div></div>
+  <div><div class="lbl" style="color:var(--heal)">Para Kael</div><div class="grid" style="grid-template-columns:repeat(2,52px)">${s.kael.map(x=>I(...x)).join('')}${rep(E('k'),6-s.kael.length)}</div></div>
+  <div><div class="lbl"><span>Tu mochila · 4/24</span></div><div class="grid" style="grid-template-columns:repeat(6,52px)">${I('pocion',{q:3})+I('pocion2')+I('pan')+I('odre')+rep(E(),14)}</div></div>
+  ${s.pick?`<div style="grid-column:1/3">${pick()}</div>`:''}
+ </div>
+ </div>`;
+} else {
+ const s=st;
+ app.innerHTML=`<div style="position:absolute;inset:0;background:#0b0a0e;padding:6px 8px;display:flex;flex-direction:column;gap:6px">
+ <div style="display:flex;gap:8px;align-items:stretch">${strip(s).replace('class="kstrip"','class="kstrip" style="flex:1;padding:2px 10px"').replace('width:32px;height:54px','')}
+  <button class="btn kael sm">Reparto justo</button><button class="btn sm">✕</button></div>
+ <div style="display:flex;gap:8px;flex:1;min-height:0">
+  <div style="border:2px solid var(--line);background:var(--panel);padding:6px"><div class="lbl">Saco</div><div class="grid" style="grid-template-columns:repeat(3,52px)">${s.saco.map(x=>I(...x)).join('')}${rep(E(),6-s.saco.length)}</div></div>
+  <div style="border:2px solid #2d5a43;background:#0f1612;padding:6px"><div class="lbl" style="color:var(--heal)">Para Kael</div><div class="grid" style="grid-template-columns:repeat(2,52px)">${s.kael.map(x=>I(...x)).join('')}${rep(E('k'),4-s.kael.length)}</div></div>
+  <div style="flex:1;border:2px solid var(--line);background:var(--panel);padding:6px;display:flex;flex-direction:column">
+   ${s.pick?pick().replace('class="pick"','class="pick" style="border:0;padding:0"'):`<div class="lbl">Tuyo · 4/24</div><div class="grid" style="grid-template-columns:repeat(5,52px)">${I('pocion',{q:3})+I('pocion2')+I('pan')+I('odre')+rep(E(),6)}</div>
+   <span style="flex:1"></span><button class="btn gold" style="min-height:48px">Cogerlo todo</button>`}
+  </div></div></div>`;
+ document.querySelectorAll('.kstrip img').forEach(i=>{i.style.width='24px';i.style.height='40px'});
+}
+</script></body></html>

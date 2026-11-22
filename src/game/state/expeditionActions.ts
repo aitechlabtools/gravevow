@@ -1,9 +1,9 @@
 // Acciones de la expedición: entrar, tutorial, reloj, trampas, vetas, cofres, botín y errantes.
-import type { ItemStack, Profile } from '../../core/types';
+import type { Grid, ItemStack, Profile } from '../../core/types';
 import { RARITY_ORDER, rollStacks } from '../../core/data/rarity';
 import { createProfile, grantRecruitKit, recruitGaps } from '../../core/profile';
 import { startExpedition, endExpedition, timeLeft, visitedSubzones, type EndReason } from '../../core/expedition';
-import { addManyToGrid, addToGrid, countItem, emptyGrid, removeItem, cloneGrid, removeAt, isCover, LAYOUTS } from '../../core/inventory';
+import { addManyToGrid, addToGrid, countItem, emptyGrid, removeItem, cloneGrid, removeAt, isCover, splitStack, LAYOUTS } from '../../core/inventory';
 import { coins as coinsStack, gridGold, isCoins } from '../../core/gold';
 import { earnGoldSafe, stackGoldValue } from '../../core/wallet';
 import { computeStats } from '../../core/stats';
@@ -21,7 +21,7 @@ import type { Profile as P } from '../../core/types';
 import { lootValue, planPayment } from '../../core/share';
 import { getWanderer } from '../../core/data/wanderers';
 import { TUTORIAL_BETRAYAL_DELAY_MS, TUTORIAL_MAP, TUTORIAL_REWARD, TUTORIAL_START_SAT, TUTORIAL_STEPS, TUTORIAL_SUPPLIES, TUTORIAL_WEAPON, TUTORIAL_WEAPON_TILE, TUTORIAL_WOUND, tutorialRoomCenter, tutorialRoomOf } from '../../core/data/tutorial';
-import { ROB_ITEMS, SHARE_SINGLE_MIN_RARITY, GRIZK_REP, KAEL_TRUST_LEVEL, kaelTrust } from '../../config/wanderers';
+import { ROB_ITEMS, SHARE_FAIR_RATIO, SHARE_SINGLE_MIN_RARITY, GRIZK_REP, KAEL_TRUST_LEVEL, kaelTrust } from '../../config/wanderers';
 const rarityRank = (r: string) => RARITY_ORDER.indexOf(r as (typeof RARITY_ORDER)[number]);
 import { bus } from './bus';
 import { bestPick, mineYield, wearPick, type VeinId } from '../../core/mining';
@@ -35,7 +35,7 @@ import { getPact, pactPrice } from '../../core/data/altars';
 import { CLASSES } from '../../core/data/classes';
 import { effectiveMaxMp, needsOf } from '../../core/needs';
 import { dev, invError, markTutorialDoneOnDevice, saveNow, set, state, subzoneDepth, toast } from './internals';
-import type { Bag, DungeonHud, Modal } from './internals';
+import type { Bag, DungeonHud, LootSession, Modal } from './internals';
 import { actions } from './store';
 import { advanceClock, newClock } from '../../core/clock';
 import { addBleed, regionCap } from '../../core/anatomy';
@@ -389,6 +389,7 @@ export const expeditionActions = {
     const worthy = count >= 2 || (single && rarityRank(stacks[0].rarity ?? getItem(stacks[0].itemId).rarity) >= rarityRank(SHARE_SINGLE_MIN_RARITY));
     const fresh = !s.chests[chestId];
     set((st) => ({ chests: { ...st.chests, [chestId]: grid }, modal: { type: 'loot', session: { id: chestId, source: 'chest', title, initialCount: count, given: [], shareAsked: st.rival.disposition === 'allied' && fresh && worthy, totalValue: lootValue(grid), givenValue: 0, givenGold: 0, single } } }));
+    if (state.modal?.type === 'loot' && state.modal.session.shareAsked) actions.tutorialEvent('ally:share');
   },
 
   /** Gasta la llave (primero de la mochila, si no del bolsillo seguro) y abre el cofre. */
@@ -412,29 +413,91 @@ export const expeditionActions = {
     const ask = !!b.allyShare && state.rival.disposition === 'allied';
     if (b.allyShare) set({ bags: { ...state.bags, [bagId]: { ...b, allyShare: false } } });
     set({ modal: { type: 'loot', session: { id: bagId, source: 'bag', title: b.label, initialCount: b.grid.filter((x) => x && !isCover(x)).length, given: [], shareAsked: ask, totalValue: lootValue(b.grid), givenValue: 0, givenGold: 0 } } });
+    if (ask) actions.tutorialEvent('ally:share');
   },
 
-  /** Da un objeto del cofre a Kael como parte del reparto. */
-  /** Da al aliado un objeto del cofre o bolsa abierto; con `n`, solo esa parte del montón (el resto se queda donde estaba). */
+  /**
+   * Aparta para el aliado un objeto del cofre o bolsa abierto (con `n`, solo esa parte del montón). Va a su montón
+   * «Para …» de la ventana: se puede recuperar mientras siga abierta y se reparte de verdad al cerrarla.
+   */
   giveToRival(lootId: string, index: number, n?: number) {
     const s = state;
     const m = s.modal;
-    if (m?.type !== 'loot') return;
+    if (m?.type !== 'loot' || !m.session.shareAsked) return;
     const bag = s.bags[lootId];
     const grid = cloneGrid(s.chests[lootId] ?? bag?.grid ?? []);
     const cur = grid[index];
     if (!cur || isCover(cur)) return;
     let it: ItemStack | null;
-    // Parte de un montón: se resta del montón y solo esa parte cuenta como dada (sin copiar nada)
+    // Parte de un montón: se resta del montón y solo esa parte va a su lado (sin copiar nada)
     if (n !== undefined && n >= 1 && n < cur.qty && !cur.gold) { grid[index] = { ...cur, qty: cur.qty - n }; it = { ...cur, uid: makeUid(), qty: n }; }
     else it = removeAt(grid, index).stack;
     if (!it) return;
     sfx('pickup');
-    const coinsGiven = isCoins(it) ? it.qty : 0;
-    const ids = coinsGiven ? [] : Array.from({ length: it.qty }, () => it.itemId);
-    const session = { ...m.session, given: [...m.session.given, ...ids], givenValue: (m.session.givenValue ?? 0) + stackGoldValue(it), givenGold: (m.session.givenGold ?? 0) + coinsGiven + (it.gold ?? 0) };
-    if (bag) set({ bags: { ...s.bags, [lootId]: { ...bag, grid } }, modal: { type: 'loot', session } });
-    else set({ chests: { ...s.chests, [lootId]: grid }, modal: { type: 'loot', session } });
+    putLoot(lootId, grid, withPile(m.session, [...(m.session.pile ?? []), it]));
+  },
+
+  /** Coge solo `n` de un montón del cofre o bolsa abierto (el resto se queda). Con `n` igual al montón, lo coge entero. */
+  takeFromLoot(lootId: string, index: number, n: number) {
+    const s = state;
+    const grid = s.chests[lootId] ?? s.bags[lootId]?.grid;
+    const cur = grid?.[index];
+    if (!grid || !cur) return;
+    if (n >= cur.qty) return actions.quickMove({ kind: 'grid', container: 'loot', index }, 'backpack', lootId);
+    const r = splitStack(grid, index, n);
+    if (!r.ok) return invError(r.error);
+    const at = r.grid.findIndex((x, i) => i !== index && x?.itemId === cur.itemId && x.qty === n && !grid[i]);
+    const m = s.modal;
+    if (m?.type === 'loot') putLoot(lootId, r.grid, m.session);
+    if (at >= 0) actions.quickMove({ kind: 'grid', container: 'loot', index: at }, 'backpack', lootId);
+  },
+
+  /** Recupera algo del montón del aliado y lo devuelve al cofre o bolsa (se junta con su montón si lo hay). */
+  takeBackFromRival(lootId: string, pileIndex: number) {
+    const s = state;
+    const m = s.modal;
+    if (m?.type !== 'loot') return;
+    const pile = [...(m.session.pile ?? [])];
+    const [it] = pile.splice(pileIndex, 1);
+    if (!it) return;
+    const back = addToGrid(cloneGrid(s.chests[lootId] ?? s.bags[lootId]?.grid ?? []), it);
+    if (back.leftover) return invError('No cabe: haz hueco en el saco.');
+    const grid = back.grid;
+    sfx('pickup');
+    putLoot(lootId, grid, withPile(m.session, pile));
+  },
+
+  /** «Reparto justo»: aparta lo que falte hasta su parte justa, monedas primero y luego lo de menos valor. */
+  fairShare(lootId: string) {
+    const s = state;
+    const m = s.modal;
+    if (m?.type !== 'loot' || !m.session.shareAsked) return;
+    const total = m.session.totalValue ?? 0;
+    const target = Math.ceil(total * SHARE_FAIR_RATIO);
+    let given = m.session.givenValue ?? 0;
+    if (given >= target) return;
+    const grid = cloneGrid(s.chests[lootId] ?? s.bags[lootId]?.grid ?? []);
+    const pile = [...(m.session.pile ?? [])];
+    // Monedas: solo las que falten
+    grid.forEach((st, i) => {
+      if (given >= target || !st || !isCoins(st)) return;
+      const k = Math.min(st.qty, target - given);
+      if (k >= st.qty) { grid[i] = null; pile.push(st); } else { grid[i] = { ...st, qty: st.qty - k }; pile.push({ ...st, uid: makeUid(), qty: k }); }
+      given += k;
+    });
+    // Después, objetos de menos a más valor, de uno en uno
+    const rest = grid.map((st, i) => ({ st, i })).filter((x) => x.st && !isCover(x.st) && !isCoins(x.st)).sort((a, b) => stackGoldValue(a.st) / a.st!.qty - stackGoldValue(b.st) / b.st!.qty);
+    for (const { i } of rest) {
+      while (given < target && grid[i]) {
+        const st = grid[i]!;
+        const one = st.qty > 1 && !st.gold ? { ...st, uid: makeUid(), qty: 1 } : st;
+        if (one === st) grid[i] = null; else grid[i] = { ...st, qty: st.qty - 1 };
+        pile.push(one);
+        given += stackGoldValue(one);
+      }
+    }
+    sfx('pickup');
+    putLoot(lootId, grid, withPile(m.session, pile));
   },
 
   closeLoot() {
@@ -727,4 +790,22 @@ function kaelAware(who: string, risk: RiskLevel, hostile: boolean, p: P) {
   const lv = kaelTrust(p.kael.trust);
   if (lv === 'hostile') return initialRival('kael', 'hostile', true);
   return initialRival('kael', hostile ? risk : KAEL_TRUST_LEVEL[lv].risk, hostile);
+}
+
+/** La sesión de botín con el montón del aliado y lo que cuenta como dado (valor, monedas e ids) recalculado. */
+function withPile(session: LootSession, pile: ItemStack[]): LootSession {
+  const given: string[] = [];
+  let givenValue = 0, givenGold = 0;
+  for (const it of pile) {
+    givenValue += stackGoldValue(it);
+    if (isCoins(it)) givenGold += it.qty; else { givenGold += it.gold ?? 0; for (let k = 0; k < it.qty; k++) given.push(it.itemId); }
+  }
+  return { ...session, pile, given, givenValue, givenGold };
+}
+
+/** Guarda la rejilla del cofre o bolsa abierto junto con su sesión. */
+function putLoot(lootId: string, grid: Grid, session: LootSession) {
+  const bag = state.bags[lootId];
+  if (bag) set({ bags: { ...state.bags, [lootId]: { ...bag, grid } }, modal: { type: 'loot', session } });
+  else set({ chests: { ...state.chests, [lootId]: grid }, modal: { type: 'loot', session } });
 }

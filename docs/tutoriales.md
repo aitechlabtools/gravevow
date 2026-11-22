@@ -60,6 +60,7 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 | `exp.kael` | Combate | `exp:kael` | intendant | — | `risk-badge` | 2 | sobre ventana |
 | `exp.ally-conflict` | Combate | `ally:conflict` | intendant | — | `ally-current`, `ally-choice` | 2 | sobre ventana; al hablar con un errante o un prisionero teniendo ya aliado |
 | `exp.kael-trust` | Combate | `kael:trust-down` | intendant | — | — | 2 | al volver, la primera vez que baja la confianza de Kael |
+| `exp.share` | Combate | `ally:share` | intendant | — | `share-meter`, `btn-fair-share` | 3 | sobre ventana; la primera vez que un aliado espera su parte de un cofre o un saco (barra, montón «Para …» y Reparto justo) |
 | `exp.ally-body` | Combate | `ally:body` | intendant | — | — | 2 | la primera vez que cae un aliado y deja su cuerpo (bolsa con lo que compartisteis) |
 | `exp.elite` | Combate | `exp:elite` | intendant | — | — | 2 | en combate |
 | `exp.boss` | Combate | `exp:boss` | intendant | — | — | 2 | en combate |

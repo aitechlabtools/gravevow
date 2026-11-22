@@ -53,6 +53,17 @@ require('fs').mkdirSync(OUT, { recursive: true });
   const v = await p.getAttribute('[data-testid=share-meter]', 'data-verdict');
   await shot('02-saco-monedas');
   ok(v === 'stingy' || v === 'fair', `dar monedas cuenta por valor (${v})`);
+  // Lo apartado se ve en su montón y se puede recuperar
+  ok(!!(await p.$('[data-testid=pile-0]')), 'lo dado aparece en el montón «Para Kael»');
+  await tap('[data-testid=pile-0]');
+  ok(!(await p.$('[data-testid=pile-0]')) && (await p.getAttribute('[data-testid=share-meter]', 'data-verdict')) === 'greedy', 'tocarlo en su montón lo devuelve al saco');
+  // Reparto justo: aparta lo justo de una vez
+  await tap('[data-testid=btn-fair-share]');
+  ok((await p.getAttribute('[data-testid=share-meter]', 'data-verdict')) === 'fair', '«Reparto justo» llega a la marca');
+  await shot('02b-reparto-justo');
+  await tap('[data-testid=pile-0]'); await tap('[data-testid=slot-loot-1]'); await p.waitForSelector('[data-testid=qty-picker]');
+  await shot('02c-selector');
+  await tap('[data-testid=btn-give]');
   await tap('[data-testid=btn-close-loot]'); await p.waitForTimeout(200);
   const r1 = await G(() => window.__GRAVEVOW__.getState().rival);
   ok(r1.gold >= 10, 'las monedas dadas van a la bolsa de Kael');

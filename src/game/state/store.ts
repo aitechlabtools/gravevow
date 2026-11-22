@@ -58,7 +58,7 @@ import { applyContainers, loadNow, containersFor, dev, equipCtx, getSave, getSta
 import type { Bag, GameState, Screen } from './internals';
 
 export type { Screen, RosterEntry, Toast, CombatKind, CombatSession, LootSession, Modal, Bag, DungeonHud, TutorialRun, GameState } from './internals';
-export { getState, subscribe, useGame, getSave, getActiveCharacterId, toast, containersFor, tutorialFrozen, dev, tutorialDoneOnDevice } from './internals';
+export { getState, subscribe, useGame, getSave, getActiveCharacterId, toast, containersFor, holdsToasts, tutorialFrozen, dev, tutorialDoneOnDevice } from './internals';
 
 /** Carga un personaje. Un fogón, yunque o mezcla que quedó a medias (minijuegos retirados) se entrega ya terminado. */
 function compose(save: SaveData, id: string): Profile | null {

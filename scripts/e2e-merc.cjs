@@ -61,7 +61,7 @@ const DEVICE = process.argv[4];
   await tap('[data-testid=merc-stance-aggressive]');
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
-  if (await page.$('[data-testid=merc-modal]')) await page.click('[data-testid=merc-modal] button:last-child');
+  if (await page.$('[data-testid=merc-modal]')) await page.click('[data-testid=merc-close]');
   console.log('actitud ahora:', (await S()).merc.stance, '· contrato:', (await S()).contract.stance);
   // Ir hacia un enemigo y pelear
   const en = await page.evaluate(() => { const e = window.__GRAVEVOW__.scene().enemies.find((x) => !x.dead && !x.boss); return [e.x, e.y]; });

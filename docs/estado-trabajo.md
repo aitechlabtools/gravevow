@@ -4,6 +4,19 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 22/11: reparto con el aliado y conversación con busto
+- **Reparto (ventana del botín)**, maqueta en `mockups/reparto`:
+  - Franja del aliado arriba: busto pequeño, estado en una palabra (Molesto, Conforme o Contento) y barra con la marca de lo justo; el «?» explica la regla. Sin bloque de texto.
+  - Montón «Para …» al lado del saco (`LootSession.pile`): lo apartado se ve ahí y se recupera tocándolo (`takeBackFromRival`) hasta cerrar; al cerrar se reparte como antes (`shareLoot` con lo del montón).
+  - Selector de cantidad al tocar un objeto del saco (`QtyPicker`): −, +, 1, Mitad, Todo, y «Para mí» (`takeFromLoot`, coge solo esa parte) o «Para …» (`giveToRival` con `n`). Sustituye a «Dividir…».
+  - «Reparto justo» (`fairShare`): aparta lo que falte hasta la marca, monedas primero y luego lo de menos valor.
+  - Cerrar pasa a ✕ en la cabecera; la ventana de escritorio se ajusta al contenido (`Modal fit`). En táctil: franja arriba y columnas Saco | Para … | Tuyo (o el selector).
+- **Conversación con busto** (`TalkPanel` en `DungeonScreen.tsx`), maqueta en `mockups/dialogo-busto`: errantes y Kael, aliado, portal («quiere su parte»), prisionero y mercenario. Busto cuadrado grande (cabeza y pecho del sprite, escala entera), nombre con riesgo o cifra a la derecha, la frase y las elecciones en una fila del mismo ancho. Sin textos pequeños; «Todavía no» y «Cerrar» son ✕. En ordenador va abajo; en táctil, centrada.
+- **Avisos en espera**: con una conversación o un reparto abiertos, los avisos (salvo errores) no se ven ni caducan; salen al cerrar (`holdsToasts` en `internals.ts`).
+- Mini tutorial nuevo `exp.share` (disparador `ally:share`, la primera vez que un aliado espera su parte). Texto de `exp.kael` corregido.
+- Pruebas: `reparto-check` ampliado (montón, recuperar, Reparto justo, selector); `destruir-check`, `e2e` y `e2e-merc` adaptados. Pasan en ordenador y móvil: reparto, aliados, tutorial inicial, destruir, mercenarios y mini tutoriales de la expedición.
+- Nota de pruebas: el aviso de cookies tapa los botones en los guiones que no fijan `gv-consent`; para pasarlos hay que fijarlo antes (como hacen `bestiario-check` o `misiones-check`).
+
 ## Novedades del 20/11: botón dorado desactivado ilegible
 - En Misiones, notas y detalle, «Cobrar/Entregar/Aceptar» desactivados salían en dorado con texto gris. La regla de `game.css` (bloque «Notas de misión») forzaba el fondo dorado también en desactivado; ahora usa `:not(:disabled)` y el botón sale gris piedra como el resto de desactivados.
 - Además, el texto de todos los botones desactivados (`.btn:disabled` y `.btn-gold:disabled`) pasa de `stone-500` a `stone-300` (#8c8693): se lee bien y sigue pareciendo inactivo.

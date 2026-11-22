@@ -192,7 +192,7 @@ fs.mkdirSync(OUT, { recursive: true });
     if (!(await page.waitForSelector('[data-testid=loot-modal]', { timeout: 3000 }).catch(() => null))) { await shot('13d-debug'); throw new Error('sin botín: ' + JSON.stringify(await page.evaluate(() => { const s = window.__GRAVEVOW__.getState(); return { modal: s.modal, err: s.invError, keys: s.expedition.backpack.filter((x) => x && /key/.test(x.itemId)) }; }))); }
     // Reparto justo: le damos a Kael un objeto del cofre
     const first = await page.$('[data-testid^=slot-loot-][data-item]:not([data-item=""])');
-    if (first && (await page.$('text=Kael espera su parte'))) {
+    if (first && (await page.$('[data-testid=share-meter]'))) {
       await first.click();
       await page.click('[data-testid=btn-give]');
     }

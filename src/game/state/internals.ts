@@ -67,6 +67,8 @@ export interface LootSession {
   givenGold?: number;
   /** Cofre de un solo objeto (quedártelo solo es tacaño). */
   single?: boolean;
+  /** Lo apartado para el aliado: se puede recuperar hasta cerrar la ventana. */
+  pile?: ItemStack[];
 }
 
 export type Modal =
@@ -290,10 +292,20 @@ export async function saveNow() {
 
 // ── Notificaciones ──
 let toastId = 0;
+/** Ventanas de conversación o de reparto: mientras están abiertas, los avisos (salvo errores) esperan para no taparlas. */
+export function holdsToasts(m: Modal): boolean {
+  if (!m) return false;
+  if (m.type === 'loot') return m.session.shareAsked;
+  return m.type === 'rival' || m.type === 'rivalDemand' || m.type === 'confirmBetray' || m.type === 'captive' || m.type === 'merc';
+}
+
 export function toast(text: string, kind: Toast['kind'] = 'info', icon?: string) {
+  if (kind !== 'danger' && holdsToasts(state.modal)) { setTimeout(() => toast(text, kind, icon), 400); return; }
   const id = ++toastId;
   set((s) => ({ toasts: [...s.toasts.slice(-4), { id, text: g(text), kind, icon }] }));
-  setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 4200);
+  // Si mientras se ve se abre una conversación o un reparto, se esconde y no caduca hasta que se cierre
+  const drop = () => { if (kind !== 'danger' && holdsToasts(state.modal)) setTimeout(drop, 400); else set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })); };
+  setTimeout(drop, 4200);
 }
 
 // ── Contenedores para el inventario ──

@@ -1,0 +1,55 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diálogo con busto · maqueta</title>
+<link rel="stylesheet" href="/node_modules/@fontsource/cinzel/latin-600.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/crimson-pro/latin-400.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/crimson-pro/latin-400-italic.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/grenze/latin-400.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/grenze/latin-600.css">
+<style>
+:root{--panel:#16151b;--line:#3a3741;--stone:#26232c;--tx:#e9e1cc;--mute:#8c8693;--gold:#e8b33a;--goldf:#c48f22;--red:#e05a5a}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#050407;color:var(--tx);font-family:"Crimson Pro",Georgia,serif}
+.scene{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#1f1b24 0,#08070b 70%)}
+.dim{position:absolute;inset:0;background:#0006}
+.dlg{position:absolute;left:50%;transform:translateX(-50%);background:var(--panel);border:2px solid #8a6a1e;display:flex}
+.bust{flex:none;background:#0d0c11;border:2px solid var(--line);display:grid;place-items:end center;overflow:hidden}
+.bust canvas{image-rendering:pixelated;display:block}
+.body{flex:1;min-width:0;display:flex;flex-direction:column}
+.name{font-family:Cinzel,serif;font-weight:600;color:var(--gold);letter-spacing:.1em;margin:0}
+.sub{font-family:Grenze;color:var(--mute);display:flex;align-items:center;gap:10px}
+.risk{display:inline-flex;align-items:center;gap:6px;font-family:Grenze;font-weight:600}
+.risk i{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid currentColor;display:inline-block}
+.say{font-style:italic;color:var(--tx);margin:0}
+.acts{display:grid;gap:10px;margin-top:auto}
+.btn{font-family:Grenze,Georgia,serif;background:var(--stone);border:2px solid var(--line);color:var(--tx);font-size:17px}
+.btn.gold{background:var(--goldf);border-color:var(--goldf);color:#1a1206;font-weight:600}
+.btn.red{border-color:var(--red);color:var(--red)}
+</style></head><body>
+<div class="scene"></div><div class="dim"></div><div id="app"></div>
+<script type="module">
+import { monsterUrl } from '/src/shared/art.ts';
+const P=new URLSearchParams(location.search), S=P.get('s')||'kael', phone=innerWidth<1000;
+const C={
+ kael:{sprite:'rival',name:'Kael el Errante',title:'Mercenario veterano',risk:['Riesgo muy bajo','#5fd19a'],say:'«Baja la voz. Lo que vive aquí oye mejor que tú.»',acts:[['Aliarse','gold'],['Hablar',''],['Seguir tu camino',''],['Atacar','red']]},
+ sela:{sprite:'wand_sela',name:'Sela Dedos Finos',title:'Ladrona',risk:['Riesgo medio','#e8913a'],say:'«Tranquilo, solo estaba mirando. ¿Ese cofre es tuyo? Qué pena.»',acts:[['Aliarse','gold'],['Hablar',''],['Seguir tu camino',''],['Atacar','red']]},
+ aliado:{sprite:'rival',name:'Kael el Errante',title:'Tu aliado',risk:['Riesgo muy bajo','#5fd19a'],say:'«Si el reloj llega a cero, aquí abajo te quedas. No lo olvides.»',acts:[['Hablar',''],['Separar caminos',''],['Traicionar','red']]},
+ portal:{sprite:'rival',name:'Kael quiere su parte',title:'2 monedas',risk:['Contento','#5fd19a'],say:'«Antes de cruzar, lo mío. Como acordamos.»',acts:[['Pagar y cruzar','gold'],['Negarte','red'],['Atacarle','red']]},
+}[S];
+// Busto: cabeza y pecho del sprite (20 × 26), recorte cuadrado 20 × 20, a escala entera
+const K=phone?7:8, side=20*K;
+const img=new Image(); img.src=monsterUrl(C.sprite,1);
+await img.decode();
+const cv=document.createElement('canvas'); cv.width=side; cv.height=side; const g=cv.getContext('2d'); g.imageSmoothingEnabled=false;
+g.drawImage(img,0,0,20,20,0,0,side,side);
+const pad=phone?10:16, W=phone?820:940;
+const app=document.getElementById('app');
+const n=C.acts.length;
+app.innerHTML=`<div class="dlg" style="${phone?'top:50%;transform:translate(-50%,-50%)':'bottom:40px'};width:${W}px;padding:${pad}px;gap:${pad+4}px">
+ <div class="bust" style="width:${side+4}px;height:${side+4}px"></div>
+ <div class="body" style="gap:${phone?6:10}px">
+  <div style="display:flex;align-items:center;gap:14px"><h2 class="name" style="font-size:${phone?20:24}px">${C.name}</h2><span style="flex:1"></span>${S==='portal'?`<span style="color:var(--gold);font:600 ${phone?20:22}px Grenze">${C.title}</span>`:`<span class="risk" style="font-size:${phone?16:18}px;color:${C.risk[1]}"><i></i>${C.risk[0]}</span>`}</div>
+  <p class="say" style="font-size:${phone?19:22}px;line-height:1.3">${C.say}</p>
+  <div class="acts" style="grid-template-columns:repeat(${n},1fr)">${C.acts.map(([t,c])=>`<button class="btn ${c}" style="min-height:${phone?44:52}px">${t}</button>`).join('')}</div>
+ </div></div>`;
+document.querySelector('.bust').appendChild(cv);
+document.body.dataset.ready='1';
+</script></body></html>

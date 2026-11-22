@@ -10,7 +10,7 @@ import { getItem } from '../../core/data/items';
 import { buysThis, vendorSellPrice } from '../../core/economy';
 import type { Appearance, ClassId, Equipment } from '../../core/types';
 import { heroUrl, monsterUrl, iconUrl } from '../../shared/art';
-import { actions, containersFor, getState, useGame } from '../state/store';
+import { actions, containersFor, getState, holdsToasts, useGame } from '../state/store';
 import type { InvMode } from './inventory';
 import { ItemIcon } from './inventory';
 import { RARITY_INFO } from '../../core/data/items';
@@ -52,16 +52,17 @@ export function GoldAmount({ value, className = '' }: { value: number; className
   );
 }
 
-export function Modal({ children, onClose, wide = false, testId }: { children: ReactNode; onClose?: () => void; wide?: boolean; testId?: string }) {
+export function Modal({ children, onClose, wide = false, testId, fit = false }: { children: ReactNode; onClose?: () => void; wide?: boolean; testId?: string; /** Ancho justo del contenido (rejillas alineadas). */ fit?: boolean }) {
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 fade-in" data-modal onMouseDown={(e) => e.target === e.currentTarget && onClose?.()} data-testid={testId}>
-      <div className={`panel panel-gold p-5 ${wide ? 'max-w-4xl' : 'max-w-lg'} w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto scroll-thin`}>{children}</div>
+      <div className={`panel panel-gold p-5 ${fit ? 'w-auto max-w-[calc(100%-2rem)]' : `${wide ? 'max-w-4xl' : 'max-w-lg'} w-[calc(100%-2rem)]`} max-h-[90vh] overflow-y-auto scroll-thin`}>{children}</div>
     </div>
   );
 }
 
 export function Toasts() {
-  const toasts = useGame((s) => s.toasts);
+  const held = useGame((s) => holdsToasts(s.modal));
+  const toasts = useGame((s) => s.toasts).filter((t) => !held || t.kind === 'danger');
   const inCombat = useGame((s) => !!s.combat);
   const inSummary = useGame((s) => s.screen === 'summary');
   const touch = useIsTouch();
