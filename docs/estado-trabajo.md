@@ -4,6 +4,11 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 22/11 (2): Contratos de Grizk más visuales
+- `ContractsPanel.tsx` rehecho según `mockups/contratos`: rejilla de bustos (cabeza y pecho, escala entera) por zona, con 🔒 y el rango necesario en los bloqueados y silueta «¿?» en los desconocidos; ficha con busto grande, oficio, frase y habilidades como chips (descripción al pasar el ratón); cuatro cifras grandes con icono (vida, ataque, defensa, velocidad); duración en tres botones grandes con precio y descuento; actitud en dos botones (la explicación en el título); botón final que dice lo que falta. Fuera la nota que decía que caben mercenario y errante a la vez.
+- Ordenador, tableta y móvil: en tableta y móvil se ocultan la frase y las habilidades y los bustos son más pequeños; en tableta las cifras van en 2 × 2. Estilos: bloque «Contratos de Grizk» de `game.css`. Se mantienen todos los `data-testid`.
+- Probado: `e2e-merc` (contratar, Lysa bloqueada) y capturas en los tres tamaños.
+
 ## Novedades del 22/11: reparto con el aliado y conversación con busto
 - **Reparto (ventana del botín)**, maqueta en `mockups/reparto`:
   - Franja del aliado arriba: busto pequeño, estado en una palabra (Molesto, Conforme o Contento) y barra con la marca de lo justo; el «?» explica la regla. Sin bloque de texto.

@@ -1,0 +1,98 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contratos de Grizk · maqueta</title>
+<link rel="stylesheet" href="/node_modules/@fontsource/cinzel/latin-600.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/crimson-pro/latin-400.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/crimson-pro/latin-400-italic.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/grenze/latin-400.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/grenze/latin-600.css">
+<style>
+:root{--bg:#0e0d12;--panel:#16151b;--line:#3a3741;--stone:#26232c;--tx:#e9e1cc;--mute:#8c8693;--gold:#e8b33a;--goldf:#c48f22;--heal:#5fd19a}
+*{box-sizing:border-box}html,body,#app{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:"Crimson Pro",Georgia,serif}
+.btn{font-family:Grenze,Georgia,serif;background:var(--stone);border:2px solid var(--line);color:var(--tx);font-size:17px;cursor:pointer}
+.btn.gold{background:var(--goldf);border-color:var(--goldf);color:#1a1206;font-weight:600}
+.btn.off{color:#8c8693;background:#1c1b22}
+.panel{background:var(--panel);border:2px solid #2a2830}
+.h{font-family:Cinzel,serif;font-weight:600;color:var(--gold);letter-spacing:.1em;margin:0}
+.lbl{font-family:Grenze;font-size:15px;color:#c9c2b2;letter-spacing:.04em}
+canvas{image-rendering:pixelated;display:block}
+.card{background:#121117;border:2px solid #2a2830;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px;position:relative;cursor:pointer}
+.card.sel{border-color:var(--gold);background:#1d1a14}
+.zrow .card{justify-content:center}
+.card .nm{font-family:Grenze;font-weight:600;font-size:17px}
+.lock{white-space:nowrap;position:absolute;top:4px;left:50%;transform:translateX(-50%);font:600 13px Grenze;color:var(--gold);background:#0e0d12;border:1px solid #6b5420;padding:0 5px}
+.bustbox{background:#0d0c11;border:2px solid var(--line);overflow:hidden;display:flex;justify-content:center}
+.stat{display:flex;align-items:center;gap:8px;font:600 22px Grenze}
+.stat img{image-rendering:pixelated}
+.chip{border:2px solid #4a3a6b;color:#c8a6ff;font:600 18px Grenze;padding:8px 14px;background:#1a1522}
+.opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.opt b{font:600 34px Grenze;line-height:1}
+.opt span{font-size:17px!important}
+.opt span{font:15px Grenze;display:flex;align-items:center;gap:4px}
+.disc{position:absolute;top:6px;right:6px;background:var(--heal);color:#0d1a13;font:600 12px Grenze;padding:1px 6px}
+.tabs .btn{display:flex;align-items:center;gap:10px;font-family:Cinzel,serif;letter-spacing:.06em;height:46px;padding:0 14px;width:100%}
+</style></head><body><div id="app"></div>
+<script type="module">
+import { monsterUrl, iconUrl } from '/src/shared/art.ts';
+import { MERCENARIES } from '/src/core/data/mercenaries.ts';
+import { getSkill } from '/src/core/data/skills.ts';
+const P=new URLSearchParams(location.search), selId=P.get('m')||'bram', phone=innerWidth<1000;
+const known=new Set(['bram','lysa','ysolde','corvin','draven','nyx']); const rank=0, gold=4;
+const zones=[['mazmorra','La Mazmorra'],['cripta','La Cripta'],['infierno','El Infierno']];
+const list=Object.values(MERCENARIES);
+async function bust(sprite,K,dark){ const img=new Image(); img.src=monsterUrl(sprite,1); await img.decode();
+  const w=img.naturalWidth, c=document.createElement('canvas'); c.width=w*K; c.height=w*K; const g=c.getContext('2d'); g.imageSmoothingEnabled=false;
+  g.drawImage(img,0,0,w,w,0,0,w*K,w*K); if(dark){g.globalCompositeOperation='source-atop'; g.fillStyle='#000'; g.fillRect(0,0,c.width,c.height);} return c; }
+const ico=(k,s=2)=>`<img src="${iconUrl(k,s)}" alt="">`;
+const m=MERCENARIES[selId]; const locked=m.rank>rank;
+const app=document.getElementById('app');
+const K=phone?3:6, KB=phone?5:14;
+const cards=(z)=>list.filter(x=>x.zone===z).map(x=>{const k=known.has(x.id)&&!x.captive; return `<div class="card ${x.id===selId?'sel':''}" data-id="${x.id}" data-dark="${k?0:1}">
+  <div class="bustbox b-${x.id}" style="width:${20*K+4}px;height:${20*K+4}px"></div>
+  <div class="nm" style="${k?'':'color:#6b6672'}">${k?x.name.split(' ')[0]:'¿?'}</div>
+  ${k&&x.rank>rank?`<span class="lock">Rango ${x.rank}</span>`:''}</div>`}).join('');
+const st=m.stats;
+const stats=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:${phone?6:12}px">
+ ${[['amulet_heart',st.maxHp,'Vida'],['sword',st.atk,'Ataque'],['shield',st.def,'Defensa'],['boots_swift',st.spd,'Velocidad']].map(([i,v,t])=>`<div class="stat panel" style="padding:${phone?'4px 8px':'0 16px'};height:${phone?40:72}px;justify-content:center;font-size:${phone?18:28}px" title="${t}">${ico(i,phone?2:3)}${v}</div>`).join('')}</div>`;
+const skills=`<div style="display:flex;gap:8px">${m.skills.map(s=>`<span class="chip">${getSkill(s).name}</span>`).join('')}</div>`;
+const durs=[[1,6,''],[3,15,'−15 %'],[5,21,'−30 %']];
+const dur=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">${durs.map(([n,p,d],i)=>`<button class="btn opt ${i===1?'gold':''}" style="position:relative;height:${phone?52:96}px"><b>${n}</b><span>${ico('coin',1)} ${p}</span>${d?`<i class="disc">${d}</i>`:''}</button>`).join('')}</div>`;
+const stance=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+ <button class="btn gold" style="height:${phone?44:64}px;font-size:19px">⚔ Agresivo</button><button class="btn" style="height:${phone?44:64}px;font-size:19px">⛨ Prudente</button></div>`;
+const cta=locked?`<button class="btn off" style="height:${phone?48:72}px;font-size:20px;width:100%">🔒 Necesitas rango ${m.rank} con Garra Roja</button>`
+ :`<button class="btn off" style="height:${phone?48:72}px;font-size:20px;width:100%">Te faltan ${15-gold} de oro · Contratar 15</button>`;
+const detail=`<div class="panel" style="padding:${phone?10:20}px;display:flex;flex-direction:column;gap:${phone?8:20}px;height:100%">
+  <div style="display:flex;gap:${phone?12:20}px;align-items:flex-start">
+   <div class="bustbox big" style="width:${20*KB+4}px;height:${20*KB+4}px;flex:none"></div>
+   <div style="display:flex;flex-direction:column;gap:${phone?6:12}px;flex:1;min-width:0">
+    <h2 class="h" style="font-size:${phone?18:30}px">${m.name}</h2>
+    <div class="lbl" style="font-size:${phone?14:17}px">${m.title} · ${zones.find(z=>z[0]===m.zone)[1]}</div>
+    ${phone?'':`<p style="font-style:italic;font-size:19px;margin:0;color:#d6cfbd">${m.blurb}</p>`}
+    ${skills}
+   </div></div>
+  ${stats}
+  ${phone?`<div style="display:flex;flex-direction:column;gap:8px">${dur}${stance}${cta}</div>`:`<div style="margin-top:auto;display:flex;flex-direction:column;gap:12px"><div class="lbl">Expediciones</div>${dur}<div class="lbl" style="margin-top:8px">En combate</div>${stance}<div style="margin-top:8px">${cta}</div></div>`}</div>`;
+if(!phone){
+ app.innerHTML=`<div style="height:64px;border-bottom:2px solid #2a2830;display:flex;align-items:center;justify-content:center;gap:10px;font:600 15px Cinzel;letter-spacing:.1em;color:#8c8693">JUGAR · HABILIDADES · ALIJO · <span style="color:#e8b33a">BASTIÓN</span> · MISIONES · BESTIARIO · TIENDA</div><div style="display:grid;grid-template-columns:300px 1fr 300px;gap:16px;padding:16px;height:calc(100% - 64px)">
+  <div class="panel" style="display:flex;flex-direction:column">
+   <div style="padding:20px;text-align:center;font-size:22px" class="h">Grizk</div>
+   <div style="flex:1;min-height:0;background:radial-gradient(#2a2318,#0d0c11);display:flex;align-items:center;justify-content:center" class="grizk"></div>
+   <div style="padding:20px;display:flex;flex-direction:column;gap:12px" class="tabs">
+    <button class="btn">Tienda</button><button class="btn">Vender</button><button class="btn gold">Contratos</button><button class="btn">Catre</button></div></div>
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;min-height:0;height:100%">
+   <div class="panel" style="padding:20px;display:flex;flex-direction:column;gap:16px">
+    ${zones.map(([z,t])=>`<div style="flex:1;display:flex;flex-direction:column;min-height:0"><div class="lbl" style="margin-bottom:8px">${t}</div><div class="zrow" style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">${cards(z)}</div></div>`).join('')}
+   </div>${detail}</div>
+  <div class="panel" style="padding:20px"><div class="h" style="text-align:center;font-size:15px">Tu mochila</div></div></div>`;
+} else {
+ app.innerHTML=`<div style="display:grid;grid-template-columns:auto 1fr;gap:8px;padding:8px;height:100%">
+  <div class="panel" style="padding:8px;display:flex;flex-direction:column;gap:6px;justify-content:space-between">
+   ${zones.map(([z,t])=>`<div style="display:grid;grid-template-columns:repeat(3,auto);gap:6px">${cards(z).replaceAll('padding:8px 6px','')}</div>`).join('')}
+  </div>${detail}</div>`;
+ document.querySelectorAll('.lock').forEach(l=>{l.style.fontSize='11px';l.style.top='2px'});document.querySelectorAll('.card').forEach(c=>{c.style.padding='4px';c.style.gap='2px';c.querySelector('.nm').style.fontSize='13px';});
+}
+for(const x of list){ const el=document.querySelector('.b-'+x.id); if(!el) continue; const card=el.closest('.card');
+  const cv=await bust(x.sprite,K,card.dataset.dark==='1'); if(x.rank>rank&&card.dataset.dark!=='1') cv.style.filter='grayscale(.7) brightness(.7)'; el.appendChild(cv); }
+document.querySelector('.big').appendChild(await bust(m.sprite,KB,false));
+const gz=document.querySelector('.grizk'); if(gz){ const img=new Image(); img.src=monsterUrl('vendor_collector',8); img.className='px'; img.style.cssText='image-rendering:pixelated;display:block'; gz.appendChild(img); }
+document.body.dataset.ready='1';
+</script></body></html>

@@ -1,6 +1,6 @@
 # Gravevow · Estado del proyecto
 
-Última actualización: 22/11/2026 (reparto con el aliado rediseñado: montón «Para …», dividir y Reparto justo; conversación con busto grande en la mazmorra). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
+Última actualización: 22/11/2026 (Contratos de Grizk con bustos; reparto con el aliado rediseñado: montón «Para …», dividir y Reparto justo; conversación con busto grande en la mazmorra). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
 
 ## Cómo retomar el trabajo
 - En un ordenador nuevo o en otra sesión: haz pull en GitHub Desktop y escribe a Claude «Lee CLAUDE.md y ESTADO_PROYECTO.md» seguido de la tarea.
@@ -86,6 +86,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- **22/11 · Contratos de Grizk más visuales**: rejilla de bustos por zona y ficha con busto grande, cifras con icono y botones grandes de duración y actitud. Maqueta en `mockups/contratos`.
 - **22/11 · Reparto y conversación con busto**: en cofres y sacos con aliado, franja con su estado y barra, montón «Para …» (se recupera hasta cerrar), selector de cantidad (Mitad, Todo, ±) y «Reparto justo». Hablar con errantes, Kael, prisioneros y mercenarios usa un panel con busto grande, la frase y los botones en una fila. Los avisos esperan mientras están abiertas. Maquetas en `mockups/reparto` y `mockups/dialogo-busto`.
 - **18/11 · Misiones y Bestiario más visuales**: Misiones es un tablón de notas (retrato, objetivo grande, progreso, recompensas en iconos; Cobrar en la nota; detalle al tocar; huecos con «Ir al Bastión»; «?» con la explicación) y la pestaña Misiones de cada mercader usa las mismas notas. El Bestiario es una galería: el conocimiento es el color del borde, jefes en casilla doble, victorias en la esquina y ficha con candados. Estilo plano solo en estas pantallas. Maquetas y comparación en `mockups/misiones-bestiario-visual`; detalle en `docs/estado-trabajo.md`.
 - **14/11 · Bastión unificado**: la pestaña Bastión enseña los 8 mercaderes (retrato de medio pecho); cada uno abre su pantalla con pestañas y su estación dentro. Una estación por mercader: Catre con Grizk (5/10/15 de oro la noche), Curtiduría (Nira), Forja de armaduras (Valerius, «La armería»), Laboratorio (Eldrin: alquimia + atril). Migración sin pérdida de niveles. Plan: `docs/plan-bastion-unificado.md`.
