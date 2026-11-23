@@ -4,30 +4,6 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
-## Novedades del 22/11 (2): Contratos de Grizk más visuales
-- `ContractsPanel.tsx` rehecho según `mockups/contratos`: rejilla de bustos (cabeza y pecho, escala entera) por zona, con 🔒 y el rango necesario en los bloqueados y silueta «¿?» en los desconocidos; ficha con busto grande, oficio, frase y habilidades como chips (descripción al pasar el ratón); cuatro cifras grandes con icono (vida, ataque, defensa, velocidad); duración en tres botones grandes con precio y descuento; actitud en dos botones (la explicación en el título); botón final que dice lo que falta. Fuera la nota que decía que caben mercenario y errante a la vez.
-- Ordenador, tableta y móvil: en tableta y móvil se ocultan la frase y las habilidades y los bustos son más pequeños; en tableta las cifras van en 2 × 2. Estilos: bloque «Contratos de Grizk» de `game.css`. Se mantienen todos los `data-testid`.
-- Probado: `e2e-merc` (contratar, Lysa bloqueada) y capturas en los tres tamaños.
-- Retoque: bustos de pecho para arriba (recorte 14 × 14 del sprite, como el retrato de Grizk) y más grandes; botones de duración, actitud y contratar más bajos; el descuento ya no es una etiqueta verde, va junto al precio («15 −15 %»); en tableta y móvil el candado va en la esquina sin tapar la cara.
-- Los bustos de Contratos se ajustan al hueco real de la página (`ResizeObserver` sobre `.ct`): con altura, el busto de la ficha llena el espacio sobre «Expediciones»; si la página es estrecha (menos de 1000 px, p. ej. 1440 × 900 o 1366 × 768), ficha compacta como en tableta (`.ct-narrow`). Probado sin desbordar en 1903 × 897, 1920 × 1080, 1440 × 900 y 1366 × 768.
-
-## Novedades del 22/11: reparto con el aliado y conversación con busto
-- **Reparto (ventana del botín)**, maqueta en `mockups/reparto`:
-  - Franja del aliado arriba: busto pequeño, estado en una palabra (Molesto, Conforme o Contento) y barra con la marca de lo justo; el «?» explica la regla. Sin bloque de texto.
-  - Montón «Para …» al lado del saco (`LootSession.pile`): lo apartado se ve ahí y se recupera tocándolo (`takeBackFromRival`) hasta cerrar; al cerrar se reparte como antes (`shareLoot` con lo del montón).
-  - Selector de cantidad al tocar un objeto del saco (`QtyPicker`): −, +, 1, Mitad, Todo, y «Para mí» (`takeFromLoot`, coge solo esa parte) o «Para …» (`giveToRival` con `n`). Sustituye a «Dividir…».
-  - «Reparto justo» (`fairShare`): aparta lo que falte hasta la marca, monedas primero y luego lo de menos valor.
-  - Cerrar pasa a ✕ en la cabecera; la ventana de escritorio se ajusta al contenido (`Modal fit`). En táctil: franja arriba y columnas Saco | Para … | Tuyo (o el selector).
-- **Conversación con busto** (`TalkPanel` en `DungeonScreen.tsx`), maqueta en `mockups/dialogo-busto`: errantes y Kael, aliado, portal («quiere su parte»), prisionero y mercenario. Busto cuadrado grande (cabeza y pecho del sprite, escala entera), nombre con riesgo o cifra a la derecha, la frase y las elecciones en una fila del mismo ancho. Sin textos pequeños; «Todavía no» y «Cerrar» son ✕. En ordenador va abajo; en táctil, centrada.
-- **Avisos en espera**: con una conversación o un reparto abiertos, los avisos (salvo errores) no se ven ni caducan; salen al cerrar (`holdsToasts` en `internals.ts`).
-- Mini tutorial nuevo `exp.share` (disparador `ally:share`, la primera vez que un aliado espera su parte). Texto de `exp.kael` corregido.
-- Pruebas: `reparto-check` ampliado (montón, recuperar, Reparto justo, selector); `destruir-check`, `e2e` y `e2e-merc` adaptados. Pasan en ordenador y móvil: reparto, aliados, tutorial inicial, destruir, mercenarios y mini tutoriales de la expedición.
-- Nota de pruebas: el aviso de cookies tapa los botones en los guiones que no fijan `gv-consent`; para pasarlos hay que fijarlo antes (como hacen `bestiario-check` o `misiones-check`).
-
-## Novedades del 20/11: botón dorado desactivado ilegible
-- En Misiones, notas y detalle, «Cobrar/Entregar/Aceptar» desactivados salían en dorado con texto gris. La regla de `game.css` (bloque «Notas de misión») forzaba el fondo dorado también en desactivado; ahora usa `:not(:disabled)` y el botón sale gris piedra como el resto de desactivados.
-- Además, el texto de todos los botones desactivados (`.btn:disabled` y `.btn-gold:disabled`) pasa de `stone-500` a `stone-300` (#8c8693): se lee bien y sigue pareciendo inactivo.
-
 ## Novedades del 19/11 (3): fase 2 de la interfaz implementada (interior del mercader)
 - Tienda con filas y ficha con un único «Comprar» dorado; columna del mercader con la tarjeta del Bastión, pestañas en columna con icono y tarjeta «Volver al Bastión» con la muralla. Detalle en `docs/guia-interfaz.md` y `docs/plan-mejora-interfaz.md`.
 - Archivos: `ui/screens/Mercaderes.tsx`, `ui/VendorsTab.tsx` (`ShopStock`, `ShopCard`, `PriceTag`), `ui/kit/tabIcons.ts` (`VENDOR_TAB_ICONS`, `BASTION_SKYLINE`), `game.css`.
@@ -840,3 +816,9 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - Móvil: el cajón lateral «Mochila» ya no sale en la tienda ni en otras pestañas; solo queda para vender («A vender») y para fabricar («Materiales»). La mochila se mira en el Alijo.
 - Tutorial vendor.nira: el paso de encargos señala el aviso (vendor-quests-link) con texto nuevo; mismo id.
 - misiones-check ajustado. Capturas: mockups/mercader-encargos.
+
+## Novedades del 23/11 — Botín en el móvil
+- Cofres, cadáveres y bolsas en el móvil se abren en una ventana flotante (600×320 como mucho) y la mazmorra se ve oscurecida detrás; tocar fuera o ✕ la cierra.
+- Dentro | Tuyo, con casillas de 44 px. Barra de abajo: sin nada tocado, «Coger el oro (n)» y «Cogerlo todo»; al tocar un montón, «− n +», «Mitad», «Todo» y «Coger n» (y «Dar n» si Kael espera su parte). Lo que no coges se queda dentro.
+- Acción nueva actions.takeSome(loc, n, lootId) (las monedas van primero a saquitos y sacos). Tableta y escritorio sin cambios.
+- Maqueta y prueba: mockups/botin-movil (real.cjs comprueba coger una parte de pociones y de monedas).

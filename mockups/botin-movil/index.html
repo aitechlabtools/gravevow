@@ -1,0 +1,38 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Botín en móvil</title>
+<style>
+*{box-sizing:border-box}body{margin:0;width:844px;height:390px;overflow:hidden;font-family:Georgia,serif;color:#e8dcc0;background:#000}
+.bg{position:absolute;inset:0;background:url(fondo-movil.png) center/cover}.dim{position:absolute;inset:0;background:#0006}
+.win{position:absolute;left:50%;top:58px;transform:translateX(-50%);width:560px;height:316px;background:#141218f2;border:2px solid #3a3741;box-shadow:0 10px 40px #000c;display:flex;flex-direction:column}
+.hd{display:flex;align-items:center;height:40px;padding-left:12px;border-bottom:1px solid #2a2830}
+.hd b{font-variant:small-caps;letter-spacing:.06em;color:#d8a531;font-size:15px;font-weight:400;flex:1}
+.x{width:44px;height:40px;border:0;border-left:1px solid #2a2830;background:none;color:#e8dcc0;font-size:18px}
+.bd{flex:1;display:flex;gap:10px;padding:8px 10px;min-height:0}
+.col h4{margin:0 0 6px;font:12px sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#a8a29e}
+.grid{display:grid;gap:4px}.s{width:44px;height:44px;background:#0d0c11;border:1px solid #2e2b35;position:relative;display:grid;place-items:center;font-size:22px}
+.s .n{position:absolute;right:2px;bottom:0;font:11px sans-serif;color:#e8dcc0}
+.s.g{border-color:#3d7a3a}.s.p{border-color:#6b4bb0}.s.b{border-color:#3a5f9a}.s.sel{outline:2px solid #f2c75a;outline-offset:-2px;box-shadow:0 0 10px #d8a53188}
+.me{flex:1;min-width:0;overflow:hidden}.sep{width:1px;background:#2a2830}
+.ft{border-top:1px solid #2a2830;padding:6px 10px;display:flex;align-items:center;gap:8px;height:58px}
+.btn{min-height:44px;min-width:44px;padding:0 12px;background:#26232c;border:1px solid #3a3741;color:#e8dcc0;font:600 13px sans-serif}
+.gold{background:#c48f22;color:#1a1205;border-color:#c48f22}.val{min-width:46px;height:44px;display:grid;place-items:center;border:1px solid #3a3741;color:#d8a531;font-size:20px}
+.info{font:12px sans-serif;color:#a8a29e;flex:1}.info b{color:#e8dcc0;font-weight:600}
+</style></head><body><div class="bg"></div><div class="dim"></div>
+<div class="win">
+ <div class="hd"><b>Saco de preso enloquecido</b><button class="x">✕</button></div>
+ <div class="bd">
+  <div class="col"><h4>Saco</h4><div class="grid" style="grid-template-columns:repeat(3,44px)" id="loot"></div></div>
+  <div class="sep"></div>
+  <div class="col me"><h4>Tuyo · 18/30</h4><div class="grid" style="grid-template-columns:repeat(7,44px)" id="bag"></div></div>
+ </div>
+ <div class="ft" id="ft"></div>
+</div>
+<script>
+const sel=new URLSearchParams(location.search).get('sel');
+const L=[['🪙','g',4],['🧀','',2],[],[],[],[],[]];
+loot.innerHTML=L.map((x,i)=>`<div class="s ${x[1]||''} ${sel&&i==0?'sel':''}">${x[0]||''}${x[2]?`<span class="n">${x[2]}</span>`:''}</div>`).join('')+'<div class="s"></div><div class="s"></div>';
+const B=[['🧪','',5],['🧪','',5],['💰','',10],[],['❤️','p'],['💰','',10],['🪨','g'],['🏆','b'],['🥾','p'],['🛡️','p'],['⛑️','b'],['🗡️','',3],[],[],[],[],[],[],[],[],[]];
+bag.innerHTML=B.map(x=>`<div class="s ${x[1]||''}">${x[0]||''}${x[2]?`<span class="n">${x[2]}</span>`:''}</div>`).join('');
+ft.innerHTML= sel
+ ? `<span class="info"><b>Monedas antiguas</b> · hay 4</span><button class="btn">−</button><div class="val">2</div><button class="btn">+</button><button class="btn">Mitad</button><button class="btn">Todo</button><button class="btn gold">Coger 2</button>`
+ : `<span class="info">Toca algo para cogerlo o para elegir cuántos. Arrástralo a tu mochila.</span><button class="btn">Coger el oro (2)</button><button class="btn gold">Cogerlo todo</button>`;
+</script></body></html>
