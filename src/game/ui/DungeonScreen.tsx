@@ -6,7 +6,7 @@ import { effectiveMaxMp, needsOf } from '../../core/needs';
 import { getPact } from '../../core/data/altars';
 import { useClearOnDrop } from './pointerDrag';
 import { gridGold } from '../../core/gold';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Phaser from 'phaser';
 import { DungeonScene, activeScene } from '../engine/DungeonScene';
 import { actions, getState, useGame, exposeDebug } from '../state/store';
@@ -14,12 +14,12 @@ import { computeStats } from '../../core/stats';
 import { CLASSES } from '../../core/data/classes';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { countItem, gridValue, type Loc } from '../../core/inventory';
+import type { ItemStack } from '../../core/types';
 import { timeLeft } from '../../core/expedition';
 import { CombatScreen } from './CombatScreen';
 import { BodyFigure, BodyPanel } from './BodyFigure';
 import { expBody } from '../state/medicalActions';
 import { Bar, EquipmentView, GridView, StatsList, ItemIcon, highlightItems } from './inventory';
-import { GoldAmountPicker } from './GoldAmountPicker';
 import { PlayerSprite, MonsterSprite, Modal, formatTime, ItemActions, GoldAmount } from './common';
 import { SettingsModal } from './TitleScreen';
 import { chestType } from '../../core/data/chests';
@@ -31,9 +31,10 @@ import { TOUCH_CFG, safe, useTouchSize } from '../../config/touch';
 import { getMerc } from '../../core/data/mercenaries';
 import { mercBaseStats, STANCE_DESC, STANCE_NAME } from '../../core/mercenaries';
 import { getWanderer } from '../../core/data/wanderers';
+import { monsterUrl } from '../../shared/art';
 import { TutorialGuide } from './TutorialGuide';
 import { ExpeditionMinis } from './ExpeditionMinis';
-import { RISK, GOLD_SHARE, SHARE_FAIR_RATIO, GRIZK_REP, type RiskLevel } from '../../config/wanderers';
+import { RISK, SHARE_FAIR_RATIO, GRIZK_REP, type RiskLevel } from '../../config/wanderers';
 import { shareVerdict } from '../../core/social';
 import { pinnedQuests, questDef, questProgress } from '../../core/quests';
 import { planPayment } from '../../core/share';
@@ -438,82 +439,72 @@ function ChestLockModal({ chestId, table }: { chestId: string; table: string }) 
   );
 }
 
-/** Cuánto le has dado al errante del valor del botín y cómo lo ve. */
-function ShareMeter({ given, total, single, name }: { given: number; total: number; single?: boolean; name: string }) {
+/** Cómo ve el aliado el reparto: palabra, color y barra con la marca de lo justo. */
+const MOOD = { fair: ['Contento', '#5fd19a'], stingy: ['Conforme', '#e8913a'], greedy: ['Molesto', '#e05a5a'] } as const;
+
+/** Franja del aliado en la ventana del botín: busto pequeño, estado en una palabra y barra. El «?» explica la regla. */
+function ShareStrip({ given, total, single, who, compact }: { given: number; total: number; single?: boolean; who: string; compact?: boolean }) {
+  const [help, setHelp] = useState(false);
   const v = shareVerdict(given, total, single);
+  const [word, color] = MOOD[v];
   const pct = total > 0 ? Math.min(1, given / total) : 0;
-  const txt = v === 'fair' ? `${name} está satisfecho.` : v === 'stingy' ? `${name} frunce el ceño.` : `${name} te mira mal.`;
-  const color = v === 'fair' ? '#6fbf73' : v === 'stingy' ? '#e0a040' : '#d0453a';
+  const w = getWanderer(who);
   return (
-    <div className="mt-1.5" data-testid="share-meter" data-verdict={v}>
-      <div className="relative h-2.5 bg-[#0b0a0f] border border-stone-700">
-        <div className="h-full" style={{ width: `${pct * 100}%`, background: color }} />
-        <div className="absolute top-[-3px] bottom-[-3px] w-0.5 bg-parchment/70" style={{ left: `${SHARE_FAIR_RATIO * 100}%` }} title="Reparto justo" />
+    <div className="share-strip" data-testid="share-meter" data-verdict={v}>
+      <MonsterSprite sprite={w.sprite} scale={compact ? 1 : 2} />
+      <b className="share-mood" style={{ color }}>{word}</b>
+      <div className="share-bar">
+        <div style={{ width: `${pct * 100}%`, background: color }} />
+        <i style={{ left: `${SHARE_FAIR_RATIO * 100}%` }} />
       </div>
-      <div className="text-sm mt-0.5" style={{ color }}>{txt} <span className="text-stone-400">({Math.round(given)} de {Math.round(total)} monedas de valor)</span></div>
+      <button className="share-help" onClick={() => setHelp(!help)} aria-label="Cómo funciona el reparto" data-testid="share-help">?</button>
+      {help && <div className="share-tip" data-testid="share-tip">Llega a la marca y {w.name.split(' ')[0]} se fía más de ti. Si no le das nada, se fía menos. Lo apartado se puede recuperar hasta cerrar.</div>}
     </div>
   );
 }
 
-/** Botín en el móvil (23/11): ventana flotante sobre la mazmorra, saco | tuyo, y una barra abajo que cambia
- *  según lo tocado: sin nada, «Coger el oro» y «Cogerlo todo»; un montón, cuántos coger (− n + · Mitad · Todo). */
-function PhoneLoot({ sel, setSel }: { sel: Loc | null; setSel: (l: Loc | null) => void }) {
-  const s = useGame((x) => x);
-  const [amt, setAmt] = useState(1);
-  const session = s.modal?.type === 'loot' ? s.modal.session : null;
-  const grid = session ? (s.chests[session.id] ?? s.bags[session.id]?.grid ?? []) : [];
-  const selStack = sel?.kind === 'grid' && sel.container === 'loot' ? grid[sel.index] : null;
-  const qty = selStack?.qty ?? 0;
-  useEffect(() => { setAmt(qty > 1 ? Math.max(1, Math.floor(qty / 2)) : 1); }, [sel?.kind === 'grid' ? sel.index : -1, qty > 0]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!session || !s.expedition) return null;
-  const share = session.shareAsked && s.rival.disposition === 'allied';
-  const who = getWanderer(s.rival.who).name.split(' ')[0];
-  const n = Math.min(Math.max(1, amt), Math.max(1, qty));
-  const it = selStack ? getItem(selStack.itemId) : null;
-  const B = 'btn text-[13px] px-3';
-  const H = { minHeight: 44, minWidth: 44 } as const;
-  const bagUsed = s.expedition.backpack.filter(Boolean).length;
+/** Montón de lo apartado para el aliado: tocar un objeto lo devuelve al botín. */
+function SharePile({ pile, lootId, name, cols }: { pile: ItemStack[]; lootId: string; name: string; cols: number }) {
+  const slots = Math.max(cols * 3, Math.ceil((pile.length + 1) / cols) * cols);
   return (
-    <div className="absolute inset-0 z-50 fade-in" data-testid="loot-modal">
-      <div className="absolute inset-0 bg-black/45" onClick={() => actions.closeLoot()} aria-hidden />
-      <div className="loot-win" role="dialog" aria-label={session.title}>
-        <div className="loot-win-hd">
-          <span className="font-display text-gold text-[15px] tracking-[0.06em] truncate flex-1">{session.title}</span>
-          <button className="loot-win-x" onClick={() => actions.closeLoot()} aria-label="Cerrar" data-testid="btn-close-loot">✕</button>
+    <div>
+      <div className="share-label share-ally">Para {name}</div>
+      <div className="share-pile" style={{ gridTemplateColumns: `repeat(${cols}, var(--slot))` }}>
+        {Array.from({ length: slots }, (_, i) => {
+          const it = pile[i];
+          return it ? (
+            <button key={it.uid} className="share-slot" onClick={() => actions.takeBackFromRival(lootId, i)} title={`${getItem(it.itemId).name}: tócalo para recuperarlo`} data-testid={`pile-${i}`}>
+              <ItemIcon itemId={it.itemId} size={40} />{it.qty > 1 && <span className="share-qty">{it.qty}</span>}
+            </button>
+          ) : <span key={i} className="share-slot" />;
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Cuánto coger o dar de un montón: − y +, atajos y a quién va. Sin aliado, solo «Para mí». */
+function QtyPicker({ stack, lootId, index, name, onDone }: { stack: ItemStack; lootId: string; index: number; name?: string; onDone: () => void }) {
+  const max = stack.qty;
+  const [n, setN] = useState(max > 1 ? Math.max(1, Math.floor(max / 2)) : 1);
+  const k = Math.min(n, max);
+  return (
+    <div className="qty-pick" data-testid="qty-picker">
+      <div className="share-label" style={{ color: RARITY_INFO[getItem(stack.itemId).rarity].color }}>{getItem(stack.itemId).name}{max > 1 ? ` · ${max}` : ''}</div>
+      {max > 1 && (
+        <div className="qty-row">
+          <button className="btn qty-b" onClick={() => setN(Math.max(1, k - 1))} disabled={k <= 1} aria-label="Uno menos">−</button>
+          <b className="qty-n" data-testid="qty-n">{k}</b>
+          <button className="btn qty-b" onClick={() => setN(Math.min(max, k + 1))} disabled={k >= max} aria-label="Uno más">+</button>
+          <span className="flex-1" />
+          <button className={`btn qty-b ${k === 1 ? 'qty-on' : ''}`} onClick={() => setN(1)}>1</button>
+          <button className={`btn qty-b ${k === Math.max(1, Math.floor(max / 2)) ? 'qty-on' : ''}`} onClick={() => setN(Math.max(1, Math.floor(max / 2)))} data-testid="qty-half">Mitad</button>
+          <button className={`btn qty-b ${k === max ? 'qty-on' : ''}`} onClick={() => setN(max)} data-testid="qty-all">Todo</button>
         </div>
-        {share && <div className="px-3 pt-1"><ShareMeter given={session.givenValue ?? 0} total={session.totalValue ?? 0} single={session.single} name={who} /></div>}
-        <div className="loot-win-bd">
-          <div className="min-w-0 shrink-0 overflow-y-auto scroll-thin">
-            <div className="loot-win-h">Dentro</div>
-            <GridView grid={grid} container="loot" cols={3} lootId={session.id} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel}
-              onQuick={(l) => actions.quickMove(l, 'backpack', session.id)} onAlt={(l) => actions.quickMove(l, 'backpack', session.id)} />
-            {grid.every((x) => !x) && <p className="text-stone-400 text-[13px] mt-2 italic">Vacío.</p>}
-          </div>
-          <div className="w-px bg-[#2a2830] shrink-0" />
-          <div className="min-w-0 flex-1 overflow-y-auto scroll-thin">
-            <div className="loot-win-h">Tuyo · {bagUsed}/{s.expedition.backpack.length}</div>
-            <GridView grid={s.expedition.backpack} container="backpack" cols={7} lootId={session.id} equipment={s.expedition.equipment} mode="dungeon"
-              onQuick={(l) => actions.quickMove(l, 'loot', session.id)} onAlt={(l) => actions.quickMove(l, 'loot', session.id)} />
-          </div>
-        </div>
-        <div className="loot-win-ft" data-testid="loot-bar">
-          {selStack && it ? (<>
-            <span className="min-w-0 flex-1 text-[13px] leading-tight truncate"><b style={{ color: RARITY_INFO[it.rarity].color }}>{it.name}</b>{qty > 1 && <span className="text-stone-400"> · hay {qty}</span>}</span>
-            {qty > 1 && <>
-              <button className={B} style={H} onClick={() => setAmt(n - 1)} disabled={n <= 1} data-testid="loot-amt-menos">−</button>
-              <span className="loot-win-val" data-testid="loot-amt">{n}</span>
-              <button className={B} style={H} onClick={() => setAmt(n + 1)} disabled={n >= qty} data-testid="loot-amt-mas">+</button>
-              <button className={B} style={H} onClick={() => setAmt(Math.max(1, Math.floor(qty / 2)))} data-testid="loot-amt-half">Mitad</button>
-              <button className={B} style={H} onClick={() => setAmt(qty)} data-testid="loot-amt-all">Todo</button>
-            </>}
-            {share && <button className={B} style={H} onClick={() => { actions.giveToRival(session.id, (sel as { index: number }).index, qty > 1 ? n : undefined); setSel(null); }} data-testid="btn-give">Dar{qty > 1 ? ` ${n}` : ''}</button>}
-            <button className={`${B} btn-gold`} style={H} onClick={() => { actions.takeSome(sel!, n, session.id); setSel(null); }} data-testid="btn-take-some">Coger{qty > 1 ? ` ${n}` : ''}</button>
-          </>) : (<>
-            <span className="min-w-0 flex-1 text-[12px] text-stone-400 leading-tight">{share ? `${who} espera su parte: toca algo y «Dar».` : 'Toca algo para elegir cuántos coger.'}</span>
-            {grid.some((x) => x?.itemId === 'gold_coins') && <button className={B} style={H} onClick={() => actions.takeGold(session.id)} data-testid="btn-take-gold">Coger el oro ({gridGold(grid)})</button>}
-            <button className={`${B} btn-gold`} style={H} onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
-          </>)}
-        </div>
+      )}
+      <div className="qty-to">
+        <button className="btn" onClick={() => { actions.takeFromLoot(lootId, index, k); onDone(); }} data-testid="btn-take-part">Para mí</button>
+        {name && <button className="btn btn-ally" onClick={() => { actions.giveToRival(lootId, index, k); onDone(); }} data-testid="btn-give">Para {name}</button>}
       </div>
     </div>
   );
@@ -523,104 +514,106 @@ function LootModal() {
   const s = useGame((x) => x);
   const layout = useLayout();
   const [sel, setSel] = useState<Loc | null>(null);
-  const [splitGive, setSplitGive] = useState(false);
   useClearOnDrop(useCallback(() => setSel(null), []));
   if (s.modal?.type !== 'loot' || !s.expedition) return null;
   const session = s.modal.session;
   const grid = s.chests[session.id] ?? s.bags[session.id]?.grid ?? [];
   const share = session.shareAsked && s.rival.disposition === 'allied';
-  const selStack = sel?.kind === 'grid' && sel.container === 'loot' ? grid[sel.index] : null;
-  if (layout === 'phone') return <PhoneLoot sel={sel} setSel={setSel} />;
-  if (layout !== 'desktop') {
-    // Fase 3 (tableta y móvil): «Del saco» | «Tuyo» | ficha, y «Cogerlo todo» como acción principal abajo
-    const phone = false;
-    const who = getWanderer(s.rival.who).name.split(' ')[0];
+  const who = getWanderer(s.rival.who).name.split(' ')[0];
+  const selIndex = sel?.kind === 'grid' && sel.container === 'loot' ? sel.index : -1;
+  const selStack = selIndex >= 0 ? grid[selIndex] : null;
+  const pile = session.pile ?? [];
+  const picker = selStack
+    ? <QtyPicker key={selStack.uid} stack={selStack} lootId={session.id} index={selIndex} name={share ? who : undefined} onDone={() => setSel(null)} />
+    : null;
+  const strip = (compact?: boolean) => share && <ShareStrip given={session.givenValue ?? 0} total={session.totalValue ?? 0} single={session.single} who={s.rival.who} compact={compact} />;
+  const takeGold = grid.some((x) => x?.itemId === 'gold_coins') && !share && <button className="btn" onClick={() => actions.takeGold(session.id)} data-testid="btn-take-gold">Coger el oro ({gridGold(grid)})</button>;
+  const fair = share && <button className="btn btn-ally" onClick={() => { actions.fairShare(session.id); setSel(null); }} data-testid="btn-fair-share">Reparto justo</button>;
+  const close = <button className="btn loot-x" onClick={() => actions.closeLoot()} aria-label="Cerrar" title="Cerrar (Esc)" data-testid="btn-close-loot">✕</button>;
+  const lootGrid = (cols: number) => (
+    <GridView grid={grid} container="loot" cols={cols} lootId={session.id} equipment={s.expedition!.equipment} mode="dungeon" selected={sel} onSelect={setSel}
+      onQuick={(l) => actions.quickMove(l, 'backpack', session.id)} onAlt={(l) => actions.quickMove(l, 'backpack', session.id)} />
+  );
+  const bp = s.expedition.backpack;
+  const packGrid = (cols: number) => (
+    <GridView grid={bp} container="backpack" cols={cols} lootId={session.id} equipment={s.expedition!.equipment} mode="dungeon"
+      onQuick={(l) => actions.quickMove(l, 'loot', session.id)} onAlt={(l) => actions.quickMove(l, 'loot', session.id)} />
+  );
+  if (layout === 'phone') {
+    // Móvil (23/11): ventana flotante con la mazmorra detrás; abajo, «Coger el oro» y «Cogerlo todo» o, con algo tocado, cuántos coger
     return (
-      <div className="absolute inset-0 z-50 flex fade-in inv-full" data-testid="loot-modal">
-        <Panel className="min-h-0 shrink-0 loot-from" bodyClassName="overflow-y-auto scroll-thin">
-          <div className="panel-title mb-2">{session.title}</div>
-          <GridView grid={grid} container="loot" cols={phone ? 4 : 6} lootId={session.id} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel}
-            onQuick={(l) => actions.quickMove(l, 'backpack', session.id)} onAlt={(l) => actions.quickMove(l, 'backpack', session.id)} />
-          {grid.every((x) => !x) && <p className="text-muted text-sm mt-2">Vacío.</p>}
-        </Panel>
-        <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">
-          <div className="panel-title mb-2">Tuyo · {s.expedition.backpack.filter(Boolean).length}/{s.expedition.backpack.length}</div>
-          <GridView grid={s.expedition.backpack} container="backpack" cols={6} lootId={session.id} equipment={s.expedition.equipment} mode="dungeon"
-            onQuick={(l) => actions.quickMove(l, 'loot', session.id)} onAlt={(l) => actions.quickMove(l, 'loot', session.id)} />
-          {!s.tutorial && <CarryBar className="mt-2" />}
-        </Panel>
-        <Panel className="min-h-0 flex-1 min-w-0" bodyClassName="min-h-0 h-full flex flex-col">
-          <div className="flex justify-end mb-2"><button className="btn" onClick={() => actions.closeLoot()} data-testid="btn-close-loot">Cerrar ✕</button></div>
-          <div className="flex-1 min-h-0 overflow-y-auto scroll-thin">
-            {share && <div className="text-sm mb-2"><b className="text-heal">{who} espera su parte.</b> Elige algo y pulsa «Dar».<ShareMeter given={session.givenValue ?? 0} total={session.totalValue ?? 0} single={session.single} name={who} /></div>}
-            {selStack ? (
-              <div className="flex flex-col gap-2 items-start">
-                <ItemIcon itemId={selStack.itemId} size={44} />
-                <span className="font-display" style={{ color: RARITY_INFO[getItem(selStack.itemId).rarity].color }}>{getItem(selStack.itemId).name}{selStack.qty > 1 ? ` · ${selStack.qty}` : ''}</span>
-                <div className="flex gap-2 flex-wrap">
-                  <button className="btn" onClick={() => { actions.quickMove(sel!, 'backpack', session.id); setSel(null); }}>Coger</button>
-                  {share && <button className="btn" onClick={() => { actions.giveToRival(session.id, (sel as { index: number }).index); setSel(null); }} data-testid="btn-give">Dar a {who}</button>}
-                </div>
-              </div>
-            ) : <div className="text-muted text-sm">Toca un objeto del saco para verlo, o cógelo todo.</div>}
+      <div className="absolute inset-0 z-50 fade-in" data-testid="loot-modal">
+        <div className="absolute inset-0 bg-black/45" onClick={() => actions.closeLoot()} aria-hidden />
+        <div className="loot-win" role="dialog" aria-label={session.title}>
+          <div className="loot-win-hd">
+            {share ? <div className="flex-1 min-w-0">{strip(true)}</div> : <span className="font-display text-gold text-[15px] tracking-[0.06em] truncate flex-1">{session.title}</span>}
+            {fair}{close}
           </div>
-          <div className="flex flex-col gap-2 mt-2">
-            {grid.some((x) => x?.itemId === 'gold_coins') && <button className="btn" onClick={() => actions.takeGold(session.id)} data-testid="btn-take-gold">Coger el oro ({gridGold(grid)})</button>}
-            <button className="btn btn-gold" style={{ minHeight: 52 }} onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
+          <div className="loot-win-bd">
+            <div className="min-w-0 shrink-0 overflow-y-auto scroll-thin"><div className="loot-win-h">{share ? 'Saco' : 'Dentro'}</div>{lootGrid(3)}{grid.every((x) => !x) && <p className="text-stone-400 text-[13px] mt-2 italic">Vacío.</p>}</div>
+            {share && <div className="min-w-0 shrink-0 overflow-y-auto scroll-thin"><SharePile pile={pile} lootId={session.id} name={who} cols={2} /></div>}
+            <div className="w-px bg-[#2a2830] shrink-0" />
+            <div className="min-w-0 flex-1 overflow-y-auto scroll-thin"><div className="loot-win-h">Tuyo · {bp.filter(Boolean).length}/{bp.length}</div>{packGrid(share ? 4 : 7)}</div>
           </div>
-        </Panel>
+          <div className="loot-win-ft" data-testid="loot-bar">
+            {picker ?? (<>
+              <span className="min-w-0 flex-1 text-[12px] text-stone-400 leading-tight">{share ? `Toca algo para repartirlo con ${who}.` : 'Toca algo para elegir cuántos coger.'}</span>
+              {takeGold}
+              <button className="btn btn-gold" style={{ minHeight: 44 }} onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
+            </>)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (layout !== 'desktop') {
+    const phone = false;
+    return (
+      <div className="absolute inset-0 z-50 flex flex-col fade-in loot-touch" data-testid="loot-modal">
+        <div className="loot-top">
+          {share ? strip(true) : <div className="panel-title loot-title">{session.title}</div>}
+          {fair}{close}
+        </div>
+        <div className="loot-cols">
+          <Panel className="min-h-0 shrink-0 loot-from" bodyClassName="overflow-y-auto scroll-thin">
+            <div className="share-label">{share ? 'Saco' : session.title}</div>
+            {lootGrid(phone ? 3 : 5)}
+          </Panel>
+          {share && <Panel className="min-h-0 shrink-0 loot-ally" bodyClassName="overflow-y-auto scroll-thin"><SharePile pile={pile} lootId={session.id} name={who} cols={2} /></Panel>}
+          <Panel className="min-h-0 flex-1 min-w-0" bodyClassName="min-h-0 h-full flex flex-col">
+            {picker ?? (
+              <>
+                <div className="share-label">Tuyo · {bp.filter(Boolean).length}/{bp.length}</div>
+                <div className="flex-1 min-h-0 overflow-y-auto scroll-thin">{packGrid(phone ? 5 : 6)}</div>
+                {takeGold && <div className="mt-2">{takeGold}</div>}
+                <button className="btn btn-gold mt-2" style={{ minHeight: 48 }} onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
+              </>
+            )}
+          </Panel>
+        </div>
       </div>
     );
   }
   return (
-    <Modal onClose={() => actions.closeLoot()} wide testId="loot-modal">
-      <div className="flex items-center justify-between mb-3 gap-2 sticky top-0 z-10 py-1" style={{ background: '#16151b' }}>
-        <h2 className="panel-title text-xl">{session.title}</h2>
-        <div className="flex gap-2 flex-wrap justify-end">
-          {grid.some((x) => x?.itemId === 'gold_coins') && <button className="btn" onClick={() => actions.takeGold(session.id)} data-testid="btn-take-gold">Coger el oro ({gridGold(grid)})</button>}
-          <button className="btn btn-gold" onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
-        </div>
+    <Modal onClose={() => actions.closeLoot()} fit testId="loot-modal">
+      <div className="loot-head">
+        <h2 className="panel-title text-lg">{session.title}</h2>
+        <span className="flex-1" />
+        {takeGold}{fair}
+        <button className="btn btn-gold" onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
+        {close}
       </div>
-      {share && (
-        <div className="panel p-3 mb-3 border-heal flex items-center gap-3">
-          <MonsterSprite sprite={getWanderer(s.rival.who).sprite} scale={2} />
-          <div className="font-body text-base flex-1">
-            <b className="text-heal">{getWanderer(s.rival.who).name.split(' ')[0]} espera su parte.</b> Selecciona algo y pulsa «Dar». Cuenta el valor, no el número de cosas: con una cuarta parte del botín (la marca de la barra) queda satisfecho y baja su riesgo de traición; si no le das nada, sube. Lo que repartas también rebaja lo que te pedirá en el portal.
-            <ShareMeter given={session.givenValue ?? 0} total={session.totalValue ?? 0} single={session.single} name={getWanderer(s.rival.who).name.split(' ')[0]} />
-            {(session.given.length > 0 || (session.givenGold ?? 0) > 0) && <div className="text-heal text-sm">Le has dado: {[...((session.givenGold ?? 0) > 0 ? [`${session.givenGold} monedas`] : []), ...session.given.map((id) => getItem(id).name)].join(', ')}.</div>}
+      {strip()}
+      <div className="loot-grid">
+        <div className="loot-left">
+          <div className="loot-pair">
+            <div><div className="share-label">{share ? 'Saco' : 'Contenido'}</div>{lootGrid(4)}{grid.every((x) => !x) && <p className="text-stone-400 text-sm mt-2 italic">Vacío.</p>}</div>
+            {share && <SharePile pile={pile} lootId={session.id} name={who} cols={2} />}
           </div>
+          {picker}
         </div>
-      )}
-      <div className="grid md:grid-cols-2 gap-5">
-        <div>
-          <div className="text-sm text-stone-300 mb-2">Contenido</div>
-          <GridView grid={grid} container="loot" cols={6} lootId={session.id} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel}
-            onQuick={(l) => actions.quickMove(l, 'backpack', session.id)} onAlt={(l) => actions.quickMove(l, 'backpack', session.id)} />
-          {grid.every((x) => !x) && <p className="text-stone-400 text-sm mt-2 italic">Vacío.</p>}
-          {selStack && (
-            <div className="flex gap-2 mt-3 items-center flex-wrap">
-              <span style={{ color: RARITY_INFO[getItem(selStack.itemId).rarity].color }}>{getItem(selStack.itemId).name}</span>
-              <button className="btn btn-gold text-sm" onClick={() => { actions.quickMove(sel!, 'backpack', session.id); setSel(null); }}>Coger</button>
-              {share && <button className="btn text-sm" onClick={() => { actions.giveToRival(session.id, (sel as { index: number }).index); setSel(null); }} data-testid="btn-give">Dar a {getWanderer(s.rival.who).name.split(' ')[0]}{selStack.qty > 1 ? ' (todo)' : ''}</button>}
-              {share && selStack.qty > 1 && !selStack.gold && <button className="btn text-sm" onClick={() => setSplitGive(true)} data-testid="btn-give-split">Dividir…</button>}
-            </div>
-          )}
-          {splitGive && selStack && sel?.kind === 'grid' && (
-            <GoldAmountPicker title={`Dar a ${getWanderer(s.rival.who).name.split(' ')[0]}`} max={selStack.qty} initial={Math.max(1, Math.floor(selStack.qty / 2))} onClose={() => setSplitGive(false)}
-              from={<><ItemIcon itemId={selStack.itemId} size={36} /><span className="font-body text-lg">{getItem(selStack.itemId).name} · <b className="text-gold">{selStack.qty}</b></span></>}
-              confirm={(n) => `Dar ${n}`} note="El resto se queda en el cofre."
-              onConfirm={(n) => { actions.giveToRival(session.id, sel.index, n); setSel(null); }} />
-          )}
-        </div>
-        <div>
-          <div className="text-sm text-stone-300 mb-2">Tu mochila · {s.expedition.backpack.filter(Boolean).length}/{s.expedition.backpack.length}</div>
-          <GridView grid={s.expedition.backpack} container="backpack" cols={6} lootId={session.id} equipment={s.expedition.equipment} mode="dungeon"
-            onQuick={(l) => actions.quickMove(l, 'loot', session.id)} onAlt={(l) => actions.quickMove(l, 'loot', session.id)} />
-          {!s.tutorial && <CarryBar className="mt-2" />}
-        </div>
+        <div><div className="share-label">Tu mochila · {bp.filter(Boolean).length}/{bp.length}</div>{packGrid(6)}{!s.tutorial && <CarryBar className="mt-2" />}</div>
       </div>
-      <p className="text-xs text-stone-400 mt-3">Doble clic o clic derecho para mover. También puedes arrastrar.</p>
-      <button className="btn mt-3" onClick={() => actions.closeLoot()} data-testid="btn-close-loot">Cerrar <kbd className="opacity-60">Esc</kbd></button>
     </Modal>
   );
 }
@@ -635,29 +628,69 @@ export function RiskBadge({ risk, size = 22 }: { risk: RiskLevel; size?: number 
   );
 }
 
+/** Busto cuadrado de un personaje: cabeza y pecho de su sprite, a escala entera y sin suavizar. */
+function TalkBust({ sprite, scale }: { sprite: string; scale: number }) {
+  const [w, setW] = useState(20);
+  const src = monsterUrl(sprite, scale);
+  const side = w * scale;
+  return (
+    <div className="talk-bust" style={{ width: side + 4, height: side + 4 }} aria-hidden>
+      <img src={src} className="pixelated" alt="" draggable={false} onLoad={(e) => setW(Math.round(e.currentTarget.naturalWidth / scale))} />
+    </div>
+  );
+}
+
+/**
+ * Conversación dentro de la mazmorra (errantes, aliados, prisioneros): busto grande a la izquierda; a la derecha,
+ * nombre (y a su derecha riesgo o cifra), lo que dice y las elecciones en una fila. En ordenador, abajo; en táctil, centrada.
+ */
+function TalkPanel({ sprite, name, side, line, children, onClose, testId, nameTestId = 'talk-name', lineTestId = 'talk-line', closeTestId }: {
+  sprite: string; name: string; side?: ReactNode; line: ReactNode; children: ReactNode; onClose?: () => void; testId: string; nameTestId?: string; lineTestId?: string; closeTestId?: string;
+}) {
+  const layout = useLayout();
+  const touch = layout !== 'desktop';
+  return (
+    <div className={`talk-wrap fade-in ${touch ? 'talk-touch' : ''}`} data-modal onMouseDown={(e) => e.target === e.currentTarget && onClose?.()} data-testid={testId}>
+      <div className="talk panel-gold">
+        <TalkBust sprite={sprite} scale={layout === 'phone' ? 6 : 8} />
+        <div className="talk-body">
+          <div className="talk-head">
+            <h2 className="talk-name" data-testid={nameTestId}>{name}</h2>
+            <span className="flex-1" />
+            {side}
+            {onClose && <button className="btn talk-x" onClick={onClose} aria-label="Cerrar" title="Cerrar (Esc)" data-testid={closeTestId}>✕</button>}
+          </div>
+          <p className="talk-line" data-testid={lineTestId}>{line}</p>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Fila de elecciones del mismo ancho. */
+const TalkActs = ({ children }: { children: ReactNode[] }) => {
+  const list = children.filter(Boolean);
+  return <div className="talk-acts" style={{ gridTemplateColumns: `repeat(${list.length}, 1fr)` }}>{list}</div>;
+};
+
+/** Riesgo de traición en una palabra con su triángulo. */
+const TalkRisk = ({ risk }: { risk: RiskLevel }) => <span className="talk-risk" style={{ color: RISK[risk].color }}><RiskBadge risk={risk} size={20} />{RISK[risk].label}</span>;
+
 function CaptiveModal({ mercId }: { mercId: string }) {
   const m = getMerc(mercId);
   const busy = useGame((s) => !!s.merc?.alive || s.rival.disposition === 'allied');
   const kael = useGame((s) => s.rival.who === 'kael' && s.rival.disposition === 'allied');
   return (
-    <Modal onClose={() => actions.closeModal()} testId="captive-modal">
-      <div className="flex gap-4">
-        <div className="shrink-0 w-28 h-36 bg-black/40 border-2 border-stone-700 flex items-end justify-center"><MonsterSprite sprite={m.sprite} scale={5} /></div>
-        <div className="flex-1 min-w-0">
-          <h2 className="font-display text-2xl">{m.name}</h2>
-          <div className="text-sm text-gold">Prisionero · {m.title}</div>
-          <p className="font-body text-lg mt-2 leading-snug">{m.blurb}</p>
-          <p className="font-body text-lg mt-2 leading-snug text-parchment">{m.rescueLine}{kael && ' Kael lo mira de reojo: «Dos bocas más que alimentar. Tú decides.»'}</p>
-        </div>
-      </div>
-      {busy ? <AllyChoice target={{ kind: 'captive', name: m.name, mercId }} /> : <>
-      <p className="font-body text-base text-stone-300 mt-3">Si rompes sus cadenas, luchará a tu lado gratis en esta expedición. <b className="text-heal">Si extraéis con vida</b>, llegará al refugio y podrás contratar sus servicios con Garra Roja (el primer contrato, a mitad de precio). Si cae en combate o mueres tú, se pierde.</p>
-      <div className="flex flex-wrap gap-2 mt-4">
-        <button className="btn btn-gold" disabled={busy} onClick={() => actions.freeCaptive(mercId)} data-testid="captive-free">Romper las cadenas</button>
-        <button className="btn" onClick={() => actions.closeModal()}>Dejarlo para luego</button>
-      </div>
-      </>}
-    </Modal>
+    <TalkPanel sprite={m.sprite} name={m.name} side={<span className="talk-tag">Prisionero</span>} onClose={() => actions.closeModal()} testId="captive-modal"
+      line={<>{m.rescueLine}{kael && ' Kael lo mira de reojo: «Dos bocas más que alimentar. Tú decides.»'}</>}>
+      {busy ? <AllyChoice target={{ kind: 'captive', name: m.name, mercId }} /> : (
+        <TalkActs>{[
+          <button key="f" className="btn btn-gold" onClick={() => actions.freeCaptive(mercId)} data-testid="captive-free">Romper las cadenas</button>,
+          <button key="l" className="btn" onClick={() => actions.closeModal()}>Dejarlo para luego</button>,
+        ]}</TalkActs>
+      )}
+    </TalkPanel>
   );
 }
 
@@ -683,27 +716,13 @@ function MercModal() {
   if (!ms) return null;
   const m = getMerc(ms.id);
   return (
-    <Modal onClose={() => actions.closeModal()} testId="merc-modal">
-      <div className="flex gap-4">
-        <div className="shrink-0 w-28 h-36 bg-black/40 border-2 border-stone-700 flex items-end justify-center"><MonsterSprite sprite={m.sprite} scale={5} /></div>
-        <div className="flex-1 min-w-0">
-          <h2 className="font-display text-2xl">{m.name}</h2>
-          <div className="text-sm text-heal">{ms.rescued ? 'Rescatado · va gratis en esta expedición' : `Contratado · ${contract?.left ?? 0} ${(contract?.left ?? 0) === 1 ? 'expedición' : 'expediciones'} contando esta`}</div>
-          <div className="mt-2"><Bar value={ms.hp} max={mercBaseStats(m).maxHp} color="#5fd19a" label="Vida" /></div>
-          <div className="text-sm text-stone-400 mt-1">Pociones: {ms.potions}</div>
-        </div>
-      </div>
-      <h3 className="panel-title text-sm mt-4 mb-2">Actitud en combate</h3>
-      <div className="grid sm:grid-cols-2 gap-2">
-        {(['aggressive', 'cautious'] as const).map((st) => (
-          <button key={st} className={`btn text-left py-2 ${ms.stance === st ? 'btn-gold' : ''}`} onClick={() => actions.setMercStance(st)} data-testid={`merc-stance-${st}`}>
-            <div>{STANCE_NAME[st]}</div>
-            <div className="font-body text-sm opacity-80 normal-case">{STANCE_DESC[st]}</div>
-          </button>
-        ))}
-      </div>
-      <button className="btn mt-4 text-sm" onClick={() => actions.closeModal()}>Cerrar</button>
-    </Modal>
+    <TalkPanel sprite={m.sprite} name={m.name} testId="merc-modal" onClose={() => actions.closeModal()} closeTestId="merc-close"
+      side={<span className="talk-tag text-heal">{ms.rescued ? 'Rescatado' : `Contrato · ${contract?.left ?? 0}`} · ♥ {ms.hp}/{mercBaseStats(m).maxHp} · {ms.potions} pociones</span>}
+      line={STANCE_DESC[ms.stance]}>
+      <TalkActs>{(['aggressive', 'cautious'] as const).map((st) => (
+        <button key={st} className={`btn ${ms.stance === st ? 'btn-gold' : ''}`} onClick={() => actions.setMercStance(st)} data-testid={`merc-stance-${st}`}>{STANCE_NAME[st]}</button>
+      ))}</TalkActs>
+    </TalkPanel>
   );
 }
 
@@ -717,42 +736,22 @@ function RivalModal() {
   // Ya te acompaña un mercenario y este errante aún no es tu aliado: solo cabe uno
   const conflict = useGame((s) => !!s.merc?.alive) && !allied && !tut && rival.disposition === 'neutral';
   const w = getWanderer(rival.who);
-  const r = RISK[rival.risk];
   const first = w.name.split(' ')[0];
   return (
-    <Modal onClose={() => { if (!onlyAlly) actions.closeModal(); }} testId="rival-modal">
-      <div className="flex gap-4">
-        <div className="shrink-0 w-28 h-36 bg-black/40 border-2 border-stone-700 flex flex-col items-center justify-end relative">
-          <span className="absolute top-1.5"><RiskBadge risk={rival.risk} size={26} /></span>
-          <MonsterSprite sprite={w.sprite} scale={5} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h2 className="font-display text-2xl" data-testid="rival-name">{w.name}</h2>
-          <div className="text-sm">
-            {allied ? <span className="text-heal">● Aliado</span> : <span className="text-gold">● {w.title}</span>}
-            <span className="text-stone-400"> · </span><span style={{ color: r.color }}>{r.symbol} {r.label} de traición</span>
-          </div>
-          <p className="font-body text-lg mt-3 leading-snug min-h-[3.5rem]" data-testid="rival-line">
-            {line ?? (allied ? `${first}: «¿Qué pasa? Mantén los ojos abiertos.»` : `${first} te observa, la mano cerca del arma. No parece hostil… todavía.`)}
-          </p>
-        </div>
-      </div>
-      {conflict ? <AllyChoice target={{ kind: 'rival', name: w.name, risk: rival.risk }} /> : <>
-      <div className={`grid gap-2 mt-4 ${onlyAlly ? '' : 'sm:grid-cols-2'}`}>
-        {!onlyAlly && <button className="btn" onClick={() => actions.rivalTalk()} data-testid="rival-talk">Hablar</button>}
-        {!allied && <button className="btn btn-gold" onClick={() => actions.rivalPropose()} data-testid="rival-ally">Aliarse</button>}
-        {!allied && !onlyAlly && <button className="btn" onClick={() => actions.rivalIgnore()} data-testid="rival-ignore">Seguir tu camino</button>}
-        {allied && !tut && <button className="btn" onClick={() => actions.rivalLeave()} data-testid="rival-leave">Separar vuestros caminos</button>}
-        {!allied && !onlyAlly && <button className="btn btn-danger" onClick={() => actions.rivalAttack()} data-testid="rival-attack">Atacar</button>}
-        {allied && !tut && <button className="btn btn-danger" onClick={() => actions.askBetray()} data-testid="rival-betray">Traicionar…</button>}
-      </div>
-      <p className="text-stone-400 mt-3 font-body text-sm" data-testid="rival-terms">
-        {allied ? `Lucha a tu lado. Quiere su parte de cada cofre y de cada saco de combate, y al llegar al portal te pedirá el ${Math.round(GOLD_SHARE * 100)} % del oro (menos si repartes bien, más si no).` : `Si os aliáis, lucha a tu lado a cambio de su parte del botín y, en el portal, del ${Math.round(GOLD_SHARE * 100)} % del oro. El triángulo indica cuánto puedes fiarte.`}
-        {' '}Una traición es a muerte y sin huida.
-      </p>
-      </>}
-      {!onlyAlly && <button className="btn mt-3 text-sm" onClick={() => actions.closeModal()}>Cerrar</button>}
-    </Modal>
+    <TalkPanel sprite={w.sprite} name={w.name} nameTestId="rival-name" lineTestId="rival-line" testId="rival-modal"
+      side={<TalkRisk risk={rival.risk} />} onClose={onlyAlly ? undefined : () => actions.closeModal()} closeTestId="rival-close"
+      line={line ?? (allied ? `${first}: «¿Qué pasa? Mantén los ojos abiertos.»` : `${first} te observa, la mano cerca del arma. No parece hostil… todavía.`)}>
+      {conflict ? <AllyChoice target={{ kind: 'rival', name: w.name, risk: rival.risk }} /> : (
+        <TalkActs>{[
+          !allied && <button key="a" className="btn btn-gold" onClick={() => actions.rivalPropose()} data-testid="rival-ally">Aliarse</button>,
+          !onlyAlly && <button key="t" className="btn" onClick={() => actions.rivalTalk()} data-testid="rival-talk">Hablar</button>,
+          !allied && !onlyAlly && <button key="i" className="btn" onClick={() => actions.rivalIgnore()} data-testid="rival-ignore">Seguir tu camino</button>,
+          allied && !tut && <button key="l" className="btn" onClick={() => actions.rivalLeave()} data-testid="rival-leave">Separar caminos</button>,
+          !allied && !onlyAlly && <button key="x" className="btn btn-danger" onClick={() => actions.rivalAttack()} data-testid="rival-attack">Atacar</button>,
+          allied && !tut && <button key="b" className="btn btn-danger" onClick={() => actions.askBetray()} data-testid="rival-betray">Traicionar</button>,
+        ]}</TalkActs>
+      )}
+    </TalkPanel>
   );
 }
 
@@ -764,28 +763,16 @@ function RivalDemand() {
   const w = getWanderer(s.rival.who);
   const first = w.name.split(' ')[0];
   const pay = planPayment(s.expedition.backpack, s.expedition.pocket, m.amount);
-  const mood = m.pct < 0.2 ? `Has repartido bien durante la bajada: ${first} se conforma con el ${Math.round(m.pct * 100)} %.` : m.pct > 0.2 ? `Te has quedado con casi todo: ${first} pide el ${Math.round(m.pct * 100)} % y no está de humor.` : `Lo acordado: el ${Math.round(m.pct * 100)} % del oro ganado desde que os aliasteis.`;
   return (
-    <Modal onClose={() => actions.closeModal()} testId="rival-demand">
-      <div className="flex items-center gap-3 mb-2">
-        <MonsterSprite sprite={w.sprite} scale={2} />
-        <h2 className="panel-title text-xl">{first} quiere su parte</h2>
-      </div>
-      <p className="font-body text-lg italic text-parchment">{m.line}</p>
-      <p className="font-body text-base text-stone-300 mt-2">{mood}</p>
-      <div className="panel p-3 mt-3 font-body text-base" data-testid="rival-demand-plan">
-        {pay.gold > 0 && <div><span className="text-gold">{pay.gold} monedas</span> de tu mochila{pay.pocket !== s.expedition.pocket && gridGold(pay.pocket) < gridGold(s.expedition.pocket) ? ' y del bolsillo seguro' : ''}.</div>}
-        {pay.items.length > 0 && <div>No llevas monedas suficientes: se cobra el resto con {pay.items.map((x) => getItem(x.itemId).name).join(', ')}.</div>}
-        {pay.short && <div className="text-ember">Ni con todo llega: se lleva lo que tienes.</div>}
-      </div>
-      <div className="flex gap-2 mt-4 flex-wrap">
-        <button className="btn btn-gold" onClick={() => actions.payRival()} data-testid="rival-pay">Pagar y cruzar</button>
-        <button className="btn btn-danger" onClick={() => actions.refuseRival()} data-testid="rival-refuse">Negarte</button>
-        <button className="btn btn-danger" onClick={() => actions.confirmBetray()} data-testid="rival-strike">Atacarle primero</button>
-        <button className="btn" onClick={() => actions.closeModal()} data-testid="rival-later">Todavía no</button>
-      </div>
-      <p className="text-sm text-stone-400 mt-3">Si te niegas, te atacará a muerte, sin huida posible. Si le atacas tú primero, empezará aturdido. Si ganas, te quedas con todo lo que lleva.{s.rival.who === 'kael' ? ' Kael no olvida.' : ''}</p>
-    </Modal>
+    <TalkPanel sprite={w.sprite} name={`${first} quiere su parte`} testId="rival-demand" onClose={() => actions.closeModal()} closeTestId="rival-later"
+      side={<b className="talk-amount" data-testid="rival-demand-plan">{m.amount} monedas</b>}
+      line={<>{m.line}{pay.items.length > 0 && <span className="talk-note"> Te faltan monedas: se cobra el resto con {pay.items.map((x) => getItem(x.itemId).name).join(', ')}.</span>}{pay.short && <span className="talk-note"> Ni con todo llega: se lleva lo que tienes.</span>}</>}>
+      <TalkActs>{[
+        <button key="p" className="btn btn-gold" onClick={() => actions.payRival()} data-testid="rival-pay">Pagar y cruzar</button>,
+        <button key="r" className="btn btn-danger" onClick={() => actions.refuseRival()} data-testid="rival-refuse">Negarte</button>,
+        <button key="s" className="btn btn-danger" onClick={() => actions.confirmBetray()} data-testid="rival-strike">Atacarle</button>,
+      ]}</TalkActs>
+    </TalkPanel>
   );
 }
 

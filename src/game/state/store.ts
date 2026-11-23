@@ -58,7 +58,7 @@ import { applyContainers, loadNow, containersFor, dev, equipCtx, getSave, getSta
 import type { Bag, GameState, Screen } from './internals';
 
 export type { Screen, RosterEntry, Toast, CombatKind, CombatSession, LootSession, Modal, Bag, DungeonHud, TutorialRun, GameState } from './internals';
-export { getState, subscribe, useGame, getSave, getActiveCharacterId, toast, containersFor, tutorialFrozen, dev, tutorialDoneOnDevice } from './internals';
+export { getState, subscribe, useGame, getSave, getActiveCharacterId, toast, containersFor, holdsToasts, tutorialFrozen, dev, tutorialDoneOnDevice } from './internals';
 
 /** Carga un personaje. Un fogón, yunque o mezcla que quedó a medias (minijuegos retirados) se entrega ya terminado. */
 function compose(save: SaveData, id: string): Profile | null {
@@ -353,30 +353,6 @@ export const actions = {
     if (!applyContainers(r.containers, lootId)) return;
     sfx('pickup');
     if (moving && from.kind === 'grid' && from.container === 'loot' && target !== 'loot') recordFound([moving]);
-  },
-
-  /** Coger solo n de un montón del saco o cofre; el resto se queda dentro. */
-  takeSome(from: Loc, n: number, lootId: string) {
-    const c = containersFor(state, lootId);
-    if (!c || from.kind !== 'grid' || from.container !== 'loot') return;
-    const src = stackAt(c, from);
-    if (!src) return;
-    if (n >= src.qty) return actions.quickMove(from, 'backpack', lootId);
-    const rest = src.qty - n;
-    if (src.itemId === COIN_ID) {
-      const pc = putCoinsPartial(c.backpack, n);
-      if (pc.left === n) return invError('Tu mochila está llena: las monedas se quedan aquí.');
-      const loot = [...c.loot]; loot[from.index] = { ...src, qty: rest + pc.left };
-      sfx('coin'); applyContainers({ ...c, backpack: pc.grid, loot }, lootId);
-      return;
-    }
-    const c2 = { ...c, loot: [...c.loot] }; c2.loot[from.index] = { ...src, qty: n };
-    const r = quickMove(c2, from, 'backpack');
-    if (!r.ok) return invError(r.error);
-    const left = (stackAt(r.containers, from)?.qty ?? 0) + rest;
-    r.containers.loot[from.index] = { ...src, qty: left };
-    if (!applyContainers(r.containers, lootId)) return;
-    sfx('pickup'); recordFound([{ ...src, qty: n - (left - rest) }]);
   },
 
   /** «Coger el oro»: solo las monedas del saco o cofre (primero a tus saquitos y sacos). */
