@@ -97,7 +97,7 @@ export const CRYPTS_OF_UMBRAVEL: DungeonDef = {
     { kind: 'enemy', id: 'e_skel1', enemyId: 'skeleton', x: 13, y: 14 },
     { kind: 'enemy', id: 'e_skel2', enemyId: 'skeleton', x: 18, y: 15 },
     { kind: 'enemy', id: 'e_skel3', enemyId: 'skeleton', x: 6, y: 20 },
-    { kind: 'enemy', id: 'e_boss', enemyId: 'ossuary_lord', x: 27, y: 15 },
+    { kind: 'enemy', id: 'e_boss', enemyId: 'mordrek', x: 27, y: 15 },
     // Trampas
     { kind: 'trap', id: 'trap1', x: 15, y: 9 },
     { kind: 'trap', id: 'trap2', x: 16, y: 16 },

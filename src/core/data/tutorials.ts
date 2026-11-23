@@ -349,16 +349,11 @@ function EXPEDITION_MINIS(): MiniTutorial[] {
     ] },
     { id: 'exp.kael', topic: 'combate', trigger: 'exp:kael', overModal: true, steps: [
       { text: '**Kael**. No es un errante cualquiera: lleva años bajando solo y casi nunca traiciona.', target: 'risk-badge' },
-      { text: 'Si te alías con él, dale su parte de cada cofre y cada saco. Lo que no quieras, se lo queda.' },
+      { text: 'Si te alías con él, reparte a partes iguales. Lo que no quieras, se lo queda.' },
     ] },
     { id: 'exp.ally-conflict', topic: 'combate', trigger: 'ally:conflict', overModal: true, steps: [
       { text: 'Solo cabe **un aliado**. Ya te acompaña alguien: aquí decides.', target: 'ally-current' },
       { text: '**Quedarte** con el tuyo, **separar caminos** (se despide y te unes al nuevo) o **traicionarle**: combate a muerte, y el nuevo no lo olvidará.', target: 'ally-choice' },
-    ] },
-    { id: 'exp.share', topic: 'combate', trigger: 'ally:share', overModal: true, steps: [
-      { text: 'Tu aliado **espera su parte**. La barra dice cómo lo ve: llega a la marca y se fiará más de ti.', target: 'share-meter' },
-      { text: 'Elige algo del saco, decide cuánto y pulsa **Para** él. Va a su montón: tócalo ahí para recuperarlo antes de cerrar.', touch: 'Toca algo del saco, decide cuánto y toca **Para** él. Va a su montón: tócalo ahí para recuperarlo antes de cerrar.' },
-      { text: '¿Sin ganas de calcular? **Reparto justo** le aparta lo suyo de una vez.', target: 'btn-fair-share' },
     ] },
     { id: 'exp.ally-body', topic: 'combate', trigger: 'ally:body', steps: [
       { text: '**Su cuerpo aún guarda lo que compartisteis.** Lo que le diste, su parte del oro y sus pociones.' },
@@ -373,7 +368,7 @@ function EXPEDITION_MINIS(): MiniTutorial[] {
       { text: 'Cuando anuncie un golpe fuerte, ponte en **Guardia**: lo encajas mucho mejor y queda expuesto después.' },
     ] },
     { id: 'exp.boss', topic: 'combate', trigger: 'exp:boss', inCombat: true, steps: [
-      { text: '**Jefe** de la subzona. Vencerlo abre la siguiente. Si huyes, conserva la vida que le hayas quitado.' },
+      { text: '**Jefe** de la subzona. El de la última subzona de cada zona abre la siguiente. Si huyes, conserva la vida que le hayas quitado.' },
       { text: 'Al bajar de la mitad de la vida cambia de fase y de golpes. Guarda algo para entonces.' },
     ] },
     { id: 'combat.class-skill', topic: 'combate', trigger: 'combat:class-skill', inCombat: true, steps: [

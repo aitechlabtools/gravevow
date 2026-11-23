@@ -31,10 +31,13 @@ require('fs').mkdirSync(OUT, { recursive: true });
   await shot('01-tablon');
 
   for (const [v, id] of [['vesper', 'q_bones'], ['nira', 'q_first_escape'], ['garth', 'q_garra_bandits'], ['garth', 'q_garra_rats'], ['brand', 'q_brand_mine']]) { await tap(`[data-testid=quests-${v}]`); await tap(`[data-testid=accept-${id}]`); }
-  await tap('[data-testid=quests-vesper]');
+  await tap('[data-testid=quests-nira]');
   ok((await p.textContent('[data-testid=quests-active]')).includes('5/5'), 'se aceptan 5 misiones');
-  ok(await p.isDisabled('[data-testid=accept-q_lord]'), 'con 5 aceptadas no se puede aceptar otra');
-  ok(await p.isDisabled('[data-testid=accept-q_lord]') && /Tablón lleno/.test(await p.textContent('[data-testid=accept-q_lord]')), 'el encargo dice «Tablón lleno»');
+  const full = '[data-testid=quests-board] [data-testid^=accept-]';
+  ok(await p.isDisabled(full), 'con 5 aceptadas no se puede aceptar otra');
+  ok(/Tablón lleno/.test(await p.textContent(full)), 'el encargo dice «Tablón lleno»');
+  await tap('[data-testid=quests-vesper]');
+  ok(!(await p.$('[data-testid=accept-q_lord]')), '«El trono vacío» no sale antes del nivel 20');
   ok(!(await p.$('[data-testid=pin-q_bones]')), 'Fijar no se ve sin abrir la nota');
   ok(!(await p.$('[data-testid=quest-empty]')), 'con 5/5 no hay huecos libres');
   await tap('[data-testid=quest-open-q_bones]');
