@@ -822,3 +822,12 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - Dentro | Tuyo, con casillas de 44 px. Barra de abajo: sin nada tocado, «Coger el oro (n)» y «Cogerlo todo»; al tocar un montón, «− n +», «Mitad», «Todo» y «Coger n» (y «Dar n» si Kael espera su parte). Lo que no coges se queda dentro.
 - Acción nueva actions.takeSome(loc, n, lootId) (las monedas van primero a saquitos y sacos). Tableta y escritorio sin cambios.
 - Maqueta y prueba: mockups/botin-movil (real.cjs comprueba coger una parte de pociones y de monedas).
+
+## Novedades del 23/11 (2) — Jefes de zona solo en la última subzona
+- Ya era así en los mapas generados: cada subzona tiene su jefe fijo (subzones.ts) y el jefe de zona (zones/*.ts → boss) es el de la última (Mazmorras del Bastión: Señor del Osario; Panteón de los Nobles: Reina Velada; Trono de las Cadenas: Belzar). Sale siempre, sin probabilidad.
+- Excepción corregida: el mapa hecho a mano de la primera expedición con el tutorial saltado (CRYPTS_OF_UMBRAVEL, core/dungeon.ts) tenía al Señor del Osario a nivel 1; ahora su jefe es Mordrek.
+- «El trono vacío» (q_lord): minLevel 20 y descripción con la subzona. Las ya aceptadas se conservan.
+- Mapa de zonas: «Jefe de la zona: X · en <última subzona>». Bestiario: la ficha de jefes y élites muestra su subzona y «Jefe de zona».
+- Mini tutorial exp.boss: «El de la última subzona de cada zona abre la siguiente».
+- Partidas: bossesDefeated guarda ids de enemigo, no sitios; nada cambia para quien ya abrió zonas.
+- Capturas: mockups/jefes-ultima-subzona (index.html, antes/después).

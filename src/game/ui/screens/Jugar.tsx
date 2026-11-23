@@ -265,7 +265,7 @@ function ZoneMap({ current, onPick, onClose }: { current: SubzoneId; onPick: (z:
         )}
         {subzonesOf(id).map((s) => <SubzoneRow key={s.id} sub={s} on={s.id === current} onPick={onPick} />)}
         <div className="text-[12px] text-stone-400 leading-snug px-0.5">
-          Jefe de la zona: {getEnemy(z.boss).name}{profile.bossesDefeated.includes(z.boss) ? ' ✓' : ''}
+          Jefe de la zona: {getEnemy(z.boss).name} · en {subzonesOf(id).slice(-1)[0].name}{profile.bossesDefeated.includes(z.boss) ? ' ✓' : ''}
           {zl && <span className="block text-blood">{zl}</span>}
         </div>
       </section>

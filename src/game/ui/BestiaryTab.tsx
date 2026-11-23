@@ -12,6 +12,7 @@ import { getSkill } from '../../core/data/skills';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { STATUSES } from '../../core/statuses';
 import { ZONES, type ZoneId } from '../../core/data/zones';
+import { SUBZONE_ORDER, getSubzone } from '../../core/data/subzones';
 import { bestiaryByZone, bestiaryProgress, knowledge, type Knowledge } from '../../core/bestiary';
 import { BESTIARY_LORE } from '../../core/data/bestiaryLore';
 import { BESTIARY_BASIC_KILLS, BESTIARY_FULL_KILLS } from '../../config/bestiary';
@@ -121,6 +122,9 @@ function Locked({ need, kills, what }: { need: number; kills: number; what: stri
 function BeastCard({ id, k, kills, onClose }: { id: string; k: Knowledge; kills: number; onClose: () => void }) {
   const e = getEnemy(id);
   const zone = Object.values(ZONES).find((z) => z.boss === id || z.elite === id || z.enemies.some((x) => x.id === id));
+  // Jefes y élites: la subzona donde salen (el jefe de zona, solo en la última de su zona)
+  const sub = e.boss || e.elite ? SUBZONE_ORDER.map(getSubzone).find((s) => s.boss === id || s.elite === id) : undefined;
+  const zoneBoss = Object.values(ZONES).some((z) => z.boss === id);
   // La criatura alterna reposo y ataque (las dos poses que ya existen)
   const [pose, setPose] = useState<'idle' | 'attack'>('idle');
   useEffect(() => { const t = setInterval(() => setPose((p) => (p === 'idle' ? 'attack' : 'idle')), 900); return () => clearInterval(t); }, []);
@@ -138,7 +142,7 @@ function BeastCard({ id, k, kills, onClose }: { id: string; k: Knowledge; kills:
           </div>
           <div className="text-center">
             <h3 className="font-display text-[clamp(18px,1.6vw,28px)] text-parchment tracking-[0.06em] leading-tight">{e.name}</h3>
-            <div className="text-[14px] text-gold">{zone?.name}{e.boss ? ' · Jefe' : e.elite ? ' · Élite' : ''}{k >= 2 && e.role && !e.boss && !e.elite ? ` · ${e.role}` : ''}{e.undead ? ' · No-muerto' : ''}</div>
+            <div className="text-[14px] text-gold">{sub?.name ?? zone?.name}{e.boss ? (zoneBoss ? ' · Jefe de zona' : ' · Jefe') : e.elite ? ' · Élite' : ''}{k >= 2 && e.role && !e.boss && !e.elite ? ` · ${e.role}` : ''}{e.undead ? ' · No-muerto' : ''}</div>
           </div>
           <div className="flex justify-center gap-5 font-display text-[16px]">
             <span className="bstat" title="Derrotadas"><Px src={skullIcon(2)} />{kills}</span>
