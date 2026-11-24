@@ -171,6 +171,13 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     ],
   },
   {
+    id: 'insure.first', topic: 'objetos', trigger: 'insure:first', narrator: 'brand', overModal: true,
+    steps: [
+      { text: 'Antes de bajar puedes **asegurar** lo que llevas puesto. Cubre **solo esta bajada**: toca cada pieza o pulsa **Todo**.', target: 'insure-grid' },
+      { text: 'Si caes, quien la fabrica te la **reforja**: yo las armas y los anillos, **Valerius** las armaduras y **Eldrin** los amuletos. La recoges en la pestaña **Seguro**.', target: 'insure-total' },
+    ],
+  },
+  {
     id: 'bastion.first-sale', topic: 'objetos', trigger: 'bastion:sale',
     steps: [
       { text: 'Bien vendido. El oro va a tu **Alijo**, en saquitos.' },

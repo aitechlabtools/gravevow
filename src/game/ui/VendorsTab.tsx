@@ -23,7 +23,7 @@ export function RepBar({ rep }: { rep: number }) {
 }
 
 /** Pestañas de un mercader. 'station': su estación del Bastión (una por mercader). */
-export type VendorView = 'shop' | 'quests' | 'sell' | 'repair' | 'contracts' | 'infirmary' | 'scrap' | 'station';
+export type VendorView = 'shop' | 'quests' | 'sell' | 'repair' | 'contracts' | 'infirmary' | 'scrap' | 'station' | 'insure';
 export interface VendorTarget { vendor: VendorId; view: VendorView }
 
 /** Mercancía de un mercader (fase 2): filas que se tocan para ver la ficha; el precio es texto dorado con moneda.

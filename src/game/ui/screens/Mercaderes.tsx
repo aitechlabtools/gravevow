@@ -4,6 +4,10 @@
 // tiene: Tienda, Vender, Misiones, sus servicios y SU estación, que es una por mercader) y «◂ Bastión»; a la derecha, tu
 // mochila, tus materiales o la zona de venta. La estación se reconstruye, se usa y se mejora dentro de su pestaña.
 // En el móvil, el retrato y el nombre van en la misma línea que las pestañas y la tercera zona en un cajón.
+import { InsureTab, Seal } from '../InsurePanels';
+import { pendingFor } from '../../../core/insurance';
+import { REFORGER } from '../../../config/insurance';
+import { stationLevel } from '../../../core/crafting';
 import { StashPanel } from '../StashPanel';
 import { useEffect, useRef, useState, type ReactNode, useCallback } from 'react';
 import { actions, useGame } from '../../state/store';
@@ -47,11 +51,14 @@ const BASTION_ORDER: VendorId[] = ['nira', 'vesper', 'garth', 'orik', 'grizk', '
 /** La estación de cada mercader (una por mercader; el encargado está en config/stations.ts). */
 export const STATION_OF = Object.fromEntries(MODULE_ORDER.map((id) => [MODULES[id].by, id])) as Partial<Record<VendorId, ModuleId>>;
 
-const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Misiones', sell: 'Vender', repair: 'Reparar', contracts: 'Contratos', infirmary: 'Enfermería', scrap: 'Desguace', station: 'Estación' };
+const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Misiones', sell: 'Vender', repair: 'Reparar', contracts: 'Contratos', infirmary: 'Enfermería', scrap: 'Desguace', station: 'Estación', insure: 'Seguro' };
 
 /** Las pestañas de cada mercader: solo las que tiene, y su estación al final. */
-function servicesOf(id: VendorId): VendorView[] {
+function servicesOf(id: VendorId, p?: Profile): VendorView[] {
   const v: VendorView[] = [];
+  // Seguro (24/11): con la estación del mercader reconstruida, o si te guarda piezas reforjadas
+  const ins = p && Object.values(REFORGER).find((r) => r.vendor === id);
+  const insure = !!(p && ins && (stationLevel(p, ins.station) >= 1 || pendingFor(p, id).length));
   if (VENDORS[id].stock.length) v.push('shop');
   if (VENDORS[id].buysItems) v.push('sell');
   if (id === 'grizk') v.push('contracts');
@@ -59,11 +66,13 @@ function servicesOf(id: VendorId): VendorView[] {
   if (id === 'brand' || id === 'nira' || id === 'orik') v.push('repair');
   if (id === 'orik') v.push('scrap');
   if (STATION_OF[id]) v.push('station');
+  if (insure) v.splice(Math.min(1, v.length), 0, 'insure');
   return v;
 }
 
 /** Lo pendiente de un mercader: misión lista, estación que ya se puede reconstruir o mejora pagable. */
-function pendingOf(p: Profile, id: VendorId): { kind: 'quest' | 'rebuild' | 'upgrade'; text: string } | null {
+function pendingOf(p: Profile, id: VendorId): { kind: 'quest' | 'rebuild' | 'upgrade' | 'reforge'; text: string } | null {
+  if (pendingFor(p, id).length) return { kind: 'reforge', text: 'Pieza reforjada' };
   if (readyQuestCount(p, id) > 0) return { kind: 'quest', text: 'Misión lista' };
   const st = STATION_OF[id];
   if (!st) return null;
@@ -148,7 +157,7 @@ function VendorTile({ id, onTalk }: { id: VendorId; onTalk: (v: VendorId) => voi
       <span className="vtile-name font-display relative" data-testid={`vendor-card-${id}`}>{v.name}<TutDot testId={`vendor-card-${id}`} inset /></span>
       <span className="vtile-port">
         <Bust sprite={v.sprite} />
-        {pend && <span className={`vtile-pend ${pend.kind === 'upgrade' ? 'gold' : ''}`} data-testid={`vendor-pending-${id}`}>{pend.kind === 'upgrade' ? (phone ? '▲' : pend.text) : <>{'●'}{phone ? '' : ` ${pend.text}`}</>}</span>}
+        {pend && <span className={`vtile-pend ${pend.kind === 'upgrade' || pend.kind === 'reforge' ? 'gold' : ''}`} data-testid={`vendor-pending-${id}`}>{pend.kind === 'reforge' ? <span className="inline-flex items-center gap-1"><Seal scale={1} title={pend.text} />{phone ? '' : pend.text}</span> : <>{pend.kind === 'upgrade' ? (phone ? '▲' : pend.text) : <>{'●'}{phone ? '' : ` ${pend.text}`}</>}</>}</span>}
       </span>
       <span className="vtile-info">
         {st && <img src={stationArtUrl(st, lvl < 1)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: phone ? 20 : 40, height: phone ? 26 : 52 }} />}
@@ -201,8 +210,9 @@ function VendorInterior({ vendor, initial, onBack, onGo, onQuests }: { vendor: V
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
-  const tabs = servicesOf(vendor);
-  const [view, setView] = useState<VendorView>(tabs.includes(initial) ? initial : tabs[0]);
+  const tabs = servicesOf(vendor, profile);
+  // Con piezas reforjadas esperando, se entra directo en «Seguro» para recogerlas
+  const [view, setView] = useState<VendorView>(tabs.includes('insure') && pendingFor(profile, vendor).length ? 'insure' : tabs.includes(initial) ? initial : tabs[0]);
   const [sel, setSel] = useState<Loc | null>(null);
   useEffect(() => { actions.tutorialEvent(`vendor:${vendor}`); }, [vendor]);
   useClearOnDrop(useCallback(() => setSel(null), []));
@@ -238,6 +248,7 @@ function VendorInterior({ vendor, initial, onBack, onGo, onQuests }: { vendor: V
     view === 'shop' ? <ShopStock vid={vendor} sel={shopSel} onSel={(id) => { setShopSel(id); if (phone) setShopOpen(true); sfx('click'); }} />
       : view === 'quests' ? <VendorQuests vendor={vendor} />
         : view === 'station' && st ? <StationTab id={st} onGo={onGo} />
+          : view === 'insure' ? <InsureTab vendor={vendor} />
           : view === 'repair' ? <RepairPanel />
             : view === 'infirmary' ? <InfirmaryPanel />
               : view === 'contracts' ? <ContractsPanel />
@@ -263,19 +274,19 @@ function VendorInterior({ vendor, initial, onBack, onGo, onQuests }: { vendor: V
       {tabs.map((x) => (
         <button key={x} type="button" role="tab" aria-selected={view === x} className={view === x ? 'on' : ''} onClick={() => go(x)} data-testid={`vendor-view-${x}`}>
           <PixelIcon rows={VENDOR_TAB_ICONS[x]} size={24} color={view === x ? '#1a1206' : 'currentColor'} /><span className="vtab-lbl">{label(x)}</span>{x === 'quests' && ready > 0 && <span className="vtab-dot" aria-label="Misión lista">●</span>}
-          {x === 'station' && pend && pend.kind !== 'quest' && <span className={`vtab-dot ${pend.kind === 'upgrade' ? 'gold' : ''}`} aria-label={pend.text}>{pend.kind === 'upgrade' ? '▲' : '●'}</span>}
+          {x === 'insure' && pend?.kind === 'reforge' && <span className="vtab-dot gold" aria-label={pend.text}>●</span>}{x === 'station' && pend && pend.kind !== 'quest' && pend.kind !== 'reforge' && <span className={`vtab-dot ${pend.kind === 'upgrade' ? 'gold' : ''}`} aria-label={pend.text}>{pend.kind === 'upgrade' ? '▲' : '●'}</span>}
         </button>
       ))}
     </div>
   );
   const backBtn = <button type="button" className="btn vback" onClick={onBack} data-testid="vendor-back">◂ Bastión</button>;
   // En la propia pestaña de la estación no se repite: la acción ya está junto a sus requisitos (18/11)
-  const pendBox = pend && !(view === 'station' && pend.kind !== 'quest') && (
+  const pendBox = pend && !(view === 'station' && pend.kind !== 'quest') && !(view === 'insure' && pend.kind === 'reforge') && (
     <div className="panel p-3 text-left" data-testid="vendor-pending">
       <div className="text-[13px] uppercase tracking-[0.12em] text-stone-400">Pendiente</div>
-      <div className="text-[15px] text-parchment mt-1">{pend.kind === 'quest' ? (ready === 1 ? 'Una misión lista para entregar' : `${ready} misiones listas para entregar`) : pend.kind === 'rebuild' ? `${MODULES[st!].name}: ya puedes reconstruirla` : `${MODULES[st!].name}: mejora disponible`}</div>
-      <button className="btn btn-gold w-full mt-2 font-display tracking-[0.1em] uppercase text-xs" style={{ minHeight: 44 }} onClick={() => { if (pend.kind === 'quest') { sfx('click'); onQuests?.(vendor); } else go('station'); }} data-testid="vendor-pending-go">
-        {pend.kind === 'quest' ? 'Entregar' : pend.kind === 'rebuild' ? 'Reconstruir' : '▲ Mejorar'}
+      <div className="text-[15px] text-parchment mt-1">{pend.kind === 'reforge' ? 'Te ha reforjado piezas que perdiste' : pend.kind === 'quest' ? (ready === 1 ? 'Una misión lista para entregar' : `${ready} misiones listas para entregar`) : pend.kind === 'rebuild' ? `${MODULES[st!].name}: ya puedes reconstruirla` : `${MODULES[st!].name}: mejora disponible`}</div>
+      <button className="btn btn-gold w-full mt-2 font-display tracking-[0.1em] uppercase text-xs" style={{ minHeight: 44 }} onClick={() => { if (pend.kind === 'quest') { sfx('click'); onQuests?.(vendor); } else go(pend.kind === 'reforge' ? 'insure' : 'station'); }} data-testid="vendor-pending-go">
+        {pend.kind === 'reforge' ? 'Recoger' : pend.kind === 'quest' ? 'Entregar' : pend.kind === 'rebuild' ? 'Reconstruir' : '▲ Mejorar'}
       </button>
     </div>
   );

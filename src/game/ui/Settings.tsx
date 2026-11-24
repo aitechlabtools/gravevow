@@ -192,6 +192,7 @@ function GameSection({ onClose, guide }: { onClose: () => void; guide?: boolean 
   const backup = useGame((s) => s.backup);
   const roster = useGame((s) => s.roster);
   const inRun = screen === 'dungeon';
+  const profile = useGame((s) => s.profile);
   return (
     <>
       <Block title="Copia de seguridad">
@@ -207,6 +208,14 @@ function GameSection({ onClose, guide }: { onClose: () => void; guide?: boolean 
             <button className="btn" onClick={() => { sfx('click'); onClose(); void actions.openSelect(); }} data-testid="settings-choose-char">Elegir personaje</button>
           )}
           <p className="set-note">Ahí puedes crear o borrar personajes (hasta 4).</p>
+        </Block>
+      )}
+      {profile && (
+        <Block title="Seguro de equipo">
+          <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
+            <input type="checkbox" checked={profile.insureAsk !== false} onChange={(e) => { sfx('click'); actions.setInsureAsk(e.target.checked); }} className="accent-[#e8b33a] w-5 h-5" data-testid="insure-ask" />
+            <span>Preguntar si aseguro el equipo al pulsar «Descender»</span>
+          </label>
         </Block>
       )}
       {roster.length > 0 && <GuideBlock onClose={onClose} scrollTo={!!guide} />}

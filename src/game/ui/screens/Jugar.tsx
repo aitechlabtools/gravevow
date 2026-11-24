@@ -23,6 +23,9 @@ import { sfx } from '../../audio';
 import { startMusic } from '../../music/director';
 import { CureButton, useCure } from '../CureOffer';
 import { useLongPress } from '../combatActions';
+import { InsureModal } from '../InsurePanels';
+import { canInsureAny } from '../../../core/insurance';
+import type { EquipSlot } from '../../../core/types';
 
 /** La subzona elegida se recuerda mientras dure la sesión (al cambiar de pestaña y volver). */
 let lastPick: SubzoneId | null = null;
@@ -62,17 +65,25 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
   // El mercenario, un poco más pequeño y detrás: el protagonista eres tú (escala entera)
   const mercScale = Math.max(2, heroScale - Math.max(1, Math.round(heroScale / 4)));
 
-  const descend = () => {
-    if (lock) return;
+  // Seguro por bajada: si hay algo que asegurar (y no lo has desactivado), antes de bajar se pregunta
+  const [insuring, setInsuring] = useState(false);
+  const go = (slots?: EquipSlot[]) => {
+    setInsuring(false);
     sfx('portal');
     if (profile.settings.music) startMusic('dungeon');
-    void actions.enterDungeon(firstTime ? 'mazmorra' : subId);
+    void actions.enterDungeon(firstTime ? 'mazmorra' : subId, slots);
+  };
+  const descend = () => {
+    if (lock) return;
+    if (!firstTime && profile.insureAsk !== false && canInsureAny(profile)) { sfx('click'); setInsuring(true); return; }
+    go();
   };
 
   const edge = { left: 'max(var(--pad), env(safe-area-inset-left))', right: 'max(var(--pad), env(safe-area-inset-right))', bottom: 'max(var(--pad), env(safe-area-inset-bottom))' };
 
   return (
     <div className="relative h-full overflow-hidden" data-testid="screen-play">
+      {insuring && <InsureModal onGo={go} onClose={() => setInsuring(false)} />}
       {/* Haz de luz y héroe en el centro; si hay un mercenario contratado, aparece a su lado */}
       <div className="beam" />
       <div className="absolute left-1/2 -translate-x-1/2 flex items-end" style={{ bottom: phone ? '8%' : '9%', gap: merc ? heroScale * 2 : 0 }} data-testid="play-heroes">

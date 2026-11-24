@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><title>Seguro de equipo por bajada</title>
+<style>body{margin:0;background:#0a090c;color:#e6e0d2;font:16px/1.5 Georgia,serif}main{max-width:1500px;margin:0 auto;padding:24px}
+h1,h2{font-family:Cinzel,Georgia,serif;font-weight:600;color:#e8b33a}h2{border-bottom:1px solid #3a3841;padding-bottom:4px;margin-top:36px}
+p,li{color:#d6d0c2;max-width:1000px}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px}
+figure{margin:0;background:#151419;border:1px solid #3a3841;padding:8px}figure img{width:100%;display:block}figcaption{font-size:14px;color:#a7a4ae;margin-top:4px}a{color:#e8b33a}</style></head><body><main>
+<h1>Seguro de equipo por bajada</h1>
+<p>Maquetas sobre pantallas reales del juego. El plan completo está en <code>docs/plan-seguro-equipo.md</code>. Reglas: al pulsar «Descender» se pregunta qué piezas aseguras para esa bajada (el 4 % de su valor, con un mínimo de 1). Si caes, quien fabrica la pieza te la reforja: Maese Brand las armas y los anillos, Valerius las armaduras y los escudos, y Eldrin los amuletos.</p>
+
+<h2>Resultado real (implementado)</h2>
+<div class="g"><figure><img src="real-descender-escritorio.png"><figcaption>«Descender» · escritorio</figcaption></figure><figure><img src="real-descender-tableta.png"><figcaption>Tableta</figcaption></figure><figure><img src="real-descender-movil.png"><figcaption>Móvil</figcaption></figure>
+<figure><img src="real-tutorial-escritorio.png"><figcaption>Mini tutorial la primera vez</figcaption></figure>
+<figure><img src="real-sellos-escritorio.png"><figcaption>Sellos en la bajada · escritorio</figcaption></figure><figure><img src="real-sellos-movil.png"><figcaption>Móvil</figcaption></figure>
+<figure><img src="real-resumen-tableta.png"><figcaption>Resumen al caer</figcaption></figure><figure><img src="real-bastion-escritorio.png"><figcaption>Bastión: aviso y marca</figcaption></figure>
+<figure><img src="real-recogida-tableta.png"><figcaption>Pestaña «Seguro»: recogida</figcaption></figure><figure><img src="real-recogida-movil.png"><figcaption>Móvil</figcaption></figure><figure><img src="real-seguro-tab-escritorio.png"><figcaption>Tras recoger</figcaption></figure></div>
+<h2>1 · Al pulsar «Descender» (versión visual, la nueva)</h2><p>El mismo muñeco de equipo que la ficha Personaje. Solo se asegura lo que llevas puesto. Tocas una casilla y queda asegurada (borde dorado, sello y coste en dorado); «Todo» las marca todas. Abajo, el total y los botones. En el móvil, el muñeco a la izquierda y lo demás a la derecha.</p>
+<div class="g"><figure><img src="descender2-escritorio.png"><figcaption>Escritorio</figcaption></figure><figure><img src="descender2-tableta.png"><figcaption>Tableta</figcaption></figure><figure><img src="descender2-movil.png"><figcaption>Móvil</figcaption></figure></div>
+<h2>1b · Al pulsar «Descender» (versión en lista, la anterior)</h2><p>Lleva marcadas las piezas que elegiste la última vez. «Todo» y «Nada» marcan o desmarcan todas a la vez. En el móvil, las piezas van en dos columnas y solo con el nombre. Cada fila mide 44 px o más.</p>
+<div class="g"><figure><img src="descender-escritorio.png"><figcaption>Escritorio</figcaption></figure><figure><img src="descender-tableta.png"><figcaption>Tableta</figcaption></figure><figure><img src="descender-movil.png"><figcaption>Móvil</figcaption></figure></div>
+<h2>2 · Sello durante la bajada</h2><p>Escudo dorado con una marca, en la esquina de la casilla: a ×2 en escritorio y a ×1 en tableta y móvil. Va también en la ficha del objeto («Asegurada esta bajada»).</p>
+<div class="g"><figure><img src="sellos-escritorio.png"><figcaption>Escritorio</figcaption></figure><figure><img src="sellos-tableta.png"><figcaption>Tableta</figcaption></figure><figure><img src="sellos-movil.png"><figcaption>Móvil</figcaption></figure></div>
+<h2>3 · Al morir: resumen</h2>
+<div class="g"><figure><img src="resumen-escritorio.png"><figcaption>Escritorio</figcaption></figure><figure><img src="resumen-tableta.png"><figcaption>Tableta</figcaption></figure><figure><img src="resumen-movil.png"><figcaption>Móvil</figcaption></figure></div>
+<h2>4 · Al volver al Bastión: aviso y marca en el mercader</h2>
+<div class="g"><figure><img src="bastion-escritorio.png"><figcaption>Escritorio</figcaption></figure><figure><img src="bastion-tableta.png"><figcaption>Tableta</figcaption></figure><figure><img src="bastion-movil.png"><figcaption>Móvil (solo el sello en la tarjeta)</figcaption></figure></div>
+<h2>5 · Recogida en el mercader</h2><p>Se abre sola al entrar en un mercader con piezas pendientes. Si no hay sitio en la mochila ni en el almacén, la pieza sigue pendiente.</p>
+<div class="g"><figure><img src="recogida-escritorio.png"><figcaption>Escritorio</figcaption></figure><figure><img src="recogida-tableta.png"><figcaption>Tableta</figcaption></figure><figure><img src="recogida-movil.png"><figcaption>Móvil</figcaption></figure></div>
+</main></body></html>

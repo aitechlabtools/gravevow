@@ -42,13 +42,16 @@ import { addBleed, regionCap } from '../../core/anatomy';
 import { withBody } from './medicalActions';
 import { receptionBlock } from '../../core/refuge';
 
+import { payInsurance } from '../../core/insurance';
+import type { EquipSlot } from '../../core/types';
 export const expeditionActions = {
 
   // ── Expedición ──
   /** Bajar a una subzona concreta, o a una zona (entonces, a la subzona más honda abierta para tu nivel). */
-  async enterDungeon(target: ZoneId | SubzoneId = 'mazmorra') {
+  /** `insure`: ranuras que se aseguran en esta bajada (ventana de «Descender»); sin valor, ninguna. */
+  async enterDungeon(target: ZoneId | SubzoneId = 'mazmorra', insure?: EquipSlot[]) {
     if (dev.kaelTrustOnEnter !== null && state.profile) { dev.kaelTrust(dev.kaelTrustOnEnter); dev.kaelTrustOnEnter = null; }
-    const p = state.profile;
+    let p = state.profile;
     if (!p) return;
     const sub = isSubzoneId(target) ? getSubzone(target) : defaultSubzone(target in ZONES ? (target as ZoneId) : 'mazmorra', p.character.level, p.bossesDefeated);
     const zoneId = sub.zone;
@@ -67,12 +70,19 @@ export const expeditionActions = {
     if (dev.forceKael && sub.zone === 'mazmorra') Object.assign(enc, { who: 'kael', risk: 'kael', hostile: false, kaelStreak: 0 });
     if (dev.forceWanderer) Object.assign(enc, { who: dev.forceWanderer, hostile: !!dev.forceHostile });
     const dungeon = first ? CRYPTS_OF_UMBRAVEL : generateDungeon(seed, { zone: zoneId, subzone: sub.id, captive, wanderer: !!enc.who });
+    // Seguro por bajada: se cobra al bajar y cubre solo esta incursión
+    let insured: string[] = [];
+    if (insure && !first) {
+      const paid = payInsurance(p, insure);
+      if (!paid.ok) return invError(paid.error);
+      p = paid.profile; insured = paid.uids;
+    }
     const started = startExpedition(p, Date.now());
     const kael = { ...p.kael, missStreak: first || sub.zone !== 'mazmorra' ? p.kael.missStreak : enc.kaelStreak };
     const seen = visitedSubzones(p);
     const firstVisit = !first && !seen.includes(sub.id);
     const profile = first ? started.profile : { ...started.profile, lastSubzone: sub.id, kael, visitedSubzones: seen.includes(sub.id) ? seen : [...seen, sub.id] };
-    const expedition = { ...started.expedition, zone: dungeon.zone ?? 'mazmorra', subzone: dungeon.subzone, chestsOpened: {}, veinsMined: 0, firstVisit };
+    const expedition = { ...started.expedition, zone: dungeon.zone ?? 'mazmorra', subzone: dungeon.subzone, chestsOpened: {}, veinsMined: 0, firstVisit, ...(insured.length ? { insured } : {}) };
     set({
       profile, expedition, dungeon, screen: 'dungeon', summary: null, combat: null, modal: null,
       rival: enc.who ? kaelAware(enc.who, enc.risk, enc.hostile, p) : noRival(), rivalLine: null, merc: dev.forceContract ? { ...rescuedMerc(dev.forceContract), rescued: false, hp: mercBaseStats(getMerc(dev.forceContract)).maxHp } : mercForExpedition(p), chests: {}, mined: {}, bags: {},

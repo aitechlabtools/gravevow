@@ -57,6 +57,8 @@ import { healBody } from '../../core/anatomy';
 import { applyContainers, loadNow, containersFor, dev, equipCtx, getSave, getState, initial, invError, kept, recordFound, refreshRoster, requestPersist, saveNow, set, ss, state, toast } from './internals';
 import type { Bag, GameState, Screen } from './internals';
 
+import { collectReforged } from '../../core/insurance';
+import type { EquipSlot } from '../../core/types';
 export type { Screen, RosterEntry, Toast, CombatKind, CombatSession, LootSession, Modal, Bag, DungeonHud, TutorialRun, GameState } from './internals';
 export { getState, subscribe, useGame, getSave, getActiveCharacterId, toast, containersFor, holdsToasts, tutorialFrozen, dev, tutorialDoneOnDevice } from './internals';
 
@@ -1032,6 +1034,34 @@ export const actions = {
   },
   backToLobby() {
     set({ screen: 'lobby', summary: null });
+    // Seguro: al volver al Bastión con piezas reforjadas esperando, un aviso con quién las tiene
+    const rf = state.profile?.reforged ?? [];
+    if (rf.length) {
+      const who = [...new Set(rf.map((r) => VENDORS[r.vendor].name))];
+      toast(`${who.join(' y ')} ${who.length > 1 ? 'te han' : 'te ha'} reforjado ${rf.length === 1 ? 'una pieza' : `${rf.length} piezas`}. Pasa a recogerla${rf.length === 1 ? '' : 's'}.`, 'good');
+    }
+  },
+
+  // ── Seguro de equipo por bajada ──
+  /** Recoge las piezas reforjadas de un mercader (una o todas). */
+  collectReforged(vendor: VendorId, uid?: string) {
+    const p = state.profile;
+    if (!p) return;
+    const r = collectReforged(p, vendor, uid);
+    if (!r.taken) return invError('No te cabe: haz sitio en la mochila o en el almacén.');
+    sfx('pickup');
+    set({ profile: r.profile });
+    toast(r.left ? `Recoges ${r.taken}. Te quedan ${r.left}: haz sitio.` : r.taken === 1 ? 'Recoges la pieza reforjada.' : `Recoges ${r.taken} piezas reforjadas.`, 'good');
+    void saveNow();
+  },
+  /** Ranuras marcadas para asegurar en la próxima bajada (se recuerdan). */
+  setInsurePlan(slots: EquipSlot[]) {
+    const p = state.profile;
+    if (p) set({ profile: { ...p, insurePlan: slots } });
+  },
+  setInsureAsk(on: boolean) {
+    const p = state.profile;
+    if (p) set({ profile: { ...p, insureAsk: on } });
   },
   ...expeditionActions,
   ...combatActions,

@@ -1,4 +1,5 @@
 import { basicAttackOf, isTwoHanded, itemSpecials } from '../../core/data/weapons';
+import { Seal } from './kit/Seal';
 import { durability, isBroken, maxDurability, wearLevel } from '../../core/durability';
 import { WEAR_COLOR } from '../../config/durability';
 import { AFFIXES, stackName, stackRarity, stackStats } from '../../core/data/rarity';
@@ -63,9 +64,11 @@ export function ItemTooltip({ stack, equipment, mode }: { stack: ItemStack; equi
   const r = RARITY_INFO[stackRarity(stack, def)];
   const equipped = def.slot && equipment ? equipment[def.slot] : null;
   const cmp = equipped && equipped.uid !== stack.uid ? getItem(equipped.itemId) : null;
+  const insured = useGame((s) => !!s.expedition?.insured?.includes(stack.uid));
   return (
     <div className="panel p-3 w-64 text-sm" style={{ borderColor: r.color }}>
       <div className="font-semibold text-base leading-tight" style={{ color: r.color }}>{stackName(stack, def)}</div>
+      {insured && <div className="text-xs text-gold flex items-center gap-1 mt-0.5" data-testid="tooltip-insured"><Seal scale={1} /> Asegurada esta bajada</div>}
       <div className="text-stone-300 text-xs mb-2">
         {r.name} · {def.slot ? SLOT_LABELS[def.slot] : categoryName(def.category)}
         {stack.qty > 1 ? ` · x${stack.qty}` : ''}
@@ -205,6 +208,9 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
   const eqNow = useGame((s) => s.profile?.equipment);
   const upgrade = !!stack && loc.kind === 'grid' && !!sdef?.slot && isUpgrade(stack, eqNow, who);
   const testId = loc.kind === 'equip' ? `slot-equip-${loc.slot}` : `slot-${loc.container}-${loc.index}`;
+  // Seguro por bajada: sello en lo asegurado (solo mientras dura la bajada)
+  const insured = useGame((s) => s.expedition?.insured);
+  const sealScale = typeof window !== 'undefined' && window.innerWidth >= 1600 ? 2 : 1;
   const dropRaw = JSON.stringify({ type: 'loc', loc, lootId });
   const drag = useDrag();
   const over = !!drag && !drag.back && drag.over === dropRaw;
@@ -245,6 +251,7 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
         ? <img src={iconUrl(stack.qty <= 3 ? 'coins1' : stack.qty <= 7 ? 'coins2' : 'coins3', 3)} width={36} height={36} alt="Monedas de oro" className="pixelated" draggable={false} />
         : <ItemIcon itemId={stack.itemId} size={cell && Math.min(cell.w, cell.h) > 1 ? 84 : big ? 48 : 36} />) : placeholderIcon ? <img src={iconUrl(placeholderIcon, 3)} width={30} height={30} className="pixelated opacity-15" alt="" draggable={false} /> : null}
       {stack && stack.qty > 1 && <span className="qty">{stack.qty}</span>}
+      {stack && insured?.includes(stack.uid) && <span className="slot-seal"><Seal scale={sealScale} /></span>}
       {stack && (() => { const w = wearLevel(stack); return w === 'ok' ? null : <span className="slot-wear" data-testid="slot-wear" data-wear={w} style={{ background: WEAR_COLOR[w], width: w === 'broken' ? '100%' : `${Math.max(8, Math.round((durability(stack) / maxDurability(stack)) * 100))}%` }} title={w === 'broken' ? 'Rota' : 'Desgastada'} />; })()}
       {marked && <span className="mark-coin" aria-label="Marcado para vender" data-testid="slot-marked" />}
       {stack && capacityOf(stack) > 0 && <span className="qty" data-testid="slot-gold" style={{ color: stack.gold ? '#f2c75a' : '#a8a29e', fontSize: cell && cell.w > 1 ? 13 : 12 }}>{stack.gold ?? 0}/{capacityOf(stack)}</span>}

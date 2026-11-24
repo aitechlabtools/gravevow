@@ -304,5 +304,11 @@ export interface Profile {
   /** Subzonas a las que ya se ha bajado (para «primera vez» del resumen). Sin valor en partidas antiguas: se deducen de `lastSubzone`. */
   visitedSubzones?: string[];
   settings: Settings;
+  /** Seguro por bajada (24/11): ranuras marcadas la última vez (la ventana de «Descender» sale con ellas). */
+  insurePlan?: EquipSlot[];
+  /** Preguntar por el seguro al pulsar «Descender» (sin valor: sí). */
+  insureAsk?: boolean;
+  /** Piezas reforjadas pendientes de recoger, cada una en su mercader. */
+  reforged?: { vendor: import('./data/vendors').VendorId; item: ItemStack }[];
   createdAt: number;
 }
