@@ -183,6 +183,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
       { text: 'Bien vendido. El oro va a tu **Alijo**, en saquitos.' },
       { text: 'Si te equivocas, lo último que vendes se puede **recomprar** al mismo precio.' },
       { text: 'Cada mercader compra **lo de su oficio**. Las letras en la esquina de cada objeto te dicen a quién llevárselo.' },
+      { text: 'Lo que no quieras vender nunca, **protégelo** desde su ficha: con el candado no se vende ni se desguaza.' },
     ],
   },
   {
@@ -241,7 +242,7 @@ function VENDOR_MINIS(): MiniTutorial[] {
   return [
     v('nira', [
       { text: 'Cuero, comida, saquitos para tu oro. Lo que necesites para no morir de tont{o|a}.', target: 'vendor-view-shop' },
-      { text: 'Te compro cuero, tela y armadura ligera. Y lo de quien aún no tenga su taller en pie. En **Vender**, «Vender todo lo que compro» lo hace de una vez.', target: 'vendor-view-sell' },
+      { text: 'Te compro cuero, tela y armadura ligera. Y lo de quien aún no tenga su taller en pie. En **Vender**, «Todo lo vendible» te lo marca de una vez.', target: 'vendor-view-sell' },
       { text: 'Te iré pidiendo cosas: aquí ves **cuántos encargos** tengo para ti. Cúmplelos y subirá tu **reputación** conmigo.', target: 'vendor-quests-link' },
       { text: 'Y en mi **Curtiduría** te enseño a trabajar el cuero y la tela.', target: 'vendor-view-station' },
     ]),

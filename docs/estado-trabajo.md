@@ -4,13 +4,22 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 24/11 (3): rediseño de la pantalla de venta
+- Tres columnas. Izquierda: el mercader con «Compra: …» (`vendor-buys`; si su estación está en ruinas, `sell-closed`). Centro: pestañas Mochila · Almacén · Compartido (`sell-tab-*`; el almacén con sus páginas, sin la de Compartido) y barra `sell-tools`: «Vendibles», rareza, tipo, «Todo lo vendible (mochila / esta página)», «Comunes (…)» y «Limpiar». Derecha: lista «A vender» (cantidad elegible en las pilas, «Por precio»), ficha del objeto elegido y, abajo fija, objetos, oro actual, total, oro después y el botón.
+- Los filtros solo apagan casillas (`SellFilter`, `.slot-filtered`): nada cambia de sitio. La selección se recuerda entre pestañas y páginas. Lo del Compartido no se vende (como antes): sale apagado y lo dice.
+- Vender N unidades: `sell(..., n)` y `sellMany` con `qty`. Precios sin cambios.
+- Candado (nuevo, se guarda en el objeto: `ItemStack.locked`): «Proteger / Quitar candado» en la ficha (Bastión y venta), `actions.toggleLock`. Lo protegido no se vende ni se desguaza y queda fuera de la selección rápida. Partidas antiguas: sin el campo, sin candado.
+- Confirmación solo para épico, legendario o mejor que lo equipado (antes también raro). Recompra igual. Aviso «+N oro» animado junto al botón (`sale-pop`, 0,9 s, sin bloquear); la venta desde esta pantalla ya no saca el aviso de abajo.
+- Las iniciales del comprador ya no salen en la venta (siguen en el Alijo). Se quitaron «Vender todo lo que compro» y su ventana: lo sustituye «Todo lo vendible».
+- Comprobación: `mockups/venta-ui/real.cjs` (32 ✓). `mockups/venta-oficio/real.cjs` queda obsoleto (usaba el botón quitado).
+
 ## Novedades del 24/11 (2): venta por oficio
 - Plan en `docs/plan-venta-oficio.md` (implementado, con las recomendaciones aprobadas); maquetas y capturas reales en `mockups/venta-oficio/` (`real.cjs`: 93 comprobaciones).
 - Los 8 mercaderes compran (`buysItems: true`), cada uno lo de su oficio. Reglas en `src/core/sellRoutes.ts`: `buyerOf` (especialista), `whoBuys` (si su estación sigue en ruinas, Nira), `isHeavy`, `wrongBuyerText`, `TRADE`, `PLACE`, `BUYER_TAG`.
 - Reparto: Nira cuero, tela, armadura ligera y mochilas; Vesper pociones, remedios y hierba amarga; Garth comida e ingredientes; Orik metal, madera, chatarra, herramientas y antorchas; Grizk joyas, tesoros y llaves (×1,25, siempre); Brand armas y dagas secundarias; Valerius armadura pesada y escudos; Eldrin reactivos, bombas, runas, tomos y orbes. Planos: el dueño de la estación de su receta.
 - Pesada = escudo, `heavy: true` en la ficha (guanteletes de forja) o solo para guerreros y clérigos.
 - Precio: el especialista paga un 10 % más (`SPECIALIST_BONUS`); Nira por cuenta de otro, el de siempre. `buysThis(vendor, itemId, profile)` ahora pide el perfil.
-- Interfaz: en «Vender», lo que no compra sale apagado (`slot-nobuy`) y al marcarlo o arrastrarlo avisa a quién se vende. Caja «Lo que compro» con «Vender todo lo que compro» (solo mochila, confirmación con lista y total; aviso si hay algo valioso). Fuera los botones «Marcar equipo común / materiales / tesoros». Iniciales del comprador en cada casilla del Bastión (`slot-buyer`, arriba a la derecha) y «Lo compra X · lugar» en la ficha y en la ventanita.
+- Interfaz: en «Vender», lo que no compra sale apagado (`slot-nobuy`) y al marcarlo o arrastrarlo avisa a quién se vende (la caja «Lo que compro» y «Vender todo lo que compro» se sustituyeron el 24/11, ver arriba). Iniciales del comprador en cada casilla del Bastión (`slot-buyer`, arriba a la derecha) y «Lo compra X · lugar» en la ficha y en la ventanita.
 - Tutoriales: `vendor.*` con un paso de venta (el de Orik ya no habla de reparar), `bastion.first-sale` con un paso nuevo.
 
 ## Novedades del 22/11 (2): Contratos de Grizk más visuales

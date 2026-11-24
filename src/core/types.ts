@@ -108,6 +108,8 @@ export interface ItemStack {
   affixes?: string[];
   /** Runas grabadas en el Atril rúnico (un id por hueco; null = hueco vacío). */
   runes?: (string | null)[];
+  /** Protegido por el jugador: no se vende ni se desguaza hasta quitarle el candado. */
+  locked?: boolean;
 }
 
 export type Grid = (ItemStack | null)[];

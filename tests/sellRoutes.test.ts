@@ -61,3 +61,22 @@ describe('venta por oficio', () => {
     if (!r.ok) expect(r.error).toContain('Grizk en La Lonja');
   });
 });
+
+import { salvageBlock } from '../src/core/salvage';
+describe('venta: cantidades y candado', () => {
+  it('vende N unidades de una pila', () => {
+    const p = withStations(base(), 1);
+    const bp = addToGrid(p.backpack.map(() => null), { uid: 'h', itemId: 'health_potion', qty: 5 }).grid;
+    const i = bp.findIndex((x) => x?.itemId === 'health_potion');
+    const r = sell({ ...p, backpack: bp }, 'backpack', i, false, 'vesper', 3);
+    expect(r.ok).toBe(true);
+    if (r.ok) { expect(r.profile.backpack[i]?.qty).toBe(2); expect(r.profile.gold - p.gold).toBe(vendorSellPrice('vesper', 'health_potion') * 3); }
+  });
+  it('lo protegido no se vende ni se desguaza', () => {
+    const p = withStations(base(), 1);
+    const bp = addToGrid(p.backpack, { uid: 's', itemId: 'iron_sword', qty: 1, locked: true }).grid;
+    const i = bp.findIndex((x) => x?.uid === 's');
+    expect(sell({ ...p, backpack: bp }, 'backpack', i, true, 'brand').ok).toBe(false);
+    expect(salvageBlock(bp[i]!)).toContain('protegido');
+  });
+});

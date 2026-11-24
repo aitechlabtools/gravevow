@@ -4,7 +4,7 @@ import { durability, isBroken, maxDurability, wearLevel } from '../../core/durab
 import { WEAR_COLOR } from '../../config/durability';
 import { AFFIXES, stackName, stackRarity, stackStats } from '../../core/data/rarity';
 import { QUALITIES } from '../../core/data/forge';
-import { useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { foodGain } from './NeedsBars';
 import { needsOf } from '../../core/needs';
 import { FOOD } from '../../config/food';
@@ -32,6 +32,8 @@ const SLOT_HINT_ICON: Record<EquipSlot, string> = {
 };
 
 export type InvMode = 'lobby' | 'merchant' | 'dungeon';
+/** Venta: filtro de la barra de herramientas. Lo que no pasa se apaga (nada cambia de sitio). */
+export const SellFilter = createContext<((s: ItemStack) => boolean) | null>(null);
 
 export const DRAG_MIME = 'application/x-gravevow';
 
@@ -65,6 +67,7 @@ export function ItemTooltip({ stack, equipment, mode }: { stack: ItemStack; equi
   const who = useGame((s) => s.profile?.character);
   const tipRefuge = useGame((s) => s.profile?.refuge);
   const buyerNow = !isCoins(stack) && sellable(stack.itemId) ? whoBuys({ refuge: tipRefuge }, stack.itemId) : null;
+  const activeV = useGame((s) => s.activeVendor);
   const r = RARITY_INFO[stackRarity(stack, def)];
   const equipped = def.slot && equipment ? equipment[def.slot] : null;
   const cmp = equipped && equipped.uid !== stack.uid ? getItem(equipped.itemId) : null;
@@ -121,9 +124,17 @@ export function ItemTooltip({ stack, equipment, mode }: { stack: ItemStack; equi
       )}
       <div className="flex justify-between mt-2 text-xs text-gold">
         <span>Valor: {def.value * stack.qty} oro</span>
-        {mode === 'merchant' && <span>Venta: {vendorSellPrice(buyerNow ?? 'nira', def.id, stack)}</span>}
+        {mode === 'merchant' && buyerNow && <span>Venta: {vendorSellPrice(activeV && buyerNow === activeV ? activeV : buyerNow, def.id, stack)}{stack.qty > 1 ? ' c/u' : ''}</span>}
       </div>
-      {buyerNow && (mode === 'merchant' || mode === 'lobby') && (
+      {mode === 'merchant' && activeV && buyerNow && (
+        <div className="mt-2 pt-2 border-t border-stone-600 text-[13px]" data-testid="tooltip-sells">
+          {stack.locked ? <span className="text-stone-300">🔒 Protegido: no se vende.</span>
+            : buyerNow === activeV ? <span className="text-heal">✓ {BUYER_NAME[activeV]} compra este objeto</span>
+            : <span style={{ color: '#e0a060' }}>✗ {BUYER_NAME[activeV]} no lo compra. Lo compra {BUYER_NAME[buyerNow]} · {PLACE[buyerNow]}.</span>}
+          <div className="text-stone-400 mt-0.5">Clic: marcar · Doble clic: vender</div>
+        </div>
+      )}
+      {buyerNow && mode === 'lobby' && (
         <div className="mt-2 pt-2 border-t border-stone-600 text-[13px] text-parchment" data-testid="tooltip-buyer">
           Lo compra <b style={{ color: VENDORS[buyerNow].color }}>{BUYER_NAME[buyerNow]}</b> · {PLACE[buyerNow]}
         </div>
@@ -222,7 +233,9 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
   const activeVendor = useGame((s) => s.activeVendor);
   const shelf = loc.kind === 'grid' && (loc.container === 'backpack' || loc.container === 'stash' || loc.container === 'shared');
   const buyer = stack && shelf && (mode === 'lobby' || mode === 'merchant') && !isCoins(stack) && sellable(stack.itemId) ? whoBuys({ refuge }, stack.itemId) : null;
-  const noBuy = !!stack && mode === 'merchant' && shelf && loc.container !== 'shared' && !!activeVendor && buyer !== activeVendor;
+  const noBuy = !!stack && mode === 'merchant' && shelf && !!activeVendor && (loc.container === 'shared' || !!stack.locked || buyer !== activeVendor);
+  const filt = useContext(SellFilter);
+  const filtered = !!stack && !!filt && shelf && !filt(stack);
   // Seguro por bajada: sello en lo asegurado (solo mientras dura la bajada)
   const insured = useGame((s) => s.expedition?.insured);
   const sealScale = typeof window !== 'undefined' && window.innerWidth >= 1600 ? 2 : 1;
@@ -238,7 +251,7 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
     <div
       data-testid={testId}
       data-item={stack?.itemId ?? ''}
-      className={`slot ${big ? 'slot-big' : ''} ${over ? 'drag-over' : ''} ${selected && !dragging ? 'selected' : ''} ${dragging ? 'is-lifted' : ''} ${marked ? 'is-marked' : ''} ${fits === true ? 'drop-ok' : fits === false ? 'drop-dim' : ''} ${fit ? 'fit-' + fit : ''} ${hinted ? 'slot-hint' : ''} ${noBuy ? 'slot-nobuy' : ''}`}
+      className={`slot ${big ? 'slot-big' : ''} ${over ? 'drag-over' : ''} ${selected && !dragging ? 'selected' : ''} ${dragging ? 'is-lifted' : ''} ${marked ? 'is-marked' : ''} ${fits === true ? 'drop-ok' : fits === false ? 'drop-dim' : ''} ${fit ? 'fit-' + fit : ''} ${hinted ? 'slot-hint' : ''} ${noBuy ? 'slot-nobuy' : ''} ${filtered ? 'slot-filtered' : ''}`}
       style={{
         ...(rarity ? { borderColor: rarity.color + 'aa', boxShadow: `inset 0 0 0 1px #07060a, inset 0 0 14px ${rarity.color}33` } : {}),
         ...(cell ? { gridColumn: `${cell.col} / span ${cell.w}`, gridRow: `${cell.row} / span ${cell.h}` } : {}),
@@ -268,7 +281,8 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
       {stack && stack.qty > 1 && <span className="qty">{stack.qty}</span>}
       {stack && insured?.includes(stack.uid) && <span className="slot-seal"><Seal scale={sealScale} /></span>}
       {stack && (() => { const w = wearLevel(stack); return w === 'ok' ? null : <span className="slot-wear" data-testid="slot-wear" data-wear={w} style={{ background: WEAR_COLOR[w], width: w === 'broken' ? '100%' : `${Math.max(8, Math.round((durability(stack) / maxDurability(stack)) * 100))}%` }} title={w === 'broken' ? 'Rota' : 'Desgastada'} />; })()}
-      {buyer && <span className="slot-buyer" style={{ color: VENDORS[buyer].color }} title={`Lo compra ${BUYER_NAME[buyer]}`} data-testid="slot-buyer">{BUYER_TAG[buyer]}</span>}
+      {stack && stack.locked && <span className="slot-lock" title="Protegido: no se vende ni se desguaza" aria-label="Protegido" data-testid="slot-lock"><LockGlyph /></span>}
+      {buyer && mode === 'lobby' && !stack?.locked && <span className="slot-buyer" style={{ color: VENDORS[buyer].color }} title={`Lo compra ${BUYER_NAME[buyer]}`} data-testid="slot-buyer">{BUYER_TAG[buyer]}</span>}
       {marked && <span className="mark-coin" aria-label="Marcado para vender" data-testid="slot-marked" />}
       {stack && capacityOf(stack) > 0 && <span className="qty" data-testid="slot-gold" style={{ color: stack.gold ? '#f2c75a' : '#a8a29e', fontSize: cell && cell.w > 1 ? 13 : 12 }}>{stack.gold ?? 0}/{capacityOf(stack)}</span>}
       {stack && loc.kind === 'grid' && !tooHigh && !wrongClass && upgrade && <span className="slot-up" title="Mejor que lo que llevas puesto" data-testid="slot-upgrade">▲</span>}
@@ -408,4 +422,10 @@ export function Bar({ value, max, color, label, testId, spend = 0 }: { value: nu
       </div>
     </div>
   );
+}
+
+/** Candado de 7×8 en pixel art (objeto protegido). */
+function LockGlyph() {
+  const R = ['..###..', '.#...#.', '.#...#.', '#######', '###.###', '###.###', '#######', '#######'];
+  return <svg width={14} height={16} viewBox="0 0 7 8" shape-rendering="crispEdges" aria-hidden>{R.flatMap((r, y) => [...r].map((c, x) => c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#e8b33a" /> : null))}</svg>;
 }

@@ -477,6 +477,20 @@ export const actions = {
     toast(`Te pones la ${getItem(r.profile.bag.itemId).name.toLowerCase()}: ${r.profile.backpack.length} casillas.`, 'good');
   },
 
+  /** Pone o quita el candado de un objeto de la mochila, el almacén o el compartido (no se vende ni se desguaza). */
+  toggleLock(loc: Loc) {
+    const p = state.profile;
+    if (!p || loc.kind !== 'grid' || !(loc.container === 'backpack' || loc.container === 'stash' || loc.container === 'shared')) return;
+    const grid = (loc.container === 'shared' ? p.shared : p[loc.container]);
+    const st = grid?.[loc.index];
+    if (!grid || !st || isCover(st)) return;
+    const next = grid.slice(); next[loc.index] = { ...st, locked: !st.locked };
+    if (!next[loc.index]!.locked) delete next[loc.index]!.locked;
+    sfx('click');
+    set({ profile: { ...p, [loc.container]: next } as Profile });
+    toast(st.locked ? `${getItem(st.itemId).name}: sin candado.` : `${getItem(st.itemId).name}: protegido. No se venderá ni se desguazará.`, 'info');
+  },
+
   /** Cambia la página del almacén que se ve. */
   setStashPage(page: StashPage) {
     const p = state.profile;
@@ -895,7 +909,8 @@ export const actions = {
   },
 
   /** Vender de una vez todo lo marcado (casillas de la mochila y del almacén). Devuelve cuánto se ha ganado. */
-  sellMany(locs: { container: 'backpack' | 'stash'; index: number }[]): number {
+  /** `quiet`: sin aviso (la pantalla de venta ya enseña «+N oro» junto al botón). */
+  sellMany(locs: { container: 'backpack' | 'stash'; index: number; qty?: number }[], quiet = false): number {
     const p0 = state.profile;
     if (!p0 || !locs.length) return 0;
     const vendor = state.activeVendor ?? 'nira';
@@ -903,20 +918,21 @@ export const actions = {
     for (const l of locs) {
       const item = p[l.container][l.index];
       if (!item) continue;
-      let r = sell(p, l.container, l.index, true, vendor);
+      const part = l.qty !== undefined && l.qty < item.qty;
+      let r = sell(p, l.container, l.index, !part, vendor, l.qty ?? 1);
       if (!r.ok && r.error === NO_ROOM_FOR_GOLD) {
         const grouped = joinPages(splitPages(p.stash).map((pg) => groupGold(pg).grid));
-        r = sell({ ...p, stash: grouped }, l.container, l.index, true, vendor);
+        r = sell({ ...p, stash: grouped }, l.container, l.index, !part, vendor, l.qty ?? 1);
       }
       if (!r.ok) { fail = r.error; continue; }
-      bought.push({ stack: item, price: r.profile.gold - p.gold });
+      bought.push({ stack: part ? { ...item, qty: l.qty! } : item, price: r.profile.gold - p.gold });
       p = r.profile; sold++;
     }
     const gain = p.gold - p0.gold;
     if (sold) {
       sfx('coin');
       set({ profile: p, buyback: [...bought.reverse(), ...state.buyback].slice(0, 5) });
-      toast(`Vendes ${sold === 1 ? '1 objeto' : `${sold} objetos`} por ${gain} de oro.`, 'good', 'coin');
+      if (!quiet) toast(`Vendes ${sold === 1 ? '1 objeto' : `${sold} objetos`} por ${gain} de oro.`, 'good', 'coin');
       actions.tutorialEvent('bastion:sale');
     }
     if (fail) invError(sold ? `No se pudo vender todo: ${fail}` : fail);

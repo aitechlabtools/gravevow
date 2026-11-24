@@ -66,7 +66,8 @@ export function vendorSellPrice(vendor: VendorId, itemId: string, stack?: Pick<I
 }
 
 /** Vende una unidad (o toda la pila si all=true) desde la mochila o el almacén. */
-export function sell(p: Profile, container: 'backpack' | 'stash', index: number, all = false, vendor: VendorId = 'nira'): EconomyResult {
+/** `n`: cuántas unidades vender de una pila (sin `all`). */
+export function sell(p: Profile, container: 'backpack' | 'stash', index: number, all = false, vendor: VendorId = 'nira', n = 1): EconomyResult {
   const grid = cloneGrid(p[container]);
   index = anchorIndex(grid, index); // una casilla tapada por un saco vende el saco
   const s = index >= 0 ? grid[index] : null;
@@ -74,7 +75,8 @@ export function sell(p: Profile, container: 'backpack' | 'stash', index: number,
   if (s.itemId === COIN_ID) return { ok: false, error: 'Las monedas ya son oro: no se venden.' };
   if ((s.gold ?? 0) > 0) return { ok: false, error: 'Vacía el saco antes de venderlo.' };
   if (getItem(s.itemId).recruit) return { ok: false, error: 'Es equipo de recluta: el Bastión te lo presta, no se vende.' };
-  const qty = all ? s.qty : 1;
+  if (s.locked) return { ok: false, error: 'Está protegido: quítale el candado para venderlo.' };
+  const qty = all ? s.qty : Math.max(1, Math.min(s.qty, Math.floor(n)));
   if (!buysThis(vendor, s.itemId, p)) return { ok: false, error: wrongBuyerText(VENDORS[vendor].name, p, s.itemId) };
   const gain = vendorSellPrice(vendor, s.itemId, s) * qty;
   if (s.qty - qty <= 0) removeAt(grid, index);

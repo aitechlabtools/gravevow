@@ -1442,3 +1442,21 @@ button.share-slot{cursor:pointer}
 /* Venta por oficio: quién compra cada objeto y, en la venta, lo que este mercader no compra */
 .slot .slot-buyer { position: absolute; right: 1px; top: 1px; font: 600 12px/1 Georgia, serif; background: #0b0a0f; padding: 1px 2px; pointer-events: none; }
 .slot.slot-nobuy > img, .slot.slot-nobuy > canvas, .slot.slot-nobuy > .qty { opacity: .3; filter: grayscale(1); }
+/* Venta (rediseño 24/11): filtro, candado, filas con cantidad, aviso de oro */
+.slot.slot-filtered > img, .slot.slot-filtered > canvas, .slot.slot-filtered > .qty { opacity: .12; filter: grayscale(1); }
+.slot.slot-filtered { border-color: #2a2830 !important; box-shadow: none !important; }
+.slot .slot-lock { position: absolute; right: 1px; top: 1px; line-height: 0; z-index: 3; pointer-events: none; }
+.sale-row { display: flex; align-items: center; gap: 6px; padding: 2px 4px; border-bottom: 1px solid #222027; }
+.sale-row.on { background: #201a10; }
+.qbtn { min-width: 28px; height: 32px; border: 1px solid #3a3841; background: #151419; color: #e6e0d2; font: 600 14px/1 Georgia, serif; padding: 0 4px; }
+.qbtn:disabled { opacity: .35; }
+.qbtn.w { min-width: 34px; color: #e8b33a; }
+.qbtn.x { border-color: transparent; background: transparent; color: #a7a4ae; min-width: 32px; }
+.qin { width: 38px; height: 32px; text-align: center; background: #0b0a0f; border: 1px solid #3a3841; color: #e6e0d2; font: 14px Georgia, serif; -moz-appearance: textfield; }
+.qin::-webkit-inner-spin-button, .qin::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+@media (pointer: coarse) { .qbtn { min-width: 40px; height: 44px; } .qin { height: 44px; } .qbtn.x { min-width: 44px; } }
+.sale-pop { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); font: 600 20px Cinzel, Georgia, serif; color: #f2c75a; text-shadow: 0 2px 0 #000; pointer-events: none; animation: sale-pop .9s ease-out forwards; }
+@keyframes sale-pop { 0% { opacity: 0; transform: translate(-50%, 8px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -34px); } }
+@media (prefers-reduced-motion: reduce) { .sale-pop { animation-duration: .01s; } }
+@media (min-width: 1600px) and (min-height: 900px) { .sell-center { --slot: 72px; } }
+@media (min-width: 1100px) and (max-width: 1599px) and (min-height: 760px) { .sell-center { --slot: 60px; } }
