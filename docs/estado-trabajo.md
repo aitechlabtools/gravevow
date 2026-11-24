@@ -4,6 +4,9 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 24/11 (4): retoques de la venta
+- Fuera las iniciales del comprador en todas las casillas (también en el Alijo) y la caja «Compra: …» de todos los mercaderes. Si el especialista no tiene estación, lo avisa la lista «A vender» (`sell-closed`). Pestañas y páginas elegidas de la venta, en dorado. Almacén de la venta: casillas a lo ancho hasta 80 px (`StashPanel fill`).
+
 ## Novedades del 24/11 (3): rediseño de la pantalla de venta
 - Tres columnas. Izquierda: el mercader con «Compra: …» (`vendor-buys`; si su estación está en ruinas, `sell-closed`). Centro: pestañas Mochila · Almacén · Compartido (`sell-tab-*`; el almacén con sus páginas, sin la de Compartido) y barra `sell-tools`: «Vendibles», rareza, tipo, «Todo lo vendible (mochila / esta página)», «Comunes (…)» y «Limpiar». Derecha: lista «A vender» (cantidad elegible en las pilas, «Por precio»), ficha del objeto elegido y, abajo fija, objetos, oro actual, total, oro después y el botón.
 - Los filtros solo apagan casillas (`SellFilter`, `.slot-filtered`): nada cambia de sitio. La selección se recuerda entre pestañas y páginas. Lo del Compartido no se vende (como antes): sale apagado y lo dice.

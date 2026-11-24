@@ -182,7 +182,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     steps: [
       { text: 'Bien vendido. El oro va a tu **Alijo**, en saquitos.' },
       { text: 'Si te equivocas, lo último que vendes se puede **recomprar** al mismo precio.' },
-      { text: 'Cada mercader compra **lo de su oficio**. Las letras en la esquina de cada objeto te dicen a quién llevárselo.' },
+      { text: 'Cada mercader compra **lo de su oficio**. La ficha de cada objeto te dice a quién llevárselo.' },
       { text: 'Lo que no quieras vender nunca, **protégelo** desde su ficha: con el candado no se vende ni se desguaza.' },
     ],
   },

@@ -18,7 +18,7 @@ import { canPlace, isCover, LAYOUTS, stackSize, type Loc } from '../../core/inve
 import { fmtWeight, stackWeight } from '../../core/carry';
 import { capacityOf, isCoins } from '../../core/gold';
 import { vendorSellPrice } from '../../core/economy';
-import { BUYER_NAME, BUYER_TAG, PLACE, sellable, whoBuys } from '../../core/sellRoutes';
+import { BUYER_NAME, PLACE, sellable, whoBuys } from '../../core/sellRoutes';
 import { VENDORS } from '../../core/data/vendors';
 import { iconUrl } from '../../shared/art';
 import { actions, useGame } from '../state/store';
@@ -282,7 +282,6 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
       {stack && insured?.includes(stack.uid) && <span className="slot-seal"><Seal scale={sealScale} /></span>}
       {stack && (() => { const w = wearLevel(stack); return w === 'ok' ? null : <span className="slot-wear" data-testid="slot-wear" data-wear={w} style={{ background: WEAR_COLOR[w], width: w === 'broken' ? '100%' : `${Math.max(8, Math.round((durability(stack) / maxDurability(stack)) * 100))}%` }} title={w === 'broken' ? 'Rota' : 'Desgastada'} />; })()}
       {stack && stack.locked && <span className="slot-lock" title="Protegido: no se vende ni se desguaza" aria-label="Protegido" data-testid="slot-lock"><LockGlyph /></span>}
-      {buyer && mode === 'lobby' && !stack?.locked && <span className="slot-buyer" style={{ color: VENDORS[buyer].color }} title={`Lo compra ${BUYER_NAME[buyer]}`} data-testid="slot-buyer">{BUYER_TAG[buyer]}</span>}
       {marked && <span className="mark-coin" aria-label="Marcado para vender" data-testid="slot-marked" />}
       {stack && capacityOf(stack) > 0 && <span className="qty" data-testid="slot-gold" style={{ color: stack.gold ? '#f2c75a' : '#a8a29e', fontSize: cell && cell.w > 1 ? 13 : 12 }}>{stack.gold ?? 0}/{capacityOf(stack)}</span>}
       {stack && loc.kind === 'grid' && !tooHigh && !wrongClass && upgrade && <span className="slot-up" title="Mejor que lo que llevas puesto" data-testid="slot-upgrade">▲</span>}

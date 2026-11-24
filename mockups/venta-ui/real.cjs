@@ -14,7 +14,7 @@ const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); if (!c) process.e
       g.setState({ profile: pr }); });
     await press('[data-testid=tab-merchants]'); await wait(500);
     await press('[data-testid=vendor-valerius]'); await wait(500); await press('[data-testid=vendor-view-sell]'); await wait(400);
-    ok(/Compra:/.test(await p.$eval('[data-testid=vendor-buys]', (e) => e.textContent).catch(() => '')) || phone, `${sz}: «Compra:» en la columna del mercader`);
+    ok(!(await p.$('[data-testid=vendor-buys]')), `${sz}: sin «Compra:» en la columna`);
     // Marcar en la mochila y en el almacén: la selección se mantiene
     const idx = (id, cont = 'backpack') => p.evaluate(([id, cont]) => window.__GRAVEVOW__.getState().profile[cont].findIndex((x) => x?.itemId === id), [id, cont]);
     await p.$eval(`[data-testid=slot-backpack-${await idx('chainmail')}]`, (e) => e.click()); await wait();

@@ -27,7 +27,7 @@ import { GridView, ItemIcon, isUpgrade, SellFilter } from '../inventory';
 import { useDrag, useClearOnDrop } from '../pointerDrag';
 import { useIsTouch } from '../../../shared/device';
 import { buysThis, vendorSellPrice } from '../../../core/economy';
-import { TRADE, buyerOpen, wrongBuyerText } from '../../../core/sellRoutes';
+import { buyerOpen, wrongBuyerText } from '../../../core/sellRoutes';
 import { pageSlice, pageStart } from '../../../core/stashPages';
 import { isCover } from '../../../core/inventory';
 import { isCoins } from '../../../core/gold';
@@ -306,7 +306,6 @@ function VendorInterior({ vendor, initial, onBack, onGo, onQuests }: { vendor: V
         <span className="vtile-rep"><RepBar rep={rep} />{discount > 0 && <span className="block text-[13px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento</span>}</span>
       </div>
       {questLink}
-      <div className="panel px-3 py-2 text-[14px] leading-snug shrink-0" data-testid="vendor-buys"><span className="text-gold">Compra:</span> <span className="text-parchment">{TRADE[vendor].toLowerCase()}</span>{!buyerOpen(profile, vendor) && <span className="block text-[13px]" style={{ color: '#e0a060' }} data-testid="sell-closed">Aún no: reconstruye su estación. Mientras, lo compra Nira.</span>}</div>
       {tabBar}
       {pendBox}
       <button type="button" className="panel vback-card flex-1" onClick={onBack} data-testid="vendor-back">
@@ -531,7 +530,9 @@ function SalePanel({ vendor, marks, setMarks, onSold, sel, setSel }: { vendor: V
               <span className="text-gold shrink-0 text-right" style={{ minWidth: 34 }}>{r.price}</span>
               <button className="qbtn x" onClick={() => setMarks(marks.filter((x) => x !== r.k))} aria-label="Quitar de la venta" data-testid="sale-remove">✕</button>
             </li>))}</ul>
-        ) : <p className="text-[13px] text-stone-400 italic text-center py-3">Toca objetos para marcarlos o arrástralos aquí.</p>}
+        ) : !buyerOpen(profile, vendor)
+          ? <p className="text-[14px] text-center py-3" style={{ color: '#e0a060' }} data-testid="sell-closed">{VENDORS[vendor].name} aún no compra: reconstruye su estación. Mientras, lo compra Nira en El Mercado.</p>
+          : <p className="text-[13px] text-stone-400 italic text-center py-3">Toca objetos para marcarlos o arrástralos aquí.</p>}
         {buyback.length > 0 && (
           <div className="mt-3 pt-2 border-t border-stone-800" data-testid="buyback">
             <div className="text-[12px] tracking-[0.15em] uppercase text-stone-400 mb-1">Recomprar (mientras sigas aquí)</div>
