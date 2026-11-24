@@ -267,13 +267,16 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - **Pausa:** «Continuar» dorado, «Ajustes» secundario y, tras una línea, «Abandonar la expedición…» en rojo con confirmación.
 - Retratos pequeños de personaje: siempre en busto (cabeza y hombros), no la figura entera.
 
-## Combate (fase 5)
-- Arriba en el centro solo la zona y el orden de turnos; el nombre del enemigo sale solo en su ficha (`combat-title` es ahora la línea de la zona, con el nombre en el `title`).
-- No hay «¿Qué hará…?»: el botón resaltado marca el turno. En el turno ajeno, «X está actuando…».
+## Combate (24/11: fichas, esqueleto de heridas y barra)
+Maqueta y capturas: `mockups/combate-heridas-barras/` (índice; `real.cjs` repite las capturas reales y las comprobaciones).
+- **Escala:** todo se mide con `--k` sobre `[data-testid=combat]`: 1 en el móvil horizontal (alto ≤ 560), 1,5 en tableta y 2 en pantallas de 1600×900 o más. Letra de las fichas y botones `4px + 8px·k` (12, 16 y 20 px).
+- **Sin título:** ni zona ni orden de turnos arriba. El turno lo marca el ▼ dorado sobre quien actúa y «X está actuando…» en el registro.
+- **Enemigos** (`FoeCard`, `.cb-foes`): fichas arriba a la izquierda, en fila y en el orden del campo (190 px·k; 240 si va solo). Escudo dorado con el nivel (`.lvl`, rojo si es jefe), nombre y vida con número (`hpnum-<id>`); debajo, los estados con icono, nombre y turnos («☠ Veneno 3», «❄ Congelación 2»), «Expuesto», «En guardia» y el golpe que prepara («⚠ Golpe pesado → ti ≈16 · Guardia», `intent-<id>`). En el móvil, todo en una línea y solo con icono y número («☠ 3», «⚠ a ti ≈16»; `.cb-full` / `.cb-short`); el nombre sale en el `title`. Con dos, tocar la ficha o el sprite elige objetivo: borde rojo de 2 px y ▶ (`target-<id>`), y ▼ rojo sobre el sprite. Nada de barras encima de los sprites.
+- **Tu grupo** (`.cb-party`), abajo a la derecha, sobre los botones: el aliado en una tira fina (`AllyStrip`, nombre, vida y número) y tu ficha (`HeroCard`, 240 px·k). Las dos llevan el escudo del nivel delante del nombre (el aliado, si lo tiene) y tu ficha tus estados («◆ Sangrado 2»).
+- **Esqueleto de heridas:** en tu ficha, `BodyFigure` como botón (`combat-body`, borde rojo si hay heridas) a ×2, ×4 o ×5. Abre «Heridas y necesidades» (el mismo `BodyPanel`); abrirlo no gasta el turno; curar sí, y solo en tu turno. Las lesiones se ven en la figura (cuadro rojo si sangra, aspa si está rota, raya si está inutilizada); no hay resumen en texto. La zona que cambia parpadea 0,6 s con borde blanco (`flash` → `.body-flash`; sin animación con «reducir movimiento»).
+- **Barra inferior:** texto del combate a la izquierda (44 %, hasta 3 líneas) y botones a la derecha. En el menú principal (`.cmdgrid.main`) solo el nombre: sin subtítulo (el coste sale en el texto al señalar o mantener pulsado y en los submenús) y con los números de tecla solo con ratón. Botones de 44 px·k de alto.
+- **Escena:** enemigos con los pies en `bottom: 41 %` (voladores 52 %); en el móvil bajan 18 px (`.foe`). Sombras pegadas a los pies (`.fighter-shadow`, `translate: -50% 15%`).
 - Los avisos (`Toasts`) no salen en combate: el último aparece como línea dorada en el registro (`combat-note`).
-- Botones: el nombre y el subtítulo pasan a dos líneas en vez de cortarse (`.cmd-sub`).
-- Ficha del jugador con busto (`.frame-bust`) y el nivel en la esquina.
-- Móvil (alto ≤ 560 px): dos tiras finas arriba, tú a la izquierda (busto, «Nv N» junto al nombre, PV y recurso) y el enemigo a la derecha; sin zona en el título. Toda tu tira es el botón `combat-body` (Heridas y necesidades; gota roja si hay heridas). Los enemigos bajan 26 px (`.foe`) para que la tira no los tape.
 
 ## Menús y fichas (fase 6)
 - Ningún texto por debajo de 12 px en el móvil (raíz de 11 px: botones y selectores fijados a 12 px; clase `.min12` para casos sueltos).

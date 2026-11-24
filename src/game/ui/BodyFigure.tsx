@@ -38,7 +38,7 @@ export function regionStatus(b: Body, r: Region): string[] {
 }
 
 /** Silueta pixelada (escala entera). `unit`: píxeles por casilla. */
-export function BodyFigure({ body, unit = 3, onClick, testId, label = 'Heridas' }: { body: Body; unit?: number; onClick?: () => void; testId?: string; label?: string }) {
+export function BodyFigure({ body, unit = 3, onClick, testId, label = 'Heridas', flash }: { body: Body; unit?: number; onClick?: () => void; testId?: string; label?: string; /** Regiones que acaban de cambiar: parpadean con borde blanco. */ flash?: Region[] }) {
   const w = 9 * unit, h = 15 * unit;
   const hurt = urgencies(body).length > 0;
   const svg = (
@@ -50,7 +50,7 @@ export function BodyFigure({ body, unit = 3, onClick, testId, label = 'Heridas' 
         const m = Math.max(1, Math.floor(unit / 3));
         return (
           <g key={r} data-region={r}>
-            <rect x={X + m / 2} y={Y + m / 2} width={W - m} height={H - m} fill={regionColor(body, r)} stroke={BODY_COLOR.outline} strokeWidth={m} />
+            <rect x={X + m / 2} y={Y + m / 2} width={W - m} height={H - m} fill={regionColor(body, r)} stroke={BODY_COLOR.outline} strokeWidth={m} className={flash?.includes(r) ? 'body-flash' : undefined} />
             {isDisabled(body, r) && <line x1={X + m} y1={Y + H - m} x2={X + W - m} y2={Y + m} stroke="#8c8693" strokeWidth={m} />}
             {p.fracture && <><line x1={X + m} y1={Y + H / 2 - unit} x2={X + W - m} y2={Y + H / 2 + unit} stroke="#f2ead8" strokeWidth={m} /><line x1={X + W - m} y1={Y + H / 2 - unit} x2={X + m} y2={Y + H / 2 + unit} stroke="#f2ead8" strokeWidth={m} /></>}
             {p.bleed > 0 && <rect x={X + W - unit - m} y={Y + m} width={unit} height={p.bleed === 2 ? unit * 2 : unit} fill="#ff2030" stroke={BODY_COLOR.outline} strokeWidth={m / 2} />}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><title>Maqueta combate: heridas y barras</title>
+<link rel="stylesheet" href="/node_modules/@fontsource/cinzel/index.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/grenze/index.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/crimson-pro/index.css">
+<style>
+*{box-sizing:border-box}html,body{margin:0;overflow:hidden;background:#000;color:#e6e0d2;font-family:Grenze,Georgia,serif}
+#bg{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.abs{position:absolute}
+.name{font-family:Cinzel,serif;color:#e9e1cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foe .name{color:#ffb3a8}
+.bar{position:relative;height:6px;background:#0b0a0f;border:1px solid #3a3841;flex:1}
+.bar>i{position:absolute;left:0;top:0;bottom:0;display:block}
+.num{font-size:12px;color:#e8dcc0;white-space:nowrap}.num i{font-style:normal;color:#8c8693}
+.chip{display:inline-flex;align-items:center;gap:3px;font-size:12px;line-height:16px;padding:0 4px;border:1px solid;background:#0b0a0fcc;white-space:nowrap}
+.chips{display:flex;gap:3px;flex-wrap:wrap}
+.lvl{display:grid;place-items:center;width:20px;height:22px;font-size:12px;color:#1a1208;background:#e8b33a;flex:none;font-weight:700}
+/* Ficha fija */
+.card{background:#151419f0;border:1px solid #6b4a12;padding:6px 9px}
+.card.ally{border-color:#2f6b4c}.card.foe{border-color:#5a2a2e}
+.card.tgt{border:2px solid #c4283b;padding:5px 8px}
+.row{display:flex;align-items:center;gap:6px}
+.lbl{font-size:12px;width:16px;flex:none}
+/* Placa sobre la cabeza */
+.plate{display:flex;flex-direction:column;justify-content:flex-end;gap:2px;padding:2px 5px 3px;background:#0b0a0fd0;border:1px solid #3a3841}
+.plate.tgt{border:2px solid #c4283b;padding:1px 4px 2px}
+.plate.ally{border-color:#2f6b4c}
+.hit{position:absolute;min-height:44px;display:flex;flex-direction:column;justify-content:flex-end}
+.arrow{position:absolute;color:#c4283b;font-size:18px;line-height:1;transform:translateX(-50%)}
+.minibar{position:absolute;height:5px;background:#0b0a0f;border:1px solid #000}
+.minibar>i{position:absolute;left:0;top:0;bottom:0}
+/* Esqueleto */
+.body-btn{display:flex;align-items:center;justify-content:center;background:#0b0a0f;border:1px solid #c4283b;cursor:pointer;flex:none;position:relative}
+.wounds{display:flex;flex-direction:column;gap:2px}
+.w{font-size:12px;line-height:15px;white-space:nowrap}
+.w.bleed{color:#ff5a64}.w.frac{color:#e8b33a}.w.off{color:#a7a4ae}.w.hurt{color:#e8b33a}
+.flash{animation:none;outline:2px solid #fff}
+.tag{position:absolute;font-size:12px;color:#1a1208;background:#e8b33a;padding:0 4px;font-family:Grenze}
+.note{position:absolute;left:50%;transform:translateX(-50%);bottom:8px;background:#0b0a0fe8;border:1px solid #e8b33a;color:#e8b33a;font-size:14px;padding:3px 10px;white-space:nowrap}
+</style></head><body>
+<img id="bg"><div id="ui"></div>
+<script>
+const Q = new URLSearchParams(location.search);
+const S = Q.get('s') || 'escritorio', C = Q.get('c') || '2v2', O = Q.get('o') || 'B', FL = Q.get('f') === '1', NOTE = Q.get('n') || '';
+const W = innerWidth, H = innerHeight, PH = S === 'movil', TB = S === 'tableta';
+document.getElementById('bg').src = `fondo-${S}-${C}.png`;
+const ui = document.getElementById('ui');
+const el = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
+const ST = { poison: ['☠', 'Veneno', '#7bc043'], stun: ['✱', 'Aturdido', '#e8d24a'], bleed: ['◆', 'Sangrado', '#ff5a64'], empower: ['▲', 'Furia', '#ff8a3a'] };
+const chip = (id, n, short) => { const [i, name, c] = ST[id]; return `<span class="chip" style="color:${c};border-color:${c}" title="${name}">${i} ${short ? '' : name + ' '}${n}</span>`; };
+const bar = (v, m, c, h = 6) => `<div class="bar" style="height:${h}px"><i style="width:${Math.round(v / m * 100)}%;background:${c}"></i></div>`;
+
+// Cuerpo de ejemplo (mismas reglas de color y marcas que el menú de heridas)
+const SHAPE = { head: [3, 0, 3, 3], thorax: [2, 3, 5, 4], abdomen: [2, 7, 5, 2], armR: [0, 3, 2, 6], armL: [7, 3, 2, 6], legR: [2, 9, 2, 6], legL: [5, 9, 2, 6] };
+const BODY = { head: { p: 1 }, thorax: { p: .6 }, abdomen: { p: 1, bleed: 1 }, armL: { p: .08, frac: 1 }, armR: { p: 1 }, legR: { p: .5, bleed: 2 }, legL: { p: 1 } };
+const col = (p) => p > .75 ? '#6fae5a' : p > .45 ? '#e8b33a' : p > .2 ? '#e8752b' : '#d23a3a';
+function figure(u, flash) {
+  const m = Math.max(1, Math.floor(u / 3)); let s = `<svg width="${9 * u}" height="${15 * u}" shape-rendering="crispEdges">`;
+  for (const [r, [x, y, w, h]] of Object.entries(SHAPE)) { const b = BODY[r], X = x * u, Y = y * u, Wd = w * u, Ht = h * u;
+    s += `<rect x="${X + m / 2}" y="${Y + m / 2}" width="${Wd - m}" height="${Ht - m}" fill="${col(b.p)}" stroke="${flash === r ? '#ffffff' : '#0d0b0c'}" stroke-width="${flash === r ? m * 2 : m}"/>`;
+    if (b.frac) s += `<line x1="${X + m}" y1="${Y + Ht / 2 - u}" x2="${X + Wd - m}" y2="${Y + Ht / 2 + u}" stroke="#f2ead8" stroke-width="${m}"/><line x1="${X + Wd - m}" y1="${Y + Ht / 2 - u}" x2="${X + m}" y2="${Y + Ht / 2 + u}" stroke="#f2ead8" stroke-width="${m}"/>`;
+    if (b.bleed) s += `<rect x="${X + Wd - u - m}" y="${Y + m}" width="${u}" height="${b.bleed === 2 ? u * 2 : u}" fill="#ff2030" stroke="#0d0b0c" stroke-width="${m / 2}"/>`; }
+  return s + '</svg>';
+}
+const WOUNDS = [['bleed', '◆◆', 'Pierna der.', 'Sangra mucho'], ['frac', '✕', 'Brazo izq.', 'Rota'], ['bleed', '◆', 'Abdomen', 'Sangra'], ['hurt', '!', 'Tórax', 'Herida']];
+function skeleton(u, list, max = 4, short) {
+  const bw = Math.max(44, 9 * u + 12), bh = Math.max(44, 15 * u + 10);
+  const ws = list ? `<div class="wounds">${WOUNDS.slice(0, max).map(([c, i, r, t]) => `<span class="w ${c}">${i} ${short ? r : r + ' · ' + t}</span>`).join('')}</div>` : '';
+  return `<div class="row" style="gap:8px;align-items:center"><button class="body-btn" style="width:${bw}px;height:${bh}px" title="Heridas (pulsa para curar o vendar)">${figure(u, FL ? 'legR' : '')}</button>${ws}</div>`;
+}
+const bust = (s) => `<span style="width:${s}px;height:${s}px;background:#0b0a0f;border:1px solid #3a3841;flex:none;display:grid;place-items:center;overflow:hidden"><img src="busto.png" style="width:${s - 4}px;image-rendering:pixelated" onerror="this.remove()"></span>`;
+
+fetch('geo.json').then((r) => r.json()).then((G) => {
+  const g = G[`${S}-${C}`], F = g.fighters, two = C === '2v2';
+  const foes = two ? [['e1', 'Esqueleto guerrero I', 34, 46, [['poison', 3]], true], ['e2', 'Esqueleto guerrero II', 46, 46, [['stun', 1]], false]] : [['e1', 'Esqueleto guerrero', 34, 46, [['poison', 3]], true]];
+  const ally = two ? ['rival', 'Kael el Errante', 60, 105, []] : null;
+  const intent = '⚠ Tajo → ti ≈12';
+
+  // ── Ficha del héroe (fija) con el esqueleto ──
+  if (PH) {
+    // Móvil: tira de 52 px arriba a la izquierda; el esqueleto es su propio botón de 44 px de ancho
+    ui.append(el(`<div class="abs card" style="left:8px;top:6px;width:${O === 'A' ? 300 : 300}px;padding:4px 6px">
+      <div class="row" style="gap:6px">${skeleton(3, false)}
+        <div style="flex:1;min-width:0">
+          <div class="row" style="justify-content:space-between"><span class="name" style="font-size:13px">Pau · Nv 1</span><span class="w bleed">◆◆ ✕ ◆</span></div>
+          <div class="row"><span class="lbl" style="color:#ff7a6a">PV</span>${bar(91, 125, '#c4283b', 5)}<span class="num">91<i>/125</i></span></div>
+          <div class="row"><span class="lbl" style="color:#ffc08a">IM</span>${bar(20, 20, '#e08a3d', 5)}<span class="num">20<i>/20</i></span></div>
+        </div></div></div>`));
+  } else {
+    const k = TB ? .86 : 1, u = TB ? 4 : 5;
+    ui.append(el(`<div class="abs card" style="left:${TB ? 16 : 24}px;top:${TB ? 14 : 20}px;width:${Math.round(380 * k)}px;padding:8px 10px">
+      <div class="row" style="gap:10px;align-items:flex-start">${bust(Math.round(52 * k))}
+        <div style="flex:1;min-width:0"><div class="name" style="font-size:${TB ? 16 : 19}px">Pau <span style="font-size:13px;color:#a7a4ae">· Guerrero · Nv 1</span></div>
+          <div class="row" style="margin-top:4px"><span class="lbl" style="color:#ff7a6a">PV</span>${bar(91, 125, '#c4283b', 7)}<span class="num">91<i> / 125</i></span></div>
+          <div class="row" style="margin-top:3px"><span class="lbl" style="color:#ffc08a">IM</span>${bar(20, 20, '#e08a3d', 7)}<span class="num">20<i> / 20</i></span></div>
+          <div class="chips" style="margin-top:4px">${chip('bleed', 2)}</div></div></div>
+      <div style="margin-top:6px;padding-top:6px;border-top:1px solid #3a3841">${skeleton(u, true, 4)}</div></div>`));
+  }
+
+  // ── Barras ──
+  const pick = (on) => on ? ' tgt' : '';
+  if (O === 'A' || O === 'C') {
+    // Sobre la cabeza de cada personaje (A: placa con nombre corto, vida, estados; C: solo una barra mínima)
+    const items = [...foes.map((f) => ['foe', ...f]), ...(ally ? [['ally', ...ally, false]] : [])];
+    for (const [side, id, name, hp, mx, sts, tgt] of items) {
+      const r = F[id]; if (!r) continue; const cx = r[0] + r[2] / 2, top = r[1] + r[3] * (side === 'ally' ? .02 : .1);
+      if (O === 'A') {
+        const w = PH ? 128 : TB ? 170 : 210;
+        const short = name.replace('Esqueleto guerrero', 'Esqueleto').replace(' el Errante', '');
+        ui.append(el(`<div class="hit" style="left:${cx - w / 2}px;top:${top - (PH ? 50 : 66)}px;width:${w}px;height:${PH ? 46 : 60}px">
+          <div class="plate ${side}${pick(tgt)}">
+            <div class="row" style="justify-content:space-between"><span class="name" style="font-size:${PH ? 12 : 14}px;color:${side === 'foe' ? '#ffb3a8' : '#9fe0bd'}">${tgt ? '▶ ' : ''}${short}</span><span class="num">${hp}<i>/${mx}</i></span></div>
+            ${bar(hp, mx, side === 'foe' ? '#c4283b' : '#5fd19a', PH ? 4 : 5)}
+            ${sts.length || (side === 'foe' && !PH) ? `<div class="chips">${sts.map(([s, n]) => chip(s, n, PH)).join('')}${side === 'foe' && !PH && tgt ? `<span class="chip" style="color:#f8dc7a;border-color:#f8dc7a">${intent}</span>` : ''}</div>` : ''}
+          </div></div>`));
+      } else {
+        const w = Math.round(r[2] * (PH ? .55 : .42));
+        ui.append(el(`<div class="minibar" style="left:${cx - w / 2}px;top:${top - (PH ? 10 : 14)}px;width:${w}px;${tgt ? 'outline:2px solid #c4283b;outline-offset:1px' : ''}"><i style="width:${Math.round(hp / mx * 100)}%;background:${side === 'foe' ? '#c4283b' : '#5fd19a'}"></i></div>`));
+        if (sts.length) ui.append(el(`<div class="abs chips" style="left:${cx + w / 2 + 4}px;top:${top - (PH ? 16 : 20)}px">${sts.map(([s, n]) => chip(s, n, true)).join('')}</div>`));
+      }
+      if (tgt) ui.append(el(`<div class="arrow" style="left:${cx}px;top:${top - (O === 'A' ? (PH ? 66 : 88) : (PH ? 30 : 38))}px">▼</div>`));
+    }
+  }
+  if (O === 'B' || O === 'C') {
+    // Marcos fijos: enemigos en fila arriba a la derecha, en el mismo orden que en el campo; aliado bajo tu ficha
+    const fw = PH ? 172 : TB ? 250 : 300, gap = PH ? 6 : 12, right = PH ? 58 : TB ? 76 : 92;
+    foes.forEach(([id, name, hp, mx, sts, tgt], i) => {
+      // Móvil: en fila arriba; escritorio y tableta: en columna arriba a la derecha (la barra de turnos sigue en el centro)
+      const x = PH ? W - right - (foes.length - i) * (fw + gap) + gap : W - right - fw;
+      const y = PH ? 6 : (TB ? 14 : 20) + i * (TB ? 70 : 78);
+      ui.append(el(`<div class="abs card foe${pick(tgt)}" style="left:${x}px;top:${y}px;width:${fw}px;min-height:44px;padding:${PH ? '4px 6px' : '6px 9px'}">
+        <div class="row" style="justify-content:space-between">${PH ? '' : '<span class="lvl">1</span>'}<span class="name" style="flex:1;font-size:${PH ? 12 : TB ? 14 : 16}px">${tgt ? '▶ ' : ''}${PH ? name.replace('Esqueleto guerrero', 'Esqueleto') : name}</span><span class="num">${hp}<i>/${mx}</i></span></div>
+        <div class="row" style="margin-top:3px">${bar(hp, mx, '#c4283b', PH ? 4 : 6)}</div>
+        <div class="chips" style="margin-top:3px">${sts.map(([s, n]) => chip(s, n, PH)).join('')}${tgt && !PH ? `<span class="chip" style="color:#f8dc7a;border-color:#f8dc7a">${intent}</span>` : ''}</div></div>`));
+      if (O === 'B' && tgt) { const r = F[id]; ui.append(el(`<div class="arrow" style="left:${r[0] + r[2] / 2}px;top:${r[1] + r[3] * .1 - (PH ? 22 : 30)}px">▼</div>`)); }
+    });
+    if (ally) {
+      ui.append(el(`<div class="abs card ally" style="${PH ? 'left:316px;top:6px;width:112px;min-height:44px;padding:4px 6px' : `left:${TB ? 16 : 24}px;top:${TB ? 226 : 262}px;width:${TB ? 250 : 300}px`}">
+        <div class="row" style="justify-content:space-between"><span class="name" style="font-size:${PH ? 12 : 15}px;color:#9fe0bd">${PH ? 'Kael' : 'Kael el Errante'}</span><span class="num">60<i>/105</i></span></div>
+        <div class="row" style="margin-top:3px">${bar(60, 105, '#5fd19a', PH ? 4 : 6)}</div></div>`));
+    }
+  }
+  if (FL) ui.append(el(`<div class="note">La pierna derecha parpadea (borde blanco 0,6 s) al recibir el sangrado</div>`));
+  if (NOTE) ui.append(el(`<div class="note">${NOTE}</div>`));
+  document.body.dataset.ready = '1';
+});
+</script></body></html>
