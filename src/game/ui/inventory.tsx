@@ -38,7 +38,7 @@ export function ItemIcon({ itemId, size = 36 }: { itemId: string; size?: number 
   return <img src={iconUrl(def.icon, 3)} width={size} height={size} alt={def.name} className="pixelated" draggable={false} />;
 }
 
-function statLine(k: keyof Stats, v: number) {
+export function statLine(k: keyof Stats, v: number) {
   const sign = v > 0 ? '+' : '';
   return `${sign}${v} ${STAT_LABELS[k]}`;
 }

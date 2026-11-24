@@ -10,16 +10,16 @@ export const INSURANCE = {
   min: 1,
 };
 
-/** Quién reforja cada ranura (quien la fabrica) y la estación que tiene que estar reconstruida. Los escudos, Valerius. */
+/** Quién asegura y entrega cada ranura (24/11: siempre Valerius) y la estación de quien la fabrica, que tiene que estar reconstruida. */
 export const REFORGER: Record<EquipSlot, { vendor: VendorId; station: CraftStation }> = {
-  mainHand: { vendor: 'brand', station: 'forge' },
-  offHand: { vendor: 'brand', station: 'forge' },
-  ring: { vendor: 'brand', station: 'forge' },
+  mainHand: { vendor: 'valerius', station: 'forge' },
+  offHand: { vendor: 'valerius', station: 'forge' },
+  ring: { vendor: 'valerius', station: 'forge' },
   helmet: { vendor: 'valerius', station: 'armory' },
   armor: { vendor: 'valerius', station: 'armory' },
   gloves: { vendor: 'valerius', station: 'armory' },
   boots: { vendor: 'valerius', station: 'armory' },
-  amulet: { vendor: 'eldrin', station: 'alchemy' },
+  amulet: { vendor: 'valerius', station: 'alchemy' },
 };
 /** Orden de las casillas en la ventana del seguro (dos filas de cuatro). */
 export const INSURE_ORDER: EquipSlot[] = ['mainHand', 'offHand', 'helmet', 'armor', 'gloves', 'boots', 'ring', 'amulet'];

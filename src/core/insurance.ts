@@ -1,6 +1,6 @@
 // Seguro de equipo por bajada (24/11). Lógica pura: qué se puede asegurar, cuánto cuesta, qué queda pendiente al caer
 // y cómo se recoge. Cifras en config/insurance.ts; reglas en docs/plan-seguro-equipo.md.
-import { INSURANCE, INSURE_ORDER, REFORGER } from '../config/insurance';
+import { INSURANCE, INSURE_ORDER } from '../config/insurance';
 import { GOLD_SCALE } from '../config/gold';
 import { RARITY_RULES } from './data/rarity';
 import { getItem } from './data/items';
@@ -10,7 +10,7 @@ import { stationLevel } from './crafting';
 import { addToGrid, LAYOUTS } from './inventory';
 import { spendGold } from './wallet';
 
-import { reforgeLost, type Reforged } from './insuranceLoss';
+import { reforgeLost, reforgerFor, type Reforged } from './insuranceLoss';
 export { reforgeLost, type Reforged };
 
 /** Valor del ejemplar en monedas: el de su ficha, ajustado por su rareza y sus atributos, más sus runas. */
@@ -34,7 +34,7 @@ export function insurableSlots(p: Profile, eq: Equipment = p.equipment): SlotIns
   return INSURE_ORDER.map((slot) => {
     const it = eq[slot];
     const item = it && !getItem(it.itemId).recruit ? it : null;
-    const r = REFORGER[slot];
+    const r = reforgerFor(slot, item);
     return { slot, item, cost: item ? insuranceCost(item) : 0, vendor: r.vendor, locked: stationLevel(p, r.station) < 1 };
   });
 }
@@ -62,7 +62,8 @@ export function payInsurance(p: Profile, slots: EquipSlot[]): { ok: true; profil
 
 /** Piezas pendientes de un mercader. */
 export function pendingFor(p: Profile, vendor: VendorId): Reforged[] {
-  return (p.reforged ?? []).filter((r) => r.vendor === vendor);
+  // Todo se recoge en Valerius (también lo guardado a nombre de Brand o de Eldrin en partidas anteriores)
+  return vendor === 'valerius' ? [...(p.reforged ?? [])] : [];
 }
 
 /** Recoge las piezas de un mercader (una por su `uid`, o todas): a la mochila y, si no cabe, al almacén. Lo que no quepa sigue pendiente. */
@@ -70,13 +71,13 @@ export function collectReforged(p: Profile, vendor: VendorId, uid?: string): { p
   let backpack = p.backpack, stash = p.stash, taken = 0;
   const keep: Reforged[] = [];
   for (const r of p.reforged ?? []) {
-    if (r.vendor !== vendor || (uid && r.item.uid !== uid)) { keep.push(r); continue; }
+    if (vendor !== 'valerius' || (uid && r.item.uid !== uid)) { keep.push(r); continue; }
     const a = addToGrid(backpack, r.item, LAYOUTS.backpack);
     if (!a.leftover) { backpack = a.grid; taken++; continue; }
     const b = addToGrid(stash, r.item, LAYOUTS.stash);
     if (!b.leftover) { stash = b.grid; taken++; continue; }
     keep.push(r);
   }
-  const left = keep.filter((r) => r.vendor === vendor).length;
+  const left = vendor === 'valerius' ? keep.length : 0;
   return { profile: { ...p, backpack, stash, reforged: keep }, taken, left };
 }

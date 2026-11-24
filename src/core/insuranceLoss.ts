@@ -4,6 +4,14 @@ import { INSURE_ORDER, REFORGER } from '../config/insurance';
 import type { VendorId } from './data/vendors';
 import type { Equipment, ItemStack } from './types';
 import { makeUid } from './rng';
+import { getItem } from './data/items';
+import type { EquipSlot } from './types';
+
+/** Quién reforja esta pieza: el de su ranura, salvo los escudos de la mano izquierda, que son de Valerius. */
+export function reforgerFor(slot: EquipSlot, it: ItemStack | null) {
+  if (slot === 'offHand' && it && getItem(it.itemId).category === 'shield') return REFORGER.helmet;
+  return REFORGER[slot];
+}
 
 /** Pieza reforjada esperando en su mercader. */
 export interface Reforged { vendor: VendorId; item: ItemStack }
@@ -16,7 +24,7 @@ export function reforgeLost(eq: Equipment, insured: string[] | undefined): Refor
     const it = eq[slot];
     if (!it || !insured.includes(it.uid)) continue;
     const { dur: _d, ...rest } = it;
-    out.push({ vendor: REFORGER[slot].vendor, item: { ...rest, uid: makeUid() } });
+    out.push({ vendor: reforgerFor(slot, it).vendor, item: { ...rest, uid: makeUid() } });
   }
   return out;
 }

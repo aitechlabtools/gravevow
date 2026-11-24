@@ -42,7 +42,7 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 | `station.runes` | Bastión y estaciones | `station:runes` | eldrin | — | `runes` | 2 | — |
 | `bastion.first-death` | Heridas y necesidades | `bastion:fallen` | vesper | — | `cure-btn` | 3 | — |
 | `bastion.can-craft` | Bastión y estaciones | `bastion:can-craft` | intendant | — | `tab-merchants` | 2 | — |
-| `insure.first` | Objetos y oro | `insure:first` | brand | — | `insure-grid`, `insure-total` | 2 | encima de la ventana del seguro (`overModal`), la primera vez que sale al pulsar «Descender» |
+| `insure.first` | Objetos y oro | `insure:first` | valerius | — | `insure-grid`, `insure-total` | 2 | encima de la ventana del seguro (`overModal`), la primera vez que sale al pulsar «Descender» |
 | `bastion.first-sale` | Objetos y oro | `bastion:sale` | intendant | — | — | 2 | — |
 | `bastion.first-rep` | Mercaderes | `bastion:rank-up` | intendant | — | — | 2 | — |
 | `bastion.first-skin` | Cuenta y copia | `bastion:skin` | intendant | — | — | 2 | — |

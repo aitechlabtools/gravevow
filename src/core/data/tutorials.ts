@@ -171,10 +171,10 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     ],
   },
   {
-    id: 'insure.first', topic: 'objetos', trigger: 'insure:first', narrator: 'brand', overModal: true,
+    id: 'insure.first', topic: 'objetos', trigger: 'insure:first', narrator: 'valerius', overModal: true,
     steps: [
       { text: 'Antes de bajar puedes **asegurar** lo que llevas puesto. Cubre **solo esta bajada**: toca cada pieza o pulsa **Todo**.', target: 'insure-grid' },
-      { text: 'Si caes, quien la fabrica te la **reforja**: yo las armas y los anillos, **Valerius** las armaduras y **Eldrin** los amuletos. La recoges en la pestaña **Seguro**.', target: 'insure-total' },
+      { text: 'Si caes, te la **reforjo**, con Brand en la forja. La recoges conmigo, en la pestaña **Seguro** de la armería.', target: 'insure-total' },
     ],
   },
   {

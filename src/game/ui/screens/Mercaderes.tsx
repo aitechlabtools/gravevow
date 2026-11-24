@@ -57,13 +57,13 @@ const VIEW_LABEL: Record<VendorView, string> = { shop: 'Tienda', quests: 'Mision
 function servicesOf(id: VendorId, p?: Profile): VendorView[] {
   const v: VendorView[] = [];
   // Seguro (24/11): con la estación del mercader reconstruida, o si te guarda piezas reforjadas
-  const ins = p && Object.values(REFORGER).find((r) => r.vendor === id);
-  const insure = !!(p && ins && (stationLevel(p, ins.station) >= 1 || pendingFor(p, id).length));
+  // Una función por mercader (24/11): el seguro solo con Valerius, con alguna estación de las piezas reconstruida o piezas pendientes
+  const insure = !!(p && id === 'valerius' && ([...new Set(Object.values(REFORGER).map((r) => r.station))].some((st) => stationLevel(p, st) >= 1) || pendingFor(p, id).length));
   if (VENDORS[id].stock.length) v.push('shop');
   if (VENDORS[id].buysItems) v.push('sell');
   if (id === 'grizk') v.push('contracts');
   if (id === 'vesper') v.push('infirmary');
-  if (id === 'brand' || id === 'nira' || id === 'orik') v.push('repair');
+  if (id === 'brand') v.push('repair'); // Reparar solo con Brand (24/11: antes también en Nira y Orik)
   if (id === 'orik') v.push('scrap');
   if (STATION_OF[id]) v.push('station');
   if (insure) v.splice(Math.min(1, v.length), 0, 'insure');

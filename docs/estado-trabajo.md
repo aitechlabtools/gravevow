@@ -880,3 +880,11 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - **Partidas guardadas:** todo es opcional; los perfiles antiguos cargan sin nada asegurado ni pendiente.
 - **Comprobado:** `npx tsc`, 520 tests (8 nuevos en `tests/insurance.test.ts`); `mockups/seguro-equipo/real.cjs` (42 comprobaciones en escritorio, tableta y móvil: ventana, casillas de 44 px o más, cobro, sellos, resumen, marca en el Bastión, recogida, mini tutorial, sin errores).
 - **Cómo probar:** con `?debug`, reconstruye la Forja o la Forja de armaduras (o en la consola: `p = __GRAVEVOW__.getState().profile; __GRAVEVOW__.setState({ profile: { ...p, refuge: { ...p.refuge, forge: 1, armory: 1, alchemy: 1 } } })`). Pulsa «Descender», marca piezas y «Asegurar y bajar». Para morir al momento: `__GRAVEVOW__.actions.finishExpedition('died')`. Vuelve al Bastión y entra en Maese Brand o Valerius.
+
+- **Retoque (24/11):** la pestaña «Seguro» explica cómo funciona (cuatro cajas) y enseña cada pieza con el color y el nombre de su rareza, sus estadísticas, atributos, runas y durabilidad, con su botón «Asegurar». Los escudos los reforja Valerius. Capturas y comprobaciones: `mockups/seguro-equipo/pestana.cjs` (15) y `real.cjs` (42).
+
+## 24/11 — Una función por mercader
+- «Reparar» solo con Brand (fuera de Orik y Nira), «Seguro» solo con Valerius (fuera de Brand y Eldrin), «Desguace» solo con Orik. Tiendas, venta y estaciones sin cambios. El seguro funciona igual (por bajada, 4 %); todas las piezas reforjadas se recogen en Valerius, también las guardadas antes a nombre de Brand o Eldrin. Mini tutorial `insure.first` contado por Valerius.
+- **Código:** `servicesOf` en `Mercaderes.tsx`; `config/insurance.ts` (todo a Valerius, con la estación de quien fabrica); `pendingFor` y `collectReforged` en `core/insurance.ts`.
+- **Comprobado:** 521 tests; `mockups/seguro-equipo/pestana.cjs` (pestañas de Brand, Orik, Nira, Eldrin y Valerius en los tres tamaños) y `real.cjs` (42).
+- **Cómo probar:** entra en Brand (Tienda, Reparar, Forja), Orik (Tienda, Desguace, Banco de trabajo), Nira (Tienda, Vender, Curtiduría) y Valerius (Tienda, Seguro, Forja de armaduras). El seguro se prueba como en la sección anterior; ahora se recoge en Valerius.

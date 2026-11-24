@@ -52,7 +52,7 @@ describe('seguro por bajada', () => {
     const died = endExpedition(st.profile, e, 'died', 1000);
     expect(died.summary.reforged?.length).toBe(2);
     const rf = died.profile.reforged!;
-    expect(rf.map((r) => r.vendor).sort()).toEqual(['brand', 'valerius']);
+    expect(rf.every((r) => r.vendor === 'valerius')).toBe(true);
     const wand = rf.find((r) => r.item.itemId === 'ash_wand')!.item;
     expect(wand.uid).not.toBe(p.equipment.mainHand!.uid);
     expect(wand.dur).toBeUndefined();
@@ -63,13 +63,15 @@ describe('seguro por bajada', () => {
   it('lo que ya no llevabas puesto al caer no se reforja', () => {
     expect(reforgeLost({ mainHand: null, offHand: null, helmet: null, armor: null, gloves: null, boots: null, ring: null, amulet: null }, ['x'])).toEqual([]);
   });
-  it('se acumulan las pendientes y se recogen por mercader', () => {
+  it('se acumulan las pendientes y se recogen todas en Valerius', () => {
     let p = rich();
     p = { ...p, reforged: [{ vendor: 'brand', item: piece('rusty_sword') }, { vendor: 'valerius', item: piece('chainmail') }, { vendor: 'brand', item: piece('ring_of_embers') }] };
-    expect(pendingFor(p, 'brand').length).toBe(2);
-    const r = collectReforged(p, 'brand');
-    expect(r.taken).toBe(2);
-    expect(r.profile.reforged).toHaveLength(1);
+    // Todo se recoge en Valerius, también lo guardado a nombre de Brand en partidas anteriores
+    expect(pendingFor(p, 'brand').length).toBe(0);
+    expect(pendingFor(p, 'valerius').length).toBe(3);
+    const r = collectReforged(p, 'valerius');
+    expect(r.taken).toBe(3);
+    expect(r.profile.reforged).toHaveLength(0);
     expect(r.profile.backpack.some((x) => x?.itemId === 'rusty_sword')).toBe(true);
   });
   it('las partidas antiguas cargan sin seguro', () => {
@@ -77,5 +79,15 @@ describe('seguro por bajada', () => {
     expect(p.reforged).toBeUndefined();
     const st = startExpedition(p, 0);
     expect(endExpedition(st.profile, st.expedition, 'died', 10).profile.reforged).toBeUndefined();
+  });
+});
+
+describe('una función por mercader', () => {
+  it('quien asegura y entrega es siempre Valerius; la estación sigue siendo la de quien fabrica', () => {
+    const p = rich({ forge: 1 });
+    const s = insurableSlots(p);
+    expect(s.every((x) => x.vendor === 'valerius')).toBe(true);
+    expect(s.find((x) => x.slot === 'mainHand')!.locked).toBe(false);
+    expect(s.find((x) => x.slot === 'helmet')!.locked).toBe(true);
   });
 });

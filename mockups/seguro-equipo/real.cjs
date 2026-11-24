@@ -61,15 +61,15 @@ const shot = (p, n) => p.screenshot({ path: path.join(__dirname, `real-${n}.png`
     // 4 · Bastión: aviso y marca
     await p.evaluate(() => window.__GRAVEVOW__.actions.backToLobby()); await wait(600);
     await press('[data-testid=tab-merchants]'); await wait(600);
-    ok(!!(await p.$('[data-testid=vendor-pending-brand] [data-testid=seal]')), `${sz}: Brand lleva la marca`);
+    ok(!!(await p.$('[data-testid=vendor-pending-valerius] [data-testid=seal]')), `${sz}: Valerius lleva la marca`);
     await shot(p, `bastion-${sz}`);
     // 5 · Recogida
-    await press('[data-testid=vendor-brand]'); await wait(600);
-    ok(!!(await p.$('[data-testid=reforged-list]')), `${sz}: Brand abre en «Seguro» con las piezas`);
+    await press('[data-testid=vendor-valerius]'); await wait(600);
+    ok(!!(await p.$('[data-testid=reforged-list]')), `${sz}: Valerius abre en «Seguro» con las piezas`);
     await shot(p, `recogida-${sz}`);
     await press('[data-testid=reforged-all]'); await wait(400);
-    const left = await p.evaluate(() => window.__GRAVEVOW__.getState().profile.reforged.filter((r) => r.vendor === 'brand').length);
-    ok(left === 0, `${sz}: recoge todo lo de Brand`);
+    const left = await p.evaluate(() => window.__GRAVEVOW__.getState().profile.reforged.filter((r) => true).length);
+    ok(left === 0, `${sz}: recoge todo en Valerius`);
     await shot(p, `seguro-tab-${sz}`);
     ok(!errs.length, `${sz}: sin errores ${errs.join(' | ')}`); await c.close(); }
   await b.close(); })();
