@@ -10,7 +10,7 @@ import { REFORGER } from '../../../config/insurance';
 import { stationLevel } from '../../../core/crafting';
 import { StashPanel } from '../StashPanel';
 import { useEffect, useRef, useState, type ReactNode, useCallback } from 'react';
-import { actions, useGame } from '../../state/store';
+import { actions, toast, useGame } from '../../state/store';
 import { PLACES, VENDORS, type VendorId } from '../../../core/data/vendors';
 import { prepText, refugeOf, upgradeBlock } from '../../../core/refuge';
 import { CotPanel, CraftPanel, RunePanel, StationDetail, UpgradeButton } from '../StationPanels';
@@ -27,11 +27,12 @@ import { GridView, ItemIcon, isUpgrade } from '../inventory';
 import { useDrag, useClearOnDrop } from '../pointerDrag';
 import { useIsTouch } from '../../../shared/device';
 import { buysThis, vendorSellPrice } from '../../../core/economy';
+import { TRADE, buyerOpen, wrongBuyerText } from '../../../core/sellRoutes';
 import { isCover } from '../../../core/inventory';
 import { isCoins } from '../../../core/gold';
 import { stackRarity } from '../../../core/data/rarity';
 import { RARITY_INFO } from '../../../core/data/items';
-import type { ItemStack, Profile } from '../../../core/types';
+import type { Profile } from '../../../core/types';
 import { RepBar, ShopStock, ShopCard, VendorQuests, type VendorTarget, type VendorView } from '../VendorsTab';
 import { RepairPanel } from '../RepairPanel';
 import { InfirmaryPanel } from '../InfirmaryPanel';
@@ -363,15 +364,19 @@ function SellGrids({ sel, setSel, marks, setMarks, vendor }: { sel: Loc | null; 
     setSel(l);
     if (!k) return;
     const g = l.kind === 'grid' && (l.container === 'backpack' || l.container === 'stash') ? profile[l.container][l.index] : null;
-    if (g && (!buysThis(vendor, g.itemId) || isCoins(g) || (g.gold ?? 0) > 0)) { sfx('error'); return; }
+    if (g && !isCoins(g) && !(g.gold ?? 0) && !buysThis(vendor, g.itemId, profile)) { sfx('error'); toast(wrongBuyerText(VENDORS[vendor].name, profile, g.itemId), 'info'); return; }
+    if (g && (isCoins(g) || (g.gold ?? 0) > 0)) { sfx('error'); return; }
     sfx('click');
     setMarks((m) => (m.includes(k) ? m.filter((x) => x !== k) : [...m, k]));
   };
   // Soltar un objeto arrastrado sobre la zona de venta lo marca
   useEffect(() => {
-    const h = (e: Event) => { const l = (e as CustomEvent<Loc>).detail; const k = markKey(l); if (k) setMarks((m) => (m.includes(k) ? m : [...m, k])); setSel(l); };
+    const h = (e: Event) => { const l = (e as CustomEvent<Loc>).detail; const k = markKey(l); setSel(l);
+      const g = l.kind === 'grid' && (l.container === 'backpack' || l.container === 'stash') ? profile[l.container][l.index] : null;
+      if (g && !isCoins(g) && !buysThis(vendor, g.itemId, profile)) { sfx('error'); toast(wrongBuyerText(VENDORS[vendor].name, profile, g.itemId), 'info'); return; }
+      if (k) setMarks((m) => (m.includes(k) ? m : [...m, k])); };
     window.addEventListener('cr-drop-sell', h); return () => window.removeEventListener('cr-drop-sell', h);
-  }, [setMarks, setSel]);
+  }, [setMarks, setSel, profile, vendor]);
   const touchy = useIsTouch();
   const isMarked = (l: Loc) => { const k = markKey(l); return !!k && marks.includes(k); };
   const bagUsed = profile.backpack.some((x) => !!x && !isCover(x));
@@ -403,13 +408,14 @@ function SalePanel({ vendor, marks, setMarks, onSold }: { vendor: VendorId; mark
   }).filter((x): x is NonNullable<typeof x> => !!x);
   const total = rows.reduce((t, r) => t + r.price, 0);
   const risky = rows.filter((r) => ['rare', 'epic', 'legendary'].includes(stackRarity(r.st, getItem(r.st.itemId))) || isUpgrade(r.st, profile.equipment, profile.character));
-  // Selección rápida en la mochila y la página abierta del almacén
-  const all = (pred: (st: ItemStack) => boolean) => {
-    const ks: string[] = [];
-    (['backpack', 'stash'] as const).forEach((c) => profile[c].forEach((st, i) => { if (st && !isCover(st) && !isCoins(st) && !(st.gold ?? 0) && buysThis(vendor, st.itemId) && pred(st)) ks.push(`${c}:${i}`); }));
-    setMarks([...new Set([...marks, ...ks])]); sfx('click');
-  };
   const doSell = () => { actions.sellMany(rows.map((r) => ({ container: r.container, index: r.index }))); setMarks([]); setConfirm(false); onSold(); };
+  // «Vender todo lo que compro»: lo de la mochila que compra este mercader
+  const [allAsk, setAllAsk] = useState(false);
+  const mine = profile.backpack.map((st, index) => (st && !isCover(st) && !isCoins(st) && !(st.gold ?? 0) && buysThis(vendor, st.itemId, profile)
+    ? { index, st, price: vendorSellPrice(vendor, st.itemId, st) * st.qty } : null)).filter((x): x is NonNullable<typeof x> => !!x);
+  const mineTotal = mine.reduce((t, r) => t + r.price, 0);
+  const mineRisky = mine.filter((r) => ['rare', 'epic', 'legendary'].includes(stackRarity(r.st, getItem(r.st.itemId))) || isUpgrade(r.st, profile.equipment, profile.character));
+  const doSellAll = () => { actions.sellMany(mine.map((r) => ({ container: 'backpack' as const, index: r.index }))); setMarks([]); setAllAsk(false); onSold(); };
   return (
     <div data-testid="sale-zone">
       <div className={`sell-drop border-2 border-dashed border-stone-700 p-2 min-h-[64px] ${over ? 'drag-over' : ''}`} data-drop={SELL_DROP}>
@@ -423,11 +429,18 @@ function SalePanel({ vendor, marks, setMarks, onSold }: { vendor: VendorId; mark
         ) : <p className="text-[13px] text-stone-400 italic text-center py-3">Toca objetos para marcarlos o arrástralos aquí.</p>}
       </div>
       {rows.length > 0 && <div className="flex justify-between font-display text-parchment mt-2"><span>Total</span><span className="text-gold" data-testid="sale-total">{total} oro</span></div>}
-      <div className="flex flex-wrap gap-1 mt-2">
-        <button className="btn text-xs" style={{ minHeight: 44 }} onClick={() => all((st) => stackRarity(st, getItem(st.itemId)) === 'common' && !!getItem(st.itemId).slot)} data-testid="mark-common">Marcar equipo común</button>
-        <button className="btn text-xs" style={{ minHeight: 44 }} onClick={() => all((st) => getItem(st.itemId).category === 'material')} data-testid="mark-materials">Marcar materiales</button>
-        <button className="btn text-xs" style={{ minHeight: 44 }} onClick={() => all((st) => ['jewel', 'relic'].includes(getItem(st.itemId).category))} data-testid="mark-treasure">Marcar tesoros</button>
-        {rows.length > 0 && <button className="btn text-xs" style={{ minHeight: 44 }} onClick={() => setMarks([])} data-testid="mark-none">Quitar marcas</button>}
+      {rows.length > 0 && <button className="btn text-xs mt-2" style={{ minHeight: 44 }} onClick={() => setMarks([])} data-testid="mark-none">Quitar marcas</button>}
+      <div className="border border-stone-700 bg-[#151419] p-2 mt-2" data-testid="sell-trade">
+        <div className="font-display text-[13px] tracking-wide text-gold">LO QUE COMPRO</div>
+        <div className="text-[14px] text-parchment leading-snug">{TRADE[vendor]}{vendor === 'nira' ? '. Y lo de quien aún no tenga su taller en pie.' : '.'}</div>
+        {!buyerOpen(profile, vendor)
+          ? <p className="text-[14px] mt-1" style={{ color: '#e0a060' }} data-testid="sell-closed">Aún no compro nada: reconstruye mi estación. Mientras, lo compra Nira en El Mercado.</p>
+          : <>
+            <button className="btn btn-gold w-full font-display mt-2" style={{ minHeight: 48 }} disabled={!mine.length} onClick={() => { sfx('click'); setAllAsk(true); }} data-testid="btn-sell-all-mine">
+              {mine.length ? `Vender todo lo que compro · ${mine.length} · ${mineTotal} oro` : 'No llevas nada de lo que compro'}
+            </button>
+            <p className="text-[12px] text-stone-400 mt-1">Solo de la mochila. Lo equipado nunca entra.</p>
+          </>}
       </div>
       <button className="btn btn-gold w-full mt-3 font-display" style={{ minHeight: 48 }} disabled={!rows.length} onClick={() => (risky.length ? setConfirm(true) : doSell())} data-testid="btn-sell-marked">
         {rows.length ? `Vender ${rows.length === 1 ? '1 objeto' : `${rows.length} objetos`} · ${total} oro` : 'Vender'}
@@ -440,6 +453,20 @@ function SalePanel({ vendor, marks, setMarks, onSold }: { vendor: VendorId; mark
               <ItemIcon itemId={b.stack.itemId} size={20} /><span className="flex-1 text-left truncate">{getItem(b.stack.itemId).name}{b.stack.qty > 1 ? ` ×${b.stack.qty}` : ''}</span><span className="text-gold">↺ {b.price}</span>
             </button>))}
         </div>
+      )}
+      {allAsk && (
+        <Modal onClose={() => setAllAsk(false)} testId="confirm-sell-all">
+          <h2 className="panel-title text-lg mb-2">Vender todo lo que compro</h2>
+          <p className="font-body text-[15px]">{VENDORS[vendor].name} se queda con esto de tu mochila:</p>
+          <ul className="border border-stone-700 mt-2 max-h-[40vh] overflow-y-auto scroll-thin text-[14px] grid sm:grid-cols-2 sm:gap-x-3">{mine.map((r) => (
+            <li key={r.index} className="flex items-center gap-2 px-2 py-1 border-b border-stone-800">
+              <ItemIcon itemId={r.st.itemId} size={20} /><span className="flex-1 truncate" style={{ color: RARITY_INFO[stackRarity(r.st, getItem(r.st.itemId))].color }}>{getItem(r.st.itemId).name}{r.st.qty > 1 ? ` ×${r.st.qty}` : ''}</span><span className="text-gold">{r.price}</span>
+            </li>))}</ul>
+          {mineRisky.length > 0 && <p className="text-[14px] mt-2" style={{ color: '#e0a060' }} data-testid="sell-all-risky">Ojo: hay {mineRisky.length === 1 ? 'algo valioso o mejor que lo que llevas' : `${mineRisky.length} objetos valiosos o mejores que lo que llevas`} ({mineRisky.slice(0, 3).map((r) => getItem(r.st.itemId).name).join(', ')}{mineRisky.length > 3 ? '…' : ''}).</p>}
+          <div className="flex justify-between font-display text-parchment mt-2"><span>Total</span><span className="text-gold">{mineTotal} oro</span></div>
+          <div className="flex gap-2 mt-3"><button className="btn btn-gold font-display flex-1" style={{ minHeight: 48 }} onClick={doSellAll} data-testid="btn-confirm-sell-all">Vender {mine.length} · {mineTotal} oro</button>
+            <button className="btn" style={{ minHeight: 48 }} onClick={() => setAllAsk(false)}>Cancelar</button></div>
+        </Modal>
       )}
       {confirm && (
         <Modal onClose={() => setConfirm(false)} testId="confirm-sell">

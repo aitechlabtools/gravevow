@@ -47,9 +47,9 @@ function offhand(b: Base & { family: WeaponFamily; classes: ClassId[]; specials:
   };
 }
 
-function gear(b: Base & { slot: EquipSlot; stats: Partial<Stats>; classes?: ClassId[] }): ItemDef {
+function gear(b: Base & { slot: EquipSlot; stats: Partial<Stats>; classes?: ClassId[]; heavy?: boolean }): ItemDef {
   const category = b.slot === 'ring' || b.slot === 'amulet' ? 'jewel' : b.slot === 'helmet' ? 'helmet' : b.slot === 'armor' ? 'armor' : b.slot;
-  return { id: b.id, name: b.name, description: b.description, icon: b.icon, category: category as ItemDef['category'], slot: b.slot, rarity: b.rarity, value: val(b.level, b.rarity), levelReq: b.level, stats: b.stats, classes: b.classes };
+  return { id: b.id, name: b.name, description: b.description, icon: b.icon, category: category as ItemDef['category'], slot: b.slot, rarity: b.rarity, value: val(b.level, b.rarity), levelReq: b.level, stats: b.stats, classes: b.classes, ...(b.heavy ? { heavy: true } : {}) };
 }
 
 const L = (n: number) => n;
@@ -107,7 +107,7 @@ add('puertas', weapon({ id: 'ignaroth_hammer', name: 'Martillo de Ignaroth', des
 add('puertas', offhand({ id: 'magma_orb', name: 'Orbe de magma', description: 'Roca fundida que no termina de enfriarse dentro de su cáscara.', icon: 'orb_fire', sub: 'puertas', level: L(74), rarity: 'rare', family: 'orb', classes: M, specials: ['arcane_pulse', 'ember_rain'], stats: { mag: ITEM_CURVES.orbMag(74), maxMp: 30, res: 8 } }));
 add('puertas', offhand({ id: 'chain_shield', name: 'Escudo de cadenas', description: 'Eslabones soldados en un muro. Pesa como una puerta.', icon: 'shield_chain', sub: 'puertas', level: L(76), rarity: 'rare', family: 'shield', classes: W, specials: ['block', 'iron_wall'], stats: { def: ITEM_CURVES.shieldDef(76), res: 10, maxHp: 46 } }));
 add('puertas', gear({ id: 'obsidian_helm', name: 'Yelmo de obsidiana', description: 'Vidrio negro tallado. Corta a quien lo toca.', icon: 'helm_obsidian', sub: 'puertas', level: L(74), rarity: 'rare', slot: 'helmet', stats: { def: ITEM_CURVES.helmDef(74), maxHp: 60, res: 9 }, classes: W }));
-add('puertas', gear({ id: 'forge_gauntlets', name: 'Guanteletes de forja', description: 'Hechos para sacar el hierro del fuego sin pinzas.', icon: 'gauntlets_fire', sub: 'puertas', level: L(77), rarity: 'rare', slot: 'gloves', stats: { atk: 10, def: 8, crit: 3 } }));
+add('puertas', gear({ id: 'forge_gauntlets', name: 'Guanteletes de forja', description: 'Hechos para sacar el hierro del fuego sin pinzas.', icon: 'gauntlets_fire', sub: 'puertas', level: L(77), rarity: 'rare', slot: 'gloves', stats: { atk: 10, def: 8, crit: 3 }, heavy: true }));
 
 // ── 9 · Los ríos de fuego (80–90): azufre y ceniza ──
 add('rios', weapon({ id: 'sulfur_greataxe', name: 'Gran hacha de azufre', description: 'El filo amarillea y humea al cortar.', icon: 'greataxe', sub: 'rios', level: L(85), rarity: 'epic', family: 'greataxe', hands: 2, classes: W, specials: ['brutal_blow', 'skull_splitter', 'reaping', 'hammer_blow'], stats: { spd: -1, crit: 5 } }));

@@ -182,6 +182,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     steps: [
       { text: 'Bien vendido. El oro va a tu **Alijo**, en saquitos.' },
       { text: 'Si te equivocas, lo último que vendes se puede **recomprar** al mismo precio.' },
+      { text: 'Cada mercader compra **lo de su oficio**. Las letras en la esquina de cada objeto te dicen a quién llevárselo.' },
     ],
   },
   {
@@ -240,37 +241,43 @@ function VENDOR_MINIS(): MiniTutorial[] {
   return [
     v('nira', [
       { text: 'Cuero, comida, saquitos para tu oro. Lo que necesites para no morir de tont{o|a}.', target: 'vendor-view-shop' },
-      { text: 'Y si traes chatarra, la compro: **márcala y pulsa Vender**.', touch: 'Y si traes chatarra, la compro: **márcala y toca Vender**.', target: 'vendor-view-sell' },
+      { text: 'Te compro cuero, tela y armadura ligera. Y lo de quien aún no tenga su taller en pie. En **Vender**, «Vender todo lo que compro» lo hace de una vez.', target: 'vendor-view-sell' },
       { text: 'Te iré pidiendo cosas: aquí ves **cuántos encargos** tengo para ti. Cúmplelos y subirá tu **reputación** conmigo.', target: 'vendor-quests-link' },
       { text: 'Y en mi **Curtiduría** te enseño a trabajar el cuero y la tela.', target: 'vendor-view-station' },
     ]),
     v('vesper', [
       { text: 'Vendas, pociones y remedios. Lo justo para volver de una pieza.', target: 'vendor-view-shop' },
       { text: 'Si vuelves rot{o|a}, en la **Enfermería** te recompongo. Cobro, claro. La fe no da de comer.', target: 'vendor-view-infirmary' },
+      { text: 'Hierbas, pociones y vendas que no uses, **véndemelas** a mí.', target: 'vendor-view-sell' },
     ]),
     v('garth', [
       { text: 'Comida y agua. Ahí abajo el hambre mata tan bien como un esqueleto.', target: 'vendor-view-shop' },
+      { text: 'Carne, setas, harina… lo que traigas de comer, **te lo compro**.', target: 'vendor-view-sell' },
       { text: 'En mi **Cocina** te enseño a guisar. Un buen plato te deja **preparad{o|a}** para bajar.', target: 'vendor-view-station' },
     ]),
     v('orik', [
-      { text: 'Herramientas y cachivaches. Y te arreglo lo que traigas abollado.', target: 'vendor-view-repair' },
+      { text: 'Herramientas y cachivaches. Y te **compro** metal, madera y chatarra.', target: 'vendor-view-sell' },
       { text: 'Lo que no uses, al **Desguace**: lo despiezo y te llevas el material. Con el **Banco de trabajo** en pie, rinde más.', target: 'vendor-view-scrap' },
     ]),
     v('grizk', [
       { text: 'Presto oro y compro lo que otros no quieren. Con intereses, claro.', target: 'vendor-view-shop' },
+      { text: 'Joyas, gemas, cálices, llaves… **véndemelos** a mí. Pago mejor que nadie.', target: 'vendor-view-sell' },
       { text: 'Y en **Contratos** te alquilo espadas. Algunas son leales. Otras, no tanto.', target: 'vendor-view-contracts' },
       { text: 'Los que venden su espada duermen en mi **Catre**. Tú también, si pagas la noche.', target: 'vendor-view-station' },
     ]),
     v('brand', [
       { text: 'Armas. Buenas, si las pagas. En la **Forja** te hago las tuyas con tu metal.', target: 'vendor-view-station' },
       { text: 'Y lo que traigas mellado, lo **reparo**. Un filo roto no corta nada.', target: 'vendor-view-repair' },
+      { text: 'Las armas que no quieras, **véndemelas**.', target: 'vendor-view-sell' },
     ]),
     v('valerius', [
       { text: 'Placas y cotas. Lo que se interpone entre tus tripas y una hoja.', target: 'vendor-view-shop' },
       { text: 'En mi **Forja de armaduras** te hago las tuyas: yelmos, corazas y escudos. Los lingotes, pídeselos a Brand.', target: 'vendor-view-station' },
+      { text: 'Armadura pesada y escudos que te sobren, **véndemelos**. La ligera, a Nira.', target: 'vendor-view-sell' },
     ]),
     v('eldrin', [
       { text: 'Pociones, polvos y frascos. No los agites cerca de una antorcha.', target: 'vendor-view-shop' },
+      { text: 'Esencias, reactivos, tomos y orbes: **véndemelos**.', target: 'vendor-view-sell' },
       { text: 'En mi **Laboratorio** te enseño a destilarlos tú, y a tallar cristales y tinta para el equipo mágico. Con cuidado.', target: 'vendor-view-station' },
     ]),
   ];

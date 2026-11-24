@@ -1438,3 +1438,7 @@ button.share-slot{cursor:pointer}
 }
 @media (max-width:1300px){.ins-cols{grid-template-columns:minmax(0,1fr)}.ins-receipt-tab{position:static}}
 @media (max-height:560px){.ins-how{grid-template-columns:repeat(4,minmax(0,1fr))}.ins-how-item{padding:4px 6px;align-items:center}.ins-how-item span span{display:none}.ins-how-item b{font-size:12px;line-height:1.2}.ins-pend{padding:6px;gap:4px}.ins-pend-row{min-height:48px}}
+
+/* Venta por oficio: quién compra cada objeto y, en la venta, lo que este mercader no compra */
+.slot .slot-buyer { position: absolute; right: 1px; top: 1px; font: 600 12px/1 Georgia, serif; background: #0b0a0f; padding: 1px 2px; pointer-events: none; }
+.slot.slot-nobuy > img, .slot.slot-nobuy > canvas, .slot.slot-nobuy > .qty { opacity: .3; filter: grayscale(1); }

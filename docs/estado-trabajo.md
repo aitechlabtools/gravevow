@@ -4,6 +4,15 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 24/11 (2): venta por oficio
+- Plan en `docs/plan-venta-oficio.md` (implementado, con las recomendaciones aprobadas); maquetas y capturas reales en `mockups/venta-oficio/` (`real.cjs`: 93 comprobaciones).
+- Los 8 mercaderes compran (`buysItems: true`), cada uno lo de su oficio. Reglas en `src/core/sellRoutes.ts`: `buyerOf` (especialista), `whoBuys` (si su estación sigue en ruinas, Nira), `isHeavy`, `wrongBuyerText`, `TRADE`, `PLACE`, `BUYER_TAG`.
+- Reparto: Nira cuero, tela, armadura ligera y mochilas; Vesper pociones, remedios y hierba amarga; Garth comida e ingredientes; Orik metal, madera, chatarra, herramientas y antorchas; Grizk joyas, tesoros y llaves (×1,25, siempre); Brand armas y dagas secundarias; Valerius armadura pesada y escudos; Eldrin reactivos, bombas, runas, tomos y orbes. Planos: el dueño de la estación de su receta.
+- Pesada = escudo, `heavy: true` en la ficha (guanteletes de forja) o solo para guerreros y clérigos.
+- Precio: el especialista paga un 10 % más (`SPECIALIST_BONUS`); Nira por cuenta de otro, el de siempre. `buysThis(vendor, itemId, profile)` ahora pide el perfil.
+- Interfaz: en «Vender», lo que no compra sale apagado (`slot-nobuy`) y al marcarlo o arrastrarlo avisa a quién se vende. Caja «Lo que compro» con «Vender todo lo que compro» (solo mochila, confirmación con lista y total; aviso si hay algo valioso). Fuera los botones «Marcar equipo común / materiales / tesoros». Iniciales del comprador en cada casilla del Bastión (`slot-buyer`, arriba a la derecha) y «Lo compra X · lugar» en la ficha y en la ventanita.
+- Tutoriales: `vendor.*` con un paso de venta (el de Orik ya no habla de reparar), `bastion.first-sale` con un paso nuevo.
+
 ## Novedades del 22/11 (2): Contratos de Grizk más visuales
 - `ContractsPanel.tsx` rehecho según `mockups/contratos`: rejilla de bustos (cabeza y pecho, escala entera) por zona, con 🔒 y el rango necesario en los bloqueados y silueta «¿?» en los desconocidos; ficha con busto grande, oficio, frase y habilidades como chips (descripción al pasar el ratón); cuatro cifras grandes con icono (vida, ataque, defensa, velocidad); duración en tres botones grandes con precio y descuento; actitud en dos botones (la explicación en el título); botón final que dice lo que falta. Fuera la nota que decía que caben mercenario y errante a la vez.
 - Ordenador, tableta y móvil: en tableta y móvil se ocultan la frase y las habilidades y los bustos son más pequeños; en tableta las cifras van en 2 × 2. Estilos: bloque «Contratos de Grizk» de `game.css`. Se mantienen todos los `data-testid`.

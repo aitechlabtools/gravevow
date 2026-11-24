@@ -17,7 +17,9 @@ import { CLASSES, STAT_LABELS } from '../../core/data/classes';
 import { canPlace, isCover, LAYOUTS, stackSize, type Loc } from '../../core/inventory';
 import { fmtWeight, stackWeight } from '../../core/carry';
 import { capacityOf, isCoins } from '../../core/gold';
-import { sellPrice } from '../../core/economy';
+import { vendorSellPrice } from '../../core/economy';
+import { BUYER_NAME, BUYER_TAG, PLACE, sellable, whoBuys } from '../../core/sellRoutes';
+import { VENDORS } from '../../core/data/vendors';
 import { iconUrl } from '../../shared/art';
 import { actions, useGame } from '../state/store';
 import { getSkill } from '../../core/data/skills';
@@ -61,6 +63,8 @@ export function FoodLine({ itemId, className = 'text-xs mb-2' }: { itemId: strin
 export function ItemTooltip({ stack, equipment, mode }: { stack: ItemStack; equipment?: Equipment; mode?: InvMode }) {
   const def = getItem(stack.itemId);
   const who = useGame((s) => s.profile?.character);
+  const tipRefuge = useGame((s) => s.profile?.refuge);
+  const buyerNow = !isCoins(stack) && sellable(stack.itemId) ? whoBuys({ refuge: tipRefuge }, stack.itemId) : null;
   const r = RARITY_INFO[stackRarity(stack, def)];
   const equipped = def.slot && equipment ? equipment[def.slot] : null;
   const cmp = equipped && equipped.uid !== stack.uid ? getItem(equipped.itemId) : null;
@@ -117,8 +121,13 @@ export function ItemTooltip({ stack, equipment, mode }: { stack: ItemStack; equi
       )}
       <div className="flex justify-between mt-2 text-xs text-gold">
         <span>Valor: {def.value * stack.qty} oro</span>
-        {mode === 'merchant' && <span>Venta: {sellPrice(def.id, stack)}</span>}
+        {mode === 'merchant' && <span>Venta: {vendorSellPrice(buyerNow ?? 'nira', def.id, stack)}</span>}
       </div>
+      {buyerNow && (mode === 'merchant' || mode === 'lobby') && (
+        <div className="mt-2 pt-2 border-t border-stone-600 text-[13px] text-parchment" data-testid="tooltip-buyer">
+          Lo compra <b style={{ color: VENDORS[buyerNow].color }}>{BUYER_NAME[buyerNow]}</b> · {PLACE[buyerNow]}
+        </div>
+      )}
     </div>
   );
 }
@@ -208,6 +217,12 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
   const eqNow = useGame((s) => s.profile?.equipment);
   const upgrade = !!stack && loc.kind === 'grid' && !!sdef?.slot && isUpgrade(stack, eqNow, who);
   const testId = loc.kind === 'equip' ? `slot-equip-${loc.slot}` : `slot-${loc.container}-${loc.index}`;
+  // Venta por oficio: iniciales de quien lo compra (en el Bastión) y, en la venta, apagado lo que este mercader no compra
+  const refuge = useGame((s) => s.profile?.refuge);
+  const activeVendor = useGame((s) => s.activeVendor);
+  const shelf = loc.kind === 'grid' && (loc.container === 'backpack' || loc.container === 'stash' || loc.container === 'shared');
+  const buyer = stack && shelf && (mode === 'lobby' || mode === 'merchant') && !isCoins(stack) && sellable(stack.itemId) ? whoBuys({ refuge }, stack.itemId) : null;
+  const noBuy = !!stack && mode === 'merchant' && shelf && loc.container !== 'shared' && !!activeVendor && buyer !== activeVendor;
   // Seguro por bajada: sello en lo asegurado (solo mientras dura la bajada)
   const insured = useGame((s) => s.expedition?.insured);
   const sealScale = typeof window !== 'undefined' && window.innerWidth >= 1600 ? 2 : 1;
@@ -223,7 +238,7 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
     <div
       data-testid={testId}
       data-item={stack?.itemId ?? ''}
-      className={`slot ${big ? 'slot-big' : ''} ${over ? 'drag-over' : ''} ${selected && !dragging ? 'selected' : ''} ${dragging ? 'is-lifted' : ''} ${marked ? 'is-marked' : ''} ${fits === true ? 'drop-ok' : fits === false ? 'drop-dim' : ''} ${fit ? 'fit-' + fit : ''} ${hinted ? 'slot-hint' : ''}`}
+      className={`slot ${big ? 'slot-big' : ''} ${over ? 'drag-over' : ''} ${selected && !dragging ? 'selected' : ''} ${dragging ? 'is-lifted' : ''} ${marked ? 'is-marked' : ''} ${fits === true ? 'drop-ok' : fits === false ? 'drop-dim' : ''} ${fit ? 'fit-' + fit : ''} ${hinted ? 'slot-hint' : ''} ${noBuy ? 'slot-nobuy' : ''}`}
       style={{
         ...(rarity ? { borderColor: rarity.color + 'aa', boxShadow: `inset 0 0 0 1px #07060a, inset 0 0 14px ${rarity.color}33` } : {}),
         ...(cell ? { gridColumn: `${cell.col} / span ${cell.w}`, gridRow: `${cell.row} / span ${cell.h}` } : {}),
@@ -253,6 +268,7 @@ export function ItemSlot({ stack, loc, lootId, equipment, mode, selected, placeh
       {stack && stack.qty > 1 && <span className="qty">{stack.qty}</span>}
       {stack && insured?.includes(stack.uid) && <span className="slot-seal"><Seal scale={sealScale} /></span>}
       {stack && (() => { const w = wearLevel(stack); return w === 'ok' ? null : <span className="slot-wear" data-testid="slot-wear" data-wear={w} style={{ background: WEAR_COLOR[w], width: w === 'broken' ? '100%' : `${Math.max(8, Math.round((durability(stack) / maxDurability(stack)) * 100))}%` }} title={w === 'broken' ? 'Rota' : 'Desgastada'} />; })()}
+      {buyer && <span className="slot-buyer" style={{ color: VENDORS[buyer].color }} title={`Lo compra ${BUYER_NAME[buyer]}`} data-testid="slot-buyer">{BUYER_TAG[buyer]}</span>}
       {marked && <span className="mark-coin" aria-label="Marcado para vender" data-testid="slot-marked" />}
       {stack && capacityOf(stack) > 0 && <span className="qty" data-testid="slot-gold" style={{ color: stack.gold ? '#f2c75a' : '#a8a29e', fontSize: cell && cell.w > 1 ? 13 : 12 }}>{stack.gold ?? 0}/{capacityOf(stack)}</span>}
       {stack && loc.kind === 'grid' && !tooHigh && !wrongClass && upgrade && <span className="slot-up" title="Mejor que lo que llevas puesto" data-testid="slot-upgrade">▲</span>}

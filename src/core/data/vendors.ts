@@ -39,7 +39,7 @@ export const PLACES: Record<PlaceId, { name: string; blurb: string }> = {
 
 export const VENDORS: Record<VendorId, VendorDef> = {
   vesper: {
-    id: 'vesper', name: 'Hermana Vesper', role: 'Sanadora de la orden', sprite: 'vendor_vesper', color: '#bfe0ff', place: 'enfermeria', buysItems: false,
+    id: 'vesper', name: 'Hermana Vesper', role: 'Sanadora de la orden', sprite: 'vendor_vesper', color: '#bfe0ff', place: 'enfermeria', buysItems: true,
     blurb: 'La orden guarda las llaves de lo que no debe abrirse y cose a los que vuelven del fondo. Demuéstrame que puedo confiarte una.',
     stock: [
       { itemId: 'health_potion', rank: 0 }, { itemId: 'mana_potion', rank: 0 }, { itemId: 'focus_tonic', rank: 0 }, { itemId: 'antidote', rank: 0 },
@@ -51,7 +51,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
     ],
   },
   garth: {
-    id: 'garth', name: 'Garth', role: 'Cocinero y cazador', sprite: 'vendor_garth', color: '#d9a066', place: 'cocina', buysItems: false,
+    id: 'garth', name: 'Garth', role: 'Cocinero y cazador', sprite: 'vendor_garth', color: '#d9a066', place: 'cocina', buysItems: true,
     blurb: 'Abajo nadie te da de comer. Tráeme pieles y colmillos de lo que cazas y no volverás con el estómago vacío.',
     stock: [{ itemId: 'ration', rank: 0 }, { itemId: 'water', rank: 0 }, { itemId: 'stale_bread', rank: 0 }, { itemId: 'wrinkled_apple', rank: 0 }, { itemId: 'watered_wine', rank: 0 }, { itemId: 'aged_cheese', rank: 0 }, { itemId: 'jerky', rank: 0 }, { itemId: 'salted_meat', rank: 0 }, { itemId: 'cave_mushroom', rank: 0 }, { itemId: 'flour', rank: 0 }, { itemId: 'goat_milk', rank: 0 }, { itemId: 'sour_wine', rank: 0 }],
   },
@@ -76,7 +76,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
     ],
   },
   orik: {
-    id: 'orik', name: 'Orik', role: 'Chatarrero del taller', sprite: 'vendor_orik', color: '#9fb4c8', place: 'taller', unlockAt: 'castillo', buysItems: false,
+    id: 'orik', name: 'Orik', role: 'Chatarrero del taller', sprite: 'vendor_orik', color: '#9fb4c8', place: 'taller', unlockAt: 'castillo', buysItems: true,
     blurb: 'Lo que tú llamas basura, yo lo llamo piezas. Algún día este Bastión tendrá muros de verdad.',
     stock: [
       { itemId: 'miner_pick', rank: 0 }, { itemId: 'repair_kit', rank: 0 }, { itemId: 'bone_dust', rank: 0 },
@@ -91,7 +91,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
     ],
   },
   brand: {
-    id: 'brand', name: 'Maese Brand', role: 'Herrero de armas', sprite: 'vendor_brand', color: '#ff8a3a', place: 'forja', unlockAt: 'osario', buysItems: false,
+    id: 'brand', name: 'Maese Brand', role: 'Herrero de armas', sprite: 'vendor_brand', color: '#ff8a3a', place: 'forja', unlockAt: 'osario', buysItems: true,
     blurb: 'Tráeme metal del fondo y te haré algo que no se rompa. Cuanto más confíe en ti, mejores planos te enseño.',
     stock: [
       { itemId: 'repair_kit', rank: 0 }, { itemId: 'bone_dust', rank: 0 },
@@ -101,7 +101,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
     ],
   },
   valerius: {
-    id: 'valerius', name: 'Valerius', role: 'Armero de placas', sprite: 'vendor_valerius', color: '#c8ccd8', place: 'armeria', unlockAt: 'catacumbas', buysItems: false,
+    id: 'valerius', name: 'Valerius', role: 'Armero de placas', sprite: 'vendor_valerius', color: '#c8ccd8', place: 'armeria', unlockAt: 'catacumbas', buysItems: true,
     blurb: 'Una espada mata una vez. Un buen escudo te salva cien. Elige bien lo que llevas encima.',
     stock: [
       { itemId: 'iron_shield', rank: 0 }, { itemId: 'gauntlets', rank: 0 },
@@ -112,7 +112,7 @@ export const VENDORS: Record<VendorId, VendorDef> = {
     ],
   },
   eldrin: {
-    id: 'eldrin', name: 'Eldrin', role: 'Alquimista', sprite: 'vendor_eldrin', color: '#b58cff', place: 'laboratorio', unlockAt: 'carmesi', buysItems: false,
+    id: 'eldrin', name: 'Eldrin', role: 'Alquimista', sprite: 'vendor_eldrin', color: '#b58cff', place: 'laboratorio', unlockAt: 'carmesi', buysItems: true,
     blurb: 'El fuego de abajo no se apaga con agua. Con azufre, paciencia y la mezcla justa, quizá.',
     stock: [
       { itemId: 'mana_potion', rank: 0 }, { itemId: 'focus_tonic', rank: 0 }, { itemId: 'antidote', rank: 0 }, { itemId: 'painkiller', rank: 0 },

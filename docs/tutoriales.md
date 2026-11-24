@@ -43,7 +43,7 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 | `bastion.first-death` | Heridas y necesidades | `bastion:fallen` | vesper | — | `cure-btn` | 3 | — |
 | `bastion.can-craft` | Bastión y estaciones | `bastion:can-craft` | intendant | — | `tab-merchants` | 2 | — |
 | `insure.first` | Objetos y oro | `insure:first` | valerius | — | `insure-grid`, `insure-total` | 2 | encima de la ventana del seguro (`overModal`), la primera vez que sale al pulsar «Descender» |
-| `bastion.first-sale` | Objetos y oro | `bastion:sale` | intendant | — | — | 2 | — |
+| `bastion.first-sale` | Objetos y oro | `bastion:sale` | intendant | — | — | 3 | — |
 | `bastion.first-rep` | Mercaderes | `bastion:rank-up` | intendant | — | — | 2 | — |
 | `bastion.first-skin` | Cuenta y copia | `bastion:skin` | intendant | — | — | 2 | — |
 | `unlock.stash-page` | Objetos y oro | `unlock:stash-page` | intendant | — | `stash-pages` | 2 | Al comprar una página del almacén. |
@@ -76,13 +76,13 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 | `exp.subzone.rios` | Progresión | `subzone:rios` | intendant | — | `hud-room` | 2 | — |
 | `exp.subzone.trono` | Progresión | `subzone:trono` | intendant | — | `hud-room` | 2 | — |
 | `vendor.nira` | Mercaderes | `vendor:nira` | nira | `vendor-card-nira` | `vendor-view-shop`, `vendor-view-sell`, `vendor-view-quests`, `vendor-view-station` | 4 | — |
-| `vendor.vesper` | Mercaderes | `vendor:vesper` | vesper | `vendor-card-vesper` | `vendor-view-shop`, `vendor-view-infirmary` | 2 | — |
-| `vendor.garth` | Mercaderes | `vendor:garth` | garth | `vendor-card-garth` | `vendor-view-shop`, `vendor-view-station` | 2 | — |
-| `vendor.orik` | Mercaderes | `vendor:orik` | orik | `vendor-card-orik` | `vendor-view-repair`, `vendor-view-scrap` | 2 | — |
-| `vendor.grizk` | Mercaderes | `vendor:grizk` | grizk | `vendor-card-grizk` | `vendor-view-shop`, `vendor-view-contracts`, `vendor-view-station` | 3 | — |
-| `vendor.brand` | Mercaderes | `vendor:brand` | brand | `vendor-card-brand` | `vendor-view-station`, `vendor-view-repair` | 2 | — |
-| `vendor.valerius` | Mercaderes | `vendor:valerius` | valerius | `vendor-card-valerius` | `vendor-view-shop`, `vendor-view-station` | 2 | — |
-| `vendor.eldrin` | Mercaderes | `vendor:eldrin` | eldrin | `vendor-card-eldrin` | `vendor-view-shop`, `vendor-view-station` | 2 | — |
+| `vendor.vesper` | Mercaderes | `vendor:vesper` | vesper | `vendor-card-vesper` | `vendor-view-shop`, `vendor-view-infirmary`, `vendor-view-sell` | 3 | — |
+| `vendor.garth` | Mercaderes | `vendor:garth` | garth | `vendor-card-garth` | `vendor-view-shop`, `vendor-view-sell`, `vendor-view-station` | 3 | — |
+| `vendor.orik` | Mercaderes | `vendor:orik` | orik | `vendor-card-orik` | `vendor-view-sell`, `vendor-view-scrap` | 2 | — |
+| `vendor.grizk` | Mercaderes | `vendor:grizk` | grizk | `vendor-card-grizk` | `vendor-view-shop`, `vendor-view-sell`, `vendor-view-contracts`, `vendor-view-station` | 4 | — |
+| `vendor.brand` | Mercaderes | `vendor:brand` | brand | `vendor-card-brand` | `vendor-view-station`, `vendor-view-repair`, `vendor-view-sell` | 3 | — |
+| `vendor.valerius` | Mercaderes | `vendor:valerius` | valerius | `vendor-card-valerius` | `vendor-view-shop`, `vendor-view-station`, `vendor-view-sell` | 3 | — |
+| `vendor.eldrin` | Mercaderes | `vendor:eldrin` | eldrin | `vendor-card-eldrin` | `vendor-view-shop`, `vendor-view-sell`, `vendor-view-station` | 3 | — |
 | `station.kitchen` | Bastión y estaciones | `station:kitchen` | garth | — | `craft-kitchen`, `recipe-c_jerky`, `craft-go`, `upgrade-open-kitchen` | 4 | — |
 | `station.bench` | Bastión y estaciones | `station:bench` | orik | — | `craft-bench`, `recipe-c_grip`, `craft-go`, `upgrade-open-bench` | 4 | — |
 | `station.infirmary` | Bastión y estaciones | `station:infirmary` | vesper | — | `craft-infirmary`, `recipe-c_bandage`, `craft-go`, `upgrade-open-infirmary` | 4 | — |

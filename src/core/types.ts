@@ -82,6 +82,8 @@ export interface ItemDef {
   grants?: string[];
   /** Equipo de recluta (Bloque 1, fase 9): prestado por el Bastión. No se vende, no se desguaza y no se pierde al morir. */
   recruit?: boolean;
+  /** Armadura pesada aunque no tenga restricción de clase (decide si la compra Valerius en vez de Nira). */
+  heavy?: boolean;
 }
 
 export interface ItemStack {

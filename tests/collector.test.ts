@@ -53,10 +53,11 @@ describe('Grizk', () => {
     expect(d.profile.backpack).toHaveLength(30);
   });
   it('compra joyas y tesoros (cálices, gemas, anillos, amuletos) y paga mejor; lo demás, no', () => {
-    expect(buysThis('grizk', 'golden_chalice')).toBe(true);
-    expect(buysThis('grizk', 'blood_gem')).toBe(true);
-    expect(buysThis('grizk', 'copper_ring')).toBe(true);
-    expect(buysThis('grizk', 'iron_sword')).toBe(false);
+    const p0 = createProfile('A', 'warrior', { cloak: 0, skin: 0 });
+    expect(buysThis('grizk', 'golden_chalice', p0)).toBe(true);
+    expect(buysThis('grizk', 'blood_gem', p0)).toBe(true);
+    expect(buysThis('grizk', 'copper_ring', p0)).toBe(true);
+    expect(buysThis('grizk', 'iron_sword', p0)).toBe(false);
     expect(vendorSellPrice('grizk', 'golden_chalice')).toBeGreaterThan(sellPrice('golden_chalice'));
     const p = withGold(lvl(createProfile('A', 'warrior', { cloak: 0, skin: 0 })), 0);
     let bp = addToGrid(p.backpack, { uid: 'c', itemId: 'golden_chalice', qty: 1 }).grid;

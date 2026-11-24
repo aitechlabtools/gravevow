@@ -1,4 +1,6 @@
-import { capacityOf } from '../../../core/gold';
+import { capacityOf, isCoins } from '../../../core/gold';
+import { BUYER_NAME, PLACE, sellable, whoBuys } from '../../../core/sellRoutes';
+import { VENDORS } from '../../../core/data/vendors';
 import { durability, isBroken, maxDurability, wearLevel } from '../../../core/durability';
 import { WEAR_COLOR } from '../../../config/durability';
 // Ficha del objeto elegido: qué es, qué da y qué puedes hacer con él. Si es un arma o una secundaria,
@@ -80,6 +82,8 @@ export function ItemCard({ loc, mode, onClear, compact = false, stacked = false 
           </div>
         )}
         {(wrongClass || tooHigh) && <div className="text-xs text-blood mt-0.5">{wrongClass ? `Solo para: ${def.classes!.map((k) => CLASSES[k].name).join(', ')}` : `Requiere nivel ${def.levelReq} (tienes ${who!.level})`}</div>}
+        {(mode === 'lobby' || mode === 'merchant') && loc.kind === 'grid' && s.profile && !isCoins(st) && sellable(st.itemId) && (() => { const w = whoBuys(s.profile, st.itemId); return (
+          <div className="text-[13px] mt-1 text-parchment" data-testid="item-card-buyer">Lo compra <b style={{ color: VENDORS[w].color }}>{BUYER_NAME[w]}</b> · {PLACE[w]}</div>); })()}
         <div className="mt-2"><ItemActions loc={loc} mode={mode} onClear={onClear} buttonsOnly /></div>
       </div>
     </div>

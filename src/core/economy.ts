@@ -7,9 +7,10 @@ import { vendorUnlocked } from './vendors';
 import { VENDORS, type VendorId } from './data/vendors';
 import { REP_RANKS, rankOf } from '../config/reputation';
 import { addToGrid, anchorIndex, cloneGrid, isCover, LAYOUTS, removeAt } from './inventory';
-import { BAG_SIZES, COIN_ID, COLLECTOR_BUYS, COLLECTOR_PRICE_MULT, GOLD_SCALE } from '../config/gold';
+import { BAG_SIZES, COIN_ID, COLLECTOR_PRICE_MULT, GOLD_SCALE } from '../config/gold';
 import { earnGold, NOT_ENOUGH, spendGold } from './wallet';
 import { makeUid } from './rng';
+import { buyerOf, SPECIALIST_BONUS, whoBuys, wrongBuyerText } from './sellRoutes';
 
 export type EconomyResult = { ok: true; profile: Profile } | { ok: false; error: string };
 
@@ -53,17 +54,18 @@ export function buy(p: Profile, itemId: string, vendorId: VendorId = 'nira'): Ec
   return paid.ok ? { ok: true, profile: paid.profile } : paid;
 }
 
-/** Vende una unidad (o toda la pila si all=true) desde la mochila o el almacén. */
-/** ¿Lo compra este mercader? Nira compra de todo; Grizk, solo joyas y tesoros (y paga mejor). */
-export function buysThis(vendor: VendorId, itemId: string): boolean {
-  if (vendor === 'grizk') return COLLECTOR_BUYS.includes(getItem(itemId).category);
-  return VENDORS[vendor].buysItems;
+/** ¿Lo compra este mercader? Cada uno, lo de su oficio; lo de un especialista sin estación, Nira (ver core/sellRoutes.ts). */
+export function buysThis(vendor: VendorId, itemId: string, p: Pick<Profile, 'refuge'>): boolean {
+  return whoBuys(p, itemId) === vendor;
 }
+/** Precio que paga ese mercader: el especialista, un 10 % más; Grizk, su ×1,25; Nira por cuenta de otro, el de siempre. */
 export function vendorSellPrice(vendor: VendorId, itemId: string, stack?: Pick<ItemStack, 'rarity' | 'affixes'>): number {
   const base = sellPrice(itemId, stack);
-  return vendor === 'grizk' ? Math.max(1, Math.round(base * COLLECTOR_PRICE_MULT)) : base;
+  if (vendor === 'grizk') return Math.max(1, Math.round(base * COLLECTOR_PRICE_MULT));
+  return buyerOf(itemId) === vendor ? Math.max(1, Math.round(base * SPECIALIST_BONUS)) : base;
 }
 
+/** Vende una unidad (o toda la pila si all=true) desde la mochila o el almacén. */
 export function sell(p: Profile, container: 'backpack' | 'stash', index: number, all = false, vendor: VendorId = 'nira'): EconomyResult {
   const grid = cloneGrid(p[container]);
   index = anchorIndex(grid, index); // una casilla tapada por un saco vende el saco
@@ -73,7 +75,7 @@ export function sell(p: Profile, container: 'backpack' | 'stash', index: number,
   if ((s.gold ?? 0) > 0) return { ok: false, error: 'Vacía el saco antes de venderlo.' };
   if (getItem(s.itemId).recruit) return { ok: false, error: 'Es equipo de recluta: el Bastión te lo presta, no se vende.' };
   const qty = all ? s.qty : 1;
-  if (!buysThis(vendor, s.itemId)) return { ok: false, error: `${VENDORS[vendor].name} no compra eso: solo joyas y tesoros.` };
+  if (!buysThis(vendor, s.itemId, p)) return { ok: false, error: wrongBuyerText(VENDORS[vendor].name, p, s.itemId) };
   const gain = vendorSellPrice(vendor, s.itemId, s) * qty;
   if (s.qty - qty <= 0) removeAt(grid, index);
   else grid[index] = { ...s, qty: s.qty - qty };
