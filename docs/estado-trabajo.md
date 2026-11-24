@@ -856,3 +856,10 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - Partidas: bossesDefeated guarda ids de enemigo, no sitios; nada cambia para quien ya abrió zonas.
 - Capturas: mockups/jefes-ultima-subzona (index.html, antes/después).
 - 23/11: arreglado el fallo de compilación (holdsToasts). El botín en móvil y los jefes se copiaron sobre una versión antigua de store.ts, DungeonScreen.tsx, game.css, tutorials.ts y este archivo, y borraron lo del 22/11 (reparto con Kael, holdsToasts). Ahora están fusionados: la ventana flotante del móvil usa el selector de cantidad y el reparto del 22/11 (takeFromLoot, «Para mí» / «Para Kael»); quitada mi acción duplicada takeSome.
+
+## 24/11 — Arreglo: en el móvil la ventana del botín se cerraba sola
+
+- Síntoma: en el móvil, al usar un cofre, una bolsa o un cadáver con el botón «Usar», la ventana no llegaba a verse. El cofre quedaba abierto, pero sin poder coger nada.
+- Causa: el botón «Usar» actúa al apoyar el dedo. El «clic» de ese mismo toque caía sobre el fondo oscuro de la ventana flotante (23/11), y el fondo la cerraba.
+- Arreglo (`DungeonScreen.tsx`, LootModal en el móvil): el fondo solo cierra la ventana si el toque empezó en él. Tocar fuera para cerrarla sigue funcionando.
+- Comprobado: probado en el móvil con «Usar» junto a un cofre, y `mockups/botin-movil/real.cjs` pasa. También se probaron cofres de todas las zonas, sacos de enemigos y el reparto con un aliado, y todo da botín.

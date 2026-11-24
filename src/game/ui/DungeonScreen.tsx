@@ -515,6 +515,8 @@ function LootModal() {
   const layout = useLayout();
   const [sel, setSel] = useState<Loc | null>(null);
   useClearOnDrop(useCallback(() => setSel(null), []));
+  // El fondo solo cierra si el toque empezó en él: el «clic» del dedo que abrió el cofre (botón «Usar») no la cierra
+  const bgDown = useRef(false);
   if (s.modal?.type !== 'loot' || !s.expedition) return null;
   const session = s.modal.session;
   const grid = s.chests[session.id] ?? s.bags[session.id]?.grid ?? [];
@@ -543,7 +545,7 @@ function LootModal() {
     // Móvil (23/11): ventana flotante con la mazmorra detrás; abajo, «Coger el oro» y «Cogerlo todo» o, con algo tocado, cuántos coger
     return (
       <div className="absolute inset-0 z-50 fade-in" data-testid="loot-modal">
-        <div className="absolute inset-0 bg-black/45" onClick={() => actions.closeLoot()} aria-hidden />
+        <div className="absolute inset-0 bg-black/45" onPointerDown={() => { bgDown.current = true; }} onClick={() => { if (bgDown.current) actions.closeLoot(); bgDown.current = false; }} aria-hidden />
         <div className="loot-win" role="dialog" aria-label={session.title}>
           <div className="loot-win-hd">
             {share ? <div className="flex-1 min-w-0">{strip(true)}</div> : <span className="font-display text-gold text-[15px] tracking-[0.06em] truncate flex-1">{session.title}</span>}
