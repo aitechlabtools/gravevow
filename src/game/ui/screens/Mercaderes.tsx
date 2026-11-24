@@ -468,7 +468,7 @@ function SellGrids({ sel, setSel, marks, setMarks, vendor }: { sel: Loc | null; 
               <GridView grid={profile.backpack} container="backpack" cols={6} equipment={profile.equipment} mode="merchant" selected={sel} onSelect={toggle} onQuick={quick} onAlt={quick} marked={isMarked} />
             </div>
           )}
-          {tab !== 'backpack' && <StashPanel cols={8} mode="merchant" sel={sel} onSelect={toggle} onQuick={quick} onAlt={quick} testId="sell-stash" marked={isMarked} hideShared={tab === 'stash'} onlyShared={tab === 'shared'} />}
+          {tab !== 'backpack' && <StashPanel cols={8} mode="merchant" sel={sel} onSelect={toggle} onQuick={quick} onAlt={quick} testId="sell-stash" marked={isMarked} hideShared={tab === 'stash'} onlyShared={tab === 'shared'} fill />}
         </div>
         <p className="font-body text-[13px] text-stone-400 shrink-0 leading-snug">{touchy ? 'Toca para marcar o arrastra a «A vender».' : 'Clic: marcar · Doble clic: vender al momento · Arrastra a «A vender».'}{tab === 'shared' ? ' Lo del Compartido no se vende: pásalo antes a tu almacén.' : ''}</p>
       </div>

@@ -15,9 +15,11 @@ import { sfx } from '../audio';
 /** Color propio de la página «Compartido» (verde azulado): se distingue de las páginas del personaje. */
 export const SHARED_COLOR = '#7fd6c9';
 
-export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode = 'lobby', compactHeader = false, title = 'Almacén', testId = 'alijo-storage', marked, hideShared = false, onlyShared = false }: {
+export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode = 'lobby', compactHeader = false, title = 'Almacén', testId = 'alijo-storage', marked, hideShared = false, onlyShared = false, fill = false }: {
   /** Venta: el Compartido va en su propia pestaña (sin él en las páginas), o solo el Compartido. */
   hideShared?: boolean; onlyShared?: boolean;
+  /** Venta: casillas tan grandes como quepan a lo ancho (hasta un tope); las filas que no quepan, con desplazamiento. */
+  fill?: boolean;
   /** Venta: casillas marcadas para vender. */
   marked?: (l: Loc) => boolean;
   cols: number; sel: Loc | null; onSelect: (l: Loc) => void; onEmpty?: (l: Loc) => void;
@@ -38,9 +40,15 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
   const [slot, setSlot] = useState<number | null>(null);
   useLayoutEffect(() => {
     const el = box.current;
-    if (touchy || !el) { setSlot(null); return; }
+    if (!el || (touchy && !fill)) { setSlot(null); return; }
     const rows = Math.ceil(STASH_PAGE_SIZE / cols);
     const fit = () => {
+      if (fill) {
+        const max = layout === 'desktop' ? 80 : layout === 'tablet' ? 60 : 0;
+        const w = Math.floor((el.clientWidth - 24 - (cols - 1) * 4) / cols);
+        setSlot(max && w > 0 ? Math.min(max, w) : null);
+        return;
+      }
       const h = el.clientHeight;
       const base = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--slot')) || 52;
       const s = Math.floor((h - (rows - 1) * 4 - 16) / rows);
@@ -50,7 +58,7 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
     const ro = new ResizeObserver(fit);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [touchy, cols]);
+  }, [touchy, cols, fill, layout]);
   return (
     <section className="panel ui-panel min-h-0" data-testid={testId} style={shownPage === 'shared' ? { borderColor: '#3f8f8a' } : undefined}>
       <div className="flex items-center justify-between gap-2" style={{ padding: compactHeader || touchy ? '6px 8px 0' : '10px 12px 0' }}>
@@ -68,8 +76,8 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
       {shownPage === 'shared' && <p className="text-[11px] px-3 pt-2" style={{ color: SHARED_COLOR }}>Lo que dejes aquí lo verán y podrán coger todos tus personajes.</p>}
       <div className="ui-pbody min-h-0 flex flex-col">
         <div ref={box} className="flex-1 min-h-0 overflow-y-auto scroll-thin" style={slot ? ({ '--slot': `${slot}px` } as CSSProperties) : undefined}>
-          <GridView key={String(shownPage)} marked={marked} grid={grid} container={shownPage === 'shared' ? 'shared' : 'stash'} offset={shownPage === 'shared' ? 0 : pageStart(shownPage)}
-            cols={cols} equipment={profile.equipment} mode={mode} selected={sel} onSelect={onSelect} onEmpty={onEmpty} onQuick={onQuick} onAlt={onAlt} />
+          <div className={fill ? 'flex justify-center' : undefined}><GridView key={String(shownPage)} marked={marked} grid={grid} container={shownPage === 'shared' ? 'shared' : 'stash'} offset={shownPage === 'shared' ? 0 : pageStart(shownPage)}
+            cols={cols} equipment={profile.equipment} mode={mode} selected={sel} onSelect={onSelect} onEmpty={onEmpty} onQuick={onQuick} onAlt={onAlt} /></div>
         </div>
       </div>
     </section>
