@@ -320,3 +320,6 @@ Plan: `docs/plan-seguro-equipo.md`. Maquetas y capturas reales: `mockups/seguro-
 
 ## Mapa de zonas ilustrado (25/11)
 - Dibujo del descenso en `src/game/ui/mapArt.ts` (160×150 px, provisional; el definitivo puede ser un PNG del mismo tamaño). `MAP_NODES` y `MAP_BANDS` colocan marcadores y franjas en %. Escala entera según alto; en móvil los marcadores son decorativos y se elige en la lista (44 px).
+
+### Ventana del seguro (Descender)
+`InsureModal` (InsurePanels.tsx, clases `.insm*`): columna de casillas + lista de filas conmutables + pie con cifras y botones. La pestaña «Seguro» de los mercaderes conserva su diseño (`InsureTab`).

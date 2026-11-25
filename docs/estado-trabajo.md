@@ -927,3 +927,9 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - **Código:** `servicesOf` en `Mercaderes.tsx`; `config/insurance.ts` (todo a Valerius, con la estación de quien fabrica); `pendingFor` y `collectReforged` en `core/insurance.ts`.
 - **Comprobado:** 521 tests; `mockups/seguro-equipo/pestana.cjs` (pestañas de Brand, Orik, Nira, Eldrin y Valerius en los tres tamaños) y `real.cjs` (42).
 - **Cómo probar:** entra en Brand (Tienda, Reparar, Forja), Orik (Tienda, Desguace, Banco de trabajo), Nira (Tienda, Vender, Curtiduría) y Valerius (Tienda, Seguro, Forja de armaduras). El seguro se prueba como en la sección anterior; ahora se recoge en Valerius.
+
+## 25/11 · Ventana «¿Aseguras tu equipo?» reestructurada
+- Dos columnas: «Equipamiento» (casillas con ✓ dorado) y «Asegurado · n/m» (una fila por pieza asegurable, casilla, nombre con color de rareza y precio; tocar la fila marca/desmarca). Todo/Nada arriba de la lista.
+- Pie: «Oro disponible», «Coste total» (rojo si falta oro) y los botones «Bajar sin asegurar» / «Asegurar y bajar» en fila.
+- Móvil: filas de 44px al tacto; la lista hace scroll si no cabe. Mapa de zonas revertido al original (fase E descartada).
+- Capturas: mockups/plan-interfaz-2/seguro/.
