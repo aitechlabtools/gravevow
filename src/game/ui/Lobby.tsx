@@ -101,7 +101,7 @@ export function Lobby() {
           {tab === 'character' && <Personaje onStash={() => go('stash')} />}
           {tab === 'stash' && <Alijo onShop={() => go('shop')} />}
           {tab === 'merchants' && <Mercaderes target={vendorTarget} onConsumed={() => setVendorTarget(null)} onQuests={(v) => { setQuestVendor(v); go('quests'); }} />}
-          {tab === 'quests' && <Misiones vendor={questVendor} />}
+          {tab === 'quests' && <Misiones vendor={questVendor} onVisit={(v) => { setVendorTarget({ vendor: v, view: 'quests' }); go('merchants'); }} />}
           {tab === 'shop' && <Tienda />}
           {tab === 'bestiary' && <BestiaryTab />}
         </div>

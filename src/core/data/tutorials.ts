@@ -85,7 +85,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   {
     id: 'tab.misiones', topic: 'mercaderes', trigger: 'tab:quests', badge: 'tab-quests',
     steps: [
-      { text: 'Tu **tablón**: cada nota es un encargo aceptado. Haz clic en una para ver qué piden, fijarla o dejarla; cuando está cumplida, **Cobrar** sale en la propia nota.', touch: 'Tu **tablón**: cada nota es un encargo aceptado. Toca una para ver qué piden, fijarla o dejarla; cuando está cumplida, **Cobrar** sale en la propia nota.', target: 'screen-quests' },
+      { text: 'Tus **misiones**: cada una es un encargo aceptado. Haz clic en una para ver qué piden, fijarla o dejarla; cuando está cumplida lleva un sello verde y puedes **Cobrar**.', touch: 'Tus **misiones**: cada una es un encargo aceptado. Toca una para ver qué piden, fijarla o dejarla; cuando está cumplida lleva un sello verde y puedes **Cobrar**.', target: 'screen-quests' },
       { text: 'Cada encargo cumplido sube tu **reputación** con quien te lo dio.' },
     ],
   },

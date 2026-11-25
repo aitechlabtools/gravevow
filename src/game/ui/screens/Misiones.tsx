@@ -9,11 +9,12 @@ import { activeQuests, boardQuests, isComplete, isOldQuest } from '../../../core
 import { useLayout } from '../../../config/ui';
 import { Modal } from '../common';
 import { sfx } from '../../audio';
+import { QuestJournal } from '../QuestJournal';
 import { BoardNotes, EmptySlot, MiniBust, QuestDetail, QuestDetailOverlay, QuestNote } from '../QuestNotes';
 
 export const QUESTS_HELP = 'Las misiones de caza, cofres y extracción avanzan al terminar cada expedición. Las entregas se cobran con lo que tengas en la mochila y el alijo. Fija una para tenerla presente en la mazmorra. Si dejas una misión, pierdes lo que llevabas.';
 
-export function Misiones({ vendor }: { vendor?: VendorId | null }) {
+export function Misiones({ vendor, onVisit }: { vendor?: VendorId | null; onVisit?: (v: VendorId) => void }) {
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
@@ -24,7 +25,21 @@ export function Misiones({ vendor }: { vendor?: VendorId | null }) {
   const openP = active.find((p) => p.id === open) ?? null;
   useEffect(() => { if (open && !openP) setOpen(null); }, [open, openP]); // cobrada o dejada: se cierra
   const side = !!openP && !phone;
-  const fit = layout !== 'tablet'; // escritorio: todo cabe sin desplazar; móvil: dos columnas, cada una con su desplazamiento; tableta: la pantalla se desplaza
+  const fit = layout !== 'tablet';
+  const helpModal = help && (
+    <Modal onClose={() => setHelp(false)} testId="quests-help-modal">
+      <div className="panel-title mb-2">Misiones</div>
+      <p className="font-body text-lg text-stone-200 leading-snug">{QUESTS_HELP}</p>
+      <button className="btn mt-3" style={{ minHeight: 44 }} onClick={() => setHelp(false)} data-testid="quests-help-ok">Entendido</button>
+    </Modal>
+  );
+  // Escritorio y tableta: diario en tres columnas
+  if (!phone) return (
+    <div className="h-full qscreen" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-quests">
+      <QuestJournal initial={vendor} onVisit={onVisit} onHelp={() => setHelp(true)} />
+      {helpModal}
+    </div>
+  ); // escritorio: todo cabe sin desplazar; móvil: dos columnas, cada una con su desplazamiento; tableta: la pantalla se desplaza
   return (
     <div className={`h-full qscreen ${fit ? 'fit' : 'overflow-y-auto scroll-thin'}`} style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))' }} data-testid="screen-quests">
       <div className={`mx-auto w-full max-w-[1800px] flex flex-col ${fit ? 'flex-1 min-h-0' : ''}`} style={{ gap: 'var(--gap)' }}>

@@ -36,7 +36,7 @@ export function useFitScale(w: number, h: number, pad = 8, max = 8) {
 }
 
 /** El dibujo del objetivo: la criatura, el objeto que se entrega, la veta, el cofre o el portal. */
-function objective(q: QuestDef): { src: (s: number) => string; w: number; h: number; boss?: boolean; label: string } {
+export function objective(q: QuestDef): { src: (s: number) => string; w: number; h: number; boss?: boolean; label: string } {
   if ((q.type === 'kill' || q.type === 'kill_boss') && q.target && ENEMIES[q.target]) {
     const e = ENEMIES[q.target];
     return { src: (s) => monsterUrl(e.sprite, s), w: 24, h: 26, boss: q.type === 'kill_boss' || !!e.boss, label: e.name };
@@ -54,7 +54,7 @@ function useNaturalSize(src1: string, fallback: [number, number]) {
   return wh;
 }
 
-function ObjectiveArt({ q, seal, big = false }: { q: QuestDef; seal?: string; big?: boolean }) {
+export function ObjectiveArt({ q, seal, big = false }: { q: QuestDef; seal?: string; big?: boolean }) {
   const o = objective(q);
   const [w, h] = useNaturalSize(o.src(1), [o.w, o.h]);
   const [ref, s] = useFitScale(w, h, big ? 10 : 14, big ? 5 : 6);
@@ -67,7 +67,7 @@ function ObjectiveArt({ q, seal, big = false }: { q: QuestDef; seal?: string; bi
   );
 }
 
-function Rewards({ q, big = false }: { q: QuestDef; big?: boolean }) {
+export function Rewards({ q, big = false }: { q: QuestDef; big?: boolean }) {
   const v = VENDORS[q.vendor];
   const s = big ? 3 : 2;
   return (
@@ -79,7 +79,7 @@ function Rewards({ q, big = false }: { q: QuestDef; big?: boolean }) {
   );
 }
 
-function Progress({ q, prog, big = false }: { q: QuestDef; prog: number; big?: boolean }) {
+export function Progress({ q, prog, big = false }: { q: QuestDef; prog: number; big?: boolean }) {
   const done = prog >= q.count;
   const n = Math.min(prog, q.count);
   return (
@@ -92,7 +92,7 @@ function Progress({ q, prog, big = false }: { q: QuestDef; prog: number; big?: b
   );
 }
 
-function ClaimButton({ q, done, className = '' }: { q: QuestDef; done: boolean; className?: string }) {
+export function ClaimButton({ q, done, className = '' }: { q: QuestDef; done: boolean; className?: string }) {
   return (
     <button className={`btn btn-gold font-display ${className}`} style={{ minHeight: 48 }} disabled={!done}
       onClick={(e) => { e.stopPropagation(); actions.claimQuest(q.id); sfx('click'); }} data-testid={`claim-${q.id}`}>{q.type === 'deliver' ? 'Entregar' : 'Cobrar'}</button>

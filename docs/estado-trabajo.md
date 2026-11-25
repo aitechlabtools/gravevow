@@ -940,5 +940,10 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - Móvil sin cambios de estructura. Capturas y script: mockups/plan-interfaz-2/alijo/ (VISTA=heridas, SOLO=).
 
 ## 25/11 · Estaciones en ruinas reestructuradas
-- `RuinPanel` (StationPanels.tsx, clases `.ruin*`): cabecera nombre + «Nivel 0 · En ruinas», arte ancho escalado a entero, propósito y encargado, escalones 0–3, «Siguiente mejora», fichas de requisitos (tienes/necesitas, ✓ Disponible o enlace «Comprar a… / Ir a…») y «Reconstruir <estación>» con el motivo del bloqueo.
+- `RuinPanel` (StationPanels.tsx, clases `.ruin*`): cabecera con nombre, propósito y encargado; fichas «Estado actual» (ruinas) y «Siguiente mejora» (arte reconstruido, borde dorado) lado a lado; escalones 0–3, «Siguiente mejora», fichas de requisitos (tienes/necesitas, ✓ Disponible o enlace «Comprar a… / Ir a…») y «Reconstruir <estación>» con el motivo del bloqueo.
 - Estaciones reconstruidas sin cambios. Capturas y script: mockups/plan-interfaz-2/ruinas/ (MERC=, SOLO=).
+
+## 25/11 · Misiones como diario en tres columnas
+- `QuestJournal` (src/game/ui/QuestJournal.tsx, clases `.qj*`), escritorio y tableta: «Tus misiones» (tarjetas compactas con clavo/chincheta, estado y sello «Lista/Cumplida»; listas primero; «+N espacios disponibles») · «Detalle de misión» (arte, objetivo con barra, recompensas en fichas, Cobrar/Entregar, Visitar a…, Fijar, Abandonar con confirmación) · «Tablón de encargos» (filtro Todos/mercader, encargos en fichas horizontales).
+- Móvil: sigue el diseño anterior (notas). «Visitar» abre al mercader (Lobby `onVisit`).
+- Scripts: mockups/plan-interfaz-2/misiones/capturar.cjs y funcional.cjs (aceptar, cobrar, abandonar, visitar).

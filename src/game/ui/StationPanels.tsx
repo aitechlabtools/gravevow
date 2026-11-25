@@ -286,31 +286,38 @@ function RuinPanel({ id, onGo, block, children }: { id: ModuleId; onGo?: GoTo; b
   const [artH, setArtH] = useState(0);
   useLayoutEffect(() => {
     const el = artRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(() => setArtH(el.clientHeight)); ro.observe(el); setArtH(el.clientHeight); return () => ro.disconnect();
+    const ro = new ResizeObserver(() => setArtH(el.clientWidth)); ro.observe(el); setArtH(el.clientWidth); return () => ro.disconnect();
   }, []);
-  const scale = Math.max(1, Math.floor((artH - 8) / STATION_ART_H)) || 1;
+  const artBox = phone ? 70 : artH > 0 ? 'clamp(110px, 20vh, 220px)' : 140;
+  const scale = Math.max(1, Math.min(Math.floor(((phone ? 70 : Math.min(220, Math.max(110, (typeof window !== 'undefined' ? window.innerHeight : 800) * 0.2))) - 10) / STATION_ART_H), Math.floor(((artH || 400) / 2 - 24) / STATION_ART_W)));
   const reqs = cost ? [...cost.items.map((it) => ({ key: it.itemId, name: getItem(it.itemId).name, have: ownedQty(profile, it.itemId), need: it.qty, icon: it.itemId, src: MATERIAL_SOURCES[it.itemId] })),
     ...(cost.gold > 0 ? [{ key: 'gold', name: 'Oro', have: profile.gold, need: cost.gold, icon: null as string | null, src: undefined }] : [])] : [];
   return (
     <div className="flex flex-col w-full ruin" style={{ gap: phone ? 8 : 12 }} data-testid={`station-detail-${id}`}>
-      <div className="flex items-baseline justify-between gap-3">
+      <div>
         <h3 className="font-display text-gold uppercase tracking-[0.08em]" style={{ fontSize: phone ? 16 : 20 }} data-testid={`module-${id}`}>{m.name}</h3>
-        <span className="text-[12px] uppercase tracking-[0.1em] text-[#d0905a] whitespace-nowrap" data-testid={`module-level-${id}`}>Nivel 0 · En ruinas</span>
+        <p className="text-[13px] text-stone-300">{m.purpose} <span className="text-stone-500">· Encargado: <span style={{ color: by.color }}>{by.name}</span></span></p>
       </div>
-      <div ref={artRef} className="ruin-art" style={{ height: phone ? 96 : 'clamp(130px, 24vh, 260px)' }}>
-        <img src={stationArtUrl(id, true)} className="pixelated" alt="En ruinas" draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} />
+      <div ref={artRef} className="grid grid-cols-2 gap-2">
+        <div className="ruin-card">
+          <div className="ruin-cap !text-stone-400">Estado actual</div>
+          <div className="ruin-art" style={{ height: artBox }}><img src={stationArtUrl(id, true)} className="pixelated" alt="En ruinas" draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} /></div>
+          <div className="text-center text-[15px] text-[#d0905a]" data-testid={`module-level-${id}`}>Nivel 0 · En ruinas</div>
+          <div className="text-center text-[12px] text-stone-400">Instalación no operativa</div>
+        </div>
+        <div className="ruin-card next" data-testid={`station-level-${id}-1`}>
+          <div className="ruin-cap">Siguiente mejora</div>
+          <div className="ruin-art lit" style={{ height: artBox }}><img src={stationArtUrl(id, false)} className="pixelated" alt={m.levels[1].name} draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} /></div>
+          <div className="text-center text-[15px] text-gold font-display">Nivel 1 · {m.levels[1].name}</div>
+          <div className="text-center text-[12px] text-stone-300 leading-snug">{m.levels[1].effect}</div>
+        </div>
       </div>
-      <p className="text-center text-[13px] text-stone-300 -mt-1">{m.purpose} <span className="text-stone-500">· Encargado: <span style={{ color: by.color }}>{by.name}</span></span></p>
       <div className="grid grid-cols-4 gap-1.5" data-testid={`station-steps-${id}`}>
         {[0, 1, 2, 3].map((k) => (
           <div key={k} className={`ruin-step ${k === 0 ? 'now' : k === 1 ? 'next' : ''}`}>{k} · {k === 0 ? 'Ruinas' : k === 1 ? m.levels[1].name : 'Bloqueado'}</div>
         ))}
       </div>
-      <div className="ruin-box" data-testid={`station-level-${id}-1`}>
-        <div className="ruin-cap">Siguiente mejora · {m.levels[1].name}</div>
-        <div className="text-[13px] text-stone-200 leading-snug">{m.levels[1].effect}</div>
-      </div>
-      <div className="ruin-cap">Requisitos de reconstrucción</div>
+      <div className="flex justify-between items-baseline"><div className="ruin-cap">Requisitos de reconstrucción</div><span className="text-[12px] text-stone-400" data-testid={`req-count-${id}`}>{reqs.filter((r) => r.have >= r.need).length} de {reqs.length} cumplidos</span></div>
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(reqs.length, phone ? 2 : 3)}, minmax(0,1fr))` }} data-testid={`station-cost-${id}`}>
         {reqs.map((r) => {
           const ok = r.have >= r.need;
