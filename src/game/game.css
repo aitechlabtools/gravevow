@@ -1741,3 +1741,4 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 .al-vsw{display:flex;flex-direction:column;gap:var(--gap);flex-shrink:0}
 .al-vsw button{flex:1;width:44px;display:grid;place-items:center;color:#a8a29e;background:#141318;border:1px solid #3a3741;cursor:pointer}
 .al-vsw button.on{background:#e8b33a;color:#1a1206;border-color:#e8b33a}
+.al-stats-tight .alijo-stats [data-stat]{min-height:34px!important;font-size:14px!important;padding:2px 0!important;align-items:center}

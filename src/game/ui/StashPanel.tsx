@@ -62,7 +62,7 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
     return () => ro.disconnect();
   }, [touchy, cols, fill, layout, ptitle, bare]);
   return (
-    <section className="panel ui-panel min-h-0" data-testid={testId} style={shownPage === 'shared' ? { borderColor: '#3f8f8a' } : undefined}>
+    <section className={`panel ui-panel min-h-0 ${bare ? 'flex-1 min-w-0' : ''}`} data-testid={testId} style={shownPage === 'shared' ? { borderColor: '#3f8f8a' } : undefined}>
       {ptitle && <h2 className="ui-ptitle">{title}</h2>}
       {!bare && <div className="flex items-center justify-between gap-2" style={{ padding: compactHeader || touchy ? '6px 8px 0' : '10px 12px 0' }}>
         {ptitle ? <span /> :
@@ -136,7 +136,6 @@ function PageTabs({ sel, onMoved, hideShared = false }: { sel: Loc | null; onMov
   return (
     <>
       <div className="flex items-center w-full" style={{ gap: wide ? 4 : 2 }} data-testid="stash-pages">{tabs}</div>
-      {sel && <p className="text-[11px] text-gold mt-1">Toca una pestaña para llevar ahí el objeto elegido.</p>}
       {buying !== null && <BuyPageModal page={buying} onClose={() => setBuying(null)} />}
     </>
   );

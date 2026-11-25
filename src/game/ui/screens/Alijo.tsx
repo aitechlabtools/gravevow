@@ -56,6 +56,14 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   const [picker, setPicker] = useState(false);
   const [sheet, setSheet] = useState(false);
   const [phoneMode, setPhoneMode] = useState<'items' | 'hero'>('items');
+  // Móvil: las casillas del bloque Equipo crecen con su ancho (de 44 a 56 px)
+  const leftRef = useRef<HTMLDivElement | null>(null);
+  const [leftW, setLeftW] = useState(0);
+  useEffect(() => {
+    const el = leftRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => setLeftW(e.contentRect.width)); ro.observe(el); return () => ro.disconnect();
+  });
+  const leftSlot = leftW ? Math.max(44, Math.min(56, Math.floor((leftW - 40) / 6) - 4)) : 44;
   // Escritorio estrecho (p. ej. 1366 × 768): Aventurero más estrecho y casillas del panel Equipo a 44 px para que quepan las dos columnas
   const compact = layout === 'desktop' && typeof window !== 'undefined' && window.innerWidth < 1600;
   const clear = () => setSel(null);
@@ -165,8 +173,8 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
         {vsw([{ id: 'items', label: 'Equipo y almacén', icon: SIDE_ICONS.storage }, { id: 'hero', label: g('{Aventurero|Aventurera} y atributos'), icon: SIDE_ICONS.gear }], phoneMode, setPhoneMode, 'alijo-seg')}
         {phoneMode === 'items' ? (
           <>
-            <div className="panel ui-panel min-h-0 flex-1 min-w-0 flex" style={{ flexDirection: 'row' }}>
-              <div className="flex-1 min-h-0 overflow-y-auto scroll-thin flex justify-center p-1.5">
+            <div ref={leftRef} className="panel ui-panel min-h-0 flex-1 min-w-0 flex" style={{ flexDirection: 'row', ['--slot' as string]: `${leftSlot}px`, ['--slot-big' as string]: `${leftSlot}px` }}>
+              <div className="flex-1 min-h-0 overflow-y-auto scroll-thin flex justify-center px-1.5 pt-3 pb-1.5">
                 <div className="flex flex-col gap-2" style={{ width: 'calc(var(--slot) * 6 + 20px)' }}>
                   <EquipDoll sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} onOpen={openSheet} />
                   {bagCol}
@@ -179,7 +187,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
         ) : (
           <>
             <div className="panel ui-panel min-h-0 flex-1 min-w-0 flex flex-col p-1.5" data-testid="alijo-hero"><PhoneHero /></div>
-            <div className="panel ui-panel min-h-0 flex-1 min-w-0 flex flex-col p-2"><div className="flex-1 min-h-0 overflow-y-auto scroll-thin"><HeroStats preview={preview} /></div></div>
+            <div className="panel ui-panel min-h-0 flex-1 min-w-0 flex flex-col p-2"><div className="flex-1 min-h-0 overflow-y-auto scroll-thin pr-2 al-stats-tight"><HeroStats preview={preview} /></div></div>
           </>
         )}
         <SheetDrawer open={sheet && !!sel} onClose={() => setSheet(false)}>{card}</SheetDrawer>
