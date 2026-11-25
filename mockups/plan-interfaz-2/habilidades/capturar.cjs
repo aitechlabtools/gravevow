@@ -15,10 +15,10 @@ await p.evaluate((a)=>{const [NV,CL]=a;const G=window.__GRAVEVOW__,pr=structured
 await p.evaluate(()=>{const G=window.__GRAVEVOW__,s=G.getState(),pr=structuredClone(s.profile);const ids=window.__GRAVEVOW__.classSkillsOf?.(pr)||null;G.setState({profile:pr});});
 await p.click('[data-testid=tab-character]');await p.waitForTimeout(500);
 // Desbloquea una habilidad en el hito 20 si toca elegir (deja el resto como está)
-if(NV<40){await p.click('[data-testid=seg-class]');await p.waitForTimeout(200);const c=await p.$('[data-testid=class-choose] [data-state=choose]');if(c){await c.click();await p.click('[data-testid^=btn-unlock-class-]');await p.waitForTimeout(300);}}
-if(true){const s=await p.$('[data-testid=seg-atk]');s&&await s.click();await p.waitForTimeout(200);}
+if(NV<40){const c=await p.$('[data-testid=class-choose] [data-state=choose]');if(c){await c.click();await p.click('[data-testid^=btn-unlock-class-]');await p.waitForTimeout(300);}}
+{const t=await p.$('[data-testid=atk-'+(process.env.FOCO||'x')+']')||(await p.$$('[data-testid^=atk-]'))[1];t&&await t.click();await p.waitForTimeout(200);}
 await p.screenshot({path:`${__dirname}/${PRE}-${w}x${h}.png`});
-if(true){await p.click('[data-testid=seg-class]');await p.waitForTimeout(200);await p.screenshot({path:`${__dirname}/${PRE}-clase-${w}x${h}.png`});}
+{const hh=await p.$('[data-testid=hito-40]')||await p.$('[data-testid^=hito-]');if(hh){await hh.click();await p.waitForTimeout(200);await p.screenshot({path:`${__dirname}/${PRE}-clase-${w}x${h}.png`});}}
 const ov=await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth||document.documentElement.scrollHeight>innerHeight+1);
 console.log(`${w}x${h}`,ov?'DESBORDA':'ok',errs.join('|'));await ctx.close();}
 await b.close();})();

@@ -4,8 +4,16 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 25/11 (9): Alijo › Equipo, versión 3
+- Aventurero · Equipo (muñeco de ranuras + mochila con bolsillo seguro y oro) · Almacén, según la captura del usuario. Móvil sin cambios (personaje con casillas alrededor). Capturas `mockups/plan-interfaz-2/alijo/v3-*`.
+
+## Novedades del 25/11 (8): Habilidades, versión 3 (todo a la vista)
+- Atributos · héroe · Habilidades (fichas por mano, hitos de clase en rombos y detalle con Equipar/Elegir). Los atributos marcan lo que cambia la habilidad elegida. Sin pestañas. Mini tutorial `tab.personaje` actualizado (3 pasos). Prueba: `habilidades/pestanas.cjs`.
+
 ## Novedades del 25/11 (7): Habilidades rehecha
 - Héroe grande con su círculo a la izquierda y un panel con pestañas Ataques · Habilidades de clase a la derecha, en los tres formatos (ver guia-interfaz › Habilidades). Fuera el camino vertical de hitos: ahora línea horizontal y solo el próximo hito. Ninguna regla cambia.
+- Retoque: el héroe en un panel con cabecera (clase, nombre y nivel) y barra de pista abajo; tarjetas de ataque con icono e indicadores rotulados. Tocar una tarjeta de clase ya no cambia de pestaña (`habilidades/pestanas.cjs`).
+- Fichas verticales que llenan el panel en Ataques y en Habilidades de clase (estructura de las capturas del usuario).
 - Capturas: `mockups/plan-interfaz-2/habilidades/capturar.cjs` (`NV=40` hito por elegir, `CLASE=mage`).
 
 ## Novedades del 25/11 (6): mismo diseño en móvil y tableta

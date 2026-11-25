@@ -326,7 +326,8 @@ Plan: `docs/plan-seguro-equipo.md`. Maquetas y capturas reales: `mockups/seguro-
 
 ### Alijo
 - Mismo diseño en los tres formatos; el móvil lo adapta al espacio.
-- Equipo: `CharacterEquip` (Alijo.tsx) mide el arco con ResizeObserver y escala el personaje a entero. Mochila en panel propio. Móvil: `CharacterEquip compact` (270 px, casillas de 44) + mochila + ficha. Almacén (`StashPanel ptitle`): título entre rombos como los demás paneles y casillas del mismo tamaño que el equipo y la mochila (60/48/44 px); lo que no cabe se desplaza.
+- Equipo (escritorio y tableta, v3 25/11): «Aventurero» (`Adventurer`: héroe en su arco a escala entera, «Clase · Nivel», experiencia y atributos) · «Equipo» (`EquipDoll`: arma y secundaria grandes a los lados, cabeza y torso en el centro; debajo atuendo, manos, pies, amuleto, anillo y mochila; luego la mochila de 6 columnas con «Bolsillo seguro» (2 columnas) y «Oro» al lado, carga, «Vaciar mochila» y «Guardar materiales») · «Almacén».
+- Móvil: `CharacterEquip` (Alijo.tsx) mide el arco con ResizeObserver y escala el personaje a entero. Mochila en panel propio. Móvil: `CharacterEquip compact` (270 px, casillas de 44) + mochila + ficha. Almacén (`StashPanel ptitle`): título entre rombos como los demás paneles y casillas del mismo tamaño que el equipo y la mochila (60/48/44 px); lo que no cabe se desplaza.
 - Heridas: `BodyPanel full` pinta `BlockBody` (clases `.doll*`), `.body-banner` y `.body-states`; fuera del Alijo se usa la figura con etiquetas. Mochila: `CureBag` (filtro Curación apaga por `data-item`). Móvil: estado físico + `CureBag` (las necesidades van dentro del estado). El cuerpo pasa a una columna con contenedor ≤500 px (tableta: dos columnas).
 
 ### Estación en ruinas
@@ -335,8 +336,12 @@ Plan: `docs/plan-seguro-equipo.md`. Maquetas y capturas reales: `mockups/seguro-
 ### Misiones (diario)
 Tres columnas 28/42/30 (`.qj`). Estados por color del borde izquierdo: dorado en progreso, verde completada. Sin historial de entregadas (el juego no lo guarda). Móvil (`QuestJournal phone`, `.qj-phone`): misiones a la izquierda y, a la derecha, pestañas Detalle · Tablón (`quests-tab-*`); filtro del tablón en fichas horizontales. Sin misiones, salta al Tablón; tocar una misión abre Detalle.
 
-### Habilidades (25/11)
-Mismo esquema en los tres formatos (`screens/Personaje.tsx`): a la izquierda el héroe con su círculo de rombos a todo el alto (nombres sobre placa oscura, `.hb-arc-label`); a la derecha un panel con dos pestañas en la cabecera, «Ataques» y «Habilidades de clase» (`.hb-tabs`, `seg-atk`/`seg-class`; se abre en Clase si hay un hito por elegir). Escritorio y tableta 60/40; móvil 1/1,15.
-- Ataques: por mano (derecha/izquierda), tarjetas `.hb-card` con nombre, indicadores y descripción debajo.
-- Indicadores `CostChips`: coste en el recurso de la clase (ímpetu: rayo amarillo; maná: gota turquesa) y recarga en azul («—» si no tiene). Leyenda al pie de Ataques.
-- Habilidades de clase: «Habilidad equipada» (borde dorado), «Habilidades desbloqueadas · n/5» con «Equipar» (`equip-class-<id>`) y «Progresión de clase»: línea 1·20·40·60·80 (`.hb-node` done/choose/next/later) y solo el próximo hito con sus opciones plegadas (`<details>` `.hb-lock`). Si hay que elegir, tarjetas moradas y «Elegir …» (`btn-unlock-class-<id>`).
+### Habilidades (25/11, versión 3)
+Todo a la vista, sin pestañas (`screens/Personaje.tsx`). Escritorio 22/44/34 y tableta 24/38/38:
+- Izquierda «Atributos» (`character-stats`, `SkillStats`): los atributos del Alijo; al elegir una habilidad, cada fila que cambia se tiñe (`.hb-stat.up` verde, `.down` rojo) con «▲ +30 % de daño · 3 turnos» o «▼ −4 de ímpetu» (`skillMarks`: golpe ×N, perforación, robo de vida, curación, escudo, coste, estados propios de Furia, Protección, Bloqueo, Aguante, Parpadeo, Regeneración y Escudo de maná). Solo informa: los cambios duran en combate.
+- Centro, sin marco: arco (medio círculo arriba y dos rectas que bajan) con la habilidad de clase arriba, la mano derecha por la derecha y la izquierda por la izquierda (empezando a 45°); el héroe dentro y «Clase · Nivel» debajo.
+- Abajo de Atributos, «Efectos de la habilidad» (`skill-effects`): las líneas de efecto en verde (o rojo) de lo elegido; el detalle de la derecha repite esas líneas sobre la descripción.
+- Cabeceras de mano: el nombre del arma en una franja con el color de la mano (`.hb-band`).
+- Derecha «Habilidades» (`character-skills`): fichas pequeñas por mano (`.hb-mini`, `atk-<id>`: icono, nombre, coste y recarga pequeños), fila de hitos de clase Nv 1·20·40·60·80 (`.hb-hito`, `class-skill-<id>` o `hito-<nv>`; dorado la equipada, «!» por elegir, «?» bloqueados) y abajo el detalle (`skill-detail`): coste y recarga grandes con rótulo, efecto y «Equipar» (`equip-class-<id>`) o, en un hito, sus opciones (`class-choose` con «Elegir», o `class-next` con candado).
+- Móvil: héroe y Habilidades; los atributos en una ventana con el botón «Atributos».
+- Coste: ímpetu con rayo amarillo, maná con gota turquesa; recarga en azul («—» si no tiene).

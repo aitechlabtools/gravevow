@@ -1653,3 +1653,75 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 .hb-tabs button:hover{color:#e9e1cc}.hb-tabs button.on{color:#e8b33a;background:transparent;border-bottom-color:#e8b33a}
 .hb-tab-d{font-size:9px}.hb-tabs button:not(.on) .hb-tab-d{opacity:.4}
 @media (max-height:560px){.hb-tabs button{min-height:44px;font-size:12px;letter-spacing:.06em}}
+/* Habilidades (2): panel del héroe con cabecera y barra de pista; tarjetas de ataque con icono e indicadores rotulados */
+.hb-hero-head{display:flex;flex-direction:column;align-items:center;padding:10px 8px 0;line-height:1.15}
+.hb-hero-cls{font-family:var(--font-display);font-size:20px;letter-spacing:.1em;text-transform:uppercase;color:#e8b33a}
+.hb-hero-lv{font-size:13px;color:#a8a29e;letter-spacing:.06em;text-transform:uppercase}
+.hb-hint{display:flex;align-items:center;gap:10px;margin:8px;padding:8px 12px;min-height:56px;background:#0f0e13;border:1px solid #3a3741}
+.hb-ico{width:46px;height:46px;flex:none;display:grid;place-items:center;background:#0d0c11;border:1px solid}
+.hb-ico.on{border-color:#e8b33a!important;box-shadow:0 0 8px #e8b33a66}
+.hb-atk{flex-direction:row;align-items:center;gap:12px}
+.hb-chips.lab .hb-chip{flex-direction:column;gap:2px;padding:5px 6px;min-width:58px}
+.hb-chip-n{display:inline-flex;align-items:center;gap:4px}
+.hb-chip small{font-family:var(--font-body,inherit);font-size:12px;letter-spacing:0;opacity:.85}
+@media (max-height:560px){.hb-hero-head{padding-top:4px}.hb-hero-cls{font-size:15px}.hb-hero-lv{font-size:12px}.hb-hint{min-height:44px;margin:4px;padding:4px 8px}.hb-hint .hb-desc{display:none}
+.hb-ico{width:36px;height:36px}.hb-chips.lab .hb-chip{min-width:46px;padding:3px 4px}.hb-chip small{font-size:12px}}
+/* Habilidades (3): fichas verticales que llenan el panel (ataques por mano; tus habilidades y próximo desbloqueo) */
+.hb-fill{flex:1 0 auto;display:flex;flex-direction:column}
+.hb-hsec{flex:1 0 auto;display:flex;flex-direction:column}.hb-hsec+.hb-hsec{border-top:1px solid #2a2730;padding-top:10px;margin-top:10px}
+.hb-shead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px;margin-bottom:6px}.hb-shead .hb-cap{margin:0}
+.hb-grid{display:grid;gap:8px;flex:1 0 auto;align-items:stretch}
+.hb-tile{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;background:#15131a;border:1px solid #3a3741;padding:10px 8px;cursor:pointer;min-width:0}
+.hb-tile:hover{border-color:#6b6772}.hb-tile.on{border-color:#e8b33a;background:#221c10;box-shadow:0 0 0 1px #e8b33a55}
+.hb-tile.st-equipped{border:2px solid #e8b33a;background:#241d0f}
+.hb-tile.st-choose{border-color:#a56bff;background:#1a1424}.hb-tile.st-choose.on{border-color:#e8b33a;background:#2a2116}
+.hb-tile.st-locked{background:#0f0e13;border-color:#2e2b35}.hb-tile.st-locked .hb-tile-name{color:#c8c2b8}
+.hb-tile-top{position:absolute;left:6px;top:4px;font-size:12px;color:#a8a29e;line-height:1}.hb-tile.st-locked .hb-tile-top{left:auto;right:6px;top:6px}
+.hb-tile-art{width:100%;flex:1 1 56px;min-height:48px;max-height:150px;display:grid;place-items:center;background:#0d0c11;border:1px solid}
+.hb-tile-name{font-family:var(--font-display);font-size:16px;color:#e9e1cc;line-height:1.1}
+.hb-tile-desc{font-size:13px;color:#c8c2b8;line-height:1.25}
+.hb-tile-chips{margin-top:auto;width:100%}.hb-tile-chips .hb-chips{width:100%;display:grid;grid-template-columns:1fr 1fr}
+.hb-tile-tag{width:100%;min-height:32px;display:grid;place-items:center;background:#c8961e;color:#1a1206;font-family:var(--font-display);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.hb-tile-btn{width:100%;min-height:44px;font-size:13px}
+@media (max-height:560px){.hb-tile{padding:6px;gap:4px}.hb-tile-art{flex-basis:36px;min-height:36px}.hb-tile-name{font-size:13px}.hb-tile-desc{font-size:12px}.hb-tile-tag{min-height:28px;font-size:12px}}
+/* Habilidades (3): atributos con lo que cambia, fichas pequeñas, hitos de clase y detalle */
+.hb-stat{padding:6px 4px;border-bottom:1px solid #2a2730;font-size:14px}
+.hb-stat.up{background:#14241a}.hb-stat.down{background:#2a1416}.hb-stat.up.down{background:#1e1e16}
+.hb-stat-m{display:block;font-size:12px;margin-top:2px}.hb-stat-m.good{color:#7fd08a}.hb-stat-m.bad{color:#ff8a8a}
+.hb-psec{padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #2a2730}
+.hb-minis{display:grid;gap:6px}
+.hb-mini{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;min-height:44px;background:#15131a;border:1px solid #3a3741;cursor:pointer;font:inherit;color:inherit;min-width:0}
+.hb-mini:hover{border-color:#6b6772}.hb-mini.on{border-color:#e8b33a;background:#221c10;box-shadow:0 0 0 1px #e8b33a55}
+.hb-mini-name{font-family:var(--font-display);font-size:13px;color:#e9e1cc;line-height:1.1;text-align:center}
+.hb-mini-cost{display:flex;gap:8px;font-size:12px}.hb-mini-cost span{display:inline-flex;align-items:center;gap:2px}
+.hb-hitos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.hb-hito{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;cursor:pointer;padding:4px 0;min-height:44px;font:inherit;color:inherit}
+.hb-hito-d{width:40px;height:40px;transform:rotate(45deg);display:grid;place-items:center;border:2px solid #3a3741;background:#0d0c11}
+.hb-hito-d>*{transform:rotate(-45deg)}
+.hb-hito-q{font-family:var(--font-display);font-size:18px;color:#6b6772}
+.hb-hito.st-equipped .hb-hito-d{border-color:#e8b33a;background:#2a2116;box-shadow:0 0 10px #e8b33a66}
+.hb-hito.st-owned .hb-hito-d{border-color:#9a6b1a}
+.hb-hito.st-choose .hb-hito-d{border-color:#e8b33a;box-shadow:0 0 12px #e8b33aaa}.hb-hito.st-choose .hb-hito-q{color:#e8b33a}
+.hb-hito.st-next .hb-hito-d{border-color:#a56bff}.hb-hito.st-next .hb-hito-q{color:#c79bff}
+.hb-hito.on .hb-hito-d{outline:2px solid #f2e6c8;outline-offset:2px}
+.hb-hito-lv{font-size:12px;color:#a8a29e}
+.hb-det{margin-top:auto;border:1px solid #8a6a2a;background:#1a160e;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:150px}
+.hb-det-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.hb-det-name{font-family:var(--font-display);font-size:18px;color:#e8b33a;text-transform:uppercase;letter-spacing:.05em}
+.hb-opt{display:block;text-align:left;width:100%;padding:8px 10px;background:#15131a;border:1px solid #3a3741;font:inherit;color:inherit;cursor:pointer}
+.hb-opt.choose{border-color:#a56bff;background:#1a1424}.hb-opt.choose.on{border-color:#e8b33a;background:#2a2116}.hb-opt.locked{cursor:default;background:#0f0e13;border-color:#2e2b35}
+@media (max-height:560px){.hb-hito-d{width:32px;height:32px}.hb-det{min-height:0;padding:8px}.hb-det-name{font-size:15px}.hb-mini{padding:4px}.hb-psec{padding-bottom:6px;margin-bottom:6px}}
+.hb-arc-foot{position:absolute;left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:#e8b33a;white-space:nowrap}
+@media (max-height:560px){.hb-arc-foot{font-size:12px}}
+.hb-effbox{margin-top:auto;border:1px solid #3d6b3a;background:#121c12;padding:10px;display:flex;flex-direction:column;gap:6px;min-height:150px}
+.hb-eff{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:14px}.hb-eff .good{color:#8fd07a}.hb-eff .bad{color:#ff8a8a}
+.hb-band{font-family:var(--font-display);font-size:14px;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;margin-bottom:6px;background:#1b1922;border-left:3px solid currentColor}
+@media (max-height:560px){.hb-effbox{min-height:0}}
+/* Alijo › Equipo (v3): muñeco de ranuras y mochila con bolsillo y oro al lado */
+.al-doll{display:flex;flex-direction:column;gap:8px;padding-bottom:10px;border-bottom:1px solid #2a2730}
+.al-doll-top{display:flex;justify-content:space-between;align-items:flex-start}
+.al-doll-row{display:flex;justify-content:space-between;align-items:flex-start;gap:4px}
+.al-sec{padding-top:10px}
+.al-box{border:1px solid #3a3741;background:#141318;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.al-box-t{font-family:var(--font-display);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#a8a29e;text-align:center}
+.al-gem{position:absolute;display:grid;place-items:center;transform:rotate(45deg);border:2px solid;background:#0d0c11;pointer-events:auto;box-shadow:0 0 0 2px #0d0c11}
