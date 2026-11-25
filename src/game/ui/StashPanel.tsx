@@ -46,7 +46,7 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
     const rows = Math.ceil(STASH_PAGE_SIZE / cols);
     const fit = () => {
       if (fill || bare || ptitle) {
-        const max = layout === 'desktop' ? 80 : layout === 'tablet' ? 60 : bare ? 40 : 0;
+        const max = layout === 'desktop' ? 80 : layout === 'tablet' ? 60 : bare ? 52 : 0;
         const w = Math.floor((el.clientWidth - 24 - (cols - 1) * 4) / cols);
         setSlot(max && w > 0 ? Math.min(max, w) : null);
         return;

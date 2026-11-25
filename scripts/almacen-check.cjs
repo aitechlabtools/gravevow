@@ -68,7 +68,7 @@ async function run(s) {
   const T = await p.evaluate(() => { const s = window.__GRAVEVOW__.getState().profile.stash; for (let i = 0; i < 112; i++) if (i % 8 < 7 && Math.floor(i / 8) % 15 < 14 && [i, i + 1, i + 8, i + 9].every((k) => !s[k])) return i; return -1; });
   // En el móvil la ficha del objeto ocupa la parte de abajo: se sube la casilla de destino antes de tocarla
   // (en el móvil la ficha del objeto tapa la parte de abajo de la pantalla: el toque se manda directamente a la casilla)
-  if (s.n === 'movil') { await p.$eval(`[data-testid=slot-stash-${T}]`, (e) => e.click()); await p.waitForTimeout(250); } else await act(`slot-stash-${T}`);
+  if (s.n === 'movil') { await p.$eval(`[data-testid=slot-stash-${T}]`, (e) => e.click()); await p.waitForTimeout(250); } /* móvil: el objeto elegido sigue elegido al cambiar a «Almacén» */ else await act(`slot-stash-${T}`);
   x = await prof();
   const st60 = await p.evaluate((T) => { const s = window.__GRAVEVOW__.getState().profile.stash; return [T, T + 1, T + 8, T + 9].map((i) => s[i]?.itemId).join(); }, T);
   if (st60 !== 'gold_sack,cover,cover,cover') fail('el saco debe ocupar 2×2 en el almacén: ' + st60);
@@ -86,7 +86,7 @@ async function run(s) {
   await p.waitForTimeout(200);
   await act('slot-backpack-0');
   await p.screenshot({ path: `${OUT}/${s.n}-saquito.png` });
-  const sheetBtn = async (id) => { const tab = await p.$('[data-testid=item-sheet-open]'); if (tab && await tab.isVisible() && (await tab.getAttribute('aria-expanded')) !== 'true') { await tab.tap(); await p.waitForTimeout(300); } const els = await p.$$(`[data-testid=${id}]`); for (const e of els) if (await e.isVisible()) { if (s.touch) await e.tap(); else await e.click(); await p.waitForTimeout(250); return; } fail('no se ve ' + id); };
+  const sheetBtn = async (id) => { for (let k = 0; k < 2 && await p.$('[data-testid=item-sheet][aria-hidden=true]'); k++) { await p.tap('[data-testid=slot-backpack-0]', { timeout: 3000 }); await p.waitForTimeout(80); } await p.waitForTimeout(350); /* móvil: doble toque abre la ficha */ const els = await p.$$(`[data-testid=${id}]`); for (const e of els) if (await e.isVisible()) { if (s.touch) await e.tap(); else await e.click(); await p.waitForTimeout(250); return; } fail('no se ve ' + id); };
   await sheetBtn('act-withdraw');
   await act('amt-mas10');
   await p.screenshot({ path: `${OUT}/${s.n}-sacar.png` });

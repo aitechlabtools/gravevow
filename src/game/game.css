@@ -1738,3 +1738,6 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 .carry-narrow[data-tier="0"] .text-right{display:none}.carry-narrow span{white-space:nowrap}
 .al-lseg .ui-seg button{font-size:10px;letter-spacing:.03em;padding-left:4px;padding-right:4px}
 .al-box-row .al-box-t{white-space:nowrap}
+.al-vsw{display:flex;flex-direction:column;gap:var(--gap);flex-shrink:0}
+.al-vsw button{flex:1;width:44px;display:grid;place-items:center;color:#a8a29e;background:#141318;border:1px solid #3a3741;cursor:pointer}
+.al-vsw button.on{background:#e8b33a;color:#1a1206;border-color:#e8b33a}

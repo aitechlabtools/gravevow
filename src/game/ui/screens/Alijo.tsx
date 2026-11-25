@@ -54,7 +54,8 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   useClearOnDrop(useCallback(() => setSel(null), []));
   const [view, setView] = useState<'gear' | 'storage' | 'status'>(section === 'status' ? 'status' : 'gear');
   const [picker, setPicker] = useState(false);
-  const [leftView, setLeftView] = useState<'hero' | 'stats'>('hero');
+  const [sheet, setSheet] = useState(false);
+  const [phoneMode, setPhoneMode] = useState<'items' | 'hero'>('items');
   // Escritorio estrecho (p. ej. 1366 × 768): Aventurero más estrecho y casillas del panel Equipo a 44 px para que quepan las dos columnas
   const compact = layout === 'desktop' && typeof window !== 'undefined' && window.innerWidth < 1600;
   const clear = () => setSel(null);
@@ -135,45 +136,53 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   const status = <StatusView withNeeds={phone} />;
 
   if (phone && section !== 'status') {
-    // Móvil (25/11, v2): dos columnas. Izquierda: Aventurero | Atributos. Derecha: Equipo (muñeco + mochila) | Almacén (mochila + almacén).
-    // La ficha del objeto va en un cajón a la derecha (como «A vender»); elegir un objeto no tapa nada, así se puede mover tocando el destino.
+    // Móvil (25/11, v4): un selector vertical de iconos y dos bloques iguales. Baúl (por defecto): equipo y mochila | almacén. Casco: personaje en su arco | atributos.
+    // Tocar elige (y otro toque en una casilla lo mueve); doble toque abre la ficha en un cajón a la derecha.
+    const openSheet = (l: Loc) => { setSel(l); setSheet(true); sfx('click'); };
+    const vsw = <T extends string>(opts: { id: T; label: string; icon: string[] }[], value: T, onChange: (v: T) => void, testId: string) => (
+      <div className="al-vsw" role="tablist" aria-orientation="vertical" data-testid={testId}>
+        {opts.map((o) => <button key={o.id} role="tab" aria-selected={o.id === value} className={o.id === value ? 'on' : ''} aria-label={o.label} title={o.label} onClick={() => { onChange(o.id); sfx('click'); }} data-testid={`seg-${o.id}`}><PixelIcon rows={o.icon} size={22} color={o.id === value ? '#1a1206' : 'currentColor'} /></button>)}
+      </div>
+    );
     const bagCol = (
       <div className="flex flex-col shrink-0" style={{ width: 'calc(var(--slot) * 6 + 20px)' }} data-testid="alijo-backpack">
         <div className="flex items-center justify-between gap-1 mb-1">
-          <span className="hb-cap" style={{ margin: 0 }}>Mochila · {profile.backpack.filter(Boolean).length}/{profile.backpack.length}</span>
+          <span className="hb-cap whitespace-nowrap" style={{ margin: 0 }}>Mochila · {profile.backpack.filter(Boolean).length}/{profile.backpack.length}</span>
           <span className="flex gap-1">
             <button className="btn text-xs" style={{ minHeight: 44, padding: '0 8px' }} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén">Vaciar</button>
             <button className="btn text-xs" style={{ minHeight: 44, padding: '0 8px' }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} data-testid="sort-backpack">Ordenar</button>
           </span>
         </div>
-        <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={quickFromBag} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
+        <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={(l) => openSheet(l)} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
         <div className="al-box al-box-row mt-1.5" data-testid="alijo-pocket">
           <div className="flex flex-col items-start min-w-0"><div className="al-box-t">Bolsillo</div><div className="text-[12px] text-heal" data-testid="pocket-gold">{gridGold(profile.pocket) > 0 ? `a salvo: ${gridGold(profile.pocket)}` : 'no se pierde'}</div></div>
-          <GridView grid={profile.pocket} container="pocket" cols={profile.pocket.length} {...grids} onQuick={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
+          <GridView grid={profile.pocket} container="pocket" cols={profile.pocket.length} {...grids} onQuick={(l) => openSheet(l)} />
         </div>
       </div>
     );
     return (
-      <div className="h-full flex" style={{ padding: '0 calc(max(var(--pad), env(safe-area-inset-right)) + 30px) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)', ['--slot' as string]: '36px', ['--slot-big' as string]: '36px' }} data-testid="screen-stash">
-        <Panel className="min-h-0 shrink-0 w-[190px]" bodyClassName="min-h-0 flex flex-col" testId="alijo-hero">
-          <div className="al-lseg"><Segmented full options={[{ id: 'hero', label: g('{Aventurero|Aventurera}') }, { id: 'stats', label: 'Atributos' }]} value={leftView} onChange={(v) => { setLeftView(v); sfx('click'); }} testId="alijo-left-seg" /></div>
-          {leftView === 'hero' ? <PhoneHero /> : <div className="flex-1 min-h-0 overflow-y-auto scroll-thin mt-1.5"><HeroStats preview={preview} /></div>}
-        </Panel>
-        <Panel className="min-h-0 flex-1 min-w-0" bodyClassName="min-h-0 flex flex-col">
-          <Segmented full options={[{ id: 'gear', label: 'Equipo' }, { id: 'storage', label: 'Almacén' }]} value={view === 'storage' ? 'storage' : 'gear'} onChange={(v) => { setView(v); sfx('click'); }} testId="alijo-seg" />
-          <div className="flex-1 min-h-0 flex gap-2 mt-1.5 justify-center">
-            {view === 'storage' ? (<>{bagCol}<div className="flex-1 min-w-0 min-h-0 flex"><StashPanel cols={stashCols} bare sel={sel} onSelect={onSelect} onEmpty={onEmpty} onQuick={(l, st) => { if (getItem(st.itemId).use?.kind === 'need') actions.eat(l); else actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} /></div></>) : (
-              <>
-                <div className="flex flex-col shrink-0" style={{ width: 'calc(var(--slot) * 3 + 20px)' }}>
-                  <EquipDoll sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} />
-                  <CarryBar className="mt-auto carry-narrow" />
+      <div className="h-full flex relative overflow-hidden" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)', ['--slot' as string]: '44px', ['--slot-big' as string]: '44px' }} data-testid="screen-stash">
+        {vsw([{ id: 'items', label: 'Equipo y almacén', icon: SIDE_ICONS.storage }, { id: 'hero', label: g('{Aventurero|Aventurera} y atributos'), icon: SIDE_ICONS.gear }], phoneMode, setPhoneMode, 'alijo-seg')}
+        {phoneMode === 'items' ? (
+          <>
+            <div className="panel ui-panel min-h-0 flex-1 min-w-0 flex" style={{ flexDirection: 'row' }}>
+              <div className="flex-1 min-h-0 overflow-y-auto scroll-thin flex justify-center p-1.5">
+                <div className="flex flex-col gap-2" style={{ width: 'calc(var(--slot) * 6 + 20px)' }}>
+                  <EquipDoll sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} onOpen={openSheet} />
+                  {bagCol}
+                  <CarryBar className="carry-narrow pb-1" />
                 </div>
-                {bagCol}
-              </>
-            )}
-          </div>
-        </Panel>
-        <SheetDrawer has={!!sel}>{sel ? card : <div className="h-full flex items-center justify-center text-center text-muted text-sm px-3">Toca un objeto para ver su ficha.</div>}</SheetDrawer>
+              </div>
+            </div>
+            <div className="min-h-0 flex-1 min-w-0 flex"><StashPanel cols={stashCols} bare sel={sel} onSelect={onSelect} onEmpty={onEmpty} onQuick={(l) => openSheet(l)} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} /></div>
+          </>
+        ) : (
+          <>
+            <div className="panel ui-panel min-h-0 flex-1 min-w-0 flex flex-col p-1.5" data-testid="alijo-hero"><PhoneHero /></div>
+            <div className="panel ui-panel min-h-0 flex-1 min-w-0 flex flex-col p-2"><div className="flex-1 min-h-0 overflow-y-auto scroll-thin"><HeroStats preview={preview} /></div></div>
+          </>
+        )}
+        <SheetDrawer open={sheet && !!sel} onClose={() => setSheet(false)}>{card}</SheetDrawer>
         {pickerModal}
       </div>
     );
@@ -325,7 +334,7 @@ function Adventurer({ preview }: { preview?: Partial<Record<keyof Stats, number>
 }
 
 /** Muñeco de ranuras con la forma del cuerpo: cabeza, amuleto, torso y pies en el eje; arma y secundaria a los lados de la cabeza; manos y anillo junto al torso; atuendo y mochila abajo. */
-function EquipDoll({ sel, onSelect, onEmpty, onDone, onSkin }: { sel: Loc | null; onSelect: (l: Loc) => void; onEmpty: (l: Loc) => void; onDone: () => void; onSkin: () => void }) {
+function EquipDoll({ sel, onSelect, onEmpty, onDone, onSkin, onOpen }: { sel: Loc | null; onSelect: (l: Loc) => void; onEmpty: (l: Loc) => void; onDone: () => void; onSkin: () => void; onOpen?: (l: Loc) => void }) {
   const prof = useGame((s) => s.profile!);
   const eq = prof.equipment;
   const selItem = sel?.kind === 'grid' ? (() => { const gr = sel.container === 'shared' ? prof.shared : sel.container === 'backpack' || sel.container === 'stash' || sel.container === 'pocket' ? prof[sel.container] : null; return gr?.[sel.index]?.itemId; })() : undefined;
@@ -333,7 +342,7 @@ function EquipDoll({ sel, onSelect, onEmpty, onDone, onSkin }: { sel: Loc | null
     <div className="flex flex-col items-center gap-0.5" key={s}>
       <ItemSlot stack={eq[s]} loc={{ kind: 'equip', slot: s }} equipment={eq} mode={MODE} placeholderIcon={SLOT_ICON[s]} label={SLOT_LABELS[s]} big={big}
         selected={sel?.kind === 'equip' && sel.slot === s} awaiting={!!sel} onSelect={onSelect} onEmpty={onEmpty} movingItemId={selItem}
-        onQuick={(l) => { actions.unequip(l); onDone(); }} onAlt={(l) => { actions.unequip(l); onDone(); }} />
+        onQuick={(l) => { if (onOpen) return onOpen(l); actions.unequip(l); onDone(); }} onAlt={(l) => { actions.unequip(l); onDone(); }} />
       <span className="text-[12px] text-stone-300 uppercase tracking-wider">{SLOT_LABELS[s]}</span>
     </div>
   );
@@ -488,36 +497,27 @@ function StatusView({ withNeeds }: { withNeeds?: boolean }) {
   );
 }
 
-/** Móvil: el héroe grande (escala entera según el hueco), con «Clase · Nivel» y la experiencia. */
+/** Móvil: el héroe en el arco de habilidades (como en escritorio), con «Clase · Nivel» y la experiencia. */
 function PhoneHero() {
   const ch = useGame((s) => s.profile!.character);
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [box, setBox] = useState({ w: 0, h: 0 });
-  useEffect(() => {
-    const el = ref.current; if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(([e]) => setBox({ w: e.contentRect.width, h: e.contentRect.height })); ro.observe(el); return () => ro.disconnect();
-  }, []);
-  const scale = box.h ? Math.max(2, Math.min(Math.floor((box.h - 16) / 26), Math.floor((box.w - 8) / 22))) : 4;
+  const k = useKit();
   const need = xpForNextLevel(ch.level);
   return (
-    <div className="flex-1 min-h-0 flex flex-col mt-1.5" data-testid="equipment-hero">
-      <div ref={ref} className="ui-arch flex-1 min-h-0 flex items-end justify-center overflow-hidden"><div className="pb-2 relative"><div className="pedestal" style={{ width: 22 * scale, height: 5 * scale, bottom: -2.5 * scale }} /><PlayerSprite scale={scale} /></div></div>
-      <div className="text-center font-display text-gold text-[13px] mt-1" data-testid="hero-level">{className(ch.classId, ch.appearance.sex)} · Nivel {ch.level}</div>
+    <div className="flex-1 min-h-0 flex flex-col" data-testid="equipment-hero">
+      <div className="relative flex-1 min-h-0 w-full" data-testid="alijo-skills"><SkillArc k={k} focus={null} onFocus={() => {}} compact noFoot /></div>
+      <div className="text-center font-display text-gold text-[13px]" data-testid="hero-level">{className(ch.classId, ch.appearance.sex)} · Nivel {ch.level}</div>
       <div title={`${ch.xp} / ${need} XP`}><div className="h-1.5 bg-stone-800"><div className="h-full bg-arcane" style={{ width: `${Math.min(100, (ch.xp / need) * 100)}%` }} /></div><div className="text-center text-[12px] text-stone-400">{ch.xp} / {need} XP</div></div>
     </div>
   );
 }
 
-/** Cajón de la ficha (móvil): pestaña vertical «Ficha» en el borde derecho; se despliega por encima. Con un objeto elegido, la pestaña brilla. */
-function SheetDrawer({ has, children }: { has: boolean; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-  useEffect(() => { if (!has) setOpen(false); }, [has]);
+/** Cajón de la ficha (móvil): se abre con doble toque en un objeto y se despliega por la derecha; se cierra con ✕ o tocando fuera. */
+function SheetDrawer({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   return (
     <>
-      <button className={`ui-drawer-tab right ${has ? 'has' : ''}`} onClick={() => setOpen(true)} aria-expanded={open} data-testid="item-sheet-open">◂ Ficha</button>
-      {open && <div className="ui-drawer-shade" onClick={() => setOpen(false)} />}
+      {open && <div className="ui-drawer-shade" onClick={onClose} />}
       <div className={`ui-drawer right ${open ? 'open' : ''}`} aria-hidden={!open} data-testid="item-sheet">
-        <div className="h-full overflow-y-auto scroll-thin relative p-3 panel"><button className="btn icon-btn absolute right-2 top-2" onClick={() => setOpen(false)} aria-label="Cerrar la ficha">✕</button><div className="pr-12">{children}</div></div>
+        <div className="h-full overflow-y-auto scroll-thin relative p-3 panel"><button className="btn icon-btn absolute right-2 top-2" onClick={onClose} aria-label="Cerrar la ficha">✕</button><div className="pr-12">{children}</div></div>
       </div>
     </>
   );
