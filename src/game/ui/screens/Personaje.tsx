@@ -304,9 +304,9 @@ function SkillsPanel({ k, focus, onFocus, earned, tab, onTab, fixed }: { k: Retu
           {canUnlock ? <p className="hb-note ok" data-testid="class-note">¡Puedes desbloquear una habilidad! Elige cuál.</p>
  : null}
           {cls.classSkills.map((id) => {
-            const sk = getSkill(id); const own = unlocked.includes(id); const eq = id === equipped; const on = focus === id;
+            const sk = getSkill(id); const own = unlocked.includes(id); const eq = id === equipped;
             return (
-              <div key={id} className={`hb-acard ${on ? 'on' : ''} ${own || canUnlock ? '' : 'locked'}`} onClick={() => own && onFocus(id)} data-testid={`class-skill-${id}`} data-state={eq ? 'equipped' : own ? 'owned' : canUnlock ? 'choose' : 'locked'}>
+              <div key={id} className={`hb-acard ${eq ? 'on' : ''} ${own || canUnlock ? '' : 'locked'}`} onClick={() => own && onFocus(id)} data-testid={`class-skill-${id}`} data-state={eq ? 'equipped' : own ? 'owned' : canUnlock ? 'choose' : 'locked'}>
                 <span className="hb-acard-top">{!own && !canUnlock && <Lock size={14} />}<ActionIcon fx={sk.fx ?? 'holy'} color={eq ? '#f2c75a' : own || canUnlock ? C.class : '#8c8693'} size={26} /><span className="hb-acard-name">{sk.name}</span>{!own && !canUnlock && nextLv && <span className="hb-req" data-testid={`class-req-${id}`}>Requiere nivel {nextLv}</span>}<CostChips cost={skillCost(sk.cost, k.maxMp, cls.resource)} cd={sk.cooldown ?? 0} res={k.res} mana={k.mana} labels /></span>
                 {effectLines(id, k.res).length > 0 && <EffectList lines={effectLines(id, k.res)} />}
                 <span className="hb-desc block">{sk.description}</span>
