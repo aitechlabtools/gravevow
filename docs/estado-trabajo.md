@@ -4,6 +4,10 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 25/11 (7): Habilidades rehecha
+- Héroe grande con su círculo a la izquierda y un panel con pestañas Ataques · Habilidades de clase a la derecha, en los tres formatos (ver guia-interfaz › Habilidades). Fuera el camino vertical de hitos: ahora línea horizontal y solo el próximo hito. Ninguna regla cambia.
+- Capturas: `mockups/plan-interfaz-2/habilidades/capturar.cjs` (`NV=40` hito por elegir, `CLASE=mage`).
+
 ## Novedades del 25/11 (6): mismo diseño en móvil y tableta
 - Regla: escritorio, tableta y móvil llevan siempre el mismo diseño, adaptado al espacio.
 - Heridas en tableta: arreglado el solape del cuerpo con «Tus curas» (consulta de contenedor a 500 px; antes 540).

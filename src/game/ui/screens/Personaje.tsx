@@ -1,9 +1,10 @@
-// Habilidades (antes «Personaje»; reorganizada el 14/11, mockups/habilidades): en escritorio, «Ataques» a la izquierda, el héroe
-// con sus rombos en el centro (clase arriba, mano derecha en el lado de la espada, mano izquierda en el del escudo) y «Clase»
-// (camino de hitos) a la derecha. En tableta y móvil, el héroe y un solo panel con selector Ataques · Clase.
+// Habilidades (rehecha el 25/11): tres columnas 30/40/30 en escritorio y tableta. Izquierda «Ataques» (tarjetas por mano con
+// ímpetu en amarillo y recarga en azul), centro el héroe con su círculo de rombos y derecha «Habilidades de clase» (equipada,
+// desbloqueadas con «Equipar» y progresión en línea horizontal 1·20·40·60·80 con las opciones del próximo hito plegadas).
+// En el móvil, el mismo diseño: el héroe y un panel con selector Ataques · Clase.
 // Los atributos, el desglose y la trayectoria están en Intendencia → «Ver detalles» (HeroDetails.tsx).
 // No cambia ninguna regla: los ataques salen de las armas y la habilidad de clase se elige en los hitos (core/classSkills.ts).
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { actions, useGame } from '../../state/store';
 import { CLASSES } from '../../../core/data/classes';
 import { computeStats, xpForNextLevel } from '../../../core/stats';
@@ -16,7 +17,7 @@ import { CLASS_UNLOCK_LEVELS, skillCost } from '../../../config/progression';
 import { PlayerSprite } from '../common';
 import { ActionIcon } from '../combatActions';
 import { ItemIcon } from '../inventory';
-import { Panel, usePixelScale } from '../kit';
+import { usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
 
 // Mismos colores que la barra de combate (combatActions.tsx → SOURCE)
@@ -39,10 +40,10 @@ function useKit() {
   const right = { label: kit.right.label, itemId: mainId, items: [basic, ...kit.right.skills.map((id) => mk(id, 'weapon'))] };
   const left = { label: two ? `${kit.right.label} (a dos manos)` : kit.left.label, itemId: two ? mainId : offId, two, items: kit.left.skills.map((id) => mk(id, 'offhand')) };
   const cs = mk(kit.classSkill, 'class');
-  return { profile, ch, cls, res, right, left, cs, maxMp };
+  const mana = cls.resource === 'mana';
+  return { profile, ch, cls, res, right, left, cs, maxMp, mana };
 }
 
-const costText = (a: { cost: number; cd: number }, res: string) => `${a.cost ? `${a.cost} ${res}` : 'sin coste'}${a.cd ? ` · recarga ${a.cd}` : ''}`;
 
 function Diamond({ fx, color, size, strong }: { fx: string; color: string; size: number; strong?: boolean }) {
   return (
@@ -60,50 +61,58 @@ export function Personaje({ onStash }: { onStash?: () => void }) {
   const k = useKit();
   const layout = useLayout();
   const phone = layout === 'phone';
-  const both = layout === 'desktop';
   const [focus, setFocus] = useState<string | null>(null);
-  // Tableta y móvil: un solo panel al lado del personaje, con selector Ataques · Clase. Se abre en Clase si hay un hito por elegir.
+  // Móvil: un solo panel al lado del personaje, con selector Ataques · Clase. Se abre en Clase si hay un hito por elegir.
   const pending = pendingUnlocks(k.profile) > 0;
   const [tab, setTab] = useState<'atk' | 'class'>(pending ? 'class' : 'atk');
-  // Tocar un rombo resalta su entrada (en los dos sitios) y, con selector, abre el panel donde está
-  const pick = (id: string | null) => { setFocus(id); if (id && !both) setTab(id === k.cs.id ? 'class' : 'atk'); };
+  const pick = (id: string | null) => { setFocus(id); if (id) setTab(id === k.cs.id ? 'class' : 'atk'); };
   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
   const arc = <SkillArc k={k} focus={focus} onFocus={pick} compact={phone} />;
   const attacks = <Attacks k={k} focus={focus} onFocus={pick} onStash={onStash} />;
   const path = <ClassPath focus={focus} onFocus={pick} />;
-  const classTitle = pending ? 'Clase ◆' : 'Clase';
 
-  if (both) {
-    // Escritorio: Ataques a la izquierda, el personaje en el centro y Clase a la derecha, sin selector
-    return (
-      <div className="h-full grid pj-wide" style={{ ...pad, gridTemplateColumns: '400px minmax(0,1fr) 420px' }} data-testid="screen-character">
-        <div className="min-h-0 flex" data-testid="character-panels"><Panel title="Ataques" className="flex-1 min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="character-atk">{attacks}</Panel></div>
-        <div className="min-h-0 flex flex-col">
-          <div className="flex-1 min-h-0 relative">{arc}</div>
-        </div>
-        <Panel title={classTitle} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="character-class">{path}</Panel>
-      </div>
-    );
-  }
+  // Mismo esquema en los tres formatos: el héroe con su círculo a la izquierda y un panel con dos pestañas en la cabecera
+  const tabs = (
+    <div className="hb-tabs" role="tablist" data-testid="character-seg">
+      {([{ id: 'atk', label: 'Ataques' }, { id: 'class', label: 'Habilidades de clase' }] as const).map((o) => (
+        <button key={o.id} role="tab" aria-selected={tab === o.id} className={tab === o.id ? 'on' : ''} onClick={() => setTab(o.id)} data-testid={`seg-${o.id}`}>
+          <span className="hb-tab-d" aria-hidden>◆</span>{o.label}{o.id === 'class' && pending && <span className="text-gold ml-1">●</span>}
+        </button>
+      ))}
+    </div>
+  );
   return (
-    <div className={`h-full grid ${phone ? '' : 'pj-wide'}`} style={{ ...pad, gridTemplateColumns: phone ? 'minmax(0,1fr) 52px minmax(0,1.15fr)' : 'minmax(0,1fr) 52px 400px' }} data-testid="screen-character">
-      <div className="min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 relative">{arc}</div>
-      </div>
-      {/* Fase 6: Ataques · Clase en columna vertical al lateral (móvil: solo icono; tableta: icono y nombre) */}
-      <div className="vtabs-col pj-side is-icon" role="tablist" aria-orientation="vertical" data-testid="character-seg">
-        {([{ id: 'atk', label: 'Ataques', fx: k.right.items[0].fx }, { id: 'class', label: 'Clase', fx: k.cs.fx }] as const).map((o) => (
-          <button key={o.id} role="tab" aria-selected={tab === o.id} aria-label={o.label} title={o.label} onClick={() => setTab(o.id)} data-testid={`seg-${o.id}`}>
-            <ActionIcon fx={o.fx} size={24} color={tab === o.id ? '#1a1206' : undefined} />
-            
-            {o.id === 'class' && pending && <span className="vtab-dot gold">◆</span>}
-          </button>
-        ))}
-      </div>
-      <div className="min-h-0 flex flex-col" style={{ gap: 'var(--gap)' }} data-testid="character-panels">
-        <Panel className="flex-1 min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId={tab === 'class' ? 'character-class' : 'character-atk'}>{tab === 'class' ? path : attacks}</Panel>
+    <div className="h-full grid" style={{ ...pad, gridTemplateColumns: phone ? 'minmax(0,1fr) minmax(0,1.15fr)' : 'minmax(0,60fr) minmax(0,40fr)' }} data-testid="screen-character">
+      <div className="min-h-0 relative">{arc}</div>
+      <div className="min-h-0 flex flex-col" data-testid="character-panels">
+        <section className="panel ui-panel flex-1 min-h-0" data-testid={tab === 'class' ? 'character-class' : 'character-atk'}>
+          {tabs}
+          <div className="ui-pbody overflow-y-auto scroll-thin">{tab === 'class' ? path : attacks}</div>
+        </section>
       </div>
     </div>
+  );
+}
+
+// ── Indicadores de ímpetu (amarillo) y recarga (azul): los mismos en Ataques y en Habilidades de clase ──
+function Bolt({ size = 14, color = '#e8b33a' }: { size?: number; color?: string }) {
+  return <svg width={size} height={size} viewBox="0 0 7 9" shapeRendering="crispEdges" aria-hidden><path d="M3 0h3v1H5v2h2v1H6v1H5v1H4v1H3v1H2V6h1V5H0V4h1V3h1V1h1z" fill={color} /></svg>;
+}
+function Drop({ size = 14, color = '#5fd1d1' }: { size?: number; color?: string }) {
+  return <svg width={size} height={size} viewBox="0 0 7 9" shapeRendering="crispEdges" aria-hidden><path d="M3 0h1v1h1v2h1v1h1v4H6v1H1V8H0V4h1V3h1V1h1z" fill={color} /><path d="M2 5h1v2H2z" fill="#d8f6f6" /></svg>;
+}
+function Recharge({ size = 14, color = '#6fa8e8' }: { size?: number; color?: string }) {
+  return <svg width={size} height={size} viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden><path d="M2 0h4v1h1v1H6V1H2v1H1v5h1v1h4V7h1v1H6v1H2V8H1V7H0V2h1V1h1zM5 2h4v4H8V4H7V3H5zM7 5h1v2H7z" fill={color} /></svg>;
+}
+/** Coste en el recurso de la clase: ímpetu (rayo, amarillo) o maná (gota, turquesa); recarga en azul. */
+export function CostChips({ cost, cd, res, big, mana }: { cost: number; cd: number; res: string; big?: boolean; mana?: boolean }) {
+  const sz = big ? 16 : 13;
+  const R = mana ? Drop : Bolt;
+  return (
+    <span className="hb-chips" aria-label={`${cost ? `${cost} de ${res}` : 'sin coste'}; ${cd ? `recarga ${cd} turnos` : 'sin recarga'}`}>
+      <span className={`hb-chip ${mana ? 'mana' : 'imp'} ${big ? 'big' : ''} ${cost ? '' : 'zero'}`} title={`${mana ? 'Maná' : 'Ímpetu'}: ${cost}`}><R size={sz} />{cost}</span>
+      <span className={`hb-chip cd ${big ? 'big' : ''} ${cd ? '' : 'zero'}`} title={cd ? `Recarga: ${cd} turnos` : 'Sin recarga'}><Recharge size={sz} />{cd || '—'}</span>
+    </span>
   );
 }
 
@@ -117,14 +126,13 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
     const upd = () => { const r = el.getBoundingClientRect(); setDim({ w: r.width, h: r.height }); };
     upd(); const ro = new ResizeObserver(upd); ro.observe(el); return () => ro.disconnect();
   }, []);
-  const node = compact ? 44 : 64, big = compact ? 52 : 80, label = compact ? 0 : 22;
-  const R = Math.max(64, Math.min((dim.h - big - label - 12) / 1.62, dim.w / 2 - node / 2 - (compact ? 4 : 18)));
-  // Si lo que limita es el ancho, se centra en vertical (tableta)
+  // Círculo compacto (25/11): rombos algo más pequeños y nombres sobre una placa oscura para que se lean
+  const node = compact ? 44 : 54, big = compact ? 52 : 66, label = compact ? 0 : 24;
+  const R = Math.max(64, Math.min((dim.h - big - label - 12) / 1.62, dim.w / 2 - node / 2 - (compact ? 4 : 56)));
   const usedH = big / 2 + 6 + R * 1.62 + label;
   const cx = dim.w / 2, cy = big / 2 + 6 + R + Math.max(0, (dim.h - usedH) / 2);
-  const scale = Math.max(min, Math.floor(R / 21)); // más grande (14/11): la cabeza llega cerca del rombo de clase
-  const feet = Math.min(dim.h - 6, cy + R * 0.55);
-  // El sprite mira al frente: la mano derecha (espada) queda a la derecha de la pantalla y la izquierda (escudo) a la izquierda.
+  const scale = Math.max(min, Math.floor((R / 21) * 0.8)); // algo más pequeño que antes para dejar sitio a los nombres
+  const feet = Math.min(dim.h - 6, cy + R * 0.5);
   const spread = (n: number, a0: number, a1: number) => Array.from({ length: n }, (_, i) => a0 + (a1 - a0) * (n === 1 ? 0.5 : i / (n - 1)));
   const rA = spread(k.right.items.length, 42, -38), lA = spread(k.left.items.length, 138, 218);
   const at = (deg: number) => ({ x: cx + R * Math.cos((deg * Math.PI) / 180), y: cy - R * Math.sin((deg * Math.PI) / 180) });
@@ -136,6 +144,7 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
   return (
     <div ref={box} className="absolute inset-0" data-testid="skill-arc">
       <svg className="absolute inset-0 pointer-events-none" width={dim.w} height={dim.h} aria-hidden>
+        <circle cx={cx} cy={cy} r={R} fill="none" stroke="#3a374155" strokeWidth="1" />
         <path d={`M ${at(42).x} ${at(42).y} A ${R} ${R} 0 0 0 ${at(90).x} ${at(90).y}`} fill="none" stroke={C.class + '55'} strokeWidth="2" strokeDasharray="4 4" />
         <path d={`M ${at(138).x} ${at(138).y} A ${R} ${R} 0 0 1 ${at(90).x} ${at(90).y}`} fill="none" stroke={C.class + '55'} strokeWidth="2" strokeDasharray="4 4" />
         <path d={`M ${at(42).x} ${at(42).y} A ${R} ${R} 0 0 1 ${at(-38).x} ${at(-38).y}`} fill="none" stroke={C.weapon + '88'} strokeWidth="2" />
@@ -151,7 +160,7 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
           <button key={n.id} className="absolute grid place-items-center" style={{ left: n.p.x, top: n.p.y, width: Math.max(44, n.size), height: Math.max(44, n.size), transform: 'translate(-50%, -50%)' }}
             onClick={() => onFocus(on ? null : n.id)} onPointerEnter={(e) => e.pointerType === 'mouse' && onFocus(n.id)} aria-label={`${n.name}: ${n.desc}`} aria-pressed={on} data-testid={`arc-${n.src === 'class' ? 'class' : n.id}`}>
             <span style={{ filter: on ? `drop-shadow(0 0 10px ${C[n.src]})` : undefined }}><Diamond fx={n.fx} color={on ? '#f2c75a' : C[n.src]} size={Math.round(n.size * 0.72)} strong={n.src === 'class' || on} /></span>
-            {!compact && <span className={`absolute left-1/2 -translate-x-1/2 top-full text-[12px] whitespace-nowrap ${on ? 'text-gold' : n.src === 'class' ? 'text-gold' : 'text-stone-300'}`}>{n.src === 'basic' ? `${n.name} · básico` : n.name}</span>}
+            {!compact && <span className={`hb-arc-label ${on || n.src === 'class' ? 'on' : ''}`}>{n.name}</span>}
           </button>
         );
       })}
@@ -159,39 +168,39 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
   );
 }
 
-// ── Ataques por mano (informativo) ──
+// ── Ataques por mano: tarjetas compactas ──
 function HandHead({ hand, label, itemId, color }: { hand: string; label: string; itemId?: string; color: string }) {
   return (
-    <h3 className="flex items-center gap-2 mb-1">
-      <span className="w-9 h-9 grid place-items-center bg-[#0d0c11] border border-stone-700 shrink-0">{itemId ? <ItemIcon itemId={itemId} size={28} /> : null}</span>
-      <span className="leading-tight"><span className="block text-[12px] tracking-[0.15em] uppercase" style={{ color }}>{hand}</span><span className="text-parchment font-display text-[15px]">{label}</span></span>
+    <h3 className="hb-hand">
+      <span className="hb-hand-ico">{itemId ? <ItemIcon itemId={itemId} size={28} /> : null}</span>
+      <span className="leading-tight min-w-0"><span className="block text-[12px] tracking-[0.15em] uppercase" style={{ color }}>{hand}</span><span className="block text-parchment font-display text-[16px] truncate">{label}</span></span>
     </h3>
   );
 }
-function AtkRow({ a, res, focus, onFocus, compact }: { a: Atk; res: string; focus: string | null; onFocus: (id: string | null) => void; compact?: boolean }) {
+function AtkCard({ a, res, focus, onFocus, mana }: { a: Atk; res: string; focus: string | null; onFocus: (id: string | null) => void; mana: boolean }) {
   const on = focus === a.id;
   return (
-    <button className={`w-full text-left flex gap-3 items-start p-2 border-2 min-h-[44px] ${on ? 'border-gold bg-[#2a2116]' : 'border-transparent'}`} onClick={() => onFocus(on ? null : a.id)} data-testid={`atk-${a.id}`}>
-      <span className="mt-1"><Diamond fx={a.fx} color={C[a.src]} size={24} /></span>
-      <span className="min-w-0 flex-1">
-        <span className="flex justify-between gap-2 items-baseline"><span className="font-display text-parchment min12">{a.name}</span>
-          <span className="text-[12px] text-stone-400 whitespace-nowrap">{a.src === 'basic' ? 'Básico · sin coste' : costText(a, res)}</span></span>
-        {(!compact || on) && <span className="block text-[14px] text-stone-300 leading-snug">{a.desc}</span>}
-      </span>
+    <button className={`hb-card ${on ? 'on' : ''}`} onClick={() => onFocus(on ? null : a.id)} data-testid={`atk-${a.id}`}>
+      <span className="hb-card-top"><span className="hb-name">{a.name}</span><CostChips cost={a.cost} cd={a.cd} res={res} big mana={mana} /></span>
+      <span className="hb-desc">{a.desc}</span>
     </button>
   );
 }
 function Attacks({ k, focus, onFocus }: { k: ReturnType<typeof useKit>; focus: string | null; onFocus: (id: string | null) => void; onStash?: () => void }) {
   return (
-    <div className="font-body space-y-4" data-testid="character-attacks">
-      <section><HandHead hand="Mano derecha" label={k.right.label} itemId={k.right.itemId} color={C.weapon} />{k.right.items.map((a) => <AtkRow key={a.id} a={a} res={k.res} focus={focus} onFocus={onFocus} />)}</section>
-      <section><HandHead hand="Mano izquierda" label={k.left.label} itemId={k.left.itemId} color={C.offhand} />
-        {k.left.two ? <p className="text-[14px] text-stone-400 italic px-2">Ocupada por el arma a dos manos: sus cuatro ataques están arriba.</p> : k.left.items.map((a) => <AtkRow key={a.id} a={a} res={k.res} focus={focus} onFocus={onFocus} />)}
+    <div className="font-body" data-testid="character-attacks">
+      <section className="hb-sec"><HandHead hand="Mano derecha" label={k.right.label} itemId={k.right.itemId} color={C.weapon} />
+        <div className="hb-list">{k.right.items.map((a) => <AtkCard key={a.id} a={a} res={k.res} focus={focus} onFocus={onFocus} mana={k.mana} />)}</div></section>
+      <section className="hb-sec"><HandHead hand="Mano izquierda" label={k.left.label} itemId={k.left.itemId} color={C.offhand} />
+        {k.left.two ? <p className="text-[14px] text-stone-400 italic px-2">Ocupada por el arma a dos manos: sus cuatro ataques están arriba.</p>
+          : <div className="hb-list">{k.left.items.map((a) => <AtkCard key={a.id} a={a} res={k.res} focus={focus} onFocus={onFocus} mana={k.mana} />)}</div>}
       </section>
+      <div className="hb-legend"><span>{k.mana ? <Drop size={13} /> : <Bolt size={13} />} {k.mana ? 'Maná' : 'Ímpetu'}</span><span><Recharge size={13} /> Recarga en turnos</span></div>
     </div>
   );
 }
-// ── Habilidad de clase: camino de hitos ──
+
+// ── Habilidades de clase: equipada · desbloqueadas · progresión ──
 function ClassPath({ focus, onFocus }: { focus: string | null; onFocus: (id: string | null) => void }) {
   const profile = useGame((s) => s.profile)!;
   const ch = profile.character;
@@ -202,109 +211,72 @@ function ClassPath({ focus, onFocus }: { focus: string | null; onFocus: (id: str
   const pending = pendingUnlocks(profile);
   const earned = 1 + unlocksEarned(ch.level);
   const remaining = cls.classSkills.filter((id) => !unlocked.includes(id));
-  const nextIdx = earned; // índice del próximo hito aún no alcanzado
+  const nextIdx = earned;
   const nextLv = MILESTONES[nextIdx];
   const prevLv = MILESTONES[nextIdx - 1] ?? 1;
   const frac = nextLv ? Math.min(1, (ch.level - prevLv + ch.xp / xpForNextLevel(ch.level)) / (nextLv - prevLv)) : 1;
-
-  // Tarjeta de una habilidad: equipada (grande), desbloqueada (toca para equiparla), candidata a elegir o bloqueada (gris)
   const [pick, setPick] = useState<string | null>(null);
-  const tags = (s: ReturnType<typeof getSkill>) => (
-    <span className="flex gap-1.5 shrink-0" aria-label={costText({ cost: skillCost(s.cost, maxMp, cls.resource), cd: s.cooldown ?? 0 }, res)}>
-      <span className="text-[12px] text-stone-400 border border-stone-700 px-1.5 leading-[20px] whitespace-nowrap">⚡ {skillCost(s.cost, maxMp, cls.resource)}</span>
-      {(s.cooldown ?? 0) > 0 && <span className="text-[12px] text-stone-400 border border-stone-700 px-1.5 leading-[20px] whitespace-nowrap">⟳ {s.cooldown}</span>}
-    </span>
-  );
-  const card = (id: string, state: 'equipped' | 'owned' | 'choose' | 'locked') => {
-    const s = getSkill(id); const on = focus === id; const locked = state === 'locked'; const sel = state === 'choose' && pick === id;
-    return (
-      <div key={id} className={`flex gap-3 items-start p-2.5 border-2 ${state === 'equipped' || sel ? 'border-gold bg-[#2a2116]' : state === 'choose' ? 'border-[#a56bff] bg-[#1a1424] cursor-pointer min-h-[44px]' : on ? 'border-stone-500' : locked ? 'border-[#1f1d24] bg-[#0b0a0e]' : 'border-stone-700 bg-[#0d0c11]'} ${state === 'owned' ? 'cursor-pointer hover:border-stone-500' : ''}`}
-        onClick={() => { if (state === 'owned') actions.equipClassSkill(id); if (state === 'choose') { setPick(id); return; } onFocus(id); }} role={state === 'choose' ? 'button' : undefined} aria-pressed={state === 'choose' ? sel : undefined} data-testid={`class-skill-${id}`} data-state={state}>
-        <span className={`grid place-items-center shrink-0 ${state === 'equipped' ? 'w-11 h-11 my-0.5' : 'w-8 h-8'} ${locked ? 'grayscale opacity-45' : ''}`}><Diamond fx={s.fx ?? 'holy'} color={C.class} size={state === 'equipped' ? 22 : 20} strong={state === 'equipped'} /></span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-baseline justify-between gap-2">
-            <span className={`font-display text-[15px] leading-tight ${locked ? 'text-stone-400' : 'text-parchment'}`}>{s.name}</span>
-            {locked ? <Lock size={12} /> : tags(s)}
-          </span>
-          <span className={`block text-[14px] leading-snug mt-0.5 ${locked ? 'text-stone-500' : 'text-stone-300'}`}>{s.description}</span>
-          {locked && <span className="block text-[12px] text-stone-500 mt-1">{costText({ cost: skillCost(s.cost, maxMp, cls.resource), cd: s.cooldown ?? 0 }, res)}</span>}
-          {state === 'owned' && <span className="block text-[12px] text-stone-400 mt-1">Toca para equiparla</span>}
-        </span>
-      </div>
-    );
-  };
+  const chips = (id: string) => { const s = getSkill(id); return <CostChips cost={skillCost(s.cost, maxMp, cls.resource)} cd={s.cooldown ?? 0} res={res} mana={cls.resource === 'mana'} />; };
+  const lvOf = (id: string) => MILESTONES[unlocked.indexOf(id)] ?? 1;
 
-  // Carril: una columna fija con la línea y los rombos centrados en ella (centro a 14 px del borde)
-  const RAIL = 28;
-  type St = 'done' | 'choose' | 'next' | 'later';
-  const rows = MILESTONES.map((lv, i) => {
-    const st: St = i < earned ? (unlocked[i] ? 'done' : 'choose') : i === nextIdx && pending === 0 ? 'next' : 'later';
-    return { lv, i, st };
-  });
-  const COLOR: Record<St, string> = { done: C.class, choose: C.class, next: '#a56bff', later: '#3a3741' };
-  const chip = (txt: string, color: string) => <span className="text-[12px] tracking-[0.12em] uppercase whitespace-nowrap" style={{ color }}>{txt}</span>;
+  const eq = getSkill(equipped);
+  const others = unlocked.filter((id) => id !== equipped);
+  // Hito donde se eligió (o se elegirá) cada habilidad: hecho, por elegir, el siguiente o más adelante
+  const stOf = (i: number) => i < earned ? (unlocked[i] ? 'done' : 'choose') : i === nextIdx ? 'next' : 'later';
+  const chooseNow = pending > 0 && remaining.length > 0;
   return (
     <div className="font-body" data-testid="class-path">
-      <h3 className="text-[12px] tracking-[0.15em] uppercase text-gold mb-1.5">Equipada</h3>
-      {card(equipped, 'equipped')}
+      <section className="hb-sec">
+        <h3 className="hb-cap">Habilidad equipada</h3>
+        <div className={`hb-card hb-eq ${focus === equipped ? 'on' : ''}`} onClick={() => onFocus(equipped)} data-testid={`class-skill-${equipped}`} data-state="equipped">
+          <span className="hb-card-top"><span className="hb-name flex items-center gap-2"><Diamond fx={eq.fx ?? 'holy'} color={C.class} size={20} strong />{eq.name}</span>{chips(equipped)}</span>
+          <span className="hb-desc">{eq.description}</span>
+          <span className="hb-foot"><span>Desbloqueada al nivel {lvOf(equipped)}</span><span className="text-gold">✓ Equipada</span></span>
+        </div>
+      </section>
 
-      <div className="flex items-baseline justify-between mt-6 mb-3 border-b border-stone-800 pb-1.5">
-        <h3 className="text-[12px] tracking-[0.15em] uppercase text-gold">Camino de hitos</h3>
-        <span className="text-[12px] text-stone-400">{unlocked.length} de {cls.classSkills.length}</span>
-      </div>
-      <ol className="relative">
-        {rows.map(({ lv, i, st }, k) => {
-          const last = k === rows.length - 1;
-          const id = unlocked[i];
-          const below = rows[k + 1];
-          // Tramo de línea hasta el hito siguiente: dorado si ese hito ya se alcanzó
-          const seg = !last && <span className="absolute w-[2px]" style={{ left: RAIL / 2 - 1, top: 15, bottom: -15, background: below.st === 'done' || below.st === 'choose' ? C.class : '#2e2b35' }} aria-hidden />;
-          const marker = (
-            <span className="absolute grid place-items-center" style={{ left: 0, top: 1, width: RAIL, height: RAIL }} aria-hidden>
-              <span className="absolute rotate-45 border-2" style={{ width: 20, height: 20, borderColor: COLOR[st], background: st === 'done' || st === 'choose' ? '#2a2116' : '#0d0c11', boxShadow: st === 'next' ? '0 0 10px #a56bff88' : undefined }} />
-              <span className={`relative font-display text-[12px] leading-none ${st === 'later' ? 'text-stone-500' : 'text-parchment'}`}>{lv}</span>
-            </span>
-          );
-          const head = (txt: ReactNode, right?: ReactNode) => (
-            <div className="flex items-center justify-between gap-2 min-h-[30px]">
-              <span className="font-display text-[15px] text-parchment">{txt}</span>{right}
-            </div>
-          );
-          let body: ReactNode = null;
-          if (st === 'done') {
-            body = <>
-              {id === equipped
-                ? head(<>Nivel {lv} <span className="font-body text-[14px] text-gold">· {getSkill(id).name} ✓</span></>)
-                : <>{head(<>Nivel {lv}</>, chip('Elegida', C.class))}{card(id, 'owned')}</>}
-            </>;
-          } else if (st === 'choose') {
-            body = i > unlocked.length
-              ? <>{head(<>Nivel {lv}</>, chip('Por elegir', C.class))}<p className="text-[14px] text-stone-400 italic">Elige primero la del hito anterior; luego te tocará esta.</p></>
-              : <>{head(<>Nivel {lv}</>, chip('¡Elige ya!', C.class))}
-                  <p className="text-[13px] text-stone-400 mb-2">{remaining.length > 1 ? 'Elige 1 · las demás no se pierden' : 'La última habilidad de tu clase'}</p>
-                  <div className="space-y-2">{remaining.map((r) => card(r, 'choose'))}</div>
-                  <button className="btn btn-gold w-full min-h-[44px] mt-3 sticky bottom-0 disabled:opacity-60 disabled:bg-stone-700 disabled:text-stone-400" disabled={!pick || !remaining.includes(pick)}
-                    onClick={() => { if (pick) { actions.unlockClassSkill(pick); setPick(null); } }} data-testid={pick ? `btn-unlock-class-${pick}` : 'btn-unlock-class'}>
-                    {pick && remaining.includes(pick) ? `Elegir ${getSkill(pick).name}` : 'Toca una habilidad'}</button></>;
-          } else if (st === 'next') {
-            body = <>
-              {head(<>Nivel {lv}</>, chip(lv - ch.level === 1 ? 'Te falta 1 nivel' : `Te faltan ${lv - ch.level} niveles`, '#c79bff'))}
-              <div className="h-1.5 bg-stone-800 mb-2"><div className="h-full bg-arcane" style={{ width: `${frac * 100}%` }} /></div>
-              <p className="text-[14px] text-stone-300 mb-2">Elegirás 1 de estas:</p>
-              <div className="space-y-2">{remaining.map((r) => card(r, 'locked'))}</div>
-            </>;
-          } else {
-            const left = cls.classSkills.length - i;
-            body = head(<span className="text-stone-500">Nivel {lv}</span>, <span className="text-[13px] text-stone-500 text-right">{left > 1 ? `Elegirás 1 de las ${left} que queden` : 'La última que quede'}</span>);
-          }
-          return (
-            <li key={lv} className={`relative ${last ? '' : 'pb-4'}`} style={{ paddingLeft: RAIL + 12 }} data-hito={lv} data-state={st}>
-              {seg}{marker}{body}
-            </li>
-          );
-        })}
-      </ol>
+      <section className="hb-sec">
+        <h3 className="hb-cap">Habilidades desbloqueadas · {unlocked.length}/{cls.classSkills.length}</h3>
+        {others.length ? <div className="hb-list">{others.map((id) => { const s = getSkill(id); return (
+          <div key={id} className={`hb-card ${focus === id ? 'on' : ''}`} onClick={() => onFocus(id)} data-testid={`class-skill-${id}`} data-state="owned">
+            <span className="hb-card-top"><span className="hb-name">{s.name}</span>{chips(id)}</span>
+            <span className="hb-desc">{s.description}</span>
+            <span className="hb-foot"><span>Desbloqueada al nivel {lvOf(id)}</span>
+              <button className="btn text-[13px]" style={{ minHeight: 44, minWidth: 88 }} onClick={(e) => { e.stopPropagation(); actions.equipClassSkill(id); }} data-testid={`equip-class-${id}`}>Equipar</button></span>
+          </div>); })}</div>
+          : <p className="text-[13px] text-stone-400 italic">Aún no tienes otras. Elegirás una nueva en cada hito.</p>}
+      </section>
+
+      <section className="hb-sec">
+        <h3 className="hb-cap">Progresión de clase</h3>
+        <div className="hb-track" aria-label="Hitos de clase">
+          <span className="hb-track-line" /><span className="hb-track-fill" style={{ width: `${(Math.min(earned - 1 + (nextLv ? frac : 0), MILESTONES.length - 1) / (MILESTONES.length - 1)) * 100}%` }} />
+          {MILESTONES.map((lv, i) => <span key={lv} className={`hb-node ${stOf(i)}`} style={{ left: `${(i / (MILESTONES.length - 1)) * 100}%` }} data-hito={lv} data-state={stOf(i)}><span>{lv}</span></span>)}
+        </div>
+        {chooseNow ? (
+          <div className="hb-next choose" data-testid="class-choose">
+            <div className="flex flex-wrap justify-between items-baseline gap-x-3"><span className="hb-next-t">¡Elige ya! · Nivel {MILESTONES[unlocked.length]}</span><span className="text-[12px] text-stone-400">Elige 1 · las demás no se pierden</span></div>
+            <div className="hb-list mt-2">{remaining.map((id) => { const s = getSkill(id); const sel = pick === id; return (
+              <button key={id} type="button" className={`hb-card choose ${sel ? 'on' : ''}`} aria-pressed={sel} onClick={() => setPick(id)} data-testid={`class-skill-${id}`} data-state="choose">
+                <span className="hb-card-top"><span className="hb-name">{s.name}</span>{chips(id)}</span><span className="hb-desc">{s.description}</span>
+              </button>); })}</div>
+            <button className="btn btn-gold w-full mt-2 disabled:opacity-60" style={{ minHeight: 44 }} disabled={!pick || !remaining.includes(pick)}
+              onClick={() => { if (pick) { actions.unlockClassSkill(pick); setPick(null); } }} data-testid={pick ? `btn-unlock-class-${pick}` : 'btn-unlock-class'}>
+              {pick && remaining.includes(pick) ? `Elegir ${getSkill(pick).name}` : 'Toca una habilidad'}</button>
+          </div>
+        ) : nextLv && remaining.length ? (
+          <div className="hb-next" data-testid="class-next">
+            <div className="flex flex-wrap justify-between items-baseline gap-x-3"><span className="hb-next-t">Próximo hito · Nivel {nextLv}</span><span className="text-[13px] text-arcane">{nextLv - ch.level === 1 ? 'Te falta 1 nivel' : `Te faltan ${nextLv - ch.level} niveles`}</span></div>
+            <div className="hb-bar"><span style={{ width: `${frac * 100}%` }} /></div>
+            <p className="text-[13px] text-stone-300 my-1.5">Elegirás 1 de estas:</p>
+            <div className="hb-list">{remaining.map((id) => { const s = getSkill(id); return (
+              <details key={id} className="hb-lock" data-testid={`class-skill-${id}`} data-state="locked">
+                <summary><Lock size={12} /><span className="hb-name flex-1 min-w-0 truncate">{s.name}</span>{chips(id)}<span className="hb-caret" aria-hidden>▾</span></summary>
+                <p className="hb-desc">{s.description}</p>
+              </details>); })}</div>
+          </div>
+        ) : <p className="text-[13px] text-gold mt-2">Has desbloqueado todas las habilidades de tu clase.</p>}
+      </section>
     </div>
   );
 }
-

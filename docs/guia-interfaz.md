@@ -334,3 +334,9 @@ Plan: `docs/plan-seguro-equipo.md`. Maquetas y capturas reales: `mockups/seguro-
 
 ### Misiones (diario)
 Tres columnas 28/42/30 (`.qj`). Estados por color del borde izquierdo: dorado en progreso, verde completada. Sin historial de entregadas (el juego no lo guarda). Móvil (`QuestJournal phone`, `.qj-phone`): misiones a la izquierda y, a la derecha, pestañas Detalle · Tablón (`quests-tab-*`); filtro del tablón en fichas horizontales. Sin misiones, salta al Tablón; tocar una misión abre Detalle.
+
+### Habilidades (25/11)
+Mismo esquema en los tres formatos (`screens/Personaje.tsx`): a la izquierda el héroe con su círculo de rombos a todo el alto (nombres sobre placa oscura, `.hb-arc-label`); a la derecha un panel con dos pestañas en la cabecera, «Ataques» y «Habilidades de clase» (`.hb-tabs`, `seg-atk`/`seg-class`; se abre en Clase si hay un hito por elegir). Escritorio y tableta 60/40; móvil 1/1,15.
+- Ataques: por mano (derecha/izquierda), tarjetas `.hb-card` con nombre, indicadores y descripción debajo.
+- Indicadores `CostChips`: coste en el recurso de la clase (ímpetu: rayo amarillo; maná: gota turquesa) y recarga en azul («—» si no tiene). Leyenda al pie de Ataques.
+- Habilidades de clase: «Habilidad equipada» (borde dorado), «Habilidades desbloqueadas · n/5» con «Equipar» (`equip-class-<id>`) y «Progresión de clase»: línea 1·20·40·60·80 (`.hb-node` done/choose/next/later) y solo el próximo hito con sus opciones plegadas (`<details>` `.hb-lock`). Si hay que elegir, tarjetas moradas y «Elegir …» (`btn-unlock-class-<id>`).
