@@ -9,7 +9,6 @@ import { actions, useGame } from '../../state/store';
 import { CLASSES, STAT_LABELS } from '../../../core/data/classes';
 import { STATUSES } from '../../../core/statuses';
 import { STAT_KEYS, type Stats } from '../../../core/types';
-import { Modal } from '../common';
 import { baseStats, computeStats } from '../../../core/stats';
 import { combatLoadout } from '../../../core/loadout';
 import { getSkill } from '../../../core/data/skills';
@@ -21,6 +20,8 @@ import { PlayerSprite } from '../common';
 import { ActionIcon } from '../combatActions';
 import { Panel, Segmented, usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
+import { PixelIcon } from '../../../shared/community';
+import { TAB_ICONS } from '../kit/tabIcons';
 import { className } from '../../../core/gender';
 
 // Mismos colores que la barra de combate (combatActions.tsx → SOURCE)
@@ -28,6 +29,7 @@ const C = { basic: '#d9d3c1', class: '#e8b33a', weapon: '#a56bff', offhand: '#8f
 type Src = keyof typeof C;
 interface Atk { id: string; name: string; desc: string; cost: number; cd: number; fx: string; src: Src }
 const MILESTONES = [1, ...CLASS_UNLOCK_LEVELS];
+const HELM_ICON = ['...XXXXXX...', '..XXXXXXXX..', '.XXXXXXXXXX.', '.XXXXXXXXXX.', '.XX..XX..XX.', '.XX..XX..XX.', '.XX..XX..XX.', '.XXX.XX.XXX.', '.XXX.XX.XXX.', '.XXX....XXX.', '..XX....XX..', '............'];
 
 export function useKit() {
   const profile = useGame((s) => s.profile)!;
@@ -80,16 +82,32 @@ export function Personaje(_: { onStash?: () => void }) {
   const hero = (
     <section className="min-h-0 relative hb-hero" data-testid="character-hero">
       <SkillArc k={k} focus={skillId} onFocus={pickFocus} compact={phone} />
-      {phone && <button className="btn absolute left-0 top-0 text-[12px]" style={{ minHeight: 44 }} onClick={() => setStats(true)} data-testid="character-stats">Atributos</button>}
     </section>
   );
   const skills = <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="character-skills"><SkillsPanel k={k} focus={focus} onFocus={pickFocus} earned={earned} tab={tab} onTab={pickTab} /></Panel>;
-  if (phone) return (
-    <div className="h-full grid" style={{ ...pad, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.25fr)' }} data-testid="screen-character">
-      {hero}{skills}
-      {stats && <Modal onClose={() => setStats(false)} testId="stats-modal"><div className="panel-title mb-2">Atributos</div>{statPanel}<button className="btn mt-3 w-full" style={{ minHeight: 44 }} onClick={() => setStats(false)}>Cerrar</button></Modal>}
-    </div>
-  );
+  if (phone) {
+    // Móvil (25/11, v2): un selector vertical de iconos y dos bloques iguales, como el Alijo.
+    // Rombo (por defecto): Ataques | Habilidad. Casco: el héroe en su arco | Atributos.
+    const sk = (t: 'atk' | 'class', id: string) => <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId={id}><SkillsPanel k={k} focus={focus} onFocus={pickFocus} earned={earned} tab={t} onTab={setTab} fixed /></Panel>;
+    const opts = [{ id: 'skills', label: 'Ataques y habilidad', icon: TAB_ICONS.character }, { id: 'hero', label: 'Personaje y atributos', icon: HELM_ICON }] as const;
+    const mode = stats ? 'hero' : 'skills';
+    return (
+      <div className="h-full grid" style={{ ...pad, gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)' }} data-testid="screen-character">
+        <div className="al-vsw" role="tablist" aria-orientation="vertical" data-testid="character-seg">
+          {opts.map((o) => (
+            <button key={o.id} role="tab" aria-selected={mode === o.id} className={mode === o.id ? 'on' : ''} aria-label={o.label} title={o.label}
+              onClick={() => setStats(o.id === 'hero')} data-testid={`character-mode-${o.id}`}>
+              <PixelIcon rows={o.icon} size={22} color={mode === o.id ? '#1a1206' : 'currentColor'} />
+            </button>
+          ))}
+        </div>
+        {mode === 'skills' ? <>{sk('atk', 'character-skills')}{sk('class', 'character-class')}</> : <>
+          <div className="panel ui-panel min-h-0 relative"><div className="absolute inset-0 [&>section]:h-full">{hero}</div></div>
+          <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col al-stats-tight" testId="character-stats">{statPanel}</Panel>
+        </>}
+      </div>
+    );
+  }
   return (
     <div className="h-full grid" style={{ ...pad, gridTemplateColumns: layout === 'tablet' ? 'minmax(0,24fr) minmax(0,38fr) minmax(0,38fr)' : 'minmax(0,22fr) minmax(0,44fr) minmax(0,34fr)' }} data-testid="screen-character">
       <Panel title="Atributos" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="character-stats">{statPanel}</Panel>
@@ -260,7 +278,7 @@ function AtkCard({ a, on, onPick, k }: { a: Atk; on: boolean; onPick: () => void
     </button>
   );
 }
-function SkillsPanel({ k, focus, onFocus, earned, tab, onTab }: { k: ReturnType<typeof useKit>; focus: string | null; onFocus: (id: string) => void; earned: number; tab: 'atk' | 'class'; onTab: (t: 'atk' | 'class') => void }) {
+function SkillsPanel({ k, focus, onFocus, earned, tab, onTab, fixed }: { k: ReturnType<typeof useKit>; focus: string | null; onFocus: (id: string) => void; earned: number; tab: 'atk' | 'class'; onTab: (t: 'atk' | 'class') => void; fixed?: boolean }) {
   const cls = k.cls;
   const { unlocked, equipped } = k.profile.classSkills;
   const remaining = cls.classSkills.filter((id) => !unlocked.includes(id));
@@ -275,10 +293,9 @@ function SkillsPanel({ k, focus, onFocus, earned, tab, onTab }: { k: ReturnType<
   );
   return (
     <div className="flex flex-col flex-1 min-h-0" data-testid="class-path">
-      <div className="mb-2 shrink-0"><Segmented full options={[{ id: 'atk', label: 'Ataques' }, { id: 'class', label: 'Habilidad' }]} value={tab} onChange={onTab} testId="skills-tab" /></div>
+      {!fixed && <div className="mb-2 shrink-0"><Segmented full options={[{ id: 'atk', label: 'Ataques' }, { id: 'class', label: 'Habilidad' }]} value={tab} onChange={onTab} testId="skills-tab" /></div>}
       {tab === 'atk' ? (
         <div className="flex-1 min-h-0 overflow-y-auto scroll-thin pr-1">
-          <p className="hb-desc mb-3">Los ataques salen de las armas que llevas: cambian al cambiar de arma. El ataque básico no gasta nada.</p>
           {hand(k.right.label, C.weapon, k.right.items)}
           {hand(k.left.label, C.offhand, k.left.items, k.left.two)}
         </div>
