@@ -271,8 +271,8 @@ function SkillStats({ skillId }: { skillId: string | null }) {
 function AtkCard({ a, on, onPick, k }: { a: Atk; on: boolean; onPick: () => void; k: ReturnType<typeof useKit> }) {
   const lines = a.id !== 'basic' ? effectLines(a.id, k.res) : [];
   return (
-    <button type="button" className={`hb-acard ${on ? 'on' : ''}`} onClick={onPick} aria-pressed={on} data-testid={`atk-${a.id}`}>
-      <span className="hb-acard-top"><ActionIcon fx={a.fx} color={on ? '#f2c75a' : C[a.src]} size={28} /><span className="hb-acard-name">{a.name}</span><CostChips cost={a.cost} cd={a.cd} res={k.res} mana={k.mana} labels /></span>
+    <button type="button" className="hb-acard" onClick={onPick} aria-pressed={on} data-testid={`atk-${a.id}`}>
+      <span className="hb-acard-top"><ActionIcon fx={a.fx} color={C[a.src]} size={28} /><span className="hb-acard-name">{a.name}</span><CostChips cost={a.cost} cd={a.cd} res={k.res} mana={k.mana} labels /></span>
       {lines.length > 0 && <EffectList lines={lines} />}
       <span className="hb-desc block">{a.desc}</span>
     </button>

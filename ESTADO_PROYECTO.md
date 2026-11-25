@@ -51,6 +51,7 @@
 - **Legal:** aviso legal, privacidad y cookies. Los datos del titular solo van en imagen y el correo de contacto también.
 
 ## En curso / por verificar
+- **Ataques (25/11):** las fichas de ataque ya no se resaltan en amarillo al tocarlas (el rombo del arco y los atributos siguen marcando lo elegido).
 - **Habilidad (25/11):** la etiqueta de nivel de las bloqueadas es ahora un chip corto con candado y «Nv 40» (title y aria «Requiere nivel 40»), para que no pise el nombre en el móvil.
 - **Habilidad (25/11):** solo se ilumina la habilidad de clase en uso (tocar otra ya no la resalta).
 - **Habilidades en móvil (25/11):** dos bloques iguales como el Alijo: un selector vertical de iconos (character-mode-skills / character-mode-hero) cambia los dos bloques a la vez: rombo = Ataques | Habilidad; casco = héroe en su arco | atributos (compactos). Fuera el botón «Atributos» y su ventana. La tableta sigue con tres columnas.
