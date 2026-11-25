@@ -323,3 +323,10 @@ Plan: `docs/plan-seguro-equipo.md`. Maquetas y capturas reales: `mockups/seguro-
 
 ### Ventana del seguro (Descender)
 `InsureModal` (InsurePanels.tsx, clases `.insm*`): columna de casillas + lista de filas conmutables + pie con cifras y botones. La pestaña «Seguro» de los mercaderes conserva su diseño (`InsureTab`).
+
+### Alijo
+- Equipo: `CharacterEquip` (Alijo.tsx) mide el arco con ResizeObserver y escala el personaje a entero. Mochila en panel propio.
+- Heridas: `BodyPanel full` pinta `BlockBody` (clases `.doll*`), `.body-banner` y `.body-states`; fuera del Alijo se usa la figura con etiquetas. Mochila: `CureBag` (filtro Curación apaga por `data-item`).
+
+### Estación en ruinas
+`StationDetail` con nivel 0 devuelve `RuinPanel`: una sola columna (el retrato del encargado ya está en el raíl izquierdo). Requisitos en fichas `.ruin-req` (ok/bad); el texto de la fuente va en el `title` del enlace.

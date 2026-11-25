@@ -933,3 +933,12 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - Pie: «Oro disponible», «Coste total» (rojo si falta oro) y los botones «Bajar sin asegurar» / «Asegurar y bajar» en fila.
 - Móvil: filas de 44px al tacto; la lista hace scroll si no cabe. Mapa de zonas revertido al original (fase E descartada).
 - Capturas: mockups/plan-interfaz-2/seguro/.
+
+## 25/11 · Alijo reestructurado (Equipo y Heridas)
+- Equipo (escritorio/tableta): «Personaje y equipo» (clase·nivel, barra XP, personaje que llena el arco con escala entera, ranuras alrededor: Arma/Manos/Pies/Anillo | Cabeza/Torso/Secundaria/Amuleto, atuendo y mochila debajo, atributos) · «Mochila» (ocupación y oro, rejilla, carga, en riesgo, Ordenar/Depositar/Materiales, bolsillo) · Almacén sin cambios.
+- Heridas: Aventurero con barra de Vida + necesidades · «Estado físico» (franja de estado, cuerpo de bloques `BlockBody` solo en modo `full`, ficha con barra, «Estados activos») · Mochila con filtro Todo/Curación y «Ordenar mochila».
+- Móvil sin cambios de estructura. Capturas y script: mockups/plan-interfaz-2/alijo/ (VISTA=heridas, SOLO=).
+
+## 25/11 · Estaciones en ruinas reestructuradas
+- `RuinPanel` (StationPanels.tsx, clases `.ruin*`): cabecera nombre + «Nivel 0 · En ruinas», arte ancho escalado a entero, propósito y encargado, escalones 0–3, «Siguiente mejora», fichas de requisitos (tienes/necesitas, ✓ Disponible o enlace «Comprar a… / Ir a…») y «Reconstruir <estación>» con el motivo del bloqueo.
+- Estaciones reconstruidas sin cambios. Capturas y script: mockups/plan-interfaz-2/ruinas/ (MERC=, SOLO=).

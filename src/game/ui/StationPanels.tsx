@@ -9,7 +9,6 @@ import { Card, usePixelScale } from './kit';
 import { useLayout } from '../../config/ui';
 import { STAT_LABELS } from '../../core/data/classes';
 import { SLOT_LABELS } from './inventory';
-import { MonsterSprite } from './common';
 import { stationArtUrl, STATION_ART_W, STATION_ART_H } from './stationArt';
 import { MATERIAL_SOURCES, STATION_FX } from '../../config/stations';
 import { VENDORS, type VendorId } from '../../core/data/vendors';
@@ -194,7 +193,6 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
   const lvl = refugeOf(profile)[id];
   const next = m.levels[lvl + 1];
   const block = next ? upgradeBlock(profile, id) : null;
-  const by = VENDORS[m.by];
   const locked = lvl < 1;
   const tablet = useLayout() === 'tablet';
   // Plegar niveles y mejora en una cabecera también en escritorio cuando el sitio no da para cinco columnas (portátil 1280–1600 px):
@@ -273,42 +271,67 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
       <div className="min-w-0 min-h-0 h-full">{children}</div>
     </div>
   );
+  // En ruinas: cabecera con nombre y estado, arte ancho, escalones de nivel, siguiente mejora, requisitos en fichas y «Reconstruir»
+  return <RuinPanel id={id} onGo={onGo} block={block}>{children}</RuinPanel>;
+}
+
+/** Estación en ruinas (antes de reconstruirla). */
+function RuinPanel({ id, onGo, block, children }: { id: ModuleId; onGo?: GoTo; block: string | null; children?: React.ReactNode }) {
+  const profile = useGame((s) => s.profile)!;
+  const phone = useLayout() === 'phone';
+  const m = MODULES[id];
+  const by = VENDORS[m.by];
+  const cost = nextCost(profile, id);
+  const artRef = useRef<HTMLDivElement>(null);
+  const [artH, setArtH] = useState(0);
+  useLayoutEffect(() => {
+    const el = artRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setArtH(el.clientHeight)); ro.observe(el); setArtH(el.clientHeight); return () => ro.disconnect();
+  }, []);
+  const scale = Math.max(1, Math.floor((artH - 8) / STATION_ART_H)) || 1;
+  const reqs = cost ? [...cost.items.map((it) => ({ key: it.itemId, name: getItem(it.itemId).name, have: ownedQty(profile, it.itemId), need: it.qty, icon: it.itemId, src: MATERIAL_SOURCES[it.itemId] })),
+    ...(cost.gold > 0 ? [{ key: 'gold', name: 'Oro', have: profile.gold, need: cost.gold, icon: null as string | null, src: undefined }] : [])] : [];
   return (
-    <div className="grid w-full" style={{ gridTemplateColumns: phone ? '170px minmax(0,1fr)' : tablet ? '240px minmax(0,1fr)' : '300px minmax(0,1fr)', gap: 'var(--gap)' }} data-testid={`station-detail-${id}`}>
-      <div className="flex flex-col min-w-0" style={{ gap: 'var(--gap)' }}>
-        <StationPresent id={id} />
-          {!locked && cost}
+    <div className="flex flex-col w-full ruin" style={{ gap: phone ? 8 : 12 }} data-testid={`station-detail-${id}`}>
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="font-display text-gold uppercase tracking-[0.08em]" style={{ fontSize: phone ? 16 : 20 }} data-testid={`module-${id}`}>{m.name}</h3>
+        <span className="text-[12px] uppercase tracking-[0.1em] text-[#d0905a] whitespace-nowrap" data-testid={`module-level-${id}`}>Nivel 0 · En ruinas</span>
       </div>
-      <div className="panel p-3 flex flex-col gap-2 min-w-0">
-        <div className="flex gap-3 items-center">
-          <div className="ui-arch shrink-0" style={{ width: phone ? 60 : 96, height: phone ? 70 : 112 }}><div className="pb-1"><MonsterSprite sprite={by.sprite} scale={phone ? 2 : 3} /></div></div>
-          <div className="min-w-0">
-            <div className="font-display text-parchment text-[14px]">Encargado: <span style={{ color: by.color }}>{by.name}</span></div>
-            <div className="text-[14px] text-stone-300 italic leading-snug">{m.purpose}</div>
-          </div>
-        </div>
-        {locked ? (
-          <>
-            <div className="border border-stone-700 px-3 py-2 bg-[#19171f] text-[13px] leading-snug" data-testid={`station-level-${id}-1`}>
-              <b className="block font-display text-gold text-[13px]">Al reconstruirla · Nivel 1 · {m.levels[1].name}</b>
-              <span className="text-stone-300">{m.levels[1].effect}</span>
+      <div ref={artRef} className="ruin-art" style={{ height: phone ? 96 : 'clamp(130px, 24vh, 260px)' }}>
+        <img src={stationArtUrl(id, true)} className="pixelated" alt="En ruinas" draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} />
+      </div>
+      <p className="text-center text-[13px] text-stone-300 -mt-1">{m.purpose} <span className="text-stone-500">· Encargado: <span style={{ color: by.color }}>{by.name}</span></span></p>
+      <div className="grid grid-cols-4 gap-1.5" data-testid={`station-steps-${id}`}>
+        {[0, 1, 2, 3].map((k) => (
+          <div key={k} className={`ruin-step ${k === 0 ? 'now' : k === 1 ? 'next' : ''}`}>{k} · {k === 0 ? 'Ruinas' : k === 1 ? m.levels[1].name : 'Bloqueado'}</div>
+        ))}
+      </div>
+      <div className="ruin-box" data-testid={`station-level-${id}-1`}>
+        <div className="ruin-cap">Siguiente mejora · {m.levels[1].name}</div>
+        <div className="text-[13px] text-stone-200 leading-snug">{m.levels[1].effect}</div>
+      </div>
+      <div className="ruin-cap">Requisitos de reconstrucción</div>
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(reqs.length, phone ? 2 : 3)}, minmax(0,1fr))` }} data-testid={`station-cost-${id}`}>
+        {reqs.map((r) => {
+          const ok = r.have >= r.need;
+          return (
+            <div key={r.key} className={`ruin-req ${ok ? 'ok' : 'bad'}`} data-testid={`req-${id}-${r.key}`}>
+              <div className="flex items-center gap-1.5 text-[13px] text-parchment">{r.icon ? <ItemIcon itemId={r.icon} size={18} /> : <span className="text-gold">●</span>}<span className="min-w-0">{r.name}</span></div>
+              <div className="ruin-qty">{r.have} / {r.need}</div>
+              {ok ? <div className="text-[12px]" style={{ color: OK }}>✓ Disponible</div>
+                : r.src?.go && onGo ? <button type="button" className="ruin-go" onClick={() => { sfx('click'); onGo(r.src!.go!.vendor, r.src!.go!.view); }} title={r.src.text} data-testid={`source-${id}-${r.key}`}>{r.src.go.view === 'shop' ? `Comprar a ${VENDORS[r.src.go.vendor].name}` : `Ir a ${VENDORS[r.src.go.vendor].name}`} ›</button>
+                : <div className="text-[12px] text-stone-400 leading-snug" data-testid={`source-${id}-${r.key}`}>{r.src?.text ?? 'Te falta'}</div>}
             </div>
-            <div className="mt-auto">{cost}</div>
-          </>
-        ) : <div className="flex flex-col gap-2">
-          {[1, 2, 3].map((k) => {
-            const isOpen = k === open;
-            return (
-              <button key={k} type="button" aria-expanded={isOpen} onClick={() => { sfx('click'); setOpen(isOpen ? 0 : k); }}
-                className={`text-left border px-3 py-2 bg-[#19171f] text-[13px] leading-snug ${k === lvl ? 'border-gold' : 'border-stone-700'}`} style={{ minHeight: 44 }} data-testid={`station-level-${id}-${k}`}>
-                <span className="flex items-center gap-2"><b className="font-display text-gold text-[13px] flex-1">Nivel {k} · {m.levels[k].name}{k <= lvl ? ' ✓' : ''}</b><span className="text-stone-400 text-[12px]">{isOpen ? '▴' : '▾'}</span></span>
-                {isOpen && <span className="block text-stone-300 mt-1">{m.levels[k].effect}</span>}
-              </button>
-            );
-          })}
-        </div>}
-        {children}
+          );
+        })}
       </div>
+      <div className="mt-auto flex flex-col gap-1">
+        <button className={`btn font-display tracking-[0.12em] uppercase ${block ? '' : 'btn-gold'}`} style={{ minHeight: 'max(44px, var(--btn-h))' }} disabled={!!block}
+          onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`} aria-describedby={block ? `upgrade-block-${id}` : undefined}>Reconstruir {m.name}</button>
+        {block ? <div className="text-[12px] text-center text-[#d0905a]" id={`upgrade-block-${id}`} data-testid={`upgrade-block-${id}`}>{block}</div>
+          : <div className="text-[12px] text-center" style={{ color: OK }} data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
+      </div>
+      {children}
     </div>
   );
 }

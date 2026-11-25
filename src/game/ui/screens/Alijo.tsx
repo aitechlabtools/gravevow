@@ -28,6 +28,7 @@ import { needsOf } from '../../../core/needs';
 import { CureOffer, useCure } from '../CureOffer';
 import { RecruitOffer } from '../RecruitOffer';
 import { baseBody } from '../../state/medicalActions';
+import { bodyHp } from '../../../core/anatomy';
 import { useLayout } from '../../../config/ui';
 import { ItemCard } from './ItemCard';
 import { PixelIcon } from '../../../shared/community';
@@ -37,6 +38,7 @@ const SIDE_ICONS: Record<string, string[]> = { gear: HELM, storage: TAB_ICONS.st
 import { sfx } from '../../audio';
 import { SkinSlot, SkinPicker } from './Atuendos';
 import { HeroStats, LevelBar } from '../HeroStats';
+import { xpForNextLevel } from '../../../core/stats';
 
 const SLOT_ICON: Record<EquipSlot, string> = { mainHand: 'sword', offHand: 'shield', helmet: 'helm', armor: 'tunic', gloves: 'gloves', boots: 'boots', ring: 'ring', amulet: 'amulet' };
 const MODE: InvMode = 'lobby';
@@ -52,14 +54,6 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
   const [picker, setPicker] = useState(false);
   // Escritorio estrecho (p. ej. 1366 × 768): Aventurero más estrecho y casillas del panel Equipo a 44 px para que quepan las dos columnas
   const compact = layout === 'desktop' && typeof window !== 'undefined' && window.innerWidth < 1600;
-  // Dos columnas en el panel Equipo cuando hay sitio (escritorio): equipo | mochila y bolsillo
-  const eqRef = useRef<HTMLDivElement | null>(null);
-  const [eqW, setEqW] = useState(0);
-  useEffect(() => {
-    const el = eqRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(([e]) => setEqW(e.contentRect.width)); ro.observe(el); return () => ro.disconnect();
-  }, [view]);
-  const twoCols = layout === 'desktop' && eqW >= (compact ? 470 : 600);
   const clear = () => setSel(null);
   const same = (a: Loc | null, b: Loc) => !!a && JSON.stringify(a) === JSON.stringify(b);
 
@@ -100,9 +94,6 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
     </Modal>
   );
 
-  const equipment = (
-    <EquipmentGrid sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} tight={compact} />
-  );
   const pickerModal = <>{picker && <SkinPicker onClose={() => setPicker(false)} onShop={onShop} />}{emptyModal}</>;
   const backpack = (
     <div data-testid="alijo-backpack">
@@ -192,12 +183,6 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
   }
 
   const side = layout === 'tablet' ? 256 : compact ? 280 : 340;
-  const goldBox = (
-    <div className="panel p-3 mt-4 flex flex-col gap-1 text-sm" data-testid="gold-box">
-      <div className="flex justify-between items-center"><span className="text-stone-300">Oro</span><GoldAmount value={profile.gold} /></div>
-      <div className="flex justify-between"><span className="text-stone-300">En riesgo</span><span className="text-ember">{gridValue(profile.backpack) + equippedValue(profile.equipment)}</span></div>
-    </div>
-  );
   const deskSeg = <div className="flex justify-center shrink-0">{seg([{ id: 'gear', label: 'Equipo' }, { id: 'status', label: 'Heridas' }])}</div>;
   const padX = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
   if (view !== 'gear') {
@@ -206,53 +191,94 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
         {deskSeg}
         <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: `${side}px minmax(0,1fr) ${layout === 'tablet' ? 300 : 360}px`, gap: 'var(--gap)' }}>
           <Panel title={g("{Aventurero|Aventurera}")} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero"><HeroColumn needs /></Panel>
-          <Panel title="Heridas" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">{status}</Panel>
-          <Panel title="Mochila" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}{sel && <div className="panel p-3 mt-3">{card}</div>}</Panel>
+          <Panel title="Estado físico" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">{status}</Panel>
+          <Panel title="Mochila" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin"><CureBag grids={grids} quick={quickFromBag} onStash={(l) => { actions.quickMove(l, 'stash'); clear(); }} />{sel && <div className="panel p-3 mt-3">{card}</div>}</Panel>
         </div>
         {pickerModal}
       </div>
     );
   }
+  // Vista «Equipo» (escritorio y tableta): Personaje y equipo · Mochila · Almacén
+  const slotVar = layout === 'tablet' ? { ['--slot' as string]: '44px', ['--slot-big' as string]: '44px' } : compact ? { ['--slot' as string]: '48px', ['--slot-big' as string]: '48px' } : { ['--slot' as string]: '60px', ['--slot-big' as string]: '60px' };
+  const bagW = `calc(var(--slot) * 6 + 34px)`;
+  const bagPanel = (
+    <Panel title="Mochila" className="min-h-0" bodyClassName="min-h-0 flex flex-col overflow-y-auto scroll-thin" testId="alijo-backpack-panel">
+      <div data-testid="alijo-backpack" className="mx-auto" style={{ width: bagW }}>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="text-stone-300 text-sm">Ocupación: <b className="text-parchment">{profile.backpack.filter(Boolean).length}/{profile.backpack.length}</b></span>
+          <GoldAmount value={profile.gold} />
+        </div>
+        <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={quickFromBag} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
+        <CarryBar className="mt-2" />
+        <div className="flex justify-between text-xs mt-1"><span className="text-stone-400">En riesgo si mueres</span><span className="text-ember" data-testid="gold-box">{gridValue(profile.backpack) + equippedValue(profile.equipment)}</span></div>
+        <div className="grid grid-cols-3 gap-1 mt-2" data-testid="backpack-quick">
+          <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => actions.sortContainer('backpack')} data-testid="sort-backpack">Ordenar</button>
+          <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 34 }} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén (no toca el equipo ni el bolsillo seguro)">Depositar</button>
+          <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => { actions.emptyBackpack(true); clear(); }} disabled={!hasMaterials} data-testid="store-materials" title="Manda minerales y materiales al almacén">Materiales</button>
+        </div>
+        {gridGold(profile.backpack) > 0 && (
+          <div className="flex items-center justify-between text-xs mt-1.5" data-testid="gold-carried"><span className="text-stone-300">Oro encima (se pierde si mueres)</span>
+            <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 30 }} onClick={() => actions.groupGold('backpack')} data-testid="group-gold-backpack" title="Mete las monedas sueltas en tus saquitos y sacos">Agrupar {gridGold(profile.backpack)}</button></div>
+        )}
+        {pocket}
+      </div>
+      {sel && layout !== 'tablet' && <div className="panel p-3 mt-3 shrink-0" data-testid="item-card-wrap">{card}</div>}
+    </Panel>
+  );
   return (
     <div className="h-full flex flex-col" data-testid="screen-stash" style={padX}>
     {deskSeg}
-    <div className="flex-1 min-h-0 grid"
-      style={{ gridTemplateColumns: `${side}px minmax(0,1fr) auto`, gap: 'var(--gap)' }}>
+    <div className="flex-1 min-h-0 grid" style={{ ...slotVar, gridTemplateColumns: `minmax(0,1fr) minmax(0,1fr) auto`, gap: 'var(--gap)' }}>
       {sel && layout === 'tablet' ? (
-        // Fase 3 (tableta): la ficha ocupa la columna del aventurero; mochila y almacén siguen a la vista
         <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="item-sheet">
           <div className="relative"><button className="btn icon-btn absolute right-0 top-0" onClick={clear} aria-label="Cerrar la ficha">✕</button>{card}</div>
         </Panel>
       ) : (
-      <Panel title={g("{Aventurero|Aventurera}")} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero">
-        <HeroColumn />
-      </Panel>
+        <Panel title="Personaje y equipo" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="alijo-hero">
+          <div className="mb-3"><RecruitOffer /></div>
+          <CharacterEquip sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} />
+        </Panel>
       )}
-      <Panel title="Equipo" className="min-h-0" bodyClassName="min-h-0 flex flex-col">
-        <div ref={eqRef} style={twoCols ? (compact ? { ['--slot' as string]: '44px', ['--slot-big' as string]: '60px' } : { ['--slot' as string]: '60px', ['--slot-big' as string]: '84px' }) : layout === 'tablet' ? { ['--slot' as string]: '44px' } : undefined} className={`flex-1 min-h-0 ${twoCols ? 'flex flex-col overflow-hidden' : 'overflow-y-auto scroll-thin'}`} data-testid="equip-body" data-cols={twoCols ? 2 : 1}>
-          <div className="mb-3 shrink-0"><RecruitOffer /></div>
-          {twoCols ? (
-            // Escritorio ancho: equipo a la izquierda, mochila + bolsillo + oro a la derecha (sin desplazar)
-            <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: 'auto auto', gridTemplateRows: 'minmax(0,1fr)', justifyContent: 'space-evenly', gap: 'var(--gap)' }} data-testid="equip-two-cols">
-              <div className="flex flex-col items-stretch self-center max-h-full overflow-y-auto scroll-thin">{equipment}{goldBox}</div>
-              {/* Si la mochila crece (más de 24 casillas) o la ficha quita alto, solo esta columna se desplaza */}
-              <div className="min-h-0 max-h-full self-center overflow-y-auto scroll-thin pr-1" style={{ width: 'calc(var(--slot) * 6 + 30px)' }} data-testid="equip-bag-col">{backpack}{pocket}</div>
-            </div>
-          ) : (
-            <div className="w-fit mx-auto">
-              <div className="flex justify-center mb-4">{equipment}</div>
-              {backpack}
-              {pocket}
-              {layout === 'desktop' && goldBox}
-            </div>
-          )}
-        </div>
-        {/* La ficha solo aparece al elegir un objeto (la ayuda de uso ya la enseñan el tutorial, la Intendencia y la Guía) */}
-        {sel && layout !== 'tablet' && <div className="panel p-3 mt-3 shrink-0" data-testid="item-card-wrap">{card}</div>}
-      </Panel>
+      {bagPanel}
       {storage}
       {pickerModal}
     </div>
+    </div>
+  );
+}
+
+/** Personaje en el centro con el equipo alrededor (arma, manos, pies, anillo | cabeza, torso, secundaria, amuleto), atuendo y mochila debajo, y atributos. */
+function CharacterEquip({ sel, onSelect, onEmpty, onDone, onSkin }: { sel: Loc | null; onSelect: (l: Loc) => void; onEmpty: (l: Loc) => void; onDone: () => void; onSkin: () => void }) {
+  const prof = useGame((s) => s.profile!);
+  const eq = prof.equipment;
+  // El personaje llena el arco: escala entera según el alto y el ancho que quedan entre las dos columnas de ranuras
+  const archRef = useRef<HTMLDivElement | null>(null);
+  const [arch, setArch] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = archRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => setArch({ w: e.contentRect.width, h: e.contentRect.height })); ro.observe(el); return () => ro.disconnect();
+  }, []);
+  const scale = arch.h ? Math.max(2, Math.min(Math.floor((arch.h - 24) / 26), Math.floor((arch.w - 8) / 26))) : 4;
+  const selItem = sel?.kind === 'grid' ? (() => { const g = sel.container === 'shared' ? prof.shared : sel.container === 'backpack' || sel.container === 'stash' || sel.container === 'pocket' ? prof[sel.container] : null; return g?.[sel.index]?.itemId; })() : undefined;
+  const slot = (s: EquipSlot) => (
+    <div className="flex flex-col items-center gap-0.5" key={s}>
+      <ItemSlot stack={eq[s]} loc={{ kind: 'equip', slot: s }} equipment={eq} mode={MODE} placeholderIcon={SLOT_ICON[s]} label={SLOT_LABELS[s]}
+        selected={sel?.kind === 'equip' && sel.slot === s} awaiting={!!sel} onSelect={onSelect} onEmpty={onEmpty} movingItemId={selItem}
+        onQuick={(l) => { actions.unequip(l); onDone(); }} onAlt={(l) => { actions.unequip(l); onDone(); }} />
+      <span className="text-[12px] text-stone-300">{SLOT_LABELS[s]}</span>
+    </div>
+  );
+  return (
+    <div className="flex flex-col" data-testid="equipment">
+      <div className="text-center font-display text-gold" data-testid="hero-level">{className(prof.character.classId, prof.character.appearance.sex)} · Nivel {prof.character.level}</div>
+      <div className="mx-auto mt-1 mb-3 w-3/4" title={`${prof.character.xp} / ${xpForNextLevel(prof.character.level)} XP`}><div className="h-1.5 bg-stone-800"><div className="h-full bg-arcane" style={{ width: `${Math.min(100, (prof.character.xp / xpForNextLevel(prof.character.level)) * 100)}%` }} /></div><div className="text-center text-[12px] text-stone-400 mt-0.5">{prof.character.xp} / {xpForNextLevel(prof.character.level)} XP</div></div>
+      <div className="flex items-center justify-center gap-3">
+        <div className="flex flex-col gap-1.5">{(['mainHand', 'gloves', 'boots', 'ring'] as EquipSlot[]).map(slot)}</div>
+        <div ref={archRef} className="ui-arch flex-1 min-w-0 self-stretch flex items-end justify-center overflow-hidden" style={{ maxWidth: 340 }}><div className="pb-3"><PlayerSprite scale={scale} /></div></div>
+        <div className="flex flex-col gap-1.5">{(['helmet', 'armor', 'offHand', 'amulet'] as EquipSlot[]).map(slot)}</div>
+      </div>
+      <div className="flex justify-center gap-6 mt-2"><div className="flex flex-col items-center gap-0.5"><SkinSlot onClick={onSkin} /></div><BagSlot sel={sel} onDone={onDone} /></div>
+      <div className="mt-3 border-t border-stone-700 pt-2"><div className="ins-cap mb-1" style={{ color: '#e8b33a' }}>Atributos</div><HeroStats /></div>
     </div>
   );
 }
@@ -290,11 +316,44 @@ function HeroColumn({ needs }: { needs?: boolean }) {
       <div className="text-center font-display text-gold mt-3">◆ {className(profile.character.classId, profile.character.appearance.sex)} ◆</div>
       {/* En «Estado» no van las estadísticas: así las necesidades suben y se ven sin desplazar */}
       {!needs && <div className="mt-2"><HeroStats /></div>}
+      {needs && <LifeBar />}
       {needs && <div className="needs-side mt-3"><NeedsPanel needs={needsOf(profile.needs)} backpack={profile.backpack} onShowFood={highlightItems} atBase note="El catre está en el Bastión, con Grizk." /></div>}
     </>
   );
 }
 
+
+/** Vida total del cuerpo (Alijo › Heridas), encima de las necesidades. */
+function LifeBar() {
+  const profile = useGame((s) => s.profile)!;
+  const b = baseBody(profile), hp = bodyHp(b);
+  return (
+    <div className="panel p-2 mt-3" data-testid="hero-life">
+      <div className="flex justify-between text-sm"><span className="font-display text-parchment">Vida</span><span>{hp}/{b.total}</span></div>
+      <div className="h-1.5 bg-stone-800 mt-1"><div className="h-full" style={{ width: `${Math.min(100, hp / Math.max(1, b.total) * 100)}%`, background: '#6fae5a' }} /></div>
+    </div>
+  );
+}
+
+/** Mochila en Heridas: filtro Todo / Curación (apaga lo que no cura), carga y ordenar. */
+function CureBag({ grids, quick, onStash }: { grids: Record<string, unknown>; quick: (l: Loc, s: ItemStack) => void; onStash: (l: Loc) => void }) {
+  const profile = useGame((s) => s.profile)!;
+  const touchy = useIsTouch();
+  const [only, setOnly] = useState<'all' | 'cure'>('all');
+  const cures = [...new Set(profile.backpack.filter((x): x is ItemStack => !!x && !isCover(x)).map((x) => x.itemId))].filter((id) => { const u = getItem(id).use; return u?.kind === 'treat' || u?.kind === 'heal'; });
+  const dimCss = only === 'cure' ? `.bag-cure .slot[data-item]:not([data-item=""])${cures.map((id) => `:not([data-item="${id}"])`).join('')}{opacity:.25}` : '';
+  return (
+    <div data-testid="alijo-backpack" className={only === 'cure' ? 'bag-cure' : ''}>
+      {dimCss && <style>{dimCss}</style>}
+      <div className="flex items-center justify-between mb-2"><span className="font-display text-parchment">Mochila · {profile.backpack.filter(Boolean).length}/{profile.backpack.length}</span></div>
+      <div className="mb-2"><Segmented full options={[{ id: 'all', label: 'Todo' }, { id: 'cure', label: `Curación${cures.length ? ` · ${cures.length}` : ''}` }]} value={only} onChange={(v) => { sfx('click'); setOnly(v); }} testId="bag-filter" /></div>
+      <GridView grid={profile.backpack} container="backpack" cols={6} {...(grids as object)} onQuick={quick} onAlt={onStash} />
+      <CarryBar className="mt-2" />
+      <button className="btn text-xs w-full mt-2" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => actions.sortContainer('backpack')} data-testid="sort-backpack">Ordenar mochila</button>
+      <p className="text-[12px] text-stone-400 mt-2">{touchy ? 'Toca' : 'Elige'} un objeto curativo y luego la parte del cuerpo para tratar una lesión.</p>
+    </div>
+  );
+}
 
 /** Casilla de la mochila puesta: nunca está vacía y no se pierde al morir. Suelta otra mochila aquí (o tócala y toca aquí) para cambiarla. */
 function BagSlot({ sel, onDone }: { sel: Loc | null; onDone: () => void }) {
@@ -338,7 +397,7 @@ function StatusView({ withNeeds }: { withNeeds?: boolean }) {
     <div className="flex-1 min-h-0 flex flex-col status-wrap" data-testid="intendencia-status">
       {cure && <div className="mb-3 status-center"><CureOffer /></div>}
       <BodyPanel body={body} backpack={profile.backpack} onTreat={(id, r) => actions.baseTreat(id, r)} onHeal={(id) => actions.baseHeal(id)} full
-        note={cure ? 'Toca una parte para ver qué le pasa y curarla con lo que llevas, o arrastra una venda, una férula o una poción hasta ella.' : g('Estás enter{o|a}.')}>
+        note={cure ? 'Toca una parte para ver qué le pasa y curarla con lo que llevas, o arrastra una venda, una férula o una poción hasta ella.' : undefined}>
         {withNeeds && <NeedsPanel needs={needsOf(profile.needs)} body={body} backpack={profile.backpack} onShowFood={highlightItems} atBase note="El catre está en el Bastión, con Grizk." />}
       </BodyPanel>
     </div>
