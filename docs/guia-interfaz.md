@@ -326,7 +326,7 @@ Plan: `docs/plan-seguro-equipo.md`. Maquetas y capturas reales: `mockups/seguro-
 
 ### Alijo
 - Mismo diseño en los tres formatos; el móvil lo adapta al espacio.
-- Equipo: `CharacterEquip` (Alijo.tsx) mide el arco con ResizeObserver y escala el personaje a entero. Mochila en panel propio. Móvil: `CharacterEquip compact` (270 px, casillas de 44) + mochila + ficha.
+- Equipo: `CharacterEquip` (Alijo.tsx) mide el arco con ResizeObserver y escala el personaje a entero. Mochila en panel propio. Móvil: `CharacterEquip compact` (270 px, casillas de 44) + mochila + ficha. Almacén (`StashPanel ptitle`): título entre rombos como los demás paneles y casillas del mismo tamaño que el equipo y la mochila (60/48/44 px); lo que no cabe se desplaza.
 - Heridas: `BodyPanel full` pinta `BlockBody` (clases `.doll*`), `.body-banner` y `.body-states`; fuera del Alijo se usa la figura con etiquetas. Mochila: `CureBag` (filtro Curación apaga por `data-item`). Móvil: estado físico + `CureBag` (las necesidades van dentro del estado). El cuerpo pasa a una columna con contenedor ≤500 px (tableta: dos columnas).
 
 ### Estación en ruinas

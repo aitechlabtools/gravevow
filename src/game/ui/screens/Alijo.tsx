@@ -122,7 +122,7 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
   // El almacén tiene 8 columnas en todos los formatos (los objetos de 2×2 necesitan la misma forma siempre)
   const stashCols = 8;
   const storage = (
-    <StashPanel cols={stashCols} sel={sel} onSelect={onSelect} onEmpty={onEmpty}
+    <StashPanel cols={stashCols} ptitle={!phone} sel={sel} onSelect={onSelect} onEmpty={onEmpty}
       onQuick={(l, st) => { if (getItem(st.itemId).use?.kind === 'need') actions.eat(l); else actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
   );
   const card = <ItemCard loc={sel} mode={MODE} onClear={clear} compact={phone} stacked={(phone && view !== 'status') || (layout === 'tablet' && view === 'gear')} />;
@@ -228,7 +228,7 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
   return (
     <div className="h-full flex flex-col" data-testid="screen-stash" style={padX}>
     {deskSeg}
-    <div className="flex-1 min-h-0 grid" style={{ ...slotVar, gridTemplateColumns: `minmax(0,1fr) minmax(0,1fr) auto`, gap: 'var(--gap)' }}>
+    <div className="flex-1 min-h-0 grid" style={{ ...slotVar, gridTemplateColumns: `minmax(0,1fr) auto auto`, gap: 'var(--gap)' }}>
       {sel && layout === 'tablet' ? (
         <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="item-sheet">
           <div className="relative"><button className="btn icon-btn absolute right-0 top-0" onClick={clear} aria-label="Cerrar la ficha">✕</button>{card}</div>

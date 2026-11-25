@@ -15,7 +15,7 @@ import { sfx } from '../audio';
 /** Color propio de la página «Compartido» (verde azulado): se distingue de las páginas del personaje. */
 export const SHARED_COLOR = '#7fd6c9';
 
-export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode = 'lobby', compactHeader = false, title = 'Almacén', testId = 'alijo-storage', marked, hideShared = false, onlyShared = false, fill = false }: {
+export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode = 'lobby', compactHeader = false, title = 'Almacén', testId = 'alijo-storage', marked, hideShared = false, onlyShared = false, fill = false, ptitle = false }: {
   /** Venta: el Compartido va en su propia pestaña (sin él en las páginas), o solo el Compartido. */
   hideShared?: boolean; onlyShared?: boolean;
   /** Venta: casillas tan grandes como quepan a lo ancho (hasta un tope); las filas que no quepan, con desplazamiento. */
@@ -25,7 +25,7 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
   cols: number; sel: Loc | null; onSelect: (l: Loc) => void; onEmpty?: (l: Loc) => void;
   onQuick?: (l: Loc, s: ItemStack) => void; onAlt?: (l: Loc, s: ItemStack) => void;
   /** Al tocar una pestaña con un objeto elegido, se lleva allí y se suelta la elección. */
-  mode?: InvMode; compactHeader?: boolean; title?: string; testId?: string;
+  mode?: InvMode; compactHeader?: boolean; title?: string; testId?: string; ptitle?: boolean;
 }) {
   const profile = useGame((s) => s.profile)!;
   const page = useGame((s) => s.stashPage);
@@ -40,7 +40,7 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
   const [slot, setSlot] = useState<number | null>(null);
   useLayoutEffect(() => {
     const el = box.current;
-    if (!el || (touchy && !fill)) { setSlot(null); return; }
+    if (!el || ptitle || (touchy && !fill)) { setSlot(null); return; } // ptitle (Alijo): mismo tamaño que el resto de casillas; si no cabe, se desplaza
     const rows = Math.ceil(STASH_PAGE_SIZE / cols);
     const fit = () => {
       if (fill) {
@@ -58,13 +58,15 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
     const ro = new ResizeObserver(fit);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [touchy, cols, fill, layout]);
+  }, [touchy, cols, fill, layout, ptitle]);
   return (
     <section className="panel ui-panel min-h-0" data-testid={testId} style={shownPage === 'shared' ? { borderColor: '#3f8f8a' } : undefined}>
+      {ptitle && <h2 className="ui-ptitle">{title}</h2>}
       <div className="flex items-center justify-between gap-2" style={{ padding: compactHeader || touchy ? '6px 8px 0' : '10px 12px 0' }}>
+        {ptitle ? <span className="text-xs" style={{ color: shownPage === 'shared' ? SHARED_COLOR : '#a8a29e' }} data-testid="stash-count">{label} · {used}/{STASH_PAGE_SIZE}</span> :
         <h2 className="font-display text-parchment uppercase tracking-[0.1em] truncate" style={{ fontSize: 'var(--fs-title, 15px)' }}>
           {title} <span className="normal-case tracking-normal text-xs font-body" style={{ color: shownPage === 'shared' ? SHARED_COLOR : '#a8a29e' }} data-testid="stash-count">· {label} · {used}/{STASH_PAGE_SIZE}</span>
-        </h2>
+        </h2>}
         <span className="flex gap-1 shrink-0">
           <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => actions.groupGold('stash')} data-testid="group-gold-stash" title="Mete las monedas sueltas de esta página en sus saquitos y sacos">Agrupar oro</button>
           <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => actions.sortContainer('stash')} data-testid="sort-stash">Ordenar</button>

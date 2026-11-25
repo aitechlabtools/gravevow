@@ -8,6 +8,7 @@ Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 - Regla: escritorio, tableta y móvil llevan siempre el mismo diseño, adaptado al espacio.
 - Heridas en tableta: arreglado el solape del cuerpo con «Tus curas» (consulta de contenedor a 500 px; antes 540).
 - Móvil: Misiones con el diario (Detalle · Tablón en pestañas), Alijo › Equipo con el personaje y las casillas alrededor, Heridas con la mochila de curas, estación en ruinas con el dibujo al lado y el seguro con la lista desplazable. Quitada la vista antigua de Misiones del móvil (`Misiones.tsx` ya solo monta `QuestJournal`) y `EquipmentGrid` del Alijo.
+- Alijo › Equipo: almacén con título «◆ Almacén ◆» y casillas del mismo tamaño que el resto (barra de desplazamiento si no caben las 15 filas). Columnas: personaje (resto) · mochila · almacén (a su ancho).
 - Capturas `movil-adaptado-*` en `mockups/plan-interfaz-2/{misiones,alijo,ruinas}`; prueba `misiones/funcional-movil.cjs`.
 
 ## Novedades del 25/11 (5): plan de interfaz 2, fase E (mapa de zonas ilustrado)
