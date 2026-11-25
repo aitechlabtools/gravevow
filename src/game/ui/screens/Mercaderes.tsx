@@ -588,11 +588,10 @@ function Materials() {
   return (
     <>
       {ids.length ? (
-        <div className="grid gap-1" style={{ gridTemplateColumns: 'repeat(4, var(--slot))' }} data-testid="forge-materials">
+        <div className="grid gap-1.5 mx-auto" style={{ gridTemplateColumns: 'repeat(4, var(--slot))', ['--slot' as string]: '64px' }} data-testid="forge-materials">
           {ids.map((id) => <div key={id} className="slot" title={getItem(id).name}><ItemIcon itemId={id} /><span className="qty">{owned(profile, id)}</span></div>)}
         </div>
       ) : <p className="font-body text-stone-400 italic">Aún no tienes materiales. Pica vetas en las mazmorras.</p>}
-      <p className="text-[11px] text-stone-400 mt-2">De la mochila y del almacén.</p>
       <div className="flex-1" />
       <div className="panel p-3 mt-3 flex justify-between items-center"><span className="text-stone-300 text-sm">Oro</span><GoldAmount value={profile.gold} /></div>
     </>

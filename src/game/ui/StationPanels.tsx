@@ -92,7 +92,6 @@ export function StationCard({ id, onGo, onEnter }: { id: ModuleId; onGo?: GoTo; 
           <button className="btn btn-gold" style={BTN} disabled={!!block} onClick={() => actions.upgradeModule(id)} data-testid={`upgrade-${id}`}>
             {locked ? 'Reconstruir' : `Mejorar · nivel ${lvl + 1}`}
           </button>
-          {block && <div className="text-xs text-[#d0905a]" data-testid={`upgrade-block-${id}`}>{block}</div>}
         </div>
       ) : <div className="text-xs text-gold mt-auto" data-testid={`upgrade-max-${id}`}>Nivel 3/3 · está al máximo.</div>}
     </div>
@@ -215,12 +214,10 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
               <div className="font-display text-gold text-[13px] tracking-[0.1em] uppercase">{locked ? 'Para reconstruirla' : `Mejora · nivel ${lvl + 1}`}</div>
               <CostLines id={id} onGo={onGo} hints={locked || id === 'cot'} />
               <button className={`btn font-display tracking-[0.12em] uppercase ${block ? '' : 'btn-gold'}`} style={{ minHeight: 'max(44px, var(--btn-h))' }} disabled={!!block}
-                onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`} aria-describedby={block ? `upgrade-block-${id}` : undefined}>
+                onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`}>
                 {locked ? 'Reconstruir' : `▲ Mejorar · nivel ${lvl + 1}`}
               </button>
-              {block
-                ? <div className="text-[13px] text-[#d0905a]" id={`upgrade-block-${id}`} data-testid={`upgrade-block-${id}`}>{block}</div>
-                : <div className="text-[13px] text-[#7fbf6a]" data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
+              {!block && <div className="text-[13px] text-[#7fbf6a]" data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
             </div>
           ) : <div className="panel p-3 text-[13px] text-gold" data-testid={`upgrade-max-${id}`}>Nivel 3/3 · está al máximo.</div>;
   if (!locked && (phone || tablet || narrow)) return (
@@ -316,9 +313,8 @@ function RuinPanel({ id, onGo, block, children }: { id: ModuleId; onGo?: GoTo; b
       </div>
       <div className="flex flex-col gap-1">
         <button className={`btn font-display tracking-[0.12em] uppercase ${block ? '' : 'btn-gold'}`} style={{ minHeight: 'max(44px, var(--btn-h))' }} disabled={!!block}
-          onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`} aria-describedby={block ? `upgrade-block-${id}` : undefined}>Reconstruir</button>
-        {block ? <div className="text-[12px] text-center text-[#d0905a]" id={`upgrade-block-${id}`} data-testid={`upgrade-block-${id}`}>{block}</div>
-          : <div className="text-[12px] text-center" style={{ color: OK }} data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
+          onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`}>Reconstruir</button>
+        {!block && <div className="text-[12px] text-center" style={{ color: OK }} data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
       </div>
           </div>
         </div>
@@ -341,9 +337,8 @@ function RuinPanel({ id, onGo, block, children }: { id: ModuleId; onGo?: GoTo; b
       </div>
       <div className="flex flex-col gap-1">
         <button className={`btn font-display tracking-[0.12em] uppercase ${block ? '' : 'btn-gold'}`} style={{ minHeight: 'max(44px, var(--btn-h))' }} disabled={!!block}
-          onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`} aria-describedby={block ? `upgrade-block-${id}` : undefined}>Reconstruir</button>
-        {block ? <div className="text-[12px] text-center text-[#d0905a]" id={`upgrade-block-${id}`} data-testid={`upgrade-block-${id}`}>{block}</div>
-          : <div className="text-[12px] text-center" style={{ color: OK }} data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
+          onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`}>Reconstruir</button>
+        {!block && <div className="text-[12px] text-center" style={{ color: OK }} data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
       </div>
       </>)}
       {children}

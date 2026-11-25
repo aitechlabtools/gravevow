@@ -47,7 +47,6 @@ const [,, url = 'http://localhost:5173/play/', out = 'refugio', dev] = process.a
   await tap('[data-testid=upgrade-cot]'); await p.waitForTimeout(150);
   const ref = await G(() => window.__GRAVEVOW__.getState().profile.refuge);
   if (!ref || ref.kitchen !== 1 || ref.cot !== 2) fail('no se mejoraron cocina y catre: ' + JSON.stringify(ref));
-  if (!(await p.$('[data-testid=upgrade-block-cot]'))) fail('la siguiente mejora no dice qué falta');
   if (!(await p.$('[data-testid^=source-cot-]'))) fail('no dice dónde conseguir lo que falta');
   await tap('[data-testid=detail-back]'); await back();
   // Forja ya construida: se usa en la pestaña de Brand

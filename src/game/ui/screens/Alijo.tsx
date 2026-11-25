@@ -6,7 +6,7 @@ import { className, g } from '../../../core/gender';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { actions, useGame } from '../../state/store';
 import { getItem } from '../../../core/data/items';
-import { gridValue, equippedValue, isCover, type Loc } from '../../../core/inventory';
+import { gridValue, equippedValue, isCover, LAYOUTS, type Loc } from '../../../core/inventory';
 import { stackRarity } from '../../../core/data/rarity';
 import { useIsTouch } from '../../../shared/device';
 import { StashPanel } from '../StashPanel';
@@ -125,7 +125,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   const selStack = sel?.kind === 'grid' ? (() => { const gr = sel.container === 'shared' ? profile.shared : sel.container === 'backpack' || sel.container === 'stash' || sel.container === 'pocket' ? profile[sel.container] : null; return gr?.[sel.index] ?? null; })() : null;
   const cmp = selStack ? compareWithEquipped(selStack, profile.equipment) : null;
   const preview = cmp ? Object.fromEntries(cmp.diffs) as Partial<Record<keyof Stats, number>> : undefined;
-  const stashCols = layout === 'desktop' && !compact ? 10 : 8;
+  const stashCols = LAYOUTS.stash.cols; // debe coincidir con la lógica (8): con otro número los objetos grandes se pintan 1×1 y la página parece medio vacía
   const storage = (
     <StashPanel cols={stashCols} ptitle={!phone} sel={sel} onSelect={onSelect} onEmpty={onEmpty}
       onQuick={(l, st) => { if (getItem(st.itemId).use?.kind === 'need') actions.eat(l); else actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
