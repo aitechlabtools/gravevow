@@ -322,14 +322,15 @@ Plan: `docs/plan-seguro-equipo.md`. Maquetas y capturas reales: `mockups/seguro-
 - Dibujo del descenso en `src/game/ui/mapArt.ts` (160×150 px, provisional; el definitivo puede ser un PNG del mismo tamaño). `MAP_NODES` y `MAP_BANDS` colocan marcadores y franjas en %. Escala entera según alto; en móvil los marcadores son decorativos y se elige en la lista (44 px).
 
 ### Ventana del seguro (Descender)
-`InsureModal` (InsurePanels.tsx, clases `.insm*`): columna de casillas + lista de filas conmutables + pie con cifras y botones. La pestaña «Seguro» de los mercaderes conserva su diseño (`InsureTab`).
+`InsureModal` (InsurePanels.tsx, clases `.insm*`): columna de casillas + lista de filas conmutables + pie con cifras y botones. En pantallas bajas (≤560 px) casillas de 46 px y la lista se desplaza (`max-height: calc(100vh - 236px)`). La pestaña «Seguro» de los mercaderes conserva su diseño (`InsureTab`).
 
 ### Alijo
-- Equipo: `CharacterEquip` (Alijo.tsx) mide el arco con ResizeObserver y escala el personaje a entero. Mochila en panel propio.
-- Heridas: `BodyPanel full` pinta `BlockBody` (clases `.doll*`), `.body-banner` y `.body-states`; fuera del Alijo se usa la figura con etiquetas. Mochila: `CureBag` (filtro Curación apaga por `data-item`).
+- Mismo diseño en los tres formatos; el móvil lo adapta al espacio.
+- Equipo: `CharacterEquip` (Alijo.tsx) mide el arco con ResizeObserver y escala el personaje a entero. Mochila en panel propio. Móvil: `CharacterEquip compact` (270 px, casillas de 44) + mochila + ficha.
+- Heridas: `BodyPanel full` pinta `BlockBody` (clases `.doll*`), `.body-banner` y `.body-states`; fuera del Alijo se usa la figura con etiquetas. Mochila: `CureBag` (filtro Curación apaga por `data-item`). Móvil: estado físico + `CureBag` (las necesidades van dentro del estado). El cuerpo pasa a una columna con contenedor ≤500 px (tableta: dos columnas).
 
 ### Estación en ruinas
-`StationDetail` con nivel 0 devuelve `RuinPanel`: solo nombre, dibujo (flex:1, alto `calc(100vh - 128px)` en escritorio/tableta), fichas `.ruin-req` (ok/bad; la que falta es botón a su fuente, texto en `title`) y «Reconstruir».
+`StationDetail` con nivel 0 devuelve `RuinPanel`: solo nombre, dibujo (flex:1, alto `calc(100vh - 128px)` en escritorio/tableta), fichas `.ruin-req` (ok/bad; la que falta es botón a su fuente, texto en `title`) y «Reconstruir». Móvil: dibujo a la izquierda (38 %) y materiales y «Reconstruir» a la derecha.
 
 ### Misiones (diario)
-Tres columnas 28/42/30 (`.qj`). Estados por color del borde izquierdo: dorado en progreso, verde completada. Sin historial de entregadas (el juego no lo guarda).
+Tres columnas 28/42/30 (`.qj`). Estados por color del borde izquierdo: dorado en progreso, verde completada. Sin historial de entregadas (el juego no lo guarda). Móvil (`QuestJournal phone`, `.qj-phone`): misiones a la izquierda y, a la derecha, pestañas Detalle · Tablón (`quests-tab-*`); filtro del tablón en fichas horizontales. Sin misiones, salta al Tablón; tocar una misión abre Detalle.

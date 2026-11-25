@@ -643,7 +643,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .needs-side .needs-hint{min-height:0}
 @media (max-height:560px){.body-panel.full .body-box{min-height:0}.body-panel.full .body-map{min-height:230px}}
 .status-wrap{container-type:inline-size}
-@container (max-width:540px){.body-panel.full{grid-template-columns:1fr;grid-template-rows:auto auto auto auto}}
+@container (max-width:500px){.body-panel.full{flex:none;grid-template-columns:1fr;grid-template-rows:auto auto auto auto}.body-panel.full .body-box{min-height:auto}.body-panel.full .doll{flex:none}}
 @media (max-height:560px){.status-wrap .body-panel.full{grid-template-columns:46% minmax(0,1fr);grid-template-rows:auto auto}.status-wrap .body-panel.full .body-box{min-height:0}.status-wrap .body-panel.full .body-map{flex:none;height:230px;min-height:0}}
 
 /* Bloque 1, fase 6: curas de la mochila dentro del panel (tocar una cura y luego la parte) */
@@ -1436,7 +1436,7 @@ button.share-slot{cursor:pointer}
 .insm-foot{display:flex;align-items:center;gap:28px;border-top:1px solid #3a3841;padding-top:12px}
 .insm-fig{display:flex;flex-direction:column;gap:2px}.insm-num{font-size:20px;color:#e6e0d2}.insm-num.short{color:#d45a4a}
 .insm-btns{margin-left:auto;display:flex;gap:10px}.insm-btns .ins-go{width:auto;min-width:190px;padding:0 16px}
-@media (max-height:560px){.insm{--u:50px;gap:6px}.insm-eq .ins-grid{gap:6px 8px}.insm-title{padding-bottom:4px}.insm-cols{gap:12px}.insm-list{padding-left:12px;min-width:220px}.insm-head{margin-bottom:0}.insm-rows{max-height:208px;overflow-y:auto}.insm-row{min-height:28px;font-size:12px}.insm-num{font-size:15px}.insm-foot{padding-top:6px;gap:16px}.insm-btns .ins-go{min-width:140px}}
+@media (max-height:560px){.insm{--u:46px;gap:6px}.insm-title{font-size:18px}.insm-eq .ins-grid{gap:6px 8px}.insm-title{padding-bottom:4px}.insm-cols{gap:12px}.insm-list{padding-left:12px;min-width:220px}.insm-head{margin-bottom:0}.insm-rows{max-height:calc(100vh - 236px);overflow-y:auto}.insm-row{min-height:28px;font-size:12px}.insm-num{font-size:15px}.insm-foot{padding-top:6px;gap:16px}.insm-btns .ins-go{min-width:140px}}
 .is-touch .insm-row{min-height:44px}
 .slot-seal{position:absolute;right:1px;bottom:1px;line-height:0;z-index:3;pointer-events:none}
 @media (min-width:1600px) and (min-height:900px){.ins-body,.insm{--u:80px}}
@@ -1598,3 +1598,16 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 .ruin-card{border:1px solid #3a3841;background:#141318;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:0}
 .ruin-card.next{border-color:#8a6a2a;background:#1a160e}
 .ruin-art.lit{background:radial-gradient(ellipse at 50% 80%,#4a3010 0%,#1a1820 60%,#0e0d12 100%)}
+
+/* Misiones en móvil: misiones | Detalle o Tablón con pestañas */
+.qj.qj-phone{grid-template-columns:minmax(0,40fr) minmax(0,60fr)}
+.qj-right{display:flex;flex-direction:column;min-height:0;gap:6px}.qj-right>.qj-col{flex:1}
+.qj-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.qj-tabs button{min-height:44px;font-family:var(--font-display);letter-spacing:.08em;text-transform:uppercase;font-size:13px;background:#15131a;border:1px solid #3a3741;color:#d6d3d1;cursor:pointer}
+.qj-tabs button.on{background:#c8961e;border-color:#e8b33a;color:#1a1206}
+.qj-filter.chips{flex-direction:row;overflow-x:auto;gap:4px;flex:none}.qj-filter.chips .qj-fopt{flex:none}.qj-filter.chips .qj-radio{display:none}
+.qj-phone .qj-col{padding:8px;gap:6px}.qj-phone .qj-head{min-height:36px}.qj-phone .qj-ico{width:40px;height:40px}.qj-phone .qj-name{font-size:14px}
+.qj-phone .qj-art{height:64px}.qj-phone .qj-title{font-size:18px}.qj-phone .qj-desc{font-size:13px}.qj-phone .qj-rw b{font-size:16px}.qj-phone .qj-rw div{padding:4px}
+.qj-phone .qj-detail{gap:6px}.qj-phone .qj-bart{width:48px;height:48px}.qj-phone .qj-bcard{padding:6px;gap:4px}
+.qj-phone [data-testid=quests-board] .qj-list,.qj-phone [data-testid=quests-board]{min-height:0}
+.qj-phone .qj-center>.qj-head{display:none}

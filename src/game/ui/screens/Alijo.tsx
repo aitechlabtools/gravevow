@@ -156,11 +156,11 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
           {view === 'status' ? (
             <>
               <Panel className="min-h-0 flex-[3]" bodyClassName="overflow-y-auto scroll-thin body-cq">{status}</Panel>
-              <Panel className="min-h-0 flex-[2]" bodyClassName="overflow-y-auto scroll-thin">{backpack}</Panel>
+              <Panel className="min-h-0 flex-[2]" bodyClassName="overflow-y-auto scroll-thin"><CureBag grids={grids} quick={quickFromBag} onStash={(l) => { actions.quickMove(l, 'stash'); clear(); }} /></Panel>
             </>
           ) : view === 'gear' ? (
             <>
-              <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col items-center"><div style={{ ['--slot-big' as string]: '44px' }}><RecruitOffer /><EquipmentGrid sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} tight /></div><div className="w-full mt-3" data-testid="alijo-hero"><LevelBar compact /><div className="mt-1"><HeroStats /></div></div></Panel>
+              <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col items-center"><div className="w-full" style={{ ['--slot' as string]: '44px', ['--slot-big' as string]: '44px', width: 270 }} data-testid="alijo-hero"><RecruitOffer /><CharacterEquip sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} compact /></div></Panel>
               <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">{backpack}{pocket}</Panel>
               {sheet}
             </>
@@ -248,7 +248,7 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
 }
 
 /** Personaje en el centro con el equipo alrededor (arma, manos, pies, anillo | cabeza, torso, secundaria, amuleto), atuendo y mochila debajo, y atributos. */
-function CharacterEquip({ sel, onSelect, onEmpty, onDone, onSkin }: { sel: Loc | null; onSelect: (l: Loc) => void; onEmpty: (l: Loc) => void; onDone: () => void; onSkin: () => void }) {
+function CharacterEquip({ sel, onSelect, onEmpty, onDone, onSkin, compact }: { sel: Loc | null; onSelect: (l: Loc) => void; onEmpty: (l: Loc) => void; onDone: () => void; onSkin: () => void; compact?: boolean }) {
   const prof = useGame((s) => s.profile!);
   const eq = prof.equipment;
   // El personaje llena el arco: escala entera según el alto y el ancho que quedan entre las dos columnas de ranuras
@@ -270,38 +270,15 @@ function CharacterEquip({ sel, onSelect, onEmpty, onDone, onSkin }: { sel: Loc |
   );
   return (
     <div className="flex flex-col" data-testid="equipment">
-      <div className="text-center font-display text-gold" data-testid="hero-level">{className(prof.character.classId, prof.character.appearance.sex)} · Nivel {prof.character.level}</div>
-      <div className="mx-auto mt-1 mb-3 w-3/4" title={`${prof.character.xp} / ${xpForNextLevel(prof.character.level)} XP`}><div className="h-1.5 bg-stone-800"><div className="h-full bg-arcane" style={{ width: `${Math.min(100, (prof.character.xp / xpForNextLevel(prof.character.level)) * 100)}%` }} /></div><div className="text-center text-[12px] text-stone-400 mt-0.5">{prof.character.xp} / {xpForNextLevel(prof.character.level)} XP</div></div>
-      <div className="flex items-center justify-center gap-3">
+      <div className={`text-center font-display text-gold ${compact ? 'text-[13px]' : ''}`} data-testid="hero-level">{className(prof.character.classId, prof.character.appearance.sex)} · Nivel {prof.character.level}</div>
+      <div className={`mx-auto mt-1 w-3/4 ${compact ? 'mb-1.5' : 'mb-3'}`} title={`${prof.character.xp} / ${xpForNextLevel(prof.character.level)} XP`}><div className="h-1.5 bg-stone-800"><div className="h-full bg-arcane" style={{ width: `${Math.min(100, (prof.character.xp / xpForNextLevel(prof.character.level)) * 100)}%` }} /></div><div className="text-center text-[12px] text-stone-400 mt-0.5">{prof.character.xp} / {xpForNextLevel(prof.character.level)} XP</div></div>
+      <div className={`flex items-center justify-center ${compact ? 'gap-1.5' : 'gap-3'}`}>
         <div className="flex flex-col gap-1.5">{(['mainHand', 'gloves', 'boots', 'ring'] as EquipSlot[]).map(slot)}</div>
-        <div ref={archRef} className="ui-arch flex-1 min-w-0 self-stretch flex items-end justify-center overflow-hidden" style={{ maxWidth: 340 }}><div className="pb-3"><PlayerSprite scale={scale} /></div></div>
+        <div ref={archRef} className="ui-arch flex-1 min-w-0 self-stretch flex items-end justify-center overflow-hidden" style={{ maxWidth: 340, minWidth: compact ? 96 : undefined }}><div className={compact ? 'pb-1' : 'pb-3'}><PlayerSprite scale={scale} /></div></div>
         <div className="flex flex-col gap-1.5">{(['helmet', 'armor', 'offHand', 'amulet'] as EquipSlot[]).map(slot)}</div>
       </div>
       <div className="flex justify-center gap-6 mt-2"><div className="flex flex-col items-center gap-0.5"><SkinSlot onClick={onSkin} /></div><BagSlot sel={sel} onDone={onDone} /></div>
       <div className="mt-3 border-t border-stone-700 pt-2"><div className="ins-cap mb-1" style={{ color: '#e8b33a' }}>Atributos</div><HeroStats /></div>
-    </div>
-  );
-}
-
-/** Equipamiento en tres columnas: arma (grande) y manos · cabeza, torso y pies · secundaria (grande), amuleto y anillo. */
-function EquipmentGrid({ sel, onSelect, onEmpty, onDone, onSkin, tight = false }: { sel: Loc | null; onSelect: (l: Loc) => void; onEmpty: (l: Loc) => void; onDone: () => void; onSkin: () => void; tight?: boolean }) {
-  const eq = useGame((s) => s.profile!.equipment);
-  const prof = useGame((s) => s.profile!);
-  // Objeto elegido en la mochila o el almacén (para iluminar la ranura de equipo donde encaja)
-  const selItem = sel?.kind === 'grid' ? (() => { const g = sel.container === 'shared' ? prof.shared : sel.container === 'backpack' || sel.container === 'stash' || sel.container === 'pocket' ? prof[sel.container] : null; return g?.[sel.index]?.itemId; })() : undefined;
-  const slot = (s: EquipSlot, big = false) => (
-    <div className="flex flex-col items-center gap-0.5" key={s}>
-      <ItemSlot stack={eq[s]} loc={{ kind: 'equip', slot: s }} equipment={eq} mode={MODE} placeholderIcon={SLOT_ICON[s]} label={SLOT_LABELS[s]} big={big}
-        selected={sel?.kind === 'equip' && sel.slot === s} awaiting={!!sel} onSelect={onSelect} onEmpty={onEmpty} movingItemId={selItem}
-        onQuick={(l) => { actions.unequip(l); onDone(); }} onAlt={(l) => { actions.unequip(l); onDone(); }} />
-      <span className="text-[10px] text-stone-300 uppercase tracking-wider">{SLOT_LABELS[s]}</span>
-    </div>
-  );
-  return (
-    <div className={`flex items-start ${tight ? 'gap-2' : 'gap-6'}`} data-testid="equipment">
-      <div className="flex flex-col items-center gap-2">{slot('mainHand', true)}{slot('gloves')}<SkinSlot onClick={onSkin} /></div>
-      <div className="flex flex-col items-center gap-2">{slot('helmet')}{slot('armor')}{slot('boots')}<BagSlot sel={sel} onDone={onDone} /></div>
-      <div className="flex flex-col items-center gap-2">{slot('offHand', true)}{slot('amulet')}{slot('ring')}</div>
     </div>
   );
 }

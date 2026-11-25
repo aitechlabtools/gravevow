@@ -4,6 +4,12 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 25/11 (6): mismo diseño en móvil y tableta
+- Regla: escritorio, tableta y móvil llevan siempre el mismo diseño, adaptado al espacio.
+- Heridas en tableta: arreglado el solape del cuerpo con «Tus curas» (consulta de contenedor a 500 px; antes 540).
+- Móvil: Misiones con el diario (Detalle · Tablón en pestañas), Alijo › Equipo con el personaje y las casillas alrededor, Heridas con la mochila de curas, estación en ruinas con el dibujo al lado y el seguro con la lista desplazable. Quitada la vista antigua de Misiones del móvil (`Misiones.tsx` ya solo monta `QuestJournal`) y `EquipmentGrid` del Alijo.
+- Capturas `movil-adaptado-*` en `mockups/plan-interfaz-2/{misiones,alijo,ruinas}`; prueba `misiones/funcional-movil.cjs`.
+
 ## Novedades del 25/11 (5): plan de interfaz 2, fase E (mapa de zonas ilustrado)
 - `ZoneMap` (`screens/Jugar.tsx`) con la estructura del usuario: ✕ arriba (`btn-zone-map-close`), dibujo del descenso a la izquierda (`mapArt.ts`, 160×150 px por código, provisional; ×3/×2/×1 según alto) con nombres de estrato y 10 marcadores (`map-node-*`: elegida dorada, jefe roja, cerradas con candado), y a la derecha pestañas de zona en fila (`zone-tab-*`), subtítulo, motivo del bloqueo una vez (`zone-lock`), subzonas y ficha del jefe (`zone-boss`). En móvil los marcadores son de adorno y se elige en la lista. Tocar pestaña, franja o marcador cerrado no elige expedición. Pruebas: `mockups/plan-interfaz-2/fase-e/funcional.cjs` y `capturar.cjs`.
 

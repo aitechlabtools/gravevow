@@ -1,7 +1,7 @@
 // Diario de misiones (25/11): tres columnas en escritorio y tableta.
 // Izquierda «Tus misiones» (tarjetas compactas, listas para cobrar primero) · centro el detalle de la elegida · derecha el «Tablón de encargos»
 // con filtro por mercader (Todos por defecto). Estados: disponible (gris), en progreso (dorado), completada (verde).
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { VENDORS, VENDOR_ORDER, type VendorId } from '../../core/data/vendors';
 import { MAX_ACTIVE_QUESTS, QUESTS } from '../../core/data/quests';
@@ -23,29 +23,46 @@ function goalText(id: string): string {
   return `${verb}: ${objective(q).label.toLowerCase()}`;
 }
 
-export function QuestJournal({ onVisit, onHelp, initial }: { onVisit?: (v: VendorId) => void; onHelp: () => void; initial?: VendorId | null }) {
+export function QuestJournal({ onVisit, onHelp, initial, phone }: { onVisit?: (v: VendorId) => void; onHelp: () => void; initial?: VendorId | null; phone?: boolean }) {
   const profile = useGame((s) => s.profile)!;
   const active = activeQuests(profile).sort((a, b) => Number(isComplete(b, profile)) - Number(isComplete(a, profile)) || Number(!!b.pinned) - Number(!!a.pinned));
   const [selId, setSelId] = useState<string | null>(null);
   const sel = active.find((p) => p.id === selId) ?? active[0] ?? null;
   const free = Math.max(0, MAX_ACTIVE_QUESTS - active.length);
+  // Móvil: misiones a la izquierda; a la derecha, Detalle o Tablón con pestañas (mismo diseño, menos ancho)
+  const [right, setRight] = useState<'detail' | 'board'>(initial || !active.length ? 'board' : 'detail');
+  useEffect(() => { if (phone && right === 'detail' && !sel) setRight('board'); }, [phone, right, sel]); // sin misiones: el tablón
+  const tabs = phone && (
+    <div className="qj-tabs" role="tablist" data-testid="quests-tabs">
+      {(['detail', 'board'] as const).map((t) => (
+        <button key={t} role="tab" aria-selected={right === t} className={right === t ? 'on' : ''} onClick={() => { setRight(t); sfx('click'); }} data-testid={`quests-tab-${t}`}>{t === 'detail' ? 'Detalle' : 'Tablón'}</button>
+      ))}
+    </div>
+  );
   return (
-    <div className="qj" data-testid="quest-journal">
+    <div className={`qj ${phone ? 'qj-phone' : ''}`} data-testid="quest-journal">
       <section className="panel qj-col" data-testid="quests-active">
         <div className="qj-head"><span className="phead-t">Tus misiones</span><span className="font-display text-gold text-[18px] ml-auto" data-testid="quests-count">{active.length}/{MAX_ACTIVE_QUESTS}</span>
           <button className="btn font-display" style={{ minWidth: 44, minHeight: 44 }} onClick={() => { onHelp(); sfx('click'); }} aria-label="Cómo funcionan las misiones" data-testid="quests-help">?</button></div>
         <div className="qj-slots" aria-hidden>{Array.from({ length: MAX_ACTIVE_QUESTS }, (_, i) => <span key={i} className={i < active.length ? 'on' : ''} />)}</div>
         <div className="qj-list scroll-thin">
-          {active.map((p) => <ActiveCard key={p.id} p={p} on={sel?.id === p.id} onPick={() => { setSelId(p.id); sfx('click'); }} />)}
+          {active.map((p) => <ActiveCard key={p.id} p={p} on={sel?.id === p.id} onPick={() => { setSelId(p.id); setRight('detail'); sfx('click'); }} />)}
           {free > 0 && <div className="qj-free" data-testid="quest-empty">+ {free} {free === 1 ? 'espacio disponible' : 'espacios disponibles'}</div>}
         </div>
       </section>
+      {phone && <div className="qj-right">{tabs}{right === 'board' ? <Board initial={initial ?? null} phone /> : (
+      <section className="panel qj-col qj-center" data-testid="quest-detail-col">
+        {sel ? <Detail key={sel.id} p={sel} onVisit={onVisit} />
+          : <div className="qj-empty"><span className="font-display text-parchment text-[16px]">Sin misiones aceptadas</span><span>Elige un encargo del tablón para empezar.</span></div>}
+      </section>)}</div>}
+      {!phone && <>
       <section className="panel qj-col qj-center" data-testid="quest-detail-col">
         <div className="qj-head justify-center"><span className="phead-t">Detalle de misión</span></div>
         {sel ? <Detail key={sel.id} p={sel} onVisit={onVisit} />
           : <div className="qj-empty"><span className="font-display text-parchment text-[16px]">Sin misiones aceptadas</span><span>Elige un encargo del tablón para empezar.</span></div>}
       </section>
       <Board initial={initial ?? null} />
+      </>}
     </div>
   );
 }
@@ -117,7 +134,7 @@ function Detail({ p, onVisit }: { p: QuestProgress; onVisit?: (v: VendorId) => v
   );
 }
 
-function Board({ initial }: { initial: VendorId | null }) {
+function Board({ initial, phone }: { initial: VendorId | null; phone?: boolean }) {
   const profile = useGame((s) => s.profile)!;
   const lv = profile.character.level;
   const [vid, setVid] = useState<VendorId | 'all'>(initial && QUEST_VENDORS.includes(initial) ? initial : 'all');
@@ -132,7 +149,7 @@ function Board({ initial }: { initial: VendorId | null }) {
   return (
     <section className="panel qj-col" data-testid="quests-board">
       <div className="qj-head"><span className="phead-t">Tablón de encargos</span><span className="text-[12px] text-stone-400 ml-auto">{total} {total === 1 ? 'disponible' : 'disponibles'}</span></div>
-      <div className="qj-filter" role="tablist">
+      <div className={`qj-filter ${phone ? 'chips' : ''}`} role="tablist">
         {(['all', ...QUEST_VENDORS] as const).map((id) => {
           const n = id === 'all' ? total : fresh(id).length;
           const name = id === 'all' ? 'Todos' : VENDORS[id].name;

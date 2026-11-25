@@ -292,10 +292,13 @@ function RuinPanel({ id, onGo, block, children }: { id: ModuleId; onGo?: GoTo; b
   const reqs = cost ? [...cost.items.map((it) => ({ key: it.itemId, name: getItem(it.itemId).name, have: ownedQty(profile, it.itemId), need: it.qty, icon: it.itemId, src: MATERIAL_SOURCES[it.itemId] })),
     ...(cost.gold > 0 ? [{ key: 'gold', name: 'Oro', have: profile.gold, need: cost.gold, icon: null as string | null, src: undefined }] : [])] : [];
   return (
-    <div className="flex flex-col w-full ruin mx-auto" style={{ gap: phone ? 8 : 14, maxWidth: 980, height: phone ? undefined : 'calc(100vh - 128px)' }} data-testid={`station-detail-${id}`}>
+    <div className="flex flex-col w-full ruin mx-auto" style={{ gap: phone ? 8 : 14, maxWidth: 980, height: phone ? '100%' : 'calc(100vh - 128px)' }} data-testid={`station-detail-${id}`}>
       <h3 className="font-display text-gold uppercase tracking-[0.08em] text-center" style={{ fontSize: phone ? 16 : 20 }} data-testid={`module-${id}`}>{m.name}</h3>
       <div className="text-center text-[12px] uppercase tracking-[0.1em] text-[#d0905a] -mt-2" data-testid={`module-level-${id}`}>En ruinas</div>
-      <div ref={artRef} className="ruin-art" style={phone ? { height: 70 } : { flex: 1, minHeight: 140 }}><img src={stationArtUrl(id, true)} className="pixelated" alt="En ruinas" draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} /></div>
+      {phone ? (
+        <div className="flex flex-1 min-h-0" style={{ gap: 10 }}>
+        <div ref={artRef} className="ruin-art" style={phone ? { width: '38%', flex: 'none' } : { flex: 1, minHeight: 140 }}><img src={stationArtUrl(id, true)} className="pixelated" alt="En ruinas" draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} /></div>
+          <div className="flex-1 min-w-0 flex flex-col justify-center" style={{ gap: 8 }}>
       <div className="ruin-cap text-center">Materiales necesarios</div>
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${reqs.length}, minmax(0,1fr))` }} data-testid={`station-cost-${id}`}>
         {reqs.map((r) => {
@@ -317,6 +320,32 @@ function RuinPanel({ id, onGo, block, children }: { id: ModuleId; onGo?: GoTo; b
         {block ? <div className="text-[12px] text-center text-[#d0905a]" id={`upgrade-block-${id}`} data-testid={`upgrade-block-${id}`}>{block}</div>
           : <div className="text-[12px] text-center" style={{ color: OK }} data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
       </div>
+          </div>
+        </div>
+      ) : (<>
+      <div ref={artRef} className="ruin-art" style={phone ? { width: '38%', flex: 'none' } : { flex: 1, minHeight: 140 }}><img src={stationArtUrl(id, true)} className="pixelated" alt="En ruinas" draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} /></div>
+      <div className="ruin-cap text-center">Materiales necesarios</div>
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${reqs.length}, minmax(0,1fr))` }} data-testid={`station-cost-${id}`}>
+        {reqs.map((r) => {
+          const ok = r.have >= r.need;
+          const go = !ok && r.src?.go && onGo ? r.src.go : null;
+          const body = (<>
+            {r.icon ? <ItemIcon itemId={r.icon} size={28} /> : <span className="text-gold text-[22px] leading-none">●</span>}
+            <span className="text-[13px] text-parchment">{r.name}</span>
+            <span className="ruin-qty">{r.have} / {r.need}</span>
+          </>);
+          return go
+            ? <button key={r.key} type="button" className="ruin-req bad" title={`${r.src!.text} Toca para ir.`} onClick={() => { sfx('click'); onGo!(go.vendor, go.view); }} data-testid={`req-${id}-${r.key}`}>{body}</button>
+            : <div key={r.key} className={`ruin-req ${ok ? 'ok' : 'bad'}`} title={ok ? undefined : r.src?.text} data-testid={`req-${id}-${r.key}`}>{body}</div>;
+        })}
+      </div>
+      <div className="flex flex-col gap-1">
+        <button className={`btn font-display tracking-[0.12em] uppercase ${block ? '' : 'btn-gold'}`} style={{ minHeight: 'max(44px, var(--btn-h))' }} disabled={!!block}
+          onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`} aria-describedby={block ? `upgrade-block-${id}` : undefined}>Reconstruir</button>
+        {block ? <div className="text-[12px] text-center text-[#d0905a]" id={`upgrade-block-${id}`} data-testid={`upgrade-block-${id}`}>{block}</div>
+          : <div className="text-[12px] text-center" style={{ color: OK }} data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
+      </div>
+      </>)}
       {children}
     </div>
   );
