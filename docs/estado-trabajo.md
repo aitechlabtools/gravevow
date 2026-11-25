@@ -987,3 +987,4 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - **Habilidad (25/11, v3):** fuera el aviso «Siguiente habilidad en…»; cada habilidad bloqueada lleva «Requiere nivel N» (class-req-*) con el siguiente hito (20, luego 40…); con una por elegir sale el aviso dorado y «Desbloquear».
 - **Habilidades en móvil (25/11):** dos bloques iguales como el Alijo: un selector vertical de iconos (character-mode-skills / character-mode-hero) cambia los dos bloques a la vez: rombo = Ataques | Habilidad; casco = héroe en su arco | atributos (compactos). Fuera el botón «Atributos» y su ventana. La tableta sigue con tres columnas.
 - **Habilidad (25/11):** solo se ilumina la habilidad de clase en uso (tocar otra ya no la resalta).
+- **Habilidad (25/11):** la etiqueta de nivel de las bloqueadas es ahora un chip corto con candado y «Nv 40» (title y aria «Requiere nivel 40»), para que no pise el nombre en el móvil.

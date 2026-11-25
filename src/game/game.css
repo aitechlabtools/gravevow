@@ -1750,7 +1750,7 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 .hb-acard.locked{opacity:.65;cursor:default}
 .hb-note{font-size:14px;color:#a8a29e;padding:8px 10px;border:1px solid #3a3741;background:#141318}.hb-note.ok{color:#1a1206;background:#e8b33a;border-color:#e8b33a;font-weight:700}
 div.hb-acard{cursor:default}
-.hb-req{font-size:13px;color:#e8b33a;border:1px solid #8a6a2a;padding:4px 8px;white-space:nowrap}
+.hb-req{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#e8b33a;border:1px solid #8a6a2a;padding:4px 7px;white-space:nowrap;flex-shrink:0}
 .al-stats-tight .hb-stat{padding:3px 6px;font-size:13px}.al-stats-tight .hb-stat-m{font-size:12px;margin-top:0}
 @media (max-width:900px){.hb-acard-top{flex-wrap:wrap}.hb-acard-name{font-size:15px}}
 [data-testid=character-stats].al-stats-tight [data-testid=skill-stats] .hb-stat,.al-stats-tight [data-testid=skill-stats] .hb-stat{flex:0 0 auto;padding:3px 6px;font-size:13px}
