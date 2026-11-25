@@ -72,7 +72,7 @@ export function Lobby() {
       <header className="ui-nav" data-testid="lobby-nav">
         <div className="flex items-center min-w-0">
         {/* Retrato, nombre y experiencia. Tocarlo abre el cambio de personaje. En el móvil, más compacto */}
-        <button className={`flex items-center shrink-0 text-left ${layout === 'phone' ? 'gap-1.5' : 'gap-2'}`} style={{ minHeight: 44 }} data-testid="nav-chip"
+        <button className={`flex items-center shrink-0 text-left ${layout === 'phone' ? 'gap-1.5' : 'gap-2'}`} style={{ minHeight: 44, minWidth: 44 }} data-testid="nav-chip"
           onClick={() => { sfx('click'); setSwitcher(!switcher); }} aria-label="Cambiar de personaje" aria-expanded={switcher}>
           <div className={`${layout === 'phone' ? 'w-8 h-8' : 'w-10 h-10'} flex items-end justify-center overflow-hidden bg-[#0d0c11] border-2 ${switcher ? 'border-gold' : 'border-stone-700'}`}><PlayerSprite scale={layout === 'phone' ? 1 : 2} animate={false} /></div>
           <div className={`nav-chip-txt min-w-0 ${layout === 'phone' ? 'w-[74px]' : 'w-28'} leading-tight`}>

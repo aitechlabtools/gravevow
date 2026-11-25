@@ -307,3 +307,16 @@ Plan: `docs/plan-seguro-equipo.md`. Maquetas y capturas reales: `mockups/seguro-
   - «Próxima bajada»: recibo con las piezas marcadas, «Tienes», «Total» y que se cobra al pulsar «Descender». A la derecha en pantallas de más de 1300 px; debajo en tableta y móvil.
 - **Quién asegura:** siempre Valerius (reforja con Brand). Cada pieza necesita reconstruida la estación de quien la fabrica: Forja (armas, anillos, dagas y tomos), Forja de armaduras (armaduras y escudos) o Laboratorio (amuletos) (`reforgerFor` en `core/insuranceLoss.ts`).
 - **Una función por mercader (24/11):** «Reparar» solo en Brand (ya no en Orik ni en Nira); «Desguace» solo en Orik; «Seguro» solo en Valerius. Tiendas, venta y estaciones, sin cambios. Plan: `docs/plan-mercaderes-funciones.md`.
+
+## Barra superior que se ajusta sola (25/11)
+- `kit/PillBar.tsx` mide el ancho que necesitan las pestañas con nombre y el sitio libre (barra menos retrato y oro/botones). Si no cabe, añade `.tight`: iconos solos, nombre en la activa y en el `title` de las demás. No depende de cortes fijos de anchura; al ensanchar vuelven los nombres.
+- Zonas táctiles: también el retrato (`nav-chip`) tiene 44 px de ancho mínimo.
+
+## Estaciones que se pliegan según su sitio (25/11)
+- La estación reconstruida decide por el ancho real de su panel, no por el formato: si no llega a 1000 px, niveles y mejora van plegados en la cabecera (como en tableta y móvil). La ficha de receta también mide su ancho y reduce icono y título. Los nombres largos pasan a dos líneas, nunca «…».
+
+## Textos y nombres (25/11)
+- En móvil horizontal la letra base es 12 px: ningún texto por debajo. Los nombres de objetos, piezas y mercaderes van a dos líneas (o con guiones) en vez de «…»; las descripciones de una línea en listas sí pueden cortarse porque la ficha las muestra enteras.
+
+## Mapa de zonas ilustrado (25/11)
+- Dibujo del descenso en `src/game/ui/mapArt.ts` (160×150 px, provisional; el definitivo puede ser un PNG del mismo tamaño). `MAP_NODES` y `MAP_BANDS` colocan marcadores y franjas en %. Escala entera según alto; en móvil los marcadores son decorativos y se elige en la lista (44 px).

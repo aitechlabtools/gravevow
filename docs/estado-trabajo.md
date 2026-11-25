@@ -4,6 +4,24 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 25/11 (5): plan de interfaz 2, fase E (mapa de zonas ilustrado)
+- `ZoneMap` (`screens/Jugar.tsx`) con la estructura del usuario: ✕ arriba (`btn-zone-map-close`), dibujo del descenso a la izquierda (`mapArt.ts`, 160×150 px por código, provisional; ×3/×2/×1 según alto) con nombres de estrato y 10 marcadores (`map-node-*`: elegida dorada, jefe roja, cerradas con candado), y a la derecha pestañas de zona en fila (`zone-tab-*`), subtítulo, motivo del bloqueo una vez (`zone-lock`), subzonas y ficha del jefe (`zone-boss`). En móvil los marcadores son de adorno y se elige en la lista. Tocar pestaña, franja o marcador cerrado no elige expedición. Pruebas: `mockups/plan-interfaz-2/fase-e/funcional.cjs` y `capturar.cjs`.
+
+## Novedades del 25/11 (4): plan de interfaz 2, fase D (mercaderes y servicios)
+- Letra base en móvil horizontal 12 px (antes 11; `html{font-size}` en `game.css`). Pestañas de la venta, candado de Contratos y punto de aviso a 12 px mínimo. Nombres a dos líneas: tienda (`.shop-name` con `line-clamp-2`), seguro (`.ins-card-name` con guiones), nombre y estación del mercader en la columna. Botón «Ir» de materiales y −/+ de fabricar con 44 px.
+- Medición: `mockups/plan-interfaz-2/fase-d/medir.cjs` (todas las vistas de los 8 mercaderes, 7 tamaños, ruinas y reconstruidas; `SOLO=1366,844` para limitar). Ojo: los clics de Playwright cuentan como ratón y quitan `is-touch`; el script simula un toque antes de medir.
+
+## Novedades del 25/11 (3): plan de interfaz 2, fase C (Alijo)
+- Heridas en móvil: el panel lleva `.body-cq` (consulta por ancho); por debajo de 360 px el cuerpo pasa a 64 % y las etiquetas miden 44 px. En pantallas bajas la etiqueta de la cabeza va a la derecha para no pisar el tórax (en 640×360 aún se rozan 3 px). El almacén en portátil no se toca: 15 filas por página siempre piden desplazar.
+
+## Novedades del 25/11 (2): plan de interfaz 2, fase B (estaciones)
+- `StationDetail` mide su ancho: por debajo de `STATION_WIDE_MIN` (1000 px) pliega niveles y mejora en la cabecera «Niveles y mejora ▾» también en escritorio (portátil 1280–1600). `CraftPanel` mide la ficha: en escritorio estrecho usa tamaños de tableta (icono 128/96, título 22/20). Nombres de receta y botones del mercader (`.vtab-lbl`) a dos líneas en vez de «…». Comprobación: `mockups/plan-interfaz-2/fase-b-estaciones.cjs` (8 estaciones, 5 tamaños, fabricar a mochila y almacén).
+- Botón «Volver al Bastión» del mercader: el castillo se quita si el botón no tiene alto (`@container`, `.vback-card`); la ficha del retrato mide `clamp(220px, 36vh, 380px)` en escritorio para que en pantallas de 720–768 px de alto el botón quede a la vista sin desplazar.
+
+## Novedades del 25/11: plan de interfaz 2, fase A (barra superior)
+- Revisado el plan de ChatGPT con mediciones reales: `docs/plan-interfaz-2.md` (fases A–E, capturas en `mockups/plan-interfaz-2/baseline/`).
+- Fase A hecha: si los nombres de las pestañas no caben (portátil 1280–1450 px), `PillBar` lo mide y pone `.ui-pills.tight` (solo iconos y el nombre de la activa; nombre al pasar el ratón). Retrato `nav-chip` con 44 px de ancho mínimo. Comprobación: `mockups/plan-interfaz-2/fase-a/medir.cjs` (9 tamaños).
+
 ## Novedades del 24/11 (4): retoques de la venta
 - Fuera las iniciales del comprador en todas las casillas (también en el Alijo) y la caja «Compra: …» de todos los mercaderes. Si el especialista no tiene estación, lo avisa la lista «A vender» (`sell-closed`). Pestañas y páginas elegidas de la venta, en dorado. Almacén de la venta: casillas a lo ancho hasta 80 px (`StashPanel fill`).
 

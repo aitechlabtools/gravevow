@@ -206,7 +206,7 @@ html{-webkit-tap-highlight-color:transparent}
 .touch-btn:active:not(:disabled){transform:scale(.94)}
 @keyframes pulse-ready{50%{box-shadow:0 0 28px #e8b33aaa}}
 /* Móvil en horizontal: la interfaz (medida en rem) se reduce para que quepa */
-@media (pointer:coarse) and (max-height:540px){ html{font-size:11px} }
+@media (pointer:coarse) and (max-height:540px){ html{font-size:12px} }
 .rotate-hint{animation:rotate-hint 2s ease-in-out infinite}
 @keyframes rotate-hint{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(90deg)}}
 
@@ -396,6 +396,9 @@ html{-webkit-tap-highlight-color:transparent}
   .ui-pills .pill:not(.on) .pill-lbl{display:none}
   .ui-pills .pill{min-width:var(--touch)}
 }
+/* Portátil y cualquier ancho en que no quepan los nombres (lo decide PillBar midiendo): nombre solo en la activa */
+.ui-pills.tight .pill:not(.on) .pill-lbl{display:none}
+.ui-pills.tight .pill{min-width:var(--touch);padding:0 12px}
 @media (max-height:520px){
   .ui-nav{gap:8px}
   .ui-pills{gap:4px}
@@ -558,6 +561,11 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .body-needs{grid-column:1/-1}
 .body-needs .needs-panel{margin-top:0}
 @media (max-width:640px){.body-panel{grid-template-columns:1fr}}
+/* Heridas del Alijo en móvil pequeño (panel de menos de 360 px): el cuerpo se queda más ancho para que las etiquetas no se pisen y midan 44 px */
+.body-cq{container-type:inline-size}
+@container (max-width:360px){.body-panel{grid-template-columns:64% minmax(0,1fr)!important}.body-tag{min-width:44px}}
+/* Pantallas bajas: con 44 px de alto, la etiqueta de la cabeza pisaba la del tórax; se aparta a la derecha */
+@media (max-height:560px){.body-tag[data-testid=body-row-head]{left:auto!important;right:0}}
 @media (max-height:560px){
   .body-panel{grid-template-columns:46% minmax(0,1fr);gap:6px}
   .body-map{height:230px}
@@ -744,7 +752,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .vtabs { align-self: flex-start; flex-shrink: 0; flex-wrap: wrap; max-width: 100%; }
 @media (max-height: 520px) { .vtabs { flex-wrap: nowrap; } }
 .vtabs button { white-space: nowrap; }
-.vtab-dot { margin-left: 6px; color: #5fd19a; font-size: .85em; }
+.vtab-dot { margin-left: 6px; color: #5fd19a; font-size: max(12px, .85em); }
 .vtab-dot.gold { color: var(--color-gold); }
 .vtabs button.on .vtab-dot { color: #1a1205; }
 
@@ -943,7 +951,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .vtabs-col button{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;background:var(--color-stone-800);border:2px solid var(--color-stone-600);color:var(--color-parchment);font-family:var(--font-display);font-size:16px;letter-spacing:.04em;text-align:left;cursor:pointer}
 .vtabs-col button:hover{background:var(--surface-hi)}
 .vtabs-col button[aria-selected=true]{background:var(--gold-fill);border-color:var(--gold-fill);color:#1a1205}
-.vtabs-col .vtab-lbl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vtabs-col .vtab-lbl{flex:1;min-width:0;line-height:1.1;overflow-wrap:break-word}
 .vtabs-col .vtab-dot{margin-left:0}
 .vtabs-col button[aria-selected=true] .vtab-dot{color:#1a1205}
 .shop-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px}
@@ -972,6 +980,9 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 @media (max-height:960px){.vback-art>*{width:64px!important;height:auto!important;image-rendering:pixelated}.vback-card{min-height:0;gap:6px;padding:8px}}
 .vback-card:hover{background:var(--surface-hi);color:var(--color-stone-300)}
 .vback-art{display:flex;align-items:flex-end;justify-content:center}
+/* Si el botón no tiene alto para el castillo y el rótulo, se quita el castillo (mide el propio botón) */
+.vback-card{container-type:size;min-height:52px}
+@container (max-height:110px){.vback-art{display:none}}
 .vback-lbl{font-family:var(--font-display);font-size:17px;letter-spacing:.06em;color:var(--color-parchment)}
 /* Fase 3 del plan de interfaz (19/11): inventario sin ficha encima */
 .alijo-side{width:52px;flex-shrink:0;padding-top:4px}
@@ -1303,7 +1314,7 @@ button.share-slot{cursor:pointer}
 .ct-stances .btn{height:48px;font-size:17px}
 .ct-cta{width:100%;min-height:56px;font-size:18px;display:flex;align-items:center;justify-content:center;text-align:center}
 .ct-off{color:#8c8693;background:#1c1b22;cursor:default}
-@media (max-width: 1100px){ .ct-list,.ct-detail{padding:10px} .ct-main{gap:8px} .ct-row{gap:6px} .ct-card{padding:4px;gap:2px} .ct-name{font-size:13px} .ct-rank{font-size:11px;top:2px}
+@media (max-width: 1100px){ .ct-list,.ct-detail{padding:10px} .ct-main{gap:8px} .ct-row{gap:6px} .ct-card{padding:4px;gap:2px} .ct-name{font-size:13px} .ct-rank{font-size:12px;top:2px}
   .ct-detail{gap:8px} .ct-head{gap:12px} .ct-info{gap:6px} .ct-title{font-size:18px} .ct-sub{font-size:14px} .ct-chip{font-size:15px;padding:4px 10px}
   .ct-stats{gap:6px} .ct-stat{height:40px;font-size:18px} .ct-buy{gap:8px} .ct-lens{gap:8px} .ct-len{height:48px} .ct-len b{font-size:20px} .ct-stances{gap:8px} .ct-stances .btn{height:44px;font-size:16px} .ct-cta{min-height:48px;font-size:17px} }
 @media (max-height: 560px){ .ct-list{gap:6px} .ct-zone{gap:0} .ct-detail{gap:6px} .ct-stat{height:36px;font-size:17px} .ct-len{height:44px} .ct-len b{font-size:18px} .ct-len span{font-size:13px} .ct-stances .btn{height:40px} .ct-cta{min-height:44px;font-size:15px} .ct-buy{gap:6px} .ct-lens,.ct-stances{gap:6px} }
@@ -1419,7 +1430,7 @@ button.share-slot{cursor:pointer}
 .ins-card.empty{opacity:.55}
 .ins-card-ico{position:relative;flex:none;width:52px;height:52px;display:grid;place-items:center;background:#0b0a0f;border:1px solid var(--rc,#3a3841)}.ins-card-ico.empty{color:#82808a;font-size:12px}
 .ins-card-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.ins-card-name{font-family:var(--font-display);font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ins-card-name{font-family:var(--font-display);font-size:16px;font-weight:600;line-height:1.15;hyphens:auto;-webkit-hyphens:auto}
 .ins-card-sub{color:#a7a4ae;font-size:13px}
 .ins-stats{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:13px}.ins-stats .pos{color:#5fd19a}.ins-stats .neg{color:#ff7a6a}
 .ins-card-extra{color:#e8b33a;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1463,3 +1474,32 @@ button.share-slot{cursor:pointer}
 @media (min-width: 1600px) and (min-height: 900px) { .sell-center .slot > img[width="36"] { width: 48px; height: 48px; } }
 /* Venta: pestañas y páginas elegidas en dorado (no en blanco) */
 .sell-center .pill.on { background: #e8b33a; border-color: #e8b33a; color: #1a1206; }
+
+/* Fase D (plan de interfaz 2): zonas táctiles de 44 px en la barra de venta y en la postura del contrato */
+.is-touch .sell-tools button,.is-touch .sell-tools select,.is-touch [data-testid^=hire-stance-]{min-height:44px}
+/* Pestañas Mochila · Almacén · Compartido de la venta: nunca por debajo de 12 px */
+.sell-center .pill{font-size:max(12px,1em)}
+/* Mapa de zonas (plan de interfaz 2, fase E): pestañas de estrato, subtítulo, bloqueo y ficha del jefe; colores planos por zona */
+.zt-mazmorra,.zl-mazmorra{--zc:#d9b05e}.zt-cripta,.zl-cripta{--zc:#a78aca}.zt-infierno,.zl-infierno{--zc:#e8752b}
+.ztab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;padding:6px 4px;border:1px solid color-mix(in srgb,var(--zc) 45%,#3a3841);background:#1b1820;cursor:pointer;text-align:center}
+.ztab-name{color:var(--zc);font-size:15px;line-height:1.1}
+.ztab-lv{font-size:12px;color:#b8adbb}
+.ztab.on{border-color:var(--zc);background:color-mix(in srgb,var(--zc) 16%,#1b1820);box-shadow:inset 0 0 0 1px var(--zc)}
+.zsub{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-gold)}
+.zlock{font-size:13px;color:#ff6b6b;line-height:1.3}
+.zboss{display:flex;flex-direction:column;gap:2px;padding:10px 12px;margin-top:4px}
+/* Mapa del descenso (mapArt.ts): dibujo a escala entera, nombres de estrato y marcadores de subzona encima */
+.zmap{position:relative;border:1px solid #3a3841}
+.zmap-band{position:absolute;left:0;right:0;background:transparent;border:0;cursor:pointer;text-align:left}
+.zmap-band.on{box-shadow:inset 3px 0 0 var(--color-gold)}
+.zmap-lbl{position:absolute;left:8px;bottom:4px;font:12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--zc);text-shadow:0 1px 0 #000}
+.zmap-node{position:absolute;width:44px;height:44px;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;z-index:1}
+.zmap-node>span{display:flex;align-items:center;justify-content:center;width:28px;height:28px;font:700 14px var(--font-display);color:#1a1206;background:#e9e1cc;border:2px solid #0b0a0e}
+.zmap-node:hover>span{filter:brightness(1.15)}
+.zmap-node.boss>span{background:#c2361a;color:#f1e6cd}
+.zmap-node.on>span{background:var(--color-gold);animation:pulseGold 1.6s infinite}
+.zmap-node.locked>span{background:#2a2730;border-color:#6b5420}
+.zmap-node.deco{width:16px;height:16px;pointer-events:none}
+.zmap-node.deco>span{width:12px;height:12px;font-size:8px;border-width:1px}
+.zmap-node.deco.locked>span svg{width:6px;height:7px}
+@media (max-height:560px){.ztab{min-height:44px;padding:4px}.ztab-name{font-size:13px}.zboss{padding:6px 10px}.zboss .text-lg{font-size:15px}}

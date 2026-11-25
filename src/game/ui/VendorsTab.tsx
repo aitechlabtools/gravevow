@@ -46,7 +46,7 @@ export function ShopStock({ vid, cols = 'shop-list', sel, onSel }: { vid: Vendor
             onClick={() => onSel?.(itemId)} onDoubleClick={() => !locked && profile.gold >= price && actions.buy(itemId, vid)} data-testid={`shop-row-${itemId}`}>
             <span className="slot shop-ico" style={{ borderColor: RARITY_INFO[d.rarity].color + 'aa' }}><ItemIcon itemId={itemId} /></span>
             <span className="flex-1 min-w-0 text-left">
-              <span className="block truncate shop-name" style={{ color: RARITY_INFO[d.rarity].color }}>{d.name}</span>
+              <span className="block shop-name leading-tight line-clamp-2" style={{ color: RARITY_INFO[d.rarity].color }}>{d.name}</span>
               <span className="block truncate shop-sub">
                 {d.slot && d.levelReq ? <span className={ch.level < d.levelReq ? 'text-danger' : ''}>Nv {d.levelReq} · </span> : null}
                 {!usable ? <span className="text-danger">Otra clase</span> : d.stats ? Object.entries(d.stats).map(([k, val]) => `${val! > 0 ? '+' : ''}${val} ${k}`).join(' ') : d.description}

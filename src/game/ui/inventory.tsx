@@ -424,7 +424,7 @@ export function Bar({ value, max, color, label, testId, spend = 0 }: { value: nu
 }
 
 /** Candado de 7×8 en pixel art (objeto protegido). */
-function LockGlyph() {
+export function LockGlyph() {
   const R = ['..###..', '.#...#.', '.#...#.', '#######', '###.###', '###.###', '#######', '#######'];
   return <svg width={14} height={16} viewBox="0 0 7 8" shape-rendering="crispEdges" aria-hidden>{R.flatMap((r, y) => [...r].map((c, x) => c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#e8b33a" /> : null))}</svg>;
 }

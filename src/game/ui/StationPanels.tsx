@@ -1,6 +1,6 @@
 // Bloque 2: estaciones del Bastión (partes en ruinas que se reconstruyen; tarjeta con encargado, coste y beneficio), el menú de crafteo común de todas las
 // estaciones con recetas (fase 3: sin minijuegos) y la vista de runas. Todo se decide tocando; objetivos de 44 px.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { MODULES, type ModuleId } from '../../core/data/refuge';
 import { needsOf } from '../../core/needs';
@@ -51,7 +51,7 @@ function CostLines({ id, onGo, hints = true }: { id: ModuleId; onGo?: GoTo; hint
         return (
           <div key={m.itemId} className="flex items-center gap-2 text-[12px] text-stone-400 bg-black/30 border border-stone-800 px-2 py-1" data-testid={`source-${id}-${m.itemId}`}>
             <span className="flex-1 min-w-0"><b className="text-stone-300">{getItem(m.itemId).name}:</b> {src.text}</span>
-            {src.go && onGo && <button className="btn text-xs shrink-0" style={BTN} onClick={() => { sfx('click'); onGo(src.go!.vendor, src.go!.view); }}>Ir</button>}
+            {src.go && onGo && <button className="btn text-xs shrink-0" style={{ ...BTN, minWidth: 44 }} onClick={() => { sfx('click'); onGo(src.go!.vendor, src.go!.view); }}>Ir</button>}
           </div>
         );
       })}
@@ -183,6 +183,9 @@ function StationPresent({ id }: { id: ModuleId }) {
   );
 }
 
+/** Ancho mínimo del panel de estación para enseñar niveles y mejora en columna propia (280) + recetas (200) + ficha legible (~480). */
+const STATION_WIDE_MIN = 1000;
+
 /** Detalle de una estación: reconstruirla o mejorarla, con los tres niveles, el coste y el retrato del encargado. */
 export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (id: ModuleId) => void; onGo?: GoTo; children?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
@@ -194,6 +197,19 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
   const by = VENDORS[m.by];
   const locked = lvl < 1;
   const tablet = useLayout() === 'tablet';
+  // Plegar niveles y mejora en una cabecera también en escritorio cuando el sitio no da para cinco columnas (portátil 1280–1600 px):
+  // se mide el ancho real del panel, no el de la pantalla.
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [boxW, setBoxW] = useState(0);
+  useLayoutEffect(() => {
+    const el = boxRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setBoxW(el.clientWidth));
+    ro.observe(el);
+    setBoxW(el.clientWidth);
+    return () => ro.disconnect();
+  }, [boxW > 0 && boxW < STATION_WIDE_MIN, locked]);
+  const narrow = boxW > 0 && boxW < STATION_WIDE_MIN;
   const [open, setOpen] = useState(Math.min(3, lvl + 1));
   const [showSide, setShowSide] = useState(false);
   const cost = next ? (
@@ -209,8 +225,8 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
                 : <div className="text-[13px] text-[#7fbf6a]" data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
             </div>
           ) : <div className="panel p-3 text-[13px] text-gold" data-testid={`upgrade-max-${id}`}>Nivel 3/3 · está al máximo.</div>;
-  if (!locked && (phone || tablet)) return (
-    <div className="flex flex-col w-full" style={{ gap: 'var(--gap)' }} data-testid={`station-detail-${id}`} data-detail-built="">
+  if (!locked && (phone || tablet || narrow)) return (
+    <div ref={boxRef} className="flex flex-col w-full" style={{ gap: 'var(--gap)' }} data-testid={`station-detail-${id}`} data-detail-built="">
       <button type="button" className="btn flex items-center gap-3 text-left" style={{ minHeight: 44 }} aria-expanded={showSide} onClick={() => { sfx('click'); setShowSide(!showSide); }} data-testid={`station-upgrade-${id}`}>
         <span style={{ lineHeight: 0 }}><StationArt id={id} scale={1} /></span>
         <span className="font-display text-parchment text-[14px] flex-1">{m.name} · Nivel {lvl}/3</span>
@@ -229,11 +245,11 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
           })}</div>
         {cost}
       </div>}
-      <div className="min-w-0 min-h-0" style={{ height: tablet && !showSide ? 'calc(100vh - 190px)' : undefined }}>{children}</div>
+      <div className="min-w-0 min-h-0" style={{ height: (tablet || (narrow && !phone)) && !showSide ? 'calc(100vh - 190px)' : undefined }}>{children}</div>
     </div>
   );
   if (!locked) return (
-    <div className="grid w-full" style={{ gridTemplateColumns: phone ? '190px minmax(0,1fr)' : tablet ? '230px minmax(0,1fr)' : '280px minmax(0,1fr)', gap: 'var(--gap)', height: !phone && !tablet ? 'calc(100vh - 128px)' : undefined }} data-testid={`station-detail-${id}`} data-detail-built="">
+    <div ref={boxRef} className="grid w-full" style={{ gridTemplateColumns: phone ? '190px minmax(0,1fr)' : tablet ? '230px minmax(0,1fr)' : '280px minmax(0,1fr)', gap: 'var(--gap)', height: !phone && !tablet ? 'calc(100vh - 128px)' : undefined }} data-testid={`station-detail-${id}`} data-detail-built="">
       <div className="flex flex-col min-w-0 min-h-0" style={{ gap: 'var(--gap)' }}>
         <div className="flex flex-col" style={{ gap: 'var(--gap)' }}>
           <StationPresent id={id} />
@@ -365,8 +381,20 @@ const groupOf = (r: CraftRecipe) => GROUPS.find((g) => g.test(r))!.id;
 
 export function CraftPanel({ station, onBack, extra }: { station: CraftStation; onBack?: () => void; extra?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
-  const craftLayout = useLayout();
-  const bigIcon = craftLayout === 'phone' ? 64 : craftLayout === 'tablet' ? 128 : 192;
+  const screenLayout = useLayout();
+  // En escritorio estrecho (portátil, la estación plegada) la ficha usa los tamaños de tableta: se mide el ancho del panel.
+  const craftRef = useRef<HTMLDivElement>(null);
+  const [craftW, setCraftW] = useState(0);
+  useLayoutEffect(() => {
+    const el = craftRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setCraftW(el.clientWidth));
+    ro.observe(el);
+    setCraftW(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+  const craftLayout = screenLayout === 'desktop' && craftW > 0 && craftW < 900 ? 'tablet' : screenLayout;
+  const bigIcon = craftLayout === 'phone' ? 64 : craftLayout === 'tablet' ? (screenLayout === 'desktop' && craftW < 640 ? 96 : 128) : 192;
   const statLbl = craftLayout === 'phone' ? 12 : 14;
   const statVal = craftLayout === 'desktop' ? 24 : craftLayout === 'tablet' ? 20 : 15;
   const all = useMemo(() => stationRecipes(station).sort((a, b) => a.level - b.level || getItem(a.result).value - getItem(b.result).value), [station]);
@@ -386,7 +414,7 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
   // Primera vez en la estación: su encargado la explica (data/tutorials.ts, «station.<id>»)
   useEffect(() => { if (lvl >= 1) actions.tutorialEvent(`station:${station}`); }, [station, lvl >= 1]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className={`flex flex-col gap-2 ${craftLayout !== 'phone' ? 'h-full min-h-0' : ''}`} data-testid={`craft-${station}`}>
+    <div ref={craftRef} className={`flex flex-col gap-2 ${craftLayout !== 'phone' ? 'h-full min-h-0' : ''}`} data-testid={`craft-${station}`}>
       {(extra || onBack) && <div className="flex flex-wrap items-center gap-2 justify-end">
         {extra}
         {onBack && <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="craft-back">◂ Volver</button>}
@@ -410,7 +438,7 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
                     return (
                       <button key={x.id} className={`flex items-center gap-2 px-2 text-left border ${x.id === r?.id ? 'border-parchment bg-stone-800' : 'border-stone-800 bg-black/30'} ${lk ? 'opacity-55' : ''}`} style={BTN} onClick={() => pick(x.id)} data-testid={`recipe-${x.id}`}>
                         <ItemIcon itemId={x.result} size={22} />
-                        <span className="truncate text-sm" style={{ color: RARITY_INFO[it.rarity].color }}>{it.name}</span>
+                        <span className="text-sm leading-tight min-w-0 break-words" style={{ color: RARITY_INFO[it.rarity].color }}>{it.name}</span>
                         {lk ? <span className="ml-auto text-[12px] text-stone-400 whitespace-nowrap">🔒 {lk.includes('plano') ? 'Plano' : `Nv ${x.level}`}</span>
                           : <span className="ml-auto w-2.5 h-2.5 rounded-full shrink-0" style={{ background: can ? OK : '#3a3530' }} />}
                       </button>
@@ -427,7 +455,7 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
             <div className="flex items-start gap-3">
               <div className="slot shrink-0 flex items-center justify-center" style={{ borderColor: RARITY_INFO[def.rarity].color + 'aa', width: bigIcon + 24, height: bigIcon + 24 }}><ItemIcon itemId={def.id} size={bigIcon} /></div>
               <div className="min-w-0 self-center">
-                <div className="font-display text-parchment leading-tight" style={{ fontSize: craftLayout === 'desktop' ? 28 : craftLayout === 'tablet' ? 22 : 17 }}>{def.name}{r.qty > 1 ? ` ×${r.qty}` : ''}</div>
+                <div className="font-display text-parchment leading-tight" style={{ fontSize: craftLayout === 'desktop' ? 28 : craftLayout === 'tablet' ? (screenLayout === 'desktop' && craftW < 640 ? 20 : 22) : 17 }}>{def.name}{r.qty > 1 ? ` ×${r.qty}` : ''}</div>
                 <div style={{ color: RARITY_INFO[def.rarity].color, fontSize: craftLayout === 'phone' ? 12 : 16 }}>{RARITY_INFO[def.rarity].name} · receta de nivel {r.level}</div>
                 {fineChance(profile, r, fine) > 0 && <div className="text-[12px] text-stone-400">Acabado fino: {Math.round(fineChance(profile, r, fine) * 100)} % de salir con una rareza más.</div>}
               </div>
@@ -468,9 +496,9 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
             </div>
             <div className="flex flex-wrap items-center gap-2 border-t border-stone-800 pt-2">
               <div className="flex items-center border border-stone-700">
-                <button className="btn w-11" style={BTN} onClick={() => setQty(Math.max(1, n - 1))} disabled={n <= 1} aria-label="Menos">−</button>
+                <button className="btn w-11 shrink-0" style={BTN} onClick={() => setQty(Math.max(1, n - 1))} disabled={n <= 1} aria-label="Menos">−</button>
                 <b className="w-11 text-center" data-testid="craft-qty">{n}</b>
-                <button className="btn w-11" style={BTN} onClick={() => setQty(n + 1)} disabled={n >= batchLimit(profile, station)} aria-label="Más" data-testid="craft-more">+</button>
+                <button className="btn w-11 shrink-0" style={BTN} onClick={() => setQty(n + 1)} disabled={n >= batchLimit(profile, station)} aria-label="Más" data-testid="craft-more">+</button>
                 <button className="btn text-xs" style={BTN} onClick={() => setQty(Math.max(1, max))} disabled={max < 1}>Máx.</button>
               </div>
               <button className="btn" style={BTN} disabled={!!block} onClick={() => actions.craft(r.id, n, fine, 'backpack')} data-testid="craft-to-backpack">A la mochila</button>

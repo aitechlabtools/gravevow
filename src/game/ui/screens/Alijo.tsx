@@ -164,7 +164,7 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
         <div className="flex-1 min-w-0 min-h-0 flex" style={{ gap: 'var(--gap)' }}>
           {view === 'status' ? (
             <>
-              <Panel className="min-h-0 flex-[3]" bodyClassName="overflow-y-auto scroll-thin">{status}</Panel>
+              <Panel className="min-h-0 flex-[3]" bodyClassName="overflow-y-auto scroll-thin body-cq">{status}</Panel>
               <Panel className="min-h-0 flex-[2]" bodyClassName="overflow-y-auto scroll-thin">{backpack}</Panel>
             </>
           ) : view === 'gear' ? (

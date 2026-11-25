@@ -6,7 +6,6 @@ import { actions, useGame } from '../../state/store';
 import { ZONES, ZONE_ORDER, defaultSubzone, subzoneLock, zoneLock, type ZoneId } from '../../../core/data/zones';
 import { SUBZONE_ORDER, getSubzone, isSubzoneId, subzonesOf, type SubzoneDef, type SubzoneId } from '../../../core/data/subzones';
 import { overlevelPenalty } from '../../../config/subzones';
-import { Segmented } from '../kit';
 import { getEnemy } from '../../../core/data/enemies';
 import { countItem, equippedValue, gridValue } from '../../../core/inventory';
 import { EXPEDITION_DURATION_MS } from '../../../core/expedition';
@@ -14,6 +13,8 @@ import { xpForNextLevel } from '../../../core/stats';
 import { getMerc } from '../../../core/data/mercenaries';
 import { pinnedQuests, questDef, questProgress, readyQuestCount } from '../../../core/quests';
 import { PlayerSprite, MonsterSprite, Modal } from '../common';
+import { MAP_BANDS, MAP_H, MAP_NODES, MAP_W, mapArtUrl } from '../mapArt';
+import { LockGlyph } from '../inventory';
 import { zoneBackdrop, zoneFor } from '../combatZones';
 import { iconUrl } from '../../../shared/art';
 import { usePixelScale } from '../kit';
@@ -263,39 +264,75 @@ function ZoneMap({ current, onPick, onClose }: { current: SubzoneId; onPick: (z:
   const profile = useGame((s) => s.profile)!;
   const phone = useLayout() === 'phone';
   const [tab, setTab] = useState<ZoneId>(getSubzone(current).zone);
-  const column = (id: ZoneId) => {
-    const z = ZONES[id];
-    const zl = zoneLock(z, profile.character.level, profile.bossesDefeated);
-    return (
-      <section key={id} className="flex flex-col gap-1.5 min-w-0" data-testid={`zone-${id}`}>
-        {!phone && (
-          <div className="flex items-baseline justify-between gap-2 px-0.5">
-            <span className="font-display text-lg text-parchment">{z.name}</span>
-            <span className="text-[12px] text-gold">Nv {z.levels[0]}–{z.levels[1]}</span>
-          </div>
-        )}
-        {subzonesOf(id).map((s) => <SubzoneRow key={s.id} sub={s} on={s.id === current} onPick={onPick} />)}
-        <div className="text-[12px] text-stone-400 leading-snug px-0.5">
-          Jefe de la zona: {getEnemy(z.boss).name} · en {subzonesOf(id).slice(-1)[0].name}{profile.bossesDefeated.includes(z.boss) ? ' ✓' : ''}
-          {zl && <span className="block text-blood">{zl}</span>}
-        </div>
-      </section>
-    );
-  };
+  const pickTab = (id: ZoneId) => { setTab(id); sfx('click'); };
+  const z = ZONES[tab];
+  const zl = zoneLock(z, profile.character.level, profile.bossesDefeated);
+  const last = subzonesOf(tab).slice(-1)[0];
+  const bossDone = profile.bossesDefeated.includes(z.boss);
+  // Dibujo del descenso a escala entera: ×3 en pantallas altas, ×2 en el resto y ×1 en el móvil (ahí los marcadores son solo
+  // de adorno y se elige en la lista, con botones de 44 px).
+  const k = phone ? 1 : typeof window !== 'undefined' && window.innerHeight >= 900 ? 3 : 2;
+  const subs = ZONE_ORDER.flatMap((id) => subzonesOf(id));
+  const map = (
+    <div className="zmap shrink-0 self-start" style={{ width: MAP_W * k, height: MAP_H * k }} data-testid="zone-map-art">
+      <img src={mapArtUrl()} alt="" className="pixelated block" draggable={false} style={{ width: MAP_W * k, height: MAP_H * k }} />
+      {MAP_BANDS.map(([a, b], i) => (
+        <button key={ZONE_ORDER[i]} type="button" tabIndex={-1} aria-hidden className={`zmap-band ${tab === ZONE_ORDER[i] ? 'on' : ''}`} style={{ top: `${a}%`, height: `${b - a}%` }} onClick={() => pickTab(ZONE_ORDER[i])}>
+          {!phone && <span className={`zmap-lbl zl-${ZONE_ORDER[i]}`}>{['I', 'II', 'III'][i]} · {ZONE_SHORT[ZONE_ORDER[i]]}</span>}
+        </button>
+      ))}
+      {subs.map((s, i) => {
+        const l = subzoneLock(s, profile.character.level, profile.bossesDefeated);
+        const boss = subzonesOf(s.zone).slice(-1)[0].id === s.id;
+        const [x, y] = MAP_NODES[i];
+        return (
+          <button key={s.id} type="button" className={`zmap-node ${s.id === current ? 'on' : ''} ${l ? 'locked' : ''} ${boss ? 'boss' : ''} ${phone ? 'deco' : ''}`} style={{ left: `${x}%`, top: `${y}%` }}
+            tabIndex={phone ? -1 : 0} aria-hidden={phone || undefined} aria-label={`${s.index}. ${s.name}${l ? ` (cerrada: ${l})` : ''}`} title={phone ? undefined : `${s.name} · Nv ${s.levels[0]}–${s.levels[1]}${l ? ` · ${l}` : ''}`}
+            onClick={() => { sfx('click'); if (l) setTab(s.zone); else onPick(s.id); }} data-testid={`map-node-${s.id}`}>
+            <span>{l ? <LockGlyph /> : s.index}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
   return (
     <Modal onClose={onClose} wide testId="zone-map">
-      <h2 className="panel-title text-xl mb-2">Mapa de zonas</h2>
-      {phone && <div className="mb-2"><Segmented options={ZONE_ORDER.map((id) => ({ id, label: ZONES[id].name.replace(/^(La|El) /, '') }))} value={tab} onChange={(v) => { setTab(v); sfx('click'); }} testId="zone-tabs" /></div>}
-      <div className={phone ? '' : 'grid grid-cols-3 gap-3'} data-testid="zone-picker">
-        {phone ? column(tab) : ZONE_ORDER.map(column)}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <h2 className="panel-title text-xl">Mapa de zonas</h2>
+        <button className="btn icon-btn" style={{ minWidth: 44, minHeight: 44 }} onClick={onClose} aria-label="Cerrar" data-testid="btn-zone-map-close">✕</button>
       </div>
-      <button className="btn mt-3" onClick={onClose} data-testid="btn-zone-map-close">Cerrar</button>
+      <div className="flex gap-4 min-w-0" data-testid="zone-picker">
+        {map}
+        <div className="flex flex-col gap-2 flex-1 min-w-0" data-testid={`zone-${tab}`}>
+          <div className="grid grid-cols-3 gap-2" role="tablist" data-testid="zone-tabs">
+            {ZONE_ORDER.map((id) => (
+              <button key={id} type="button" role="tab" aria-selected={tab === id} className={`ztab zt-${id} ${tab === id ? 'on' : ''}`} onClick={() => pickTab(id)} data-testid={`zone-tab-${id}`}>
+                <span className="ztab-name font-display">{ZONES[id].name}</span>
+                <span className="ztab-lv">Nv {ZONES[id].levels[0]}–{ZONES[id].levels[1]}</span>
+              </button>
+            ))}
+          </div>
+          <div className="zsub">{ZONE_DEPTH[tab]}</div>
+          {zl && <div className="zlock" data-testid="zone-lock">{zl}</div>}
+          {subzonesOf(tab).map((s) => <SubzoneRow key={s.id} sub={s} on={s.id === current} onPick={onPick} zoneLocked={zl} />)}
+          <div className="zboss panel" data-testid="zone-boss">
+            <span className="zsub">Jefe de la zona</span>
+            <span className="font-display text-parchment text-lg leading-tight">{getEnemy(z.boss).name}{bossDone ? ' ✓' : ''}</span>
+            <span className="text-[12px] text-stone-300">{last.name}</span>
+          </div>
+        </div>
+      </div>
     </Modal>
   );
 }
 
+/** Nombre corto de cada estrato en el dibujo. */
+const ZONE_SHORT: Record<ZoneId, string> = { mazmorra: 'Bastión', cripta: 'Cripta', infierno: 'Infierno' };
+/** Dónde queda cada zona en el descenso (solo texto de ambiente; no cambia rutas ni reglas). */
+const ZONE_DEPTH: Record<ZoneId, string> = { mazmorra: 'El Bastión y sus mazmorras', cripta: 'Bajo el Bastión', infierno: 'Las profundidades' };
+
 /** Fila de una subzona: nombre, niveles y estado (cerrada, demasiado fácil o elegida). Mide 44 px o más. */
-function SubzoneRow({ sub, on, onPick }: { sub: SubzoneDef; on: boolean; onPick: (z: SubzoneId) => void }) {
+function SubzoneRow({ sub, on, onPick, zoneLocked }: { sub: SubzoneDef; on: boolean; onPick: (z: SubzoneId) => void; zoneLocked?: string | null }) {
   const profile = useGame((s) => s.profile)!;
   const l = subzoneLock(sub, profile.character.level, profile.bossesDefeated);
   const easy = overlevelPenalty(sub.levels[1], profile.character.level);
@@ -304,10 +341,10 @@ function SubzoneRow({ sub, on, onPick }: { sub: SubzoneDef; on: boolean; onPick:
       className={`panel subzone-row text-left ${on ? 'border-gold pulse-gold' : 'hover:brightness-125'} ${l ? 'opacity-55 cursor-not-allowed' : ''}`}>
       <span className="subzone-num font-display">{sub.index}</span>
       <span className="flex-1 min-w-0">
-        <span className="block font-display text-parchment leading-tight truncate">{sub.name}</span>
+        <span className="block font-display text-parchment leading-tight">{sub.name}</span>
         <span className="block text-[12px] leading-tight text-stone-300">
           Nv {sub.levels[0]}–{sub.levels[1]}
-          {l ? <span className="text-blood"> · {l.replace(/^Necesitas /, 'necesitas ').replace(/\.$/, '')}</span> : easy ? <span className="text-ember"> · demasiado fácil</span> : null}
+          {l && l !== zoneLocked ? <span className="text-blood"> · {l.replace(/^Necesitas /, 'necesitas ').replace(/\.$/, '')}</span> : !l && easy ? <span className="text-ember"> · demasiado fácil</span> : null}
         </span>
       </span>
       {l ? <span aria-label="Cerrada" className="text-blood shrink-0">🔒</span> : on ? <span className="text-gold shrink-0" aria-hidden>◆</span> : null}

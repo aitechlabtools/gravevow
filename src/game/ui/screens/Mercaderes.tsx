@@ -293,14 +293,14 @@ function VendorInterior({ vendor, initial, onBack, onGo, onQuests }: { vendor: V
   );
   const left = (
     <div className="min-h-0 flex flex-col overflow-y-auto scroll-thin" style={{ gap: 'var(--gap)' }} data-testid="vendor-panel">
-      <div className="panel vtile vcard shrink-0" style={{ height: layout === 'tablet' ? 300 : 380, cursor: 'default' }}>
+      <div className="panel vtile vcard shrink-0" style={{ height: layout === 'tablet' ? 300 : 'clamp(220px, 36vh, 380px)', cursor: 'default' }}>
         <span className="vtile-name font-display" data-testid="vendor-name">{v.name}</span>
         <span className="vtile-port"><Bust sprite={v.sprite} /></span>
         <span className="vtile-info">
           {st && <img src={stationArtUrl(st, refugeOf(profile)[st] < 1)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: 40, height: 52 }} />}
           <span className="min-w-0">
             <span className="block text-gold uppercase tracking-[0.12em] text-[13px] truncate">{PLACES[v.place].name}</span>
-            <span className="block text-[14px] text-stone-300 truncate">{st ? `${MODULES[st].name} · ${refugeOf(profile)[st] < 1 ? 'En ruinas' : `Nv ${refugeOf(profile)[st]}/3`}` : v.role}</span>
+            <span className="block text-[14px] text-stone-300 leading-snug">{st ? `${MODULES[st].name} · ${refugeOf(profile)[st] < 1 ? 'En ruinas' : `Nv ${refugeOf(profile)[st]}/3`}` : v.role}</span>
           </span>
         </span>
         <span className="vtile-rep"><RepBar rep={rep} />{discount > 0 && <span className="block text-[13px] text-heal mt-0.5">{Math.round(discount * 100)} % de descuento</span>}</span>
@@ -324,7 +324,7 @@ function VendorInterior({ vendor, initial, onBack, onGo, onQuests }: { vendor: V
       <div className="h-full flex flex-col relative min-h-0" style={{ ...pad, paddingRight: drawer ? 'calc(max(var(--pad), env(safe-area-inset-right)) + 40px)' : 'max(var(--pad), env(safe-area-inset-right))' }} data-testid="vendor-interior">
         <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: '150px minmax(0,1fr)', gap: 'var(--gap)' }}>
           <div className="min-h-0 flex flex-col overflow-y-auto scroll-thin" style={{ gap: 6 }} data-testid="vendor-panel">
-            <div className="flex items-center gap-2 px-1"><MonsterSprite sprite={v.sprite} scale={1} /><span className="font-display text-parchment truncate text-[15px]" data-testid="vendor-name">{v.name}</span></div>
+            <div className="flex items-center gap-2 px-1"><MonsterSprite sprite={v.sprite} scale={1} /><span className="font-display text-parchment text-[15px] leading-tight min-w-0" data-testid="vendor-name">{v.name}</span></div>
             {questLink}
             {tabBar}
             <div className="mt-1">{backBtn}</div>
