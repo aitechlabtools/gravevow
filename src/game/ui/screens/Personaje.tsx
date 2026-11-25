@@ -4,7 +4,7 @@
 // En el móvil, el héroe y el panel de Habilidades; los atributos, con el botón «Atributos».
 // Los atributos, el desglose y la trayectoria están en Intendencia → «Ver detalles» (HeroDetails.tsx).
 // No cambia ninguna regla: los ataques salen de las armas y la habilidad de clase se elige en los hitos (core/classSkills.ts).
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { actions, useGame } from '../../state/store';
 import { CLASSES, STAT_LABELS } from '../../../core/data/classes';
 import { STATUSES } from '../../../core/statuses';
@@ -19,7 +19,7 @@ import { pendingUnlocks, unlocksEarned } from '../../../core/classSkills';
 import { CLASS_UNLOCK_LEVELS, skillCost } from '../../../config/progression';
 import { PlayerSprite } from '../common';
 import { ActionIcon } from '../combatActions';
-import { Panel, usePixelScale } from '../kit';
+import { Panel, Segmented, usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
 import { className } from '../../../core/gender';
 
@@ -69,16 +69,21 @@ export function Personaje(_: { onStash?: () => void }) {
   // Lo elegido: un ataque, una habilidad de clase o un hito («hito:40»). Si hay un hito por elegir, se abre ese.
   const [focus, setFocus] = useState<string | null>(pending ? `hito:${MILESTONES[k.profile.classSkills.unlocked.length]}` : k.right.items[1]?.id ?? k.right.items[0]?.id ?? null);
   const [stats, setStats] = useState(false);
+  // Derecha: «Ataques» (los de las armas) o «Habilidades» (las de clase y sus hitos). Si hay un hito por elegir, abre Habilidades.
+  const [tab, setTab] = useState<'atk' | 'class'>(pending ? 'class' : 'atk');
+  const isClassFocus = (id: string | null) => !!id && (id.startsWith('hito:') || k.cls.classSkills.includes(id));
+  const pickFocus = (id: string | null) => { setFocus(id); if (id) setTab(isClassFocus(id) ? 'class' : 'atk'); };
+  const pickTab = (t: 'atk' | 'class') => { setTab(t); if (isClassFocus(focus) !== (t === 'class')) setFocus(t === 'class' ? k.profile.classSkills.equipped ?? null : k.right.items[1]?.id ?? k.right.items[0]?.id ?? null); };
   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
   const skillId = focus && !focus.startsWith('hito:') ? focus : null;
   const statPanel = <SkillStats skillId={skillId} />;
   const hero = (
     <section className="min-h-0 relative hb-hero" data-testid="character-hero">
-      <SkillArc k={k} focus={skillId} onFocus={(id) => setFocus(id)} compact={phone} />
+      <SkillArc k={k} focus={skillId} onFocus={pickFocus} compact={phone} />
       {phone && <button className="btn absolute left-0 top-0 text-[12px]" style={{ minHeight: 44 }} onClick={() => setStats(true)} data-testid="character-stats">Atributos</button>}
     </section>
   );
-  const skills = <Panel title="Habilidades" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="character-skills"><SkillsPanel k={k} focus={focus} onFocus={setFocus} earned={earned} /></Panel>;
+  const skills = <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="character-skills"><SkillsPanel k={k} focus={focus} onFocus={pickFocus} earned={earned} tab={tab} onTab={pickTab} /></Panel>;
   if (phone) return (
     <div className="h-full grid" style={{ ...pad, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.25fr)' }} data-testid="screen-character">
       {hero}{skills}
@@ -100,8 +105,10 @@ function Bolt({ size = 14, color = '#e8b33a' }: { size?: number; color?: string 
 function Drop({ size = 14, color = '#5fd1d1' }: { size?: number; color?: string }) {
   return <svg width={size} height={size} viewBox="0 0 7 9" shapeRendering="crispEdges" aria-hidden><path d="M3 0h1v1h1v2h1v1h1v4H6v1H1V8H0V4h1V3h1V1h1z" fill={color} /><path d="M2 5h1v2H2z" fill="#d8f6f6" /></svg>;
 }
+// Recarga: reloj de arena (turnos de espera)
+const HOURGLASS = ['XXXXXXX', '.X...X.', '.XXXXX.', '..XXX..', '...X...', '..X.X..', '.X.X.X.', '.XXXXX.', 'XXXXXXX'];
 function Recharge({ size = 14, color = '#6fa8e8' }: { size?: number; color?: string }) {
-  return <svg width={size} height={size} viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden><path d="M2 0h4v1h1v1H6V1H2v1H1v5h1v1h4V7h1v1H6v1H2V8H1V7H0V2h1V1h1zM5 2h4v4H8V4H7V3H5zM7 5h1v2H7z" fill={color} /></svg>;
+  return <svg width={size} height={size} viewBox="0 0 7 9" shapeRendering="crispEdges" aria-hidden>{HOURGLASS.flatMap((r, y) => [...r].map((c, x) => c === 'X' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={color} /> : null))}</svg>;
 }
 /** Coste en el recurso de la clase: ímpetu (rayo, amarillo) o maná (gota, turquesa); recarga en azul. */
 export function CostChips({ cost, cd, res, big, mana, labels }: { cost: number; cd: number; res: string; big?: boolean; mana?: boolean; labels?: boolean }) {
@@ -110,7 +117,7 @@ export function CostChips({ cost, cd, res, big, mana, labels }: { cost: number; 
   return (
     <span className={`hb-chips ${labels ? 'lab' : ''}`} aria-label={`${cost ? `${cost} de ${res}` : 'sin coste'}; ${cd ? `recarga ${cd} turnos` : 'sin recarga'}`}>
       <span className={`hb-chip ${mana ? 'mana' : 'imp'} ${big ? 'big' : ''} ${cost ? '' : 'zero'}`} title={`${mana ? 'Maná' : 'Ímpetu'}: ${cost}`}><span className="hb-chip-n"><R size={sz} />{cost}</span>{labels && <small>{mana ? 'Maná' : 'Ímpetu'}</small>}</span>
-      <span className={`hb-chip cd ${big ? 'big' : ''} ${cd ? '' : 'zero'}`} title={cd ? `Recarga: ${cd} turnos` : 'Sin recarga'}><span className="hb-chip-n"><Recharge size={sz} />{cd || '—'}</span>{labels && <small>Recarga</small>}</span>
+      {cd > 0 && <span className={`hb-chip cd ${big ? 'big' : ''} ${cd ? '' : 'zero'}`} title={cd ? `Recarga: ${cd} turnos` : 'Sin recarga'}><span className="hb-chip-n"><Recharge size={sz} />{cd || '—'}</span>{labels && <small>Recarga</small>}</span>}
     </span>
   );
 }
@@ -167,7 +174,6 @@ export function SkillArc({ k, focus, onFocus, compact, noFoot }: { k: ReturnType
           <button key={n.id} className="absolute grid place-items-center" style={{ left: n.p.x, top: n.p.y, width: Math.max(44, n.size), height: Math.max(44, n.size), transform: 'translate(-50%, -50%)' }}
             onClick={() => onFocus(on ? null : n.id)} onPointerEnter={(e) => e.pointerType === 'mouse' && onFocus(n.id)} aria-label={`${n.name}: ${n.desc}`} aria-pressed={on} data-testid={`arc-${n.src === 'class' ? 'class' : n.id}`}>
             <span style={{ filter: on ? `drop-shadow(0 0 10px ${C[n.src]})` : undefined }}><Diamond fx={n.fx} color={on ? '#f2c75a' : C[n.src]} size={Math.round(n.size * 0.72)} strong={n.src === 'class' || on} /></span>
-            {!compact && <span className={`hb-arc-label ${on || n.src === 'class' ? 'on' : ''}`}>{n.name}</span>}
           </button>
         );
       })}
@@ -243,96 +249,60 @@ function SkillStats({ skillId }: { skillId: string | null }) {
 }
 
 // ── Panel de habilidades: fichas pequeñas por mano, hitos de clase y detalle de lo elegido ──
-function MiniTile({ a, on, onPick, res, mana }: { a: Atk; on: boolean; onPick: () => void; res: string; mana: boolean }) {
+/** Ficha grande de un ataque: icono, nombre, ímpetu o maná y recarga con su nombre, efectos y qué hace. */
+function AtkCard({ a, on, onPick, k }: { a: Atk; on: boolean; onPick: () => void; k: ReturnType<typeof useKit> }) {
+  const lines = a.id !== 'basic' ? effectLines(a.id, k.res) : [];
   return (
-    <button type="button" className={`hb-mini ${on ? 'on' : ''}`} onClick={onPick} aria-pressed={on} data-testid={`atk-${a.id}`}>
-      <ActionIcon fx={a.fx} color={on ? '#f2c75a' : C[a.src]} size={28} />
-      <span className="hb-mini-name">{a.name}</span>
-      <span className="hb-mini-cost"><span className={mana ? 'text-[#7fe0e0]' : 'text-gold'}>{mana ? <Drop size={15} /> : <Bolt size={15} />}{a.cost}</span><span className="text-[#8ec0f2]"><Recharge size={15} />{a.cd || '—'}</span></span>
-      <span className="sr-only">{res}</span>
+    <button type="button" className={`hb-acard ${on ? 'on' : ''}`} onClick={onPick} aria-pressed={on} data-testid={`atk-${a.id}`}>
+      <span className="hb-acard-top"><ActionIcon fx={a.fx} color={on ? '#f2c75a' : C[a.src]} size={28} /><span className="hb-acard-name">{a.name}</span><CostChips cost={a.cost} cd={a.cd} res={k.res} mana={k.mana} labels /></span>
+      {lines.length > 0 && <EffectList lines={lines} />}
+      <span className="hb-desc block">{a.desc}</span>
     </button>
   );
 }
-function SkillsPanel({ k, focus, onFocus, earned }: { k: ReturnType<typeof useKit>; focus: string | null; onFocus: (id: string) => void; earned: number }) {
+function SkillsPanel({ k, focus, onFocus, earned, tab, onTab }: { k: ReturnType<typeof useKit>; focus: string | null; onFocus: (id: string) => void; earned: number; tab: 'atk' | 'class'; onTab: (t: 'atk' | 'class') => void }) {
   const cls = k.cls;
   const { unlocked, equipped } = k.profile.classSkills;
   const remaining = cls.classSkills.filter((id) => !unlocked.includes(id));
   const nextLv = MILESTONES[earned];
-  const hand = (label: string, item: string, color: string, items: Atk[], two?: boolean) => (
+  const canUnlock = earned > unlocked.length && remaining.length > 0;
+  const hand = (item: string, color: string, items: Atk[], two?: boolean) => (
     <section className="hb-psec">
-      <h3 className="hb-band" style={{ color }} title={label}>{item}</h3>
-      {two ? <p className="text-[13px] text-stone-400 italic">Ocupada por el arma a dos manos.</p>
-        : <div className="hb-minis" style={{ gridTemplateColumns: `repeat(${Math.max(3, items.length)}, minmax(0,1fr))` }}>{items.map((a) => <MiniTile key={a.id} a={a} on={focus === a.id} onPick={() => onFocus(a.id)} res={k.res} mana={k.mana} />)}</div>}
+      <h3 className="hb-band" style={{ color }}>{item}</h3>
+      {two ? <p className="text-[14px] text-stone-400 italic">Ocupada por el arma a dos manos.</p>
+        : <div className="flex flex-col gap-2">{items.map((a) => <AtkCard key={a.id} a={a} on={focus === a.id} onPick={() => onFocus(a.id)} k={k} />)}</div>}
     </section>
   );
   return (
     <div className="flex flex-col flex-1 min-h-0" data-testid="class-path">
-      {hand(k.left.two ? 'Arma a dos manos' : 'Mano derecha', k.right.label, C.weapon, k.right.items)}
-      {hand('Mano izquierda', k.left.label, C.offhand, k.left.items, k.left.two)}
-      <section className="hb-psec">
-        <h3 className="hb-cap flex justify-between"><span>Habilidades de clase</span><span className="text-stone-400">{unlocked.length}/{cls.classSkills.length}</span></h3>
-        <div className="hb-hitos">
-          {MILESTONES.map((lv, i) => {
-            const id = unlocked[i];
-            const st = id ? (id === equipped ? 'equipped' : 'owned') : i < earned ? 'choose' : i === earned ? 'next' : 'later';
-            const key = id ?? `hito:${lv}`; const on = focus === key;
+      <div className="mb-2 shrink-0"><Segmented full options={[{ id: 'atk', label: 'Ataques' }, { id: 'class', label: 'Habilidad' }]} value={tab} onChange={onTab} testId="skills-tab" /></div>
+      {tab === 'atk' ? (
+        <div className="flex-1 min-h-0 overflow-y-auto scroll-thin pr-1">
+          <p className="hb-desc mb-3">Los ataques salen de las armas que llevas: cambian al cambiar de arma. El ataque básico no gasta nada.</p>
+          {hand(k.right.label, C.weapon, k.right.items)}
+          {hand(k.left.label, C.offhand, k.left.items, k.left.two)}
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto scroll-thin pr-1" data-testid="class-list">
+          {canUnlock ? <p className="hb-note ok" data-testid="class-note">¡Puedes desbloquear una habilidad! Elige cuál.</p>
+ : null}
+          {cls.classSkills.map((id) => {
+            const sk = getSkill(id); const own = unlocked.includes(id); const eq = id === equipped; const on = focus === id;
             return (
-              <button key={lv} type="button" className={`hb-hito st-${st} ${on ? 'on' : ''}`} onClick={() => onFocus(key)} aria-pressed={on}
-                aria-label={id ? `${getSkill(id).name}, nivel ${lv}` : `Hito del nivel ${lv}`} data-testid={id ? `class-skill-${id}` : `hito-${lv}`} data-state={st} data-hito={lv}>
-                <span className="hb-hito-d">{id ? <ActionIcon fx={getSkill(id).fx ?? 'holy'} color={st === 'equipped' ? '#f2c75a' : C.class} size={22} /> : <span className="hb-hito-q">{st === 'choose' ? '!' : '?'}</span>}</span>
-                <span className="hb-hito-lv">Nv {lv}</span>
-              </button>
+              <div key={id} className={`hb-acard ${on ? 'on' : ''} ${own || canUnlock ? '' : 'locked'}`} onClick={() => own && onFocus(id)} data-testid={`class-skill-${id}`} data-state={eq ? 'equipped' : own ? 'owned' : canUnlock ? 'choose' : 'locked'}>
+                <span className="hb-acard-top">{!own && !canUnlock && <Lock size={14} />}<ActionIcon fx={sk.fx ?? 'holy'} color={eq ? '#f2c75a' : own || canUnlock ? C.class : '#8c8693'} size={26} /><span className="hb-acard-name">{sk.name}</span>{!own && !canUnlock && nextLv && <span className="hb-req" data-testid={`class-req-${id}`}>Requiere nivel {nextLv}</span>}<CostChips cost={skillCost(sk.cost, k.maxMp, cls.resource)} cd={sk.cooldown ?? 0} res={k.res} mana={k.mana} labels /></span>
+                {effectLines(id, k.res).length > 0 && <EffectList lines={effectLines(id, k.res)} />}
+                <span className="hb-desc block">{sk.description}</span>
+                <span className="flex justify-end">
+                  {eq ? <span className="text-gold text-[14px]" data-testid="class-equipped">✓ En uso</span>
+                    : own ? <button className="btn" style={{ minHeight: 44, minWidth: 110 }} onClick={(e) => { e.stopPropagation(); actions.equipClassSkill(id); }} data-testid={`equip-class-${id}`}>Usar</button>
+                    : canUnlock ? <button className="btn btn-gold" style={{ minHeight: 44, minWidth: 130 }} onClick={(e) => { e.stopPropagation(); actions.unlockClassSkill(id); }} data-testid={`btn-unlock-class-${id}`}>Desbloquear</button> : null}
+                </span>
+              </div>
             );
           })}
         </div>
-        {nextLv && remaining.length > 0 && !(earned > unlocked.length) && <p className="text-[12px] text-stone-400 mt-1">Próximo desbloqueo al nivel {nextLv} · {nextLv - k.ch.level === 1 ? 'falta 1 nivel' : `faltan ${nextLv - k.ch.level} niveles`}</p>}
-      </section>
-      <Detail k={k} focus={focus} earned={earned} />
+      )}
     </div>
   );
-}
-function Detail({ k, focus, earned }: { k: ReturnType<typeof useKit>; focus: string | null; earned: number }) {
-  const cls = k.cls;
-  const { unlocked, equipped } = k.profile.classSkills;
-  const remaining = cls.classSkills.filter((id) => !unlocked.includes(id));
-  const [pick, setPick] = useState<string | null>(null);
-  const costOf = (id: string) => skillCost(getSkill(id).cost, k.maxMp, cls.resource);
-  const chips = (cost: number, cd: number) => <CostChips cost={cost} cd={cd} res={k.res} mana={k.mana} big labels />;
-  // Un hito ya elegido muestra su habilidad
-  if (focus?.startsWith('hito:')) { const u = unlocked[MILESTONES.indexOf(Number(focus.slice(5)))]; if (u) focus = u; }
-  let body: React.ReactNode = <p className="text-[13px] text-stone-400 text-center m-auto">Toca un ataque, una habilidad o un hito para ver sus efectos.</p>;
-  const atk = [...k.right.items, ...k.left.items].find((a) => a.id === focus);
-  if (atk) body = <>
-    <div className="hb-det-top"><span className="hb-det-name">{atk.name}</span>{chips(atk.cost, atk.cd)}</div>
-    {atk.id !== 'basic' && effectLines(atk.id, k.res).length ? <EffectList lines={effectLines(atk.id, k.res)} /> : null}
-    <p className="hb-desc">{atk.desc}</p>
-  </>;
-  else if (focus && unlocked.includes(focus)) {
-    const s = getSkill(focus);
-    body = <>
-      <div className="hb-det-top"><span className="hb-det-name">{s.name}</span>{chips(costOf(focus), s.cooldown ?? 0)}</div>
-      {effectLines(focus, k.res).length > 0 && <EffectList lines={effectLines(focus, k.res)} />}
-      <p className="hb-desc">{s.description}</p>
-      <div className="hb-foot"><span>Desbloqueada al nivel {MILESTONES[unlocked.indexOf(focus)]}</span>
-        {focus === equipped ? <span className="text-gold" data-testid="class-equipped">✓ Equipada</span>
-          : <button className="btn btn-gold" style={{ minHeight: 44, minWidth: 110 }} onClick={() => actions.equipClassSkill(focus)} data-testid={`equip-class-${focus}`}>Equipar</button>}</div>
-    </>;
-  } else if (focus?.startsWith('hito:')) {
-    const lv = Number(focus.slice(5)); const i = MILESTONES.indexOf(lv);
-    const choose = i < earned && i === unlocked.length;
-    const opts = remaining.map((id) => { const s = getSkill(id); const sel = pick === id; return (
-      <button key={id} type="button" className={`hb-opt ${choose ? 'choose' : 'locked'} ${sel ? 'on' : ''}`} disabled={!choose} onClick={() => setPick(id)} aria-pressed={sel} data-testid={`class-skill-${id}`} data-state={choose ? 'choose' : 'locked'}>
-        <span className="flex items-center gap-2 min-w-0">{!choose && <Lock size={12} />}<ActionIcon fx={s.fx ?? 'holy'} color={choose ? C.class : '#8c8693'} size={20} /><span className="hb-name truncate">{s.name}</span><span className="ml-auto"><CostChips cost={costOf(id)} cd={s.cooldown ?? 0} res={k.res} mana={k.mana} /></span></span>
-        <span className="hb-desc block mt-1">{s.description}</span>
-      </button>); });
-    body = <>
-      <div className="hb-det-top"><span className="hb-det-name">{choose ? `¡Elige! · Nivel ${lv}` : `Nivel ${lv}`}</span>
-        <span className="text-[12px] text-stone-400">{choose ? 'Elige 1 · las demás no se pierden' : i < earned ? 'Elige antes la del hito anterior' : lv - k.ch.level === 1 ? 'Falta 1 nivel' : `Faltan ${lv - k.ch.level} niveles`}</span></div>
-      <div className="flex flex-col gap-1.5" data-testid={choose ? 'class-choose' : 'class-next'}>{opts}</div>
-      {choose && <button className="btn btn-gold w-full mt-2 disabled:opacity-60" style={{ minHeight: 44 }} disabled={!pick || !remaining.includes(pick)}
-        onClick={() => { if (pick) { actions.unlockClassSkill(pick); setPick(null); } }} data-testid={pick ? `btn-unlock-class-${pick}` : 'btn-unlock-class'}>
-        {pick && remaining.includes(pick) ? `Elegir ${getSkill(pick).name}` : 'Toca una habilidad'}</button>}
-    </>;
-  }
-  return <div className={`hb-det ${focus?.startsWith('hito:') ? 'hito' : ''}`} data-testid="skill-detail">{body}</div>;
 }

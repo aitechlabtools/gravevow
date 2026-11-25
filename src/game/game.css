@@ -1742,3 +1742,12 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 .al-vsw button{flex:1;width:44px;display:grid;place-items:center;color:#a8a29e;background:#141318;border:1px solid #3a3741;cursor:pointer}
 .al-vsw button.on{background:#e8b33a;color:#1a1206;border-color:#e8b33a}
 .al-stats-tight .alijo-stats [data-stat]{min-height:34px!important;font-size:14px!important;padding:2px 0!important;align-items:center}
+.hb-acard{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%;padding:10px 12px;background:#141318;border:1px solid #3a3741;cursor:pointer}
+.hb-acard:hover{border-color:#57534e}.hb-acard.on{border-color:#e8b33a;background:#1f1a12}
+.hb-acard-top{display:flex;align-items:center;gap:10px}.hb-acard-name{flex:1;min-width:0;font-family:var(--font-display);font-size:16px;color:#e9e1cc}
+[data-testid=character-stats] [data-testid=skill-stats] .hb-stat{flex:1 1 0;display:flex;flex-direction:column;justify-content:center;font-size:17px;padding:4px 6px}
+[data-testid=character-stats] [data-testid=skill-stats] .hb-stat-m{font-size:14px}
+.hb-acard.locked{opacity:.65;cursor:default}
+.hb-note{font-size:14px;color:#a8a29e;padding:8px 10px;border:1px solid #3a3741;background:#141318}.hb-note.ok{color:#1a1206;background:#e8b33a;border-color:#e8b33a;font-weight:700}
+div.hb-acard{cursor:default}
+.hb-req{font-size:13px;color:#e8b33a;border:1px solid #8a6a2a;padding:4px 8px;white-space:nowrap}

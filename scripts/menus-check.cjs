@@ -32,7 +32,7 @@ const VIEWS = [
   { name: 'mercader-forja', tab: 'merchants', steps: ['vendor-brand', 'vendor-view-station'] },
   { name: 'mercader-grizk', tab: 'merchants', steps: ['vendor-grizk'] },
   { name: 'grizk-vender', tab: 'merchants', steps: ['vendor-grizk', 'vendor-view-sell'] },
-  { name: 'intendencia-estado', tab: 'stash', steps: ['seg-status'] },
+  { name: 'intendencia-estado', tab: 'estado' },
   { name: 'mercader-contratos', tab: 'merchants', steps: ['vendor-grizk', 'vendor-view-contracts'] },
   { name: 'misiones', tab: 'quests' },
   { name: 'bestiario', tab: 'bestiary' },
