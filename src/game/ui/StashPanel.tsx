@@ -42,10 +42,10 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
   const [slot, setSlot] = useState<number | null>(null);
   useLayoutEffect(() => {
     const el = box.current;
-    if (!el || ptitle || (touchy && !fill && !bare)) { setSlot(null); return; } // ptitle (Alijo): mismo tamaño que el resto de casillas; la columna mide justo la rejilla
+    if (!el || (touchy && !fill && !bare && !ptitle)) { setSlot(null); return; } // ptitle (Alijo): las casillas llenan el ancho de la columna (hasta 80 px)
     const rows = Math.ceil(STASH_PAGE_SIZE / cols);
     const fit = () => {
-      if (fill || bare) {
+      if (fill || bare || ptitle) {
         const max = layout === 'desktop' ? 80 : layout === 'tablet' ? 60 : bare ? 40 : 0;
         const w = Math.floor((el.clientWidth - 24 - (cols - 1) * 4) / cols);
         setSlot(max && w > 0 ? Math.min(max, w) : null);

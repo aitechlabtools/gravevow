@@ -247,7 +247,9 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
     );
   }
   // Vista «Equipo» (escritorio y tableta): Personaje y equipo · Mochila · Almacén
-  const slotVar = layout === 'tablet' ? { ['--slot' as string]: '44px', ['--slot-big' as string]: '44px' } : compact ? { ['--slot' as string]: '48px', ['--slot-big' as string]: '48px' } : { ['--slot' as string]: '60px', ['--slot-big' as string]: '60px' };
+  // Escritorio: casillas de hasta 60 px, más pequeñas si la pantalla es baja, para que el panel Equipo quepa sin desplazar
+  const deskSlot = typeof window !== 'undefined' ? Math.max(36, Math.min(compact ? 48 : 60, Math.floor((window.innerHeight - 450) / 9))) : 60;
+  const slotVar = layout === 'tablet' ? { ['--slot' as string]: '44px', ['--slot-big' as string]: '44px' } : { ['--slot' as string]: `${deskSlot}px`, ['--slot-big' as string]: `${deskSlot}px` };
   // Alijo › Equipo (25/11, v3): Aventurero (héroe, nivel y atributos) · Equipo (muñeco de ranuras y mochila con bolsillo y oro) · Almacén
   const btnH = { minHeight: touchy ? 44 : 34 };
   const equipPanel = (
@@ -286,7 +288,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   return (
     <div className="h-full flex flex-col" data-testid="screen-stash" style={padX}>
     {deskSeg}
-    <div className="flex-1 min-h-0 grid" style={{ ...slotVar, gridTemplateColumns: 'minmax(0,1fr) calc(var(--slot) * 6 + 90px) calc(var(--slot) * 8 + 72px)', gap: 'var(--gap)' }}>
+    <div className="flex-1 min-h-0 grid" style={{ ...slotVar, gridTemplateColumns: 'minmax(0,1fr) minmax(calc(var(--slot) * 6 + 90px),1fr) minmax(calc(var(--slot) * 8 + 72px),1fr)', gap: 'var(--gap)' }}>
       {sel && layout === 'tablet' ? (
         <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="item-sheet">
           <div className="relative"><button className="btn icon-btn absolute right-0 top-0" onClick={clear} aria-label="Cerrar la ficha">✕</button>{card}</div>
