@@ -206,7 +206,7 @@ html{-webkit-tap-highlight-color:transparent}
 .touch-btn:active:not(:disabled){transform:scale(.94)}
 @keyframes pulse-ready{50%{box-shadow:0 0 28px #e8b33aaa}}
 /* Móvil en horizontal: la interfaz (medida en rem) se reduce para que quepa */
-@media (pointer:coarse) and (max-height:540px){ html{font-size:11px} }
+@media (pointer:coarse) and (max-height:540px){ html{font-size:12px} }
 .rotate-hint{animation:rotate-hint 2s ease-in-out infinite}
 @keyframes rotate-hint{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(90deg)}}
 
@@ -396,6 +396,9 @@ html{-webkit-tap-highlight-color:transparent}
   .ui-pills .pill:not(.on) .pill-lbl{display:none}
   .ui-pills .pill{min-width:var(--touch)}
 }
+/* Portátil y cualquier ancho en que no quepan los nombres (lo decide PillBar midiendo): nombre solo en la activa */
+.ui-pills.tight .pill:not(.on) .pill-lbl{display:none}
+.ui-pills.tight .pill{min-width:var(--touch);padding:0 12px}
 @media (max-height:520px){
   .ui-nav{gap:8px}
   .ui-pills{gap:4px}
@@ -556,8 +559,26 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .body-note{font-size:12px;color:#a8a29e;margin-bottom:6px}
 .body-hint{margin-top:auto;padding-top:6px;margin-bottom:0;color:#78716c}
 .body-needs{grid-column:1/-1}
+.body-banner{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:#16261a;border:1px solid #3d6b3a;color:#8fd07a;font-size:14px}
+.body-banner.hurt{background:#2a1416;border-color:#7a2a30;color:#ff8a8a}.body-banner-r{font-size:12px;opacity:.9}
+.doll{display:grid;grid-template-columns:44px 58px 58px 44px;grid-template-rows:64px 80px 64px 92px;gap:6px;justify-content:center;padding:14px 0;flex:1;align-content:center}
+.doll-part{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#1b211a;border:2px solid var(--rc);color:#e9e1cc;cursor:pointer;font:inherit;padding:2px;min-width:0}
+.doll-part:hover{filter:brightness(1.2)}.doll-part.on{background:#3a2f17;border-color:#e8b33a;box-shadow:0 0 0 1px #e8b33a}
+.doll-part.off{opacity:.6}.doll-part.drop-yes{border:2px dashed #5fd19a;box-shadow:0 0 10px #5fd19a88}.doll-part.drop-no{opacity:.4}
+.doll-name{font-size:12px;line-height:1.1}.doll-hp{font-size:12px;color:#a8a29e}.doll-ico{position:absolute;right:2px;top:1px;display:flex;gap:2px}
+.body-panel.full .body-detail{border-color:#8a6a2a;padding:10px 12px}
+.body-detail-bar{height:4px;background:#292524;margin:2px 0 6px;position:relative}.body-detail-bar span{position:absolute;inset:0 auto 0 0}
+.body-states{margin-top:10px;background:#0000004d;border:1px solid #292524;padding:8px 12px;font-size:13px}
+.body-states-cap{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#e8b33a;margin-bottom:4px}
+.body-states-row{display:flex;justify-content:space-between;padding:3px 0;color:#d6d3d1}.body-states-row .ok{color:#6fae5a}.body-states-row .bad{color:#ff8a8a}
+@media (max-height:560px){.doll{grid-template-columns:40px 48px 48px 40px;grid-template-rows:44px 54px 44px 58px;gap:4px;padding:4px 0}}
 .body-needs .needs-panel{margin-top:0}
 @media (max-width:640px){.body-panel{grid-template-columns:1fr}}
+/* Heridas del Alijo en móvil pequeño (panel de menos de 360 px): el cuerpo se queda más ancho para que las etiquetas no se pisen y midan 44 px */
+.body-cq{container-type:inline-size}
+@container (max-width:360px){.body-panel{grid-template-columns:64% minmax(0,1fr)!important}.body-tag{min-width:44px}}
+/* Pantallas bajas: con 44 px de alto, la etiqueta de la cabeza pisaba la del tórax; se aparta a la derecha */
+@media (max-height:560px){.body-tag[data-testid=body-row-head]{left:auto!important;right:0}}
 @media (max-height:560px){
   .body-panel{grid-template-columns:46% minmax(0,1fr);gap:6px}
   .body-map{height:230px}
@@ -613,8 +634,8 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .card-short{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* Intendencia → Estado: el panel de heridas ocupa todo el alto, centrado; las necesidades van bajo el aventurero */
-.body-panel.full{flex:1;min-height:0;width:100%;max-width:1000px;margin:0 auto;grid-template-rows:minmax(0,1fr) auto;grid-template-columns:minmax(300px,46%) minmax(0,1fr)}
-.body-panel.full .body-box{min-height:360px}
+.body-panel.full{flex:1;min-height:0;width:100%;max-width:1000px;margin:0 auto;grid-template-rows:auto minmax(0,1fr) auto;grid-template-columns:minmax(260px,42%) minmax(0,1fr);align-content:start}
+.body-panel.full .body-box{min-height:0}
 .body-panel.full .body-map{flex:1;height:auto;min-height:300px}
 .status-center{width:100%;max-width:1000px;margin-left:auto;margin-right:auto}
 .needs-side .needs-panel{grid-template-columns:1fr;gap:4px;margin-top:0}
@@ -622,7 +643,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .needs-side .needs-hint{min-height:0}
 @media (max-height:560px){.body-panel.full .body-box{min-height:0}.body-panel.full .body-map{min-height:230px}}
 .status-wrap{container-type:inline-size}
-@container (max-width:820px){.body-panel.full{grid-template-columns:1fr;grid-template-rows:auto auto auto}.body-panel.full .body-box{min-height:420px}}
+@container (max-width:500px){.body-panel.full{flex:none;grid-template-columns:1fr;grid-template-rows:auto auto auto auto}.body-panel.full .body-box{min-height:auto}.body-panel.full .doll{flex:none}}
 @media (max-height:560px){.status-wrap .body-panel.full{grid-template-columns:46% minmax(0,1fr);grid-template-rows:auto auto}.status-wrap .body-panel.full .body-box{min-height:0}.status-wrap .body-panel.full .body-map{flex:none;height:230px;min-height:0}}
 
 /* Bloque 1, fase 6: curas de la mochila dentro del panel (tocar una cura y luego la parte) */
@@ -744,7 +765,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .vtabs { align-self: flex-start; flex-shrink: 0; flex-wrap: wrap; max-width: 100%; }
 @media (max-height: 520px) { .vtabs { flex-wrap: nowrap; } }
 .vtabs button { white-space: nowrap; }
-.vtab-dot { margin-left: 6px; color: #5fd19a; font-size: .85em; }
+.vtab-dot { margin-left: 6px; color: #5fd19a; font-size: max(12px, .85em); }
 .vtab-dot.gold { color: var(--color-gold); }
 .vtabs button.on .vtab-dot { color: #1a1205; }
 
@@ -943,7 +964,7 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 .vtabs-col button{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;background:var(--color-stone-800);border:2px solid var(--color-stone-600);color:var(--color-parchment);font-family:var(--font-display);font-size:16px;letter-spacing:.04em;text-align:left;cursor:pointer}
 .vtabs-col button:hover{background:var(--surface-hi)}
 .vtabs-col button[aria-selected=true]{background:var(--gold-fill);border-color:var(--gold-fill);color:#1a1205}
-.vtabs-col .vtab-lbl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vtabs-col .vtab-lbl{flex:1;min-width:0;line-height:1.1;overflow-wrap:break-word}
 .vtabs-col .vtab-dot{margin-left:0}
 .vtabs-col button[aria-selected=true] .vtab-dot{color:#1a1205}
 .shop-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px}
@@ -972,6 +993,9 @@ html.is-touch .tut-guide { top: auto; bottom: max(8px, env(safe-area-inset-botto
 @media (max-height:960px){.vback-art>*{width:64px!important;height:auto!important;image-rendering:pixelated}.vback-card{min-height:0;gap:6px;padding:8px}}
 .vback-card:hover{background:var(--surface-hi);color:var(--color-stone-300)}
 .vback-art{display:flex;align-items:flex-end;justify-content:center}
+/* Si el botón no tiene alto para el castillo y el rótulo, se quita el castillo (mide el propio botón) */
+.vback-card{container-type:size;min-height:52px}
+@container (max-height:110px){.vback-art{display:none}}
 .vback-lbl{font-family:var(--font-display);font-size:17px;letter-spacing:.06em;color:var(--color-parchment)}
 /* Fase 3 del plan de interfaz (19/11): inventario sin ficha encima */
 .alijo-side{width:52px;flex-shrink:0;padding-top:4px}
@@ -1192,6 +1216,15 @@ body:has([data-craft-built]) [data-testid=vendor-side],body:has([data-craft-buil
 .vquest-link:hover { filter: brightness(1.15); }
 @media (max-height: 520px) { .vquest-link { gap: 6px; padding: 6px 8px; min-height: 44px; } .vquest-link .vq-t { font-size: 12px !important; letter-spacing: .04em !important; white-space: nowrap; } .vquest-link .vq-s { font-size: 12px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .vquest-link svg { width: 16px; height: 16px; } }
 
+/* Botín en el móvil (23/11): ventana flotante, la mazmorra se ve detrás */
+.loot-win { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(600px, calc(100% - 24px)); height: min(320px, calc(100% - 16px));
+  display: flex; flex-direction: column; background: #141218f2; border: 2px solid #3a3741; box-shadow: 0 10px 40px #000c; }
+.loot-win-hd { display: flex; align-items: center; min-height: 40px; padding-left: 12px; border-bottom: 1px solid #2a2830; }
+.loot-win-x { width: 44px; height: 44px; border-left: 1px solid #2a2830; color: var(--color-parchment); font-size: 18px; }
+.loot-win-bd { flex: 1; min-height: 0; display: flex; gap: 10px; padding: 6px 10px; }
+.loot-win-h { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #a8a29e; margin-bottom: 4px; }
+.loot-win-ft { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-top: 1px solid #2a2830; min-height: 56px; }
+.loot-win-val { min-width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid #3a3741; color: var(--color-gold); font-family: var(--font-display); font-size: 20px; }
 /* ===== Reparto con el aliado en la ventana del botín (22/11; maqueta en mockups/reparto) ===== */
 .btn-ally{border-color:#5fd19a;color:#5fd19a}
 .btn-ally:hover:not(:disabled){background:#14231b}
@@ -1294,7 +1327,7 @@ button.share-slot{cursor:pointer}
 .ct-stances .btn{height:48px;font-size:17px}
 .ct-cta{width:100%;min-height:56px;font-size:18px;display:flex;align-items:center;justify-content:center;text-align:center}
 .ct-off{color:#8c8693;background:#1c1b22;cursor:default}
-@media (max-width: 1100px){ .ct-list,.ct-detail{padding:10px} .ct-main{gap:8px} .ct-row{gap:6px} .ct-card{padding:4px;gap:2px} .ct-name{font-size:13px} .ct-rank{font-size:11px;top:2px}
+@media (max-width: 1100px){ .ct-list,.ct-detail{padding:10px} .ct-main{gap:8px} .ct-row{gap:6px} .ct-card{padding:4px;gap:2px} .ct-name{font-size:13px} .ct-rank{font-size:12px;top:2px}
   .ct-detail{gap:8px} .ct-head{gap:12px} .ct-info{gap:6px} .ct-title{font-size:18px} .ct-sub{font-size:14px} .ct-chip{font-size:15px;padding:4px 10px}
   .ct-stats{gap:6px} .ct-stat{height:40px;font-size:18px} .ct-buy{gap:8px} .ct-lens{gap:8px} .ct-len{height:48px} .ct-len b{font-size:20px} .ct-stances{gap:8px} .ct-stances .btn{height:44px;font-size:16px} .ct-cta{min-height:48px;font-size:17px} }
 @media (max-height: 560px){ .ct-list{gap:6px} .ct-zone{gap:0} .ct-detail{gap:6px} .ct-stat{height:36px;font-size:17px} .ct-len{height:44px} .ct-len b{font-size:18px} .ct-len span{font-size:13px} .ct-stances .btn{height:40px} .ct-cta{min-height:44px;font-size:15px} .ct-buy{gap:6px} .ct-lens,.ct-stances{gap:6px} }
@@ -1302,3 +1335,406 @@ button.share-slot{cursor:pointer}
 @media (max-width: 1100px){ .ct-rank{left:auto;right:2px;transform:none;padding:0 2px;border:0;background:none} }
 .ct-narrow .ct-stats{grid-template-columns:repeat(2,1fr)} .ct-narrow .ct-head{flex-direction:column} .ct-narrow .ct-title{font-size:22px} .ct-narrow .ct-list,.ct-narrow .ct-detail{padding:14px}
 .ct-narrow .ct-len span{font-size:13px;gap:3px}
+.loot-win-ft .qty-pick { display: flex; align-items: center; gap: 8px; border: 0; padding: 0; min-width: 0; background: none; width: 100%; }
+.loot-win-ft .qty-pick .share-label { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.loot-win-ft .qty-row { margin: 0; flex: 1; }
+.loot-win-ft .qty-to { display: flex; gap: 6px; }
+.loot-win-ft .qty-to .btn { padding: 0 12px; }
+
+/* ── Combate 24/11: fichas de enemigos arriba a la izquierda, tu grupo sobre los botones, texto | botones abajo ──
+   --k escala todo: 1 en el móvil horizontal, 1,5 en tableta y 2 en pantallas grandes. */
+[data-testid=combat]{--k:1.5}
+@media (min-width:1600px) and (min-height:900px){[data-testid=combat]{--k:2}}
+@media (max-height:560px){[data-testid=combat]{--k:1}}
+.cb-foes{position:absolute;z-index:10;left:max(calc(8px * var(--k)),env(safe-area-inset-left));top:calc(6px * var(--k));display:flex;gap:calc(6px * var(--k));align-items:flex-start}
+.cb-party{position:absolute;z-index:10;right:max(calc(8px * var(--k)),env(safe-area-inset-right));bottom:calc(6px * var(--k));display:flex;flex-direction:column;gap:calc(4px * var(--k));width:calc(240px * var(--k))}
+.cb-card{background:#151419f0;border:1px solid #3a3841;color:#e6e0d2;font-size:calc(4px + 8px * var(--k));line-height:1.2;padding:calc(4px * var(--k)) calc(6px * var(--k))}
+.cb-card .bar{height:calc(4px * var(--k));border-width:1px}.cb-card .bar>div{background-image:none!important}
+.cb-row{display:flex;justify-content:space-between;align-items:center;gap:6px;min-width:0}
+.cb-name{font-family:var(--font-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cb-num{font-weight:400;color:#e8dcc0;white-space:nowrap;flex:none}
+.cb-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:calc(3px * var(--k));min-width:0}
+.cb-chips .chip{font-size:inherit;line-height:1.25;padding:0 4px}
+.cb-card .intent{font-size:inherit;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block}
+.cb-card.cb-foe{width:calc(190px * var(--k));min-height:44px;border-color:#5a2a2e}.cb-card.cb-foe .cb-name{color:#ffb3a8}
+.cb-card.cb-foe.boss{border-color:#7a1c26}
+.cb-card.cb-foe.pick{cursor:pointer}.cb-card.cb-foe.tgt{border:2px solid #c4283b;padding:calc(4px * var(--k) - 1px) calc(6px * var(--k) - 1px)}.cb-card.cb-foe.tgt .cb-name{color:#ff8a7a}
+.cb-card.dead{opacity:.45}
+.cb-card.ally{display:flex;align-items:center;gap:calc(6px * var(--k));height:calc(28px * var(--k));border-color:#2f6b4c}.cb-card.ally .cb-name{color:#9fe0bd;flex:none}.cb-card.ally .w-full{flex:1}
+.cb-card.hero{display:flex;align-items:center;gap:calc(6px * var(--k));padding:2px calc(6px * var(--k)) 2px 2px;border-color:#6b4a12}
+.cb-card.hero .body-btn,.cb-figure{flex:none;min-width:44px;min-height:44px;padding:2px;border-width:1px;display:inline-flex;align-items:center;justify-content:center;background:#0b0a0f}
+.cb-hero-info{flex:1;min-width:0}.cb-hero-info .cb-chips{margin-top:0;flex-wrap:nowrap}
+.cb-bar{display:flex;align-items:center;gap:4px;margin-top:calc(2px * var(--k))}.cb-bar .w-full{flex:1}
+.body-flash{animation:body-flash .6s steps(1) 1}
+@keyframes body-flash{0%,33%,66%{stroke:#fff;stroke-width:2px}16%,50%,100%{stroke:#0d0b0c}}
+@media (prefers-reduced-motion:reduce){.body-flash{animation:none}}
+/* Barra inferior: texto a la izquierda y botones a la derecha en todos los tamaños */
+.combat-bar{grid-template-columns:44% minmax(0,1fr)!important;padding:calc(4px * var(--k)) calc(8px * var(--k))!important;gap:calc(4px * var(--k))!important;min-height:0!important}
+.combat-bar [data-testid=combat-log]{position:static!important;transform:none!important;width:auto!important;white-space:normal!important;text-align:left!important;pointer-events:auto!important;
+  font-size:calc(5px + 8px * var(--k))!important;line-height:1.3;padding:calc(3px * var(--k)) calc(8px * var(--k))!important;background:#0b0a0f}
+.combat-bar [data-testid=combat-log] *{font-size:inherit!important}
+.combat-bar [data-testid=combat-log] > div:not(:last-child){display:block!important;color:#8c8693}
+.combat-bar .cmdgrid{gap:calc(4px * var(--k))!important}.combat-bar .cmdpair{gap:calc(4px * var(--k))!important}
+.combat-bar .cmdgrid.main{grid-template-rows:auto auto}
+.combat-bar .cmdgrid.main .cmd{min-height:max(44px,calc(44px * var(--k)))!important;height:max(44px,calc(44px * var(--k)));padding:2px 4px 2px calc(14px * var(--k))!important}
+.combat-bar .cmdgrid.main .cmd-label{font-size:calc(4px + 8px * var(--k))!important;letter-spacing:.02em!important;white-space:normal!important;line-height:1.1}
+.combat-bar .cmdgrid.main .cmd-sub{display:none!important}
+.is-touch .combat-bar .cmdgrid.main kbd{display:none}
+/* Los enemigos bajan al suelo y las sombras quedan pegadas a los pies */
+.fighter-shadow{translate:-50% 15%}
+.cb-foes>.cb-foe:only-child{width:calc(240px * var(--k))}
+.cb-card .lvl.cb-lvl{flex:none;width:calc(16px * var(--k) + 2px);height:calc(18px * var(--k) + 2px);font-size:max(12px,calc(8px * var(--k) + 2px))}.cb-row>.cb-name{flex:1}
+@media (max-height:560px){.combat-stage .foe{transform:translateY(18px)}}
+.cb-hero-info .cb-chips{flex-wrap:wrap}
+/* Móvil: estados e intención solo con icono y número, todo en una línea (el nombre sale en el title) */
+.cb-short{display:none}
+@media (max-height:560px){.cb-card .cb-full{display:none}.cb-card .cb-short{display:inline}.cb-chips{flex-wrap:nowrap;overflow:hidden}}
+
+/* ── Seguro por bajada (24/11): cuadrícula de ranuras y recibo (ventana de «Descender» y pestaña «Seguro») ── */
+.ins-title{margin:0 0 12px;color:#e8b33a;font-size:24px}
+.ins-body{--u:72px;display:flex;gap:28px;align-items:stretch}
+.ins-grid{display:grid;grid-template-columns:repeat(4,var(--u));gap:10px 12px;align-content:center}
+.ins-grid.few{grid-template-columns:repeat(4,var(--u))}
+.ins-cell{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ins-slot{position:relative;width:var(--u);height:var(--u);display:grid;place-items:center;background:#0b0a0f;border:1px solid #3a3841;cursor:pointer;padding:0}
+.ins-slot.on{background:#201a10;border:2px solid #e8b33a}
+.ins-slot:disabled{cursor:default}
+.ins-slot.locked{opacity:.55}
+.ins-slot:hover:not(:disabled){border-color:#e8b33a}
+.ins-slot img{image-rendering:pixelated}
+.ins-cost{position:absolute;left:3px;top:1px;font-size:12px;color:#a7a4ae;line-height:1.2}.ins-slot.on .ins-cost{color:#e8b33a}
+.ins-lock{position:absolute;right:2px;top:1px;font-size:12px}
+.ins-seal{position:absolute;right:2px;bottom:2px;line-height:0}
+.ins-empty{color:#82808a;font-size:12px}
+.ins-lbl{font-size:12px;color:#a7a4ae;white-space:nowrap}.ins-lbl.on{color:#e8b33a}
+.ins-receipt{display:flex;flex-direction:column;gap:8px;width:300px;min-width:0}
+.ins-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ins-cap{font-family:var(--font-display);font-size:14px;letter-spacing:.1em;color:#a7a4ae;text-transform:uppercase;display:inline-flex;align-items:center;gap:8px}.ins-cap-gold{color:#e8b33a}
+.ins-all{min-height:44px;min-width:84px}
+.ins-lines{display:flex;flex-direction:column;gap:4px;font-size:15px;min-height:40px}
+.ins-line{display:flex;align-items:center;gap:6px;color:#e6e0d2}.ins-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ins-price{color:#e8b33a}
+.ins-none{color:#a7a4ae;font-size:14px}
+.ins-total{margin-top:auto;border-top:1px solid #3a3841;padding-top:8px;display:flex;justify-content:space-between;align-items:baseline}
+.ins-have{color:#a7a4ae;font-size:14px}.ins-sum{color:#e8b33a;font-size:17px}
+.ins-go{min-height:44px;width:100%}
+.ins-tab{display:flex;flex-direction:column;gap:14px;padding:4px}
+.ins-note{margin:0;color:#a7a4ae;font-size:14px}
+.ins-pend{display:flex;flex-direction:column;gap:8px;border:1px solid #e8b33a;padding:10px;background:#151419}
+.ins-pend-row{display:flex;align-items:center;gap:12px;min-height:56px;padding:4px 8px;border:1px solid #3a3841;background:#0b0a0f}
+.ins-pend-row .ins-name{display:flex;flex-direction:column;font-family:var(--font-display);font-size:16px}.ins-sub{font-family:var(--font-body);font-size:12px;color:#a7a4ae}
+.insm{--u:72px;display:flex;flex-direction:column;gap:12px}
+.insm-title{border-bottom:1px solid #3a3841;padding-bottom:10px;margin:0}
+.insm-cols{display:flex;gap:20px;align-items:stretch}
+.insm-eq{flex:none}.insm-list{flex:1;min-width:280px;border-left:1px solid #3a3841;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.insm-head{min-height:44px;margin-bottom:6px}
+.insm-rows{display:flex;flex-direction:column;gap:4px}
+.insm-row{display:flex;align-items:center;gap:10px;min-height:36px;padding:0 10px;background:#1b1a20;border:1px solid transparent;text-align:left;font-size:15px;color:#a7a4ae;cursor:pointer}
+.insm-row:hover{border-color:#e8b33a}.insm-row:not(.on) .ins-name{opacity:.55}
+.insm-check{width:18px;height:18px;flex:none;display:grid;place-items:center;border:1px solid #6b6772;background:#0b0a0f;color:#0b0a0f;font-size:13px;line-height:1}
+.insm-row.on .insm-check,.insm-tick{background:#e8b33a;border-color:#e8b33a;color:#0b0a0f}
+.insm-tick{position:absolute;right:3px;bottom:3px;width:16px;height:16px;display:grid;place-items:center;font-size:12px;line-height:1}
+.insm-foot{display:flex;align-items:center;gap:28px;border-top:1px solid #3a3841;padding-top:12px}
+.insm-fig{display:flex;flex-direction:column;gap:2px}.insm-num{font-size:20px;color:#e6e0d2}.insm-num.short{color:#d45a4a}
+.insm-btns{margin-left:auto;display:flex;gap:10px}.insm-btns .ins-go{width:auto;min-width:190px;padding:0 16px}
+@media (max-height:560px){.insm{--u:46px;gap:6px}.insm-title{font-size:18px}.insm-eq .ins-grid{gap:6px 8px}.insm-title{padding-bottom:4px}.insm-cols{gap:12px}.insm-list{padding-left:12px;min-width:220px}.insm-head{margin-bottom:0}.insm-rows{max-height:calc(100vh - 236px);overflow-y:auto}.insm-row{min-height:28px;font-size:12px}.insm-num{font-size:15px}.insm-foot{padding-top:6px;gap:16px}.insm-btns .ins-go{min-width:140px}}
+.is-touch .insm-row{min-height:44px}
+.slot-seal{position:absolute;right:1px;bottom:1px;line-height:0;z-index:3;pointer-events:none}
+@media (min-width:1600px) and (min-height:900px){.ins-body,.insm{--u:80px}}
+@media (max-height:560px){
+  .ins-title{font-size:17px;margin-bottom:6px}
+  .ins-body{--u:50px;gap:18px}.ins-grid{gap:6px 8px}
+  .ins-receipt{gap:4px}.ins-lines{font-size:12px;gap:1px;min-height:0}.ins-cap{font-size:12px}.ins-all{min-width:70px}
+  .ins-sum{font-size:13px}.ins-have{font-size:12px}
+  .ins-tab{gap:8px}
+}
+/* Pestaña «Seguro» (24/11, 2.ª versión): cómo funciona, fichas de las piezas y recibo */
+.ins-how{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.ins-how-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid #3a3841;background:#151419}
+.ins-how-item>svg{flex:none;margin-top:2px}
+.ins-how-item>span{display:flex;flex-direction:column;gap:2px;min-width:0}.ins-how-item b{font-family:var(--font-display);color:#e6e0d2;font-size:15px;font-weight:600}.ins-how-item span span{color:#a7a4ae;font-size:13px;line-height:1.35}
+.ins-cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+.ins-cards{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ins-card{display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid #3a3841;border-left:4px solid var(--rc,#3a3841);background:#151419;min-height:64px}
+.ins-card.on{background:#201a10;border-color:#e8b33a;border-left-color:var(--rc,#e8b33a)}
+.ins-card.empty{opacity:.55}
+.ins-card-ico{position:relative;flex:none;width:52px;height:52px;display:grid;place-items:center;background:#0b0a0f;border:1px solid var(--rc,#3a3841)}.ins-card-ico.empty{color:#82808a;font-size:12px}
+.ins-card-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ins-card-name{font-family:var(--font-display);font-size:16px;font-weight:600;line-height:1.15;hyphens:auto;-webkit-hyphens:auto}
+.ins-card-sub{color:#a7a4ae;font-size:13px}
+.ins-stats{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:13px}.ins-stats .pos{color:#5fd19a}.ins-stats .neg{color:#ff7a6a}
+.ins-card-extra{color:#e8b33a;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ins-card-act{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.ins-card-cost{color:#e8b33a;font-size:15px}
+.ins-card-btn{min-height:44px;min-width:110px}
+.ins-card-lock{font-size:12px;color:#a7a4ae;max-width:130px;text-align:right}
+.ins-receipt-tab{width:auto;border:1px solid #3a3841;background:#151419;padding:12px;position:sticky;top:0}
+.ins-pend .ins-name{display:flex;flex-direction:column}
+@media (max-width:1300px){.ins-how{grid-template-columns:repeat(2,minmax(0,1fr))}.ins-cols{grid-template-columns:minmax(0,1fr) 240px;gap:14px}}
+@media (max-height:560px){
+  .ins-how{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.ins-how-item{padding:6px 8px;gap:8px}.ins-how-item b{font-size:13px}.ins-how-item span span{font-size:12px}
+  .ins-cols{grid-template-columns:minmax(0,1fr);gap:8px}
+  .ins-card{min-height:56px;gap:8px;padding:6px 8px}.ins-card-ico{width:44px;height:44px}.ins-card-name{font-size:14px}.ins-card-sub,.ins-stats{font-size:12px}
+  .ins-card-btn{min-width:92px}.ins-receipt-tab{position:static;padding:8px}
+}
+@media (max-width:1300px){.ins-cols{grid-template-columns:minmax(0,1fr)}.ins-receipt-tab{position:static}}
+@media (max-height:560px){.ins-how{grid-template-columns:repeat(4,minmax(0,1fr))}.ins-how-item{padding:4px 6px;align-items:center}.ins-how-item span span{display:none}.ins-how-item b{font-size:12px;line-height:1.2}.ins-pend{padding:6px;gap:4px}.ins-pend-row{min-height:48px}}
+
+/* Venta por oficio: quién compra cada objeto y, en la venta, lo que este mercader no compra */
+.slot.slot-nobuy > img, .slot.slot-nobuy > canvas, .slot.slot-nobuy > .qty { opacity: .3; filter: grayscale(1); }
+/* Venta (rediseño 24/11): filtro, candado, filas con cantidad, aviso de oro */
+.slot.slot-filtered > img, .slot.slot-filtered > canvas, .slot.slot-filtered > .qty { opacity: .12; filter: grayscale(1); }
+.slot.slot-filtered { border-color: #2a2830 !important; box-shadow: none !important; }
+.slot .slot-lock { position: absolute; right: 1px; top: 1px; line-height: 0; z-index: 3; pointer-events: none; }
+.sale-row { display: flex; align-items: center; gap: 6px; padding: 2px 4px; border-bottom: 1px solid #222027; }
+.sale-row.on { background: #201a10; }
+.qbtn { min-width: 28px; height: 32px; border: 1px solid #3a3841; background: #151419; color: #e6e0d2; font: 600 14px/1 Georgia, serif; padding: 0 4px; }
+.qbtn:disabled { opacity: .35; }
+.qbtn.w { min-width: 34px; color: #e8b33a; }
+.qbtn.x { border-color: transparent; background: transparent; color: #a7a4ae; min-width: 32px; }
+.qin { width: 38px; height: 32px; text-align: center; background: #0b0a0f; border: 1px solid #3a3841; color: #e6e0d2; font: 14px Georgia, serif; -moz-appearance: textfield; }
+.qin::-webkit-inner-spin-button, .qin::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+@media (pointer: coarse) { .qbtn { min-width: 40px; height: 44px; } .qin { height: 44px; } .qbtn.x { min-width: 44px; } }
+.sale-pop { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); font: 600 20px Cinzel, Georgia, serif; color: #f2c75a; text-shadow: 0 2px 0 #000; pointer-events: none; animation: sale-pop .9s ease-out forwards; }
+@keyframes sale-pop { 0% { opacity: 0; transform: translate(-50%, 8px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -34px); } }
+@media (prefers-reduced-motion: reduce) { .sale-pop { animation-duration: .01s; } }
+@media (min-width: 1600px) and (min-height: 900px) { .sell-center { --slot: 72px; } }
+@media (min-width: 1100px) and (max-width: 1599px) and (min-height: 760px) { .sell-center { --slot: 60px; } }
+/* Venta en ordenador grande: casillas de 72–80 px, icono a ×4 (48 px) */
+@media (min-width: 1600px) and (min-height: 900px) { .sell-center .slot > img[width="36"] { width: 48px; height: 48px; } }
+/* Venta: pestañas y páginas elegidas en dorado (no en blanco) */
+.sell-center .pill.on { background: #e8b33a; border-color: #e8b33a; color: #1a1206; }
+
+/* Fase D (plan de interfaz 2): zonas táctiles de 44 px en la barra de venta y en la postura del contrato */
+.is-touch .sell-tools button,.is-touch .sell-tools select,.is-touch [data-testid^=hire-stance-]{min-height:44px}
+/* Pestañas Mochila · Almacén · Compartido de la venta: nunca por debajo de 12 px */
+.sell-center .pill{font-size:max(12px,1em)}
+/* Mapa de zonas (plan de interfaz 2, fase E): pestañas de estrato, subtítulo, bloqueo y ficha del jefe; colores planos por zona */
+.zt-mazmorra,.zl-mazmorra{--zc:#d9b05e}.zt-cripta,.zl-cripta{--zc:#a78aca}.zt-infierno,.zl-infierno{--zc:#e8752b}
+.ztab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;padding:6px 4px;border:1px solid color-mix(in srgb,var(--zc) 45%,#3a3841);background:#1b1820;cursor:pointer;text-align:center}
+.ztab-name{color:var(--zc);font-size:15px;line-height:1.1}
+.ztab-lv{font-size:12px;color:#b8adbb}
+.ztab.on{border-color:var(--zc);background:color-mix(in srgb,var(--zc) 16%,#1b1820);box-shadow:inset 0 0 0 1px var(--zc)}
+.zsub{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-gold)}
+.zlock{font-size:13px;color:#ff6b6b;line-height:1.3}
+.zboss{display:flex;flex-direction:column;gap:2px;padding:10px 12px;margin-top:4px}
+/* Mapa del descenso (mapArt.ts): dibujo a escala entera, nombres de estrato y marcadores de subzona encima */
+.zmap{position:relative;border:1px solid #3a3841}
+.zmap-band{position:absolute;left:0;right:0;background:transparent;border:0;cursor:pointer;text-align:left}
+.zmap-band.on{box-shadow:inset 3px 0 0 var(--color-gold)}
+.zmap-lbl{position:absolute;left:8px;bottom:4px;font:12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--zc);text-shadow:0 1px 0 #000}
+.zmap-node{position:absolute;width:44px;height:44px;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;z-index:1}
+.zmap-node>span{display:flex;align-items:center;justify-content:center;width:28px;height:28px;font:700 14px var(--font-display);color:#1a1206;background:#e9e1cc;border:2px solid #0b0a0e}
+.zmap-node:hover>span{filter:brightness(1.15)}
+.zmap-node.boss>span{background:#c2361a;color:#f1e6cd}
+.zmap-node.on>span{background:var(--color-gold);animation:pulseGold 1.6s infinite}
+.zmap-node.locked>span{background:#2a2730;border-color:#6b5420}
+.zmap-node.deco{width:16px;height:16px;pointer-events:none}
+.zmap-node.deco>span{width:12px;height:12px;font-size:8px;border-width:1px}
+.zmap-node.deco.locked>span svg{width:6px;height:7px}
+@media (max-height:560px){.ztab{min-height:44px;padding:4px}.ztab-name{font-size:13px}.zboss{padding:6px 10px}.zboss .text-lg{font-size:15px}}
+
+/* Estación en ruinas */
+.ruin-art{display:flex;align-items:flex-end;justify-content:center;overflow:hidden;background:linear-gradient(#1a1820,#0e0d12);border:1px solid #3a3841}
+.ruin-step{min-height:36px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;padding:2px 4px;border:1px solid #3a3841;background:#141318;color:#8c8693}
+.ruin-step.now{background:#3a1e1a;border-color:#7a3a30;color:#e0a090}.ruin-step.next{border-color:#e8b33a;color:#e8b33a;background:#221c10}
+.ruin-box{border:1px solid #3a3841;background:#19171f;padding:8px 12px}
+.ruin-cap{font-family:var(--font-display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#e8b33a;margin-bottom:2px}
+.ruin-req{border:1px solid #3a3841;background:#141318;padding:10px 6px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;min-width:0;font:inherit;color:inherit}
+button.ruin-req{cursor:pointer}button.ruin-req:hover{border-color:#d0605a;background:#1e1416}
+.ruin-req.bad{border-color:#6a3030}.ruin-qty{font-size:16px;line-height:1.1}
+@media (min-height:700px){.ruin-req{padding:16px 8px}.ruin-qty{font-size:20px}}.ruin-req.ok .ruin-qty{color:#7fbf6a}.ruin-req.bad .ruin-qty{color:#d0605a}
+.ruin-go{align-self:flex-start;font:inherit;font-size:12px;color:#e8a070;background:none;border:0;padding:0;cursor:pointer;min-height:24px;text-align:left}.ruin-go:hover{text-decoration:underline}
+.is-touch .ruin-go{min-height:44px}
+@media (max-height:560px){.ruin-step{min-height:30px}.ruin-qty{font-size:15px}.ruin-req{padding:4px 8px}}
+
+/* Diario de misiones (tres columnas) */
+.qj{display:grid;grid-template-columns:minmax(0,28fr) minmax(0,42fr) minmax(0,30fr);gap:var(--gap);height:100%;min-height:0}
+.qj-col{display:flex;flex-direction:column;min-height:0;padding:12px;gap:10px}
+.qj-head{display:flex;align-items:center;gap:8px;min-height:44px}
+.qj-slots{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.qj-slots span{height:4px;background:#2a2730}.qj-slots span.on{background:#e8b33a}
+.qj-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px}
+.qj-card{position:relative;display:flex;gap:10px;align-items:center;text-align:left;background:#15131a;border:1px solid #3a3741;padding:8px;cursor:pointer;font:inherit;color:inherit;border-left-width:4px}
+.qj-card:hover{border-color:#6b6772}.qj-card.on{background:#221c10;border-color:#e8b33a}
+.qj-card.st-progress{border-left-color:#e8b33a}.qj-card.st-done{border-left-color:#5fd19a}
+.qj-ico{width:52px;height:52px;flex:none;display:flex}.qj-ico .qn-art,.qj-bart .qn-art,.qj-art .qn-art{height:100%;margin:0;flex:1;min-height:0}
+.qj-card-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.qj-vname{font-size:12px;display:flex;align-items:center;gap:4px}
+.qj-name{font-family:var(--font-display);font-size:15px;color:#e9e1cc;line-height:1.15}
+.qj-row{display:flex;justify-content:space-between;align-items:center;font-size:12px}.qj-n{color:#e9e1cc}
+.qj-st{font-size:12px}.qj-st.st-progress{color:#e8b33a}.qj-st.st-done{color:#5fd19a}.qj-st.st-board{color:#a8a29e}
+.qj-bar{display:block;height:4px;background:#2a2730;position:relative}.qj-bar span{position:absolute;inset:0 auto 0 0;background:#e8b33a}.qj-card.st-done .qj-bar span{background:#5fd19a}
+.qj-bar.big{height:8px;margin-top:4px}
+.qj-free{border:1px dashed #3a3741;color:#8c8693;font-size:13px;text-align:center;padding:10px;background:none;font-family:inherit;min-height:44px}
+button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
+.qj-center .qj-head{border-bottom:1px solid #2a2730}
+.qj-detail{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.qj-art{height:clamp(110px,20vh,200px);display:flex;background:#0c0b10;border:1px solid #2a2730}.qj-art .qn-art{flex:1;min-height:0}
+.qj-title{font-family:var(--font-display);color:#e8b33a;font-size:clamp(20px,1.6vw,28px);text-transform:uppercase;letter-spacing:.06em}
+.qj-desc{font-size:15px;color:#d6d3d1;text-align:center;line-height:1.35;margin:0}
+.qj-sec{border-top:1px solid #2a2730;padding-top:10px}
+.qj-cap{font-family:var(--font-display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#e8b33a;margin-bottom:6px}
+.qj-rw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.qj-rw div{border:1px solid #3a3741;background:#15131a;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px}
+.qj-rw b{font-family:var(--font-display);font-size:20px;font-weight:400}.qj-rw span{font-size:12px;color:#a8a29e}
+.qj-actions{margin-top:auto;display:flex;flex-direction:column;gap:8px;border-top:1px solid #2a2730;padding-top:10px}
+.qj-abandon{font:inherit;font-size:13px;color:#d0605a;background:none;border:0;cursor:pointer;min-height:36px}.qj-abandon:hover{text-decoration:underline}
+.is-touch .qj-abandon{min-height:44px}
+.qj-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#a8a29e;font-size:14px;text-align:center}
+.qj-filter{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid #2a2730;padding-bottom:8px}
+.qj-fopt{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 8px;background:#15131a;border:1px solid transparent;font:inherit;font-size:14px;color:#d6d3d1;cursor:pointer;text-align:left}
+.is-touch .qj-fopt{min-height:44px}
+.qj-fopt:hover{border-color:#3a3741}.qj-fopt.on{border-color:#e8b33a;background:#221c10}.qj-fopt.none{color:#78716c}
+.qj-radio{width:12px;height:12px;border:1px solid #6b6772;flex:none}.qj-fopt.on .qj-radio{background:#e8b33a;border-color:#e8b33a}
+.qj-fn{font-size:12px;color:#a8a29e}
+.qj-bcard{position:relative;border:1px solid #3a3741;background:#15131a;padding:10px;display:flex;flex-direction:column;gap:6px}
+.qj-bart{width:72px;height:72px;flex:none;display:flex;background:#0c0b10;overflow:hidden}.qj-bart .qn-art{flex:1;min-height:0}
+.qj-bname{font-family:var(--font-display);color:#e8b33a;font-size:15px;text-transform:uppercase;letter-spacing:.05em}
+.qj-bmini{display:flex;justify-content:center;gap:14px;font-size:14px}.qj-bmini span{display:inline-flex;align-items:center;gap:4px}
+@media (max-height:820px){.qj-art{height:110px}.qj-detail{gap:8px}.qj-bart{height:56px}}
+.qj-nail{position:absolute;top:3px;right:5px;line-height:0}
+.qj-seal{position:absolute;right:22px;top:6px;font-family:var(--font-display);font-size:12px;color:#0c1a10;background:#5fd19a;padding:1px 6px;transform:rotate(-6deg);box-shadow:0 0 0 1px #2c6a48}
+.qj-card.st-done{background:#122018}.qj-card.st-done.on{background:#1a2a1a}
+@media (max-height:820px){.qj-bart{width:60px;height:60px}}
+.ruin-card{border:1px solid #3a3841;background:#141318;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.ruin-card.next{border-color:#8a6a2a;background:#1a160e}
+.ruin-art.lit{background:radial-gradient(ellipse at 50% 80%,#4a3010 0%,#1a1820 60%,#0e0d12 100%)}
+
+/* Misiones en móvil: misiones | Detalle o Tablón con pestañas */
+.qj.qj-phone{grid-template-columns:minmax(0,40fr) minmax(0,60fr)}
+.qj-right{display:flex;flex-direction:column;min-height:0;gap:6px}.qj-right>.qj-col{flex:1}
+.qj-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.qj-tabs button{min-height:44px;font-family:var(--font-display);letter-spacing:.08em;text-transform:uppercase;font-size:13px;background:#15131a;border:1px solid #3a3741;color:#d6d3d1;cursor:pointer}
+.qj-tabs button.on{background:#c8961e;border-color:#e8b33a;color:#1a1206}
+.qj-filter.chips{flex-direction:row;overflow-x:auto;gap:4px;flex:none}.qj-filter.chips .qj-fopt{flex:none}.qj-filter.chips .qj-radio{display:none}
+.qj-phone .qj-col{padding:8px;gap:6px}.qj-phone .qj-head{min-height:36px}.qj-phone .qj-ico{width:40px;height:40px}.qj-phone .qj-name{font-size:14px}
+.qj-phone .qj-art{height:64px}.qj-phone .qj-title{font-size:18px}.qj-phone .qj-desc{font-size:13px}.qj-phone .qj-rw b{font-size:16px}.qj-phone .qj-rw div{padding:4px}
+.qj-phone .qj-detail{gap:6px}.qj-phone .qj-bart{width:48px;height:48px}.qj-phone .qj-bcard{padding:6px;gap:4px}
+.qj-phone [data-testid=quests-board] .qj-list,.qj-phone [data-testid=quests-board]{min-height:0}
+.qj-phone .qj-center>.qj-head{display:none}
+
+/* Habilidades (25/11): tarjetas de ataque y de clase, indicadores de ímpetu (amarillo) y recarga (azul), progresión horizontal */
+.hb-sec{margin-bottom:16px}.hb-sec+.hb-sec{border-top:1px solid #2a2730;padding-top:12px}
+.hb-hand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.hb-hand-ico{width:40px;height:40px;flex:none;display:grid;place-items:center;background:#0d0c11;border:1px solid #3a3741}
+.hb-list{display:flex;flex-direction:column;gap:6px}
+.hb-card{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:#15131a;border:1px solid #3a3741;padding:10px 12px;font:inherit;color:inherit;cursor:pointer;min-height:44px}
+.hb-card:hover{border-color:#6b6772}.hb-card.on{border-color:#e8b33a;background:#221c10}
+.hb-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hb-name{font-family:var(--font-display);font-size:16px;color:#e9e1cc;line-height:1.15}
+.hb-desc{font-size:14px;color:#c8c2b8;line-height:1.3;margin:0}
+.hb-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#a8a29e;margin-top:2px}
+.hb-chips{display:inline-flex;gap:4px;flex:none}
+.hb-chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-size:14px;line-height:1;padding:4px 7px;border:1px solid;min-width:40px;justify-content:center}
+.hb-chip.big{font-size:17px;padding:6px 9px;min-width:50px}
+.hb-chip.imp{color:#f2c75a;border-color:#6b5420;background:#2a2210}.hb-chip.cd{color:#8ec0f2;border-color:#2c4a6e;background:#121c2a}
+.hb-chip.zero{opacity:.55}
+.hb-legend{display:flex;gap:16px;font-size:12px;color:#a8a29e;border-top:1px solid #2a2730;padding-top:8px}.hb-legend span{display:inline-flex;align-items:center;gap:5px}
+.hb-cap{font-family:var(--font-display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#e8b33a;margin-bottom:8px}
+.hb-eq{border:2px solid #e8b33a;background:#221c10;box-shadow:0 0 0 1px #0d0c11,0 0 14px #e8b33a33}
+.hb-card.choose{border-color:#a56bff;background:#1a1424}.hb-card.choose.on{border-color:#e8b33a;background:#2a2116}
+.hb-track{position:relative;height:40px;margin:6px 18px 10px}
+.hb-track-line,.hb-track-fill{position:absolute;left:0;top:19px;height:3px}.hb-track-line{right:0;background:#2e2b35}.hb-track-fill{background:#e8b33a}
+.hb-node{position:absolute;top:20px;width:34px;height:34px;transform:translate(-50%,-50%);display:grid;place-items:center;border:2px solid #3a3741;border-radius:50%;background:#0d0c11;font-family:var(--font-display);font-size:13px;color:#78716c}
+.hb-node.done{border-color:#e8b33a;background:#2a2116;color:#f2e6c8}.hb-node.choose{border-color:#e8b33a;color:#e8b33a;box-shadow:0 0 10px #e8b33a88}
+.hb-node.next{border-color:#a56bff;color:#e9e1cc;box-shadow:0 0 10px #a56bff88}
+.hb-next{border:1px solid #3a3741;background:#15131a;padding:10px 12px}.hb-next.choose{border-color:#e8b33a}
+.hb-next-t{font-family:var(--font-display);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#c79bff}.hb-next.choose .hb-next-t{color:#e8b33a}
+.hb-bar{height:6px;background:#2a2730;margin-top:6px;position:relative}.hb-bar span{position:absolute;inset:0 auto 0 0;background:#a56bff}
+.hb-lock{border:1px solid #2e2b35;background:#0f0e13}
+.hb-lock summary{display:flex;align-items:center;gap:8px;padding:8px 10px;min-height:44px;cursor:pointer;list-style:none}.hb-lock summary::-webkit-details-marker{display:none}
+.hb-lock .hb-name{font-size:15px;color:#c8c2b8}.hb-lock .hb-desc{padding:0 10px 10px}
+.hb-caret{color:#78716c;font-size:12px;transition:transform .15s}.hb-lock[open] .hb-caret{transform:rotate(180deg)}
+.hb-arc-label{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:2px;white-space:nowrap;font-size:13px;color:#e9e1cc;background:#0d0c11e6;border:1px solid #3a3741;padding:1px 6px}
+.hb-arc-label.on{color:#e8b33a;border-color:#8a6a2a}
+@media (max-height:560px){.hb-card{padding:6px 8px}.hb-name{font-size:14px}.hb-desc{font-size:13px}.hb-chip.big{font-size:14px;padding:4px 6px;min-width:40px}.hb-sec{margin-bottom:10px}}
+.hb-chip.mana{color:#7fe0e0;border-color:#236060;background:#0f2424}
+.hb-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #2a2730}
+.hb-tabs button{min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font-display);font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#a8a29e;background:#0f0e13;border:0;border-bottom:2px solid transparent;cursor:pointer}
+.hb-tabs button:hover{color:#e9e1cc}.hb-tabs button.on{color:#e8b33a;background:transparent;border-bottom-color:#e8b33a}
+.hb-tab-d{font-size:9px}.hb-tabs button:not(.on) .hb-tab-d{opacity:.4}
+@media (max-height:560px){.hb-tabs button{min-height:44px;font-size:12px;letter-spacing:.06em}}
+/* Habilidades (2): panel del héroe con cabecera y barra de pista; tarjetas de ataque con icono e indicadores rotulados */
+.hb-hero-head{display:flex;flex-direction:column;align-items:center;padding:10px 8px 0;line-height:1.15}
+.hb-hero-cls{font-family:var(--font-display);font-size:20px;letter-spacing:.1em;text-transform:uppercase;color:#e8b33a}
+.hb-hero-lv{font-size:13px;color:#a8a29e;letter-spacing:.06em;text-transform:uppercase}
+.hb-hint{display:flex;align-items:center;gap:10px;margin:8px;padding:8px 12px;min-height:56px;background:#0f0e13;border:1px solid #3a3741}
+.hb-ico{width:46px;height:46px;flex:none;display:grid;place-items:center;background:#0d0c11;border:1px solid}
+.hb-ico.on{border-color:#e8b33a!important;box-shadow:0 0 8px #e8b33a66}
+.hb-atk{flex-direction:row;align-items:center;gap:12px}
+.hb-chips.lab .hb-chip{flex-direction:column;gap:2px;padding:5px 6px;min-width:58px}
+.hb-chip-n{display:inline-flex;align-items:center;gap:4px}
+.hb-chip small{font-family:var(--font-body,inherit);font-size:12px;letter-spacing:0;opacity:.85}
+@media (max-height:560px){.hb-hero-head{padding-top:4px}.hb-hero-cls{font-size:15px}.hb-hero-lv{font-size:12px}.hb-hint{min-height:44px;margin:4px;padding:4px 8px}.hb-hint .hb-desc{display:none}
+.hb-ico{width:36px;height:36px}.hb-chips.lab .hb-chip{min-width:46px;padding:3px 4px}.hb-chip small{font-size:12px}}
+/* Habilidades (3): fichas verticales que llenan el panel (ataques por mano; tus habilidades y próximo desbloqueo) */
+.hb-fill{flex:1 0 auto;display:flex;flex-direction:column}
+.hb-hsec{flex:1 0 auto;display:flex;flex-direction:column}.hb-hsec+.hb-hsec{border-top:1px solid #2a2730;padding-top:10px;margin-top:10px}
+.hb-shead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px;margin-bottom:6px}.hb-shead .hb-cap{margin:0}
+.hb-grid{display:grid;gap:8px;flex:1 0 auto;align-items:stretch}
+.hb-tile{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;background:#15131a;border:1px solid #3a3741;padding:10px 8px;cursor:pointer;min-width:0}
+.hb-tile:hover{border-color:#6b6772}.hb-tile.on{border-color:#e8b33a;background:#221c10;box-shadow:0 0 0 1px #e8b33a55}
+.hb-tile.st-equipped{border:2px solid #e8b33a;background:#241d0f}
+.hb-tile.st-choose{border-color:#a56bff;background:#1a1424}.hb-tile.st-choose.on{border-color:#e8b33a;background:#2a2116}
+.hb-tile.st-locked{background:#0f0e13;border-color:#2e2b35}.hb-tile.st-locked .hb-tile-name{color:#c8c2b8}
+.hb-tile-top{position:absolute;left:6px;top:4px;font-size:12px;color:#a8a29e;line-height:1}.hb-tile.st-locked .hb-tile-top{left:auto;right:6px;top:6px}
+.hb-tile-art{width:100%;flex:1 1 56px;min-height:48px;max-height:150px;display:grid;place-items:center;background:#0d0c11;border:1px solid}
+.hb-tile-name{font-family:var(--font-display);font-size:16px;color:#e9e1cc;line-height:1.1}
+.hb-tile-desc{font-size:13px;color:#c8c2b8;line-height:1.25}
+.hb-tile-chips{margin-top:auto;width:100%}.hb-tile-chips .hb-chips{width:100%;display:grid;grid-template-columns:1fr 1fr}
+.hb-tile-tag{width:100%;min-height:32px;display:grid;place-items:center;background:#c8961e;color:#1a1206;font-family:var(--font-display);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.hb-tile-btn{width:100%;min-height:44px;font-size:13px}
+@media (max-height:560px){.hb-tile{padding:6px;gap:4px}.hb-tile-art{flex-basis:36px;min-height:36px}.hb-tile-name{font-size:13px}.hb-tile-desc{font-size:12px}.hb-tile-tag{min-height:28px;font-size:12px}}
+/* Habilidades (3): atributos con lo que cambia, fichas pequeñas, hitos de clase y detalle */
+.hb-stat{padding:6px 4px;border-bottom:1px solid #2a2730;font-size:14px}
+.hb-stat.up{background:#14241a}.hb-stat.down{background:#2a1416}.hb-stat.up.down{background:#1e1e16}
+.hb-stat-m{display:block;font-size:12px;margin-top:2px}.hb-stat-m.good{color:#7fd08a}.hb-stat-m.bad{color:#ff8a8a}
+.hb-psec{padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #2a2730}
+.hb-minis{display:grid;gap:6px}
+.hb-mini{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;min-height:44px;background:#15131a;border:1px solid #3a3741;cursor:pointer;font:inherit;color:inherit;min-width:0}
+.hb-mini:hover{border-color:#6b6772}.hb-mini.on{border-color:#e8b33a;background:#221c10;box-shadow:0 0 0 1px #e8b33a55}
+.hb-mini-name{font-family:var(--font-display);font-size:13px;color:#e9e1cc;line-height:1.1;text-align:center}
+.hb-mini-cost{display:flex;gap:12px;font-size:16px;font-weight:600}.hb-mini-cost span{display:inline-flex;align-items:center;gap:2px}
+.hb-hitos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.hb-hito{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;cursor:pointer;padding:4px 0;min-height:44px;font:inherit;color:inherit}
+.hb-hito-d{width:40px;height:40px;transform:rotate(45deg);display:grid;place-items:center;border:2px solid #3a3741;background:#0d0c11}
+.hb-hito-d>*{transform:rotate(-45deg)}
+.hb-hito-q{font-family:var(--font-display);font-size:18px;color:#6b6772}
+.hb-hito.st-equipped .hb-hito-d{border-color:#e8b33a;background:#2a2116;box-shadow:0 0 10px #e8b33a66}
+.hb-hito.st-owned .hb-hito-d{border-color:#9a6b1a}
+.hb-hito.st-choose .hb-hito-d{border-color:#e8b33a;box-shadow:0 0 12px #e8b33aaa}.hb-hito.st-choose .hb-hito-q{color:#e8b33a}
+.hb-hito.st-next .hb-hito-d{border-color:#a56bff}.hb-hito.st-next .hb-hito-q{color:#c79bff}
+.hb-hito.on .hb-hito-d{outline:2px solid #f2e6c8;outline-offset:2px}
+.hb-hito-lv{font-size:12px;color:#a8a29e}
+.hb-det{margin-top:auto;border:1px solid #8a6a2a;background:#1a160e;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:150px}
+.hb-det.hito{margin-top:0;flex:1 1 auto;min-height:0;overflow:auto}
+.hb-det-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.hb-det-name{font-family:var(--font-display);font-size:18px;color:#e8b33a;text-transform:uppercase;letter-spacing:.05em}
+.hb-opt{display:block;text-align:left;width:100%;padding:8px 10px;background:#15131a;border:1px solid #3a3741;font:inherit;color:inherit;cursor:pointer}
+.hb-opt.choose{border-color:#a56bff;background:#1a1424}.hb-opt.choose.on{border-color:#e8b33a;background:#2a2116}.hb-opt.locked{cursor:default;background:#0f0e13;border-color:#2e2b35}
+@media (max-height:560px){.hb-hito-d{width:32px;height:32px}.hb-det{min-height:0;padding:8px}.hb-det-name{font-size:15px}.hb-mini{padding:4px}.hb-psec{padding-bottom:6px;margin-bottom:6px}}
+.hb-arc-foot{position:absolute;left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:#e8b33a;white-space:nowrap}
+@media (max-height:560px){.hb-arc-foot{font-size:12px}}
+.hb-effbox{margin-top:auto;border:1px solid #3d6b3a;background:#121c12;padding:10px;display:flex;flex-direction:column;gap:6px;min-height:150px}
+.hb-eff{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:14px}.hb-eff .good{color:#8fd07a}.hb-eff .bad{color:#ff8a8a}
+.hb-band{font-family:var(--font-display);font-size:14px;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;margin-bottom:6px;background:#1b1922;border-left:3px solid currentColor}
+@media (max-height:560px){.hb-effbox{min-height:0}}
+/* Alijo › Equipo (v3): muñeco de ranuras y mochila con bolsillo y oro al lado */
+.al-doll{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-areas:'arma cabeza sec' 'arma amuleto sec' 'manos torso anillo' 'atuendo pies mochila';gap:0 8px;justify-items:center;align-items:start;padding-bottom:6px;border-bottom:1px solid #2a2730}
+.al-doll-top{display:flex;justify-content:space-between;align-items:flex-start}
+.al-doll-row{display:flex;justify-content:space-between;align-items:flex-start;gap:4px}
+.al-sec{padding-top:6px}
+.al-box{border:1px solid #3a3741;background:#141318;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.al-pocket-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.al-box-row{flex-direction:row;justify-content:space-between}
+.al-box-t{font-family:var(--font-display);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#a8a29e;text-align:center}
+.al-gem{position:absolute;display:grid;place-items:center;transform:rotate(45deg);border:2px solid;background:#0d0c11;pointer-events:auto;box-shadow:0 0 0 2px #0d0c11}
+
+.alijo-stats .hs-up{background:#132313}.alijo-stats .hs-down{background:#2a1214}
+.pill .nb.alert{background:#c4283b;color:#fff}
+@media (max-height:1000px){.al-doll span.uppercase{display:none}.al-doll{gap:6px 8px}}
+.al-doll>:nth-child(1),.al-doll>:nth-child(5),.al-doll>:nth-child(8){justify-self:start}
+.al-doll>:nth-child(3),.al-doll>:nth-child(7),.al-doll>:nth-child(10){justify-self:end}
+.ui-drawer-tab.right.has{color:#1a1206;background:#e8b33a;border-color:#e8b33a}
+.carry-narrow[data-tier="0"] .text-right{display:none}.carry-narrow span{white-space:nowrap}
+.al-lseg .ui-seg button{font-size:10px;letter-spacing:.03em;padding-left:4px;padding-right:4px}
+.al-box-row .al-box-t{white-space:nowrap}

@@ -72,7 +72,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
       { text: 'Bienvenido al **Bastión de Ceniza**. Soy el intendente: aquí arriba lo tienes todo, en estas pestañas.', target: 'lobby-nav' },
       { text: 'Empecemos por tu **Alijo**: tu equipo, tu mochila y el almacén. Haz clic en la pestaña.', touch: 'Empecemos por tu **Alijo**: tu equipo, tu mochila y el almacén. Toca la pestaña.', target: 'tab-stash', action: 'click' },
       { text: 'Lo que traes de abajo va en la **mochila**, y la mochila **se pierde si mueres**. El oro también **ocupa sitio**: las monedas sueltas llenan casillas. Elige un objeto para ver su ficha; arrástralo para moverlo y haz **doble clic** para la acción rápida.', touch: 'Lo que traes de abajo va en la **mochila**, y la mochila **se pierde si mueres**. El oro también **ocupa sitio**: las monedas sueltas llenan casillas. Toca un objeto para ver su ficha y luego una casilla libre para moverlo; **dos toques**, acción rápida.', target: 'alijo-backpack' },
-      { text: 'Los **saquitos** y **sacos** que vende Nira guardan muchas monedas en una sola casilla. Pulsa **«Agrupar oro»**.', touch: 'Los **saquitos** y **sacos** que vende Nira guardan muchas monedas en una sola casilla. Toca **«Agrupar oro»**.', target: 'group-gold-backpack', action: 'click' },
+      { text: 'Los **saquitos** y **sacos** que vende Nira guardan muchas monedas en una sola casilla. Pulsa **«Ordenar»**: mete el oro en ellos y coloca la mochila.', touch: 'Los **saquitos** y **sacos** que vende Nira guardan muchas monedas en una sola casilla. Toca **«Ordenar»**: mete el oro en ellos y coloca la mochila.', target: 'sort-backpack', action: 'click' },
       { text: 'Este es tu **bolsillo seguro**: lo que guardes ahí **no se pierde al morir**. Caben cosas pequeñas, como llaves o saquitos. Arrastra ahí lo más valioso antes de bajar.', touch: 'Este es tu **bolsillo seguro**: lo que guardes ahí **no se pierde al morir**. Caben llaves o saquitos: toca uno y luego una casilla del bolsillo.', target: 'alijo-pocket' },
       { text: 'Pulsa **«Vaciar mochila»**: todo lo que llevas pasa al almacén, donde está a salvo.', touch: 'Toca **«Vaciar mochila»**: todo lo que llevas pasa al almacén, donde está a salvo.', target: 'empty-backpack', action: 'click' },
       { text: 'Ahora, la pestaña **Bastión**. Haz clic en ella.', touch: 'Ahora, la pestaña **Bastión**. Tócala.', target: 'tab-merchants', action: 'click' },
@@ -85,7 +85,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   {
     id: 'tab.misiones', topic: 'mercaderes', trigger: 'tab:quests', badge: 'tab-quests',
     steps: [
-      { text: 'Tu **tablón**: cada nota es un encargo aceptado. Haz clic en una para ver qué piden, fijarla o dejarla; cuando está cumplida, **Cobrar** sale en la propia nota.', touch: 'Tu **tablón**: cada nota es un encargo aceptado. Toca una para ver qué piden, fijarla o dejarla; cuando está cumplida, **Cobrar** sale en la propia nota.', target: 'screen-quests' },
+      { text: 'Tus **misiones**: cada una es un encargo aceptado. Haz clic en una para ver qué piden, fijarla o dejarla; cuando está cumplida lleva un sello verde y puedes **Cobrar**.', touch: 'Tus **misiones**: cada una es un encargo aceptado. Toca una para ver qué piden, fijarla o dejarla; cuando está cumplida lleva un sello verde y puedes **Cobrar**.', target: 'screen-quests' },
       { text: 'Cada encargo cumplido sube tu **reputación** con quien te lo dio.' },
     ],
   },
@@ -105,7 +105,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   },
   // ── Pestañas y pantallas ──
   {
-    id: 'tab.intendencia', topic: 'cuerpo', trigger: 'stash:status',
+    id: 'tab.intendencia', topic: 'cuerpo', trigger: 'tab:estado', badge: 'tab-estado',
     steps: [
       { text: 'Aquí ves tu **cuerpo** parte por parte y tus **necesidades**: saciedad, hidratación y descanso.', target: 'intendencia-status' },
       { text: 'Si algo está herido y llevas con qué curarlo, sale un botón. **Pruébalo**.', target: 'body-quick', action: 'click' },
@@ -115,7 +115,8 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     id: 'tab.personaje', topic: 'progresion', trigger: 'tab:character', badge: 'tab-character',
     steps: [
       { text: 'Tus **ataques** salen de tus armas: cada mano trae los suyos. Para cambiarlos, cambia de arma en el **Alijo**.', target: 'skill-arc' },
-      { text: 'La **habilidad de clase** se gana por hitos de nivel, en el panel **Clase**. Solo llevas una equipada.', target: 'character-panels' },
+      { text: 'La **habilidad de clase** se gana por hitos de nivel: los rombos **Nv 1 · 20 · 40 · 60 · 80** del panel **Habilidades**. Toca uno para ver sus opciones y equiparla; solo llevas una.', target: 'character-skills' },
+      { text: 'Al tocar una habilidad, en **Atributos** se marca en verde lo que mejora y en rojo lo que cuesta mientras dura.', target: 'character-stats' },
     ],
   },
   {
@@ -171,10 +172,19 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     ],
   },
   {
+    id: 'insure.first', topic: 'objetos', trigger: 'insure:first', narrator: 'valerius', overModal: true,
+    steps: [
+      { text: 'Antes de bajar puedes **asegurar** lo que llevas puesto. Cubre **solo esta bajada**: toca cada pieza o pulsa **Todo**.', target: 'insure-grid' },
+      { text: 'Si caes, te la **reforjo**, con Brand en la forja. La recoges conmigo, en la pestaña **Seguro** de la armería.', target: 'insure-total' },
+    ],
+  },
+  {
     id: 'bastion.first-sale', topic: 'objetos', trigger: 'bastion:sale',
     steps: [
       { text: 'Bien vendido. El oro va a tu **Alijo**, en saquitos.' },
       { text: 'Si te equivocas, lo último que vendes se puede **recomprar** al mismo precio.' },
+      { text: 'Cada mercader compra **lo de su oficio**. La ficha de cada objeto te dice a quién llevárselo.' },
+      { text: 'Lo que no quieras vender nunca, **protégelo** desde su ficha: con el candado no se vende ni se desguaza.' },
     ],
   },
   {
@@ -233,37 +243,43 @@ function VENDOR_MINIS(): MiniTutorial[] {
   return [
     v('nira', [
       { text: 'Cuero, comida, saquitos para tu oro. Lo que necesites para no morir de tont{o|a}.', target: 'vendor-view-shop' },
-      { text: 'Y si traes chatarra, la compro: **márcala y pulsa Vender**.', touch: 'Y si traes chatarra, la compro: **márcala y toca Vender**.', target: 'vendor-view-sell' },
+      { text: 'Te compro cuero, tela y armadura ligera. Y lo de quien aún no tenga su taller en pie. En **Vender**, «Todo lo vendible» te lo marca de una vez.', target: 'vendor-view-sell' },
       { text: 'Te iré pidiendo cosas: aquí ves **cuántos encargos** tengo para ti. Cúmplelos y subirá tu **reputación** conmigo.', target: 'vendor-quests-link' },
       { text: 'Y en mi **Curtiduría** te enseño a trabajar el cuero y la tela.', target: 'vendor-view-station' },
     ]),
     v('vesper', [
       { text: 'Vendas, pociones y remedios. Lo justo para volver de una pieza.', target: 'vendor-view-shop' },
       { text: 'Si vuelves rot{o|a}, en la **Enfermería** te recompongo. Cobro, claro. La fe no da de comer.', target: 'vendor-view-infirmary' },
+      { text: 'Hierbas, pociones y vendas que no uses, **véndemelas** a mí.', target: 'vendor-view-sell' },
     ]),
     v('garth', [
       { text: 'Comida y agua. Ahí abajo el hambre mata tan bien como un esqueleto.', target: 'vendor-view-shop' },
+      { text: 'Carne, setas, harina… lo que traigas de comer, **te lo compro**.', target: 'vendor-view-sell' },
       { text: 'En mi **Cocina** te enseño a guisar. Un buen plato te deja **preparad{o|a}** para bajar.', target: 'vendor-view-station' },
     ]),
     v('orik', [
-      { text: 'Herramientas y cachivaches. Y te arreglo lo que traigas abollado.', target: 'vendor-view-repair' },
+      { text: 'Herramientas y cachivaches. Y te **compro** metal, madera y chatarra.', target: 'vendor-view-sell' },
       { text: 'Lo que no uses, al **Desguace**: lo despiezo y te llevas el material. Con el **Banco de trabajo** en pie, rinde más.', target: 'vendor-view-scrap' },
     ]),
     v('grizk', [
       { text: 'Presto oro y compro lo que otros no quieren. Con intereses, claro.', target: 'vendor-view-shop' },
+      { text: 'Joyas, gemas, cálices, llaves… **véndemelos** a mí. Pago mejor que nadie.', target: 'vendor-view-sell' },
       { text: 'Y en **Contratos** te alquilo espadas. Algunas son leales. Otras, no tanto.', target: 'vendor-view-contracts' },
       { text: 'Los que venden su espada duermen en mi **Catre**. Tú también, si pagas la noche.', target: 'vendor-view-station' },
     ]),
     v('brand', [
       { text: 'Armas. Buenas, si las pagas. En la **Forja** te hago las tuyas con tu metal.', target: 'vendor-view-station' },
       { text: 'Y lo que traigas mellado, lo **reparo**. Un filo roto no corta nada.', target: 'vendor-view-repair' },
+      { text: 'Las armas que no quieras, **véndemelas**.', target: 'vendor-view-sell' },
     ]),
     v('valerius', [
       { text: 'Placas y cotas. Lo que se interpone entre tus tripas y una hoja.', target: 'vendor-view-shop' },
       { text: 'En mi **Forja de armaduras** te hago las tuyas: yelmos, corazas y escudos. Los lingotes, pídeselos a Brand.', target: 'vendor-view-station' },
+      { text: 'Armadura pesada y escudos que te sobren, **véndemelos**. La ligera, a Nira.', target: 'vendor-view-sell' },
     ]),
     v('eldrin', [
       { text: 'Pociones, polvos y frascos. No los agites cerca de una antorcha.', target: 'vendor-view-shop' },
+      { text: 'Esencias, reactivos, tomos y orbes: **véndemelos**.', target: 'vendor-view-sell' },
       { text: 'En mi **Laboratorio** te enseño a destilarlos tú, y a tallar cristales y tinta para el equipo mágico. Con cuidado.', target: 'vendor-view-station' },
     ]),
   ];
@@ -373,7 +389,7 @@ function EXPEDITION_MINIS(): MiniTutorial[] {
       { text: 'Cuando anuncie un golpe fuerte, ponte en **Guardia**: lo encajas mucho mejor y queda expuesto después.' },
     ] },
     { id: 'exp.boss', topic: 'combate', trigger: 'exp:boss', inCombat: true, steps: [
-      { text: '**Jefe** de la subzona. Vencerlo abre la siguiente. Si huyes, conserva la vida que le hayas quitado.' },
+      { text: '**Jefe** de la subzona. El de la última subzona de cada zona abre la siguiente. Si huyes, conserva la vida que le hayas quitado.' },
       { text: 'Al bajar de la mitad de la vida cambia de fase y de golpes. Guarda algo para entonces.' },
     ] },
     { id: 'combat.class-skill', topic: 'combate', trigger: 'combat:class-skill', inCombat: true, steps: [

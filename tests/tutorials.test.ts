@@ -49,7 +49,7 @@ describe('bienvenida al Bastión', () => {
     expect(w.narrator).toBe('intendant');
     expect(w.trigger).toBe('lobby:welcome');
     expect(w.steps[w.steps.length - 1].target).toBe('btn-enter-dungeon');
-    expect(w.steps.filter((s) => s.action === 'click').map((s) => s.target)).toEqual(['tab-stash', 'group-gold-backpack', 'empty-backpack', 'tab-merchants', 'tab-play']);
+    expect(w.steps.filter((s) => s.action === 'click').map((s) => s.target)).toEqual(['tab-stash', 'sort-backpack', 'empty-backpack', 'tab-merchants', 'tab-play']);
   });
   it('un perfil nuevo no ve el cartel viejo de la mazmorra', async () => {
     const { createProfile } = await import('../src/core/profile');

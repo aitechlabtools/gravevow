@@ -17,6 +17,7 @@ const SIZES = [
 async function run(s) {
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: s.vp, hasTouch: s.touch, isMobile: s.touch });
+  await ctx.addInitScript(() => localStorage.setItem('gv-consent', JSON.stringify({ analytics: false })));
   const p = await ctx.newPage();
   const errs = [];
   p.on('pageerror', (e) => errs.push(e.message));
@@ -85,7 +86,7 @@ async function run(s) {
   await p.waitForTimeout(200);
   await act('slot-backpack-0');
   await p.screenshot({ path: `${OUT}/${s.n}-saquito.png` });
-  const sheetBtn = async (id) => { const els = await p.$$(`[data-testid=${id}]`); for (const e of els) if (await e.isVisible()) { if (s.touch) await e.tap(); else await e.click(); await p.waitForTimeout(250); return; } fail('no se ve ' + id); };
+  const sheetBtn = async (id) => { const tab = await p.$('[data-testid=item-sheet-open]'); if (tab && await tab.isVisible() && (await tab.getAttribute('aria-expanded')) !== 'true') { await tab.tap(); await p.waitForTimeout(300); } const els = await p.$$(`[data-testid=${id}]`); for (const e of els) if (await e.isVisible()) { if (s.touch) await e.tap(); else await e.click(); await p.waitForTimeout(250); return; } fail('no se ve ' + id); };
   await sheetBtn('act-withdraw');
   await act('amt-mas10');
   await p.screenshot({ path: `${OUT}/${s.n}-sacar.png` });
@@ -93,7 +94,7 @@ async function run(s) {
   let gold = await p.evaluate(() => window.__GRAVEVOW__.getState().profile.backpack.map((x) => x ? `${x.itemId}:${x.qty}:${x.gold ?? ''}` : '-').slice(0, 5).join());
   if (!gold.startsWith('gold_pouch:1:17,gold_coins:10:,gold_coins:10:,gold_coins:7:')) fail('sacar 20 monedas: ' + gold);
   { const x = await p.$('[data-testid=item-sheet] [aria-label="Cerrar la ficha"]'); if (x) { if (s.touch) await x.tap(); else await x.click(); await p.waitForTimeout(200); } } // móvil: la ficha ocupa el sitio de la mochila
-  await act('group-gold-backpack');
+  await act('sort-backpack');
   gold = await p.evaluate(() => window.__GRAVEVOW__.getState().profile.backpack.filter(Boolean).map((x) => `${x.itemId}:${x.gold ?? x.qty}`).join());
   if (gold !== 'gold_pouch:44') fail('agrupar oro: ' + gold);
   await p.evaluate(() => { const G = window.__GRAVEVOW__; const pr = G.getState().profile; G.setState({ profile: { ...pr, backpack: pr.backpack.map(() => null) } }); });

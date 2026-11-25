@@ -4,6 +4,64 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 25/11 (9): Alijo › Equipo, versión 3
+- Aventurero · Equipo (muñeco de ranuras + mochila con bolsillo seguro y oro) · Almacén, según la captura del usuario. Móvil sin cambios (personaje con casillas alrededor). Capturas `mockups/plan-interfaz-2/alijo/v3-*`.
+
+## Novedades del 25/11 (8): Habilidades, versión 3 (todo a la vista)
+- Atributos · héroe · Habilidades (fichas por mano, hitos de clase en rombos y detalle con Equipar/Elegir). Los atributos marcan lo que cambia la habilidad elegida. Sin pestañas. Mini tutorial `tab.personaje` actualizado (3 pasos). Prueba: `habilidades/pestanas.cjs`.
+
+## Novedades del 25/11 (7): Habilidades rehecha
+- Héroe grande con su círculo a la izquierda y un panel con pestañas Ataques · Habilidades de clase a la derecha, en los tres formatos (ver guia-interfaz › Habilidades). Fuera el camino vertical de hitos: ahora línea horizontal y solo el próximo hito. Ninguna regla cambia.
+- Retoque: el héroe en un panel con cabecera (clase, nombre y nivel) y barra de pista abajo; tarjetas de ataque con icono e indicadores rotulados. Tocar una tarjeta de clase ya no cambia de pestaña (`habilidades/pestanas.cjs`).
+- Fichas verticales que llenan el panel en Ataques y en Habilidades de clase (estructura de las capturas del usuario).
+- Capturas: `mockups/plan-interfaz-2/habilidades/capturar.cjs` (`NV=40` hito por elegir, `CLASE=mage`).
+
+## Novedades del 25/11 (6): mismo diseño en móvil y tableta
+- Regla: escritorio, tableta y móvil llevan siempre el mismo diseño, adaptado al espacio.
+- Heridas en tableta: arreglado el solape del cuerpo con «Tus curas» (consulta de contenedor a 500 px; antes 540).
+- Móvil: Misiones con el diario (Detalle · Tablón en pestañas), Alijo › Equipo con el personaje y las casillas alrededor, Heridas con la mochila de curas, estación en ruinas con el dibujo al lado y el seguro con la lista desplazable. Quitada la vista antigua de Misiones del móvil (`Misiones.tsx` ya solo monta `QuestJournal`) y `EquipmentGrid` del Alijo.
+- Alijo › Equipo: almacén con título «◆ Almacén ◆» y casillas del mismo tamaño que el resto (barra de desplazamiento si no caben las 15 filas). Columnas: personaje (resto) · mochila · almacén (a su ancho).
+- Capturas `movil-adaptado-*` en `mockups/plan-interfaz-2/{misiones,alijo,ruinas}`; prueba `misiones/funcional-movil.cjs`.
+
+## Novedades del 25/11 (5): plan de interfaz 2, fase E (mapa de zonas ilustrado)
+- `ZoneMap` (`screens/Jugar.tsx`) con la estructura del usuario: ✕ arriba (`btn-zone-map-close`), dibujo del descenso a la izquierda (`mapArt.ts`, 160×150 px por código, provisional; ×3/×2/×1 según alto) con nombres de estrato y 10 marcadores (`map-node-*`: elegida dorada, jefe roja, cerradas con candado), y a la derecha pestañas de zona en fila (`zone-tab-*`), subtítulo, motivo del bloqueo una vez (`zone-lock`), subzonas y ficha del jefe (`zone-boss`). En móvil los marcadores son de adorno y se elige en la lista. Tocar pestaña, franja o marcador cerrado no elige expedición. Pruebas: `mockups/plan-interfaz-2/fase-e/funcional.cjs` y `capturar.cjs`.
+
+## Novedades del 25/11 (4): plan de interfaz 2, fase D (mercaderes y servicios)
+- Letra base en móvil horizontal 12 px (antes 11; `html{font-size}` en `game.css`). Pestañas de la venta, candado de Contratos y punto de aviso a 12 px mínimo. Nombres a dos líneas: tienda (`.shop-name` con `line-clamp-2`), seguro (`.ins-card-name` con guiones), nombre y estación del mercader en la columna. Botón «Ir» de materiales y −/+ de fabricar con 44 px.
+- Medición: `mockups/plan-interfaz-2/fase-d/medir.cjs` (todas las vistas de los 8 mercaderes, 7 tamaños, ruinas y reconstruidas; `SOLO=1366,844` para limitar). Ojo: los clics de Playwright cuentan como ratón y quitan `is-touch`; el script simula un toque antes de medir.
+
+## Novedades del 25/11 (3): plan de interfaz 2, fase C (Alijo)
+- Heridas en móvil: el panel lleva `.body-cq` (consulta por ancho); por debajo de 360 px el cuerpo pasa a 64 % y las etiquetas miden 44 px. En pantallas bajas la etiqueta de la cabeza va a la derecha para no pisar el tórax (en 640×360 aún se rozan 3 px). El almacén en portátil no se toca: 15 filas por página siempre piden desplazar.
+
+## Novedades del 25/11 (2): plan de interfaz 2, fase B (estaciones)
+- `StationDetail` mide su ancho: por debajo de `STATION_WIDE_MIN` (1000 px) pliega niveles y mejora en la cabecera «Niveles y mejora ▾» también en escritorio (portátil 1280–1600). `CraftPanel` mide la ficha: en escritorio estrecho usa tamaños de tableta (icono 128/96, título 22/20). Nombres de receta y botones del mercader (`.vtab-lbl`) a dos líneas en vez de «…». Comprobación: `mockups/plan-interfaz-2/fase-b-estaciones.cjs` (8 estaciones, 5 tamaños, fabricar a mochila y almacén).
+- Botón «Volver al Bastión» del mercader: el castillo se quita si el botón no tiene alto (`@container`, `.vback-card`); la ficha del retrato mide `clamp(220px, 36vh, 380px)` en escritorio para que en pantallas de 720–768 px de alto el botón quede a la vista sin desplazar.
+
+## Novedades del 25/11: plan de interfaz 2, fase A (barra superior)
+- Revisado el plan de ChatGPT con mediciones reales: `docs/plan-interfaz-2.md` (fases A–E, capturas en `mockups/plan-interfaz-2/baseline/`).
+- Fase A hecha: si los nombres de las pestañas no caben (portátil 1280–1450 px), `PillBar` lo mide y pone `.ui-pills.tight` (solo iconos y el nombre de la activa; nombre al pasar el ratón). Retrato `nav-chip` con 44 px de ancho mínimo. Comprobación: `mockups/plan-interfaz-2/fase-a/medir.cjs` (9 tamaños).
+
+## Novedades del 24/11 (4): retoques de la venta
+- Fuera las iniciales del comprador en todas las casillas (también en el Alijo) y la caja «Compra: …» de todos los mercaderes. Si el especialista no tiene estación, lo avisa la lista «A vender» (`sell-closed`). Pestañas y páginas elegidas de la venta, en dorado. Almacén de la venta: casillas a lo ancho hasta 80 px (`StashPanel fill`).
+
+## Novedades del 24/11 (3): rediseño de la pantalla de venta
+- Tres columnas. Izquierda: el mercader con «Compra: …» (`vendor-buys`; si su estación está en ruinas, `sell-closed`). Centro: pestañas Mochila · Almacén · Compartido (`sell-tab-*`; el almacén con sus páginas, sin la de Compartido) y barra `sell-tools`: «Vendibles», rareza, tipo, «Todo lo vendible (mochila / esta página)», «Comunes (…)» y «Limpiar». Derecha: lista «A vender» (cantidad elegible en las pilas, «Por precio»), ficha del objeto elegido y, abajo fija, objetos, oro actual, total, oro después y el botón.
+- Los filtros solo apagan casillas (`SellFilter`, `.slot-filtered`): nada cambia de sitio. La selección se recuerda entre pestañas y páginas. Lo del Compartido no se vende (como antes): sale apagado y lo dice.
+- Vender N unidades: `sell(..., n)` y `sellMany` con `qty`. Precios sin cambios.
+- Candado (nuevo, se guarda en el objeto: `ItemStack.locked`): «Proteger / Quitar candado» en la ficha (Bastión y venta), `actions.toggleLock`. Lo protegido no se vende ni se desguaza y queda fuera de la selección rápida. Partidas antiguas: sin el campo, sin candado.
+- Confirmación solo para épico, legendario o mejor que lo equipado (antes también raro). Recompra igual. Aviso «+N oro» animado junto al botón (`sale-pop`, 0,9 s, sin bloquear); la venta desde esta pantalla ya no saca el aviso de abajo.
+- Las iniciales del comprador ya no salen en la venta (siguen en el Alijo). Se quitaron «Vender todo lo que compro» y su ventana: lo sustituye «Todo lo vendible».
+- Comprobación: `mockups/venta-ui/real.cjs` (32 ✓). `mockups/venta-oficio/real.cjs` queda obsoleto (usaba el botón quitado).
+
+## Novedades del 24/11 (2): venta por oficio
+- Plan en `docs/plan-venta-oficio.md` (implementado, con las recomendaciones aprobadas); maquetas y capturas reales en `mockups/venta-oficio/` (`real.cjs`: 93 comprobaciones).
+- Los 8 mercaderes compran (`buysItems: true`), cada uno lo de su oficio. Reglas en `src/core/sellRoutes.ts`: `buyerOf` (especialista), `whoBuys` (si su estación sigue en ruinas, Nira), `isHeavy`, `wrongBuyerText`, `TRADE`, `PLACE`, `BUYER_TAG`.
+- Reparto: Nira cuero, tela, armadura ligera y mochilas; Vesper pociones, remedios y hierba amarga; Garth comida e ingredientes; Orik metal, madera, chatarra, herramientas y antorchas; Grizk joyas, tesoros y llaves (×1,25, siempre); Brand armas y dagas secundarias; Valerius armadura pesada y escudos; Eldrin reactivos, bombas, runas, tomos y orbes. Planos: el dueño de la estación de su receta.
+- Pesada = escudo, `heavy: true` en la ficha (guanteletes de forja) o solo para guerreros y clérigos.
+- Precio: el especialista paga un 10 % más (`SPECIALIST_BONUS`); Nira por cuenta de otro, el de siempre. `buysThis(vendor, itemId, profile)` ahora pide el perfil.
+- Interfaz: en «Vender», lo que no compra sale apagado (`slot-nobuy`) y al marcarlo o arrastrarlo avisa a quién se vende (la caja «Lo que compro» y «Vender todo lo que compro» se sustituyeron el 24/11, ver arriba). Iniciales del comprador en cada casilla del Bastión (`slot-buyer`, arriba a la derecha) y «Lo compra X · lugar» en la ficha y en la ventanita.
+- Tutoriales: `vendor.*` con un paso de venta (el de Orik ya no habla de reparar), `bastion.first-sale` con un paso nuevo.
+
 ## Novedades del 22/11 (2): Contratos de Grizk más visuales
 - `ContractsPanel.tsx` rehecho según `mockups/contratos`: rejilla de bustos (cabeza y pecho, escala entera) por zona, con 🔒 y el rango necesario en los bloqueados y silueta «¿?» en los desconocidos; ficha con busto grande, oficio, frase y habilidades como chips (descripción al pasar el ratón); cuatro cifras grandes con icono (vida, ataque, defensa, velocidad); duración en tres botones grandes con precio y descuento; actitud en dos botones (la explicación en el título); botón final que dice lo que falta. Fuera la nota que decía que caben mercenario y errante a la vez.
 - Ordenador, tableta y móvil: en tableta y móvil se ocultan la frase y las habilidades y los bustos son más pequeños; en tableta las cifras van en 2 × 2. Estilos: bloque «Contratos de Grizk» de `game.css`. Se mantienen todos los `data-testid`.
@@ -840,3 +898,82 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - Móvil: el cajón lateral «Mochila» ya no sale en la tienda ni en otras pestañas; solo queda para vender («A vender») y para fabricar («Materiales»). La mochila se mira en el Alijo.
 - Tutorial vendor.nira: el paso de encargos señala el aviso (vendor-quests-link) con texto nuevo; mismo id.
 - misiones-check ajustado. Capturas: mockups/mercader-encargos.
+
+## Novedades del 23/11 — Botín en el móvil
+- Cofres, cadáveres y bolsas en el móvil se abren en una ventana flotante (600×320 como mucho) y la mazmorra se ve oscurecida detrás; tocar fuera o ✕ la cierra.
+- Dentro | Tuyo, con casillas de 44 px. Barra de abajo: sin nada tocado, «Coger el oro (n)» y «Cogerlo todo»; al tocar un montón, «− n +», «Mitad», «Todo» y «Coger n» (y «Dar n» si Kael espera su parte). Lo que no coges se queda dentro.
+- Acción nueva actions.takeSome(loc, n, lootId) (las monedas van primero a saquitos y sacos). Tableta y escritorio sin cambios.
+- Maqueta y prueba: mockups/botin-movil (real.cjs comprueba coger una parte de pociones y de monedas).
+
+## Novedades del 23/11 (2) — Jefes de zona solo en la última subzona
+- Ya era así en los mapas generados: cada subzona tiene su jefe fijo (subzones.ts) y el jefe de zona (zones/*.ts → boss) es el de la última (Mazmorras del Bastión: Señor del Osario; Panteón de los Nobles: Reina Velada; Trono de las Cadenas: Belzar). Sale siempre, sin probabilidad.
+- Excepción corregida: el mapa hecho a mano de la primera expedición con el tutorial saltado (CRYPTS_OF_UMBRAVEL, core/dungeon.ts) tenía al Señor del Osario a nivel 1; ahora su jefe es Mordrek.
+- «El trono vacío» (q_lord): minLevel 20 y descripción con la subzona. Las ya aceptadas se conservan.
+- Mapa de zonas: «Jefe de la zona: X · en <última subzona>». Bestiario: la ficha de jefes y élites muestra su subzona y «Jefe de zona».
+- Mini tutorial exp.boss: «El de la última subzona de cada zona abre la siguiente».
+- Partidas: bossesDefeated guarda ids de enemigo, no sitios; nada cambia para quien ya abrió zonas.
+- Capturas: mockups/jefes-ultima-subzona (index.html, antes/después).
+- 23/11: arreglado el fallo de compilación (holdsToasts). El botín en móvil y los jefes se copiaron sobre una versión antigua de store.ts, DungeonScreen.tsx, game.css, tutorials.ts y este archivo, y borraron lo del 22/11 (reparto con Kael, holdsToasts). Ahora están fusionados: la ventana flotante del móvil usa el selector de cantidad y el reparto del 22/11 (takeFromLoot, «Para mí» / «Para Kael»); quitada mi acción duplicada takeSome.
+
+## 24/11 — Arreglo: en el móvil la ventana del botín se cerraba sola
+
+- Síntoma: en el móvil, al usar un cofre, una bolsa o un cadáver con el botón «Usar», la ventana no llegaba a verse. El cofre quedaba abierto, pero sin poder coger nada.
+- Causa: el botón «Usar» actúa al apoyar el dedo. El «clic» de ese mismo toque caía sobre el fondo oscuro de la ventana flotante (23/11), y el fondo la cerraba.
+- Arreglo (`DungeonScreen.tsx`, LootModal en el móvil): el fondo solo cierra la ventana si el toque empezó en él. Tocar fuera para cerrarla sigue funcionando.
+- Comprobado: probado en el móvil con «Usar» junto a un cofre, y `mockups/botin-movil/real.cjs` pasa. También se probaron cofres de todas las zonas, sacos de enemigos y el reparto con un aliado, y todo da botín.
+
+
+## 24/11 — Combate: esqueleto de heridas, fichas nuevas y barra con el texto a la izquierda
+- **Qué había:** el esqueleto (`BodyFigure`) estaba en la ficha del combate desde el 11/11, pero a 18-27 px y sin poder pulsarse; el 19/11 se ocultó en el móvil. Las fichas de los enemigos tapaban a los esqueletos en el móvil en 2 contra 2.
+- **Ahora** (`CombatScreen.tsx`: `FoeCard`, `AllyStrip`, `HeroCard`; CSS al final de `game.css`, bloque «Combate 24/11»): fichas de enemigos arriba a la izquierda; tu ficha con el esqueleto pulsable y la tira del aliado abajo a la derecha, sobre los botones; texto a la izquierda y botones a la derecha en todos los tamaños, sin subtítulos; sin zona ni orden de turnos; enemigos más abajo, sobre el suelo, y sombras pegadas a los pies. El esqueleto abre el menú de heridas de siempre y parpadea en la zona que cambia. Escala con `--k` (móvil 1, tableta 1,5, escritorio grande 2). Detalle en `docs/guia-interfaz.md` › Combate.
+- **Retoques tras verlo:** escudo dorado con el nivel en enemigos, aliado y héroe; estados con su nombre («Veneno 3», «Congelación 2») e intención del enemigo («⚠ Golpe pesado → ti») bajo la barra de vida.
+- **Reglas sin cambios:** abrir el menú no gasta turno; curar lo gasta (por `combatAct`).
+- **Comprobado:** `npx tsc`, 512 tests; `mockups/combate-heridas-barras/real.cjs` (36 comprobaciones en móvil, tableta y escritorio, 1 contra 1 y 2 contra 2: sin solapes con sprites ni barra, esqueleto de 44 px o más, nada por debajo de 12 px salvo ▶, el menú no gasta turno, parpadeo); `scripts/curas-check`, `grupos-check` e `intenciones-check` pasan. `scripts/bombas-check` ya fallaba antes de este cambio (no encuentra `use-nail_bomb`): pendiente aparte.
+- **Cómo probar:** con `?debug`, en la mazmorra: `__GRAVEVOW__.actions.startCombat('pve','e1','skeleton',{entityId:'e2',enemyId:'skeleton'})` (2 contra 1; para 2 contra 2, antes `setState({rival:{...getState().rival, who:'kael', disposition:'allied', hp:60, potions:1}})`). Heridas: copia `expedition.body`, cambia `parts.armL.fracture=true`, `parts.legR.bleed=2`, etc., y `setState` antes de empezar el combate.
+
+
+## 24/11 — Seguro de equipo por bajada
+- **Qué es:** al pulsar «Descender» se pregunta qué piezas del **equipo puesto** se aseguran para esa bajada (4 % del valor del ejemplar, mínimo 1). Si caes (o se acaba el tiempo) con ellas puestas, quien las fabrica te las reforja: Brand (armas y anillos), Valerius (armaduras y escudos) y Eldrin (amuletos). Vuelven como las bajaste, con la durabilidad entera y sin seguro. Si extraes, el seguro se gasta. Solo con la estación del mercader reconstruida.
+- **Código:** `config/insurance.ts` (porcentaje, mínimo, quién reforja cada ranura), `core/insurance.ts` (coste, ranuras, pago, recogida) y `core/insuranceLoss.ts` (reforja al caer; aparte para no crear importaciones circulares desde `core/expedition.ts`). `Profile.insurePlan`, `insureAsk` y `reforged`; `ExpeditionState.insured`; `ExpeditionSummary.reforged`. `enterDungeon(zona, ranuras)` cobra y guarda los `uid`. Interfaz en `ui/InsurePanels.tsx` y `kit/Seal.tsx`; pestaña `insure` en `Mercaderes.tsx`; sello en `inventory.tsx`; nota en `SummaryScreen.tsx`; opción en Ajustes › Partida; mini tutorial `insure.first`.
+- **Partidas guardadas:** todo es opcional; los perfiles antiguos cargan sin nada asegurado ni pendiente.
+- **Comprobado:** `npx tsc`, 520 tests (8 nuevos en `tests/insurance.test.ts`); `mockups/seguro-equipo/real.cjs` (42 comprobaciones en escritorio, tableta y móvil: ventana, casillas de 44 px o más, cobro, sellos, resumen, marca en el Bastión, recogida, mini tutorial, sin errores).
+- **Cómo probar:** con `?debug`, reconstruye la Forja o la Forja de armaduras (o en la consola: `p = __GRAVEVOW__.getState().profile; __GRAVEVOW__.setState({ profile: { ...p, refuge: { ...p.refuge, forge: 1, armory: 1, alchemy: 1 } } })`). Pulsa «Descender», marca piezas y «Asegurar y bajar». Para morir al momento: `__GRAVEVOW__.actions.finishExpedition('died')`. Vuelve al Bastión y entra en Maese Brand o Valerius.
+
+- **Retoque (24/11):** la pestaña «Seguro» explica cómo funciona (cuatro cajas) y enseña cada pieza con el color y el nombre de su rareza, sus estadísticas, atributos, runas y durabilidad, con su botón «Asegurar». Los escudos los reforja Valerius. Capturas y comprobaciones: `mockups/seguro-equipo/pestana.cjs` (15) y `real.cjs` (42).
+
+## 24/11 — Una función por mercader
+- «Reparar» solo con Brand (fuera de Orik y Nira), «Seguro» solo con Valerius (fuera de Brand y Eldrin), «Desguace» solo con Orik. Tiendas, venta y estaciones sin cambios. El seguro funciona igual (por bajada, 4 %); todas las piezas reforjadas se recogen en Valerius, también las guardadas antes a nombre de Brand o Eldrin. Mini tutorial `insure.first` contado por Valerius.
+- **Código:** `servicesOf` en `Mercaderes.tsx`; `config/insurance.ts` (todo a Valerius, con la estación de quien fabrica); `pendingFor` y `collectReforged` en `core/insurance.ts`.
+- **Comprobado:** 521 tests; `mockups/seguro-equipo/pestana.cjs` (pestañas de Brand, Orik, Nira, Eldrin y Valerius en los tres tamaños) y `real.cjs` (42).
+- **Cómo probar:** entra en Brand (Tienda, Reparar, Forja), Orik (Tienda, Desguace, Banco de trabajo), Nira (Tienda, Vender, Curtiduría) y Valerius (Tienda, Seguro, Forja de armaduras). El seguro se prueba como en la sección anterior; ahora se recoge en Valerius.
+
+## 25/11 · Ventana «¿Aseguras tu equipo?» reestructurada
+- Dos columnas: «Equipamiento» (casillas con ✓ dorado) y «Asegurado · n/m» (una fila por pieza asegurable, casilla, nombre con color de rareza y precio; tocar la fila marca/desmarca). Todo/Nada arriba de la lista.
+- Pie: «Oro disponible», «Coste total» (rojo si falta oro) y los botones «Bajar sin asegurar» / «Asegurar y bajar» en fila.
+- Móvil: filas de 44px al tacto; la lista hace scroll si no cabe. Mapa de zonas revertido al original (fase E descartada).
+- Capturas: mockups/plan-interfaz-2/seguro/.
+
+## 25/11 · Alijo reestructurado (Equipo y Heridas)
+- Equipo (escritorio/tableta): «Personaje y equipo» (clase·nivel, barra XP, personaje que llena el arco con escala entera, ranuras alrededor: Arma/Manos/Pies/Anillo | Cabeza/Torso/Secundaria/Amuleto, atuendo y mochila debajo, atributos) · «Mochila» (ocupación y oro, rejilla, carga, en riesgo, Ordenar/Depositar/Materiales, bolsillo) · Almacén sin cambios.
+- Heridas: Aventurero con barra de Vida + necesidades · «Estado físico» (franja de estado, cuerpo de bloques `BlockBody` solo en modo `full`, ficha con barra, «Estados activos») · Mochila con filtro Todo/Curación y «Ordenar mochila».
+- Móvil sin cambios de estructura. Capturas y script: mockups/plan-interfaz-2/alijo/ (VISTA=heridas, SOLO=).
+
+## 25/11 · Estaciones en ruinas (página intermedia simple)
+- `RuinPanel` (StationPanels.tsx, clases `.ruin*`): nombre + «En ruinas», dibujo en ruinas que llena el alto libre (escala entera; móvil franja de 70 px), «Materiales necesarios» en fichas centradas (icono, nombre, tienes/necesitas; la que falta lleva a su fuente al tocarla) y «Reconstruir» con el motivo del bloqueo.
+- Columnas izquierda (mercader) y derecha (tus materiales) sin cambios; estaciones reconstruidas sin cambios. Capturas y script: mockups/plan-interfaz-2/ruinas/.
+
+## 25/11 · Misiones como diario en tres columnas
+- `QuestJournal` (src/game/ui/QuestJournal.tsx, clases `.qj*`), escritorio y tableta: «Tus misiones» (tarjetas compactas con clavo/chincheta, estado y sello «Lista/Cumplida»; listas primero; «+N espacios disponibles») · «Detalle de misión» (arte, objetivo con barra, recompensas en fichas, Cobrar/Entregar, Visitar a…, Fijar, Abandonar con confirmación) · «Tablón de encargos» (filtro Todos/mercader, encargos en fichas horizontales).
+- Móvil: sigue el diseño anterior (notas). «Visitar» abre al mercader (Lobby `onVisit`).
+- Scripts: mockups/plan-interfaz-2/misiones/capturar.cjs y funcional.cjs (aceptar, cobrar, abandonar, visitar).
+
+### 25/11 · Pulido Habilidades y Alijo
+- Habilidades: fuera el recuadro «Efectos de la habilidad» (los efectos ya salen en los atributos y en la ficha); personaje más grande y algo más arriba; ímpetu y recarga más grandes en las cartas; al tocar un hito sin elegir, sus opciones ocupan el hueco libre del panel.
+- Alijo › Equipo: columnas 25/35/40 (Aventurero · Equipo · Almacén; almacén a 10 columnas en escritorio ancho); el Aventurero usa el mismo arco que Habilidades (SkillArc compact, sin etiquetas); muñeco de ranuras más apretado; carga y botones de la mochila en un pie fijo (backpack-foot); al elegir una pieza, los atributos marcan en verde/rojo lo que ganarías o perderías (HeroStats preview, data-preview).
+- **Apartado ESTADO (25/11):** nueva pestaña del menú tras Alijo (`tab-estado`, icono de cruz de hierro en kit/tabIcons.ts). Muestra lo que era Alijo › Heridas (Aventurero con necesidades, Estado físico y Mochila de curación), con el mismo componente (`<Alijo section="status">`). El Alijo ya no tiene selector Equipo / Heridas (en el móvil quedan Equipo y Almacén). Aviso de lesiones: número rojo en el icono (`tab-badge-estado`, aria «Estado, n lesiones») con las partes dañadas o fracturadas de `profile.wounds`. La mochila de Estado abre en «Curación» si estás herido y llevas curas; si no, en «Todo». Textos que decían «Alijo › Heridas» (store.ts, SummaryScreen) dicen «Estado». Mini tutorial `tab.intendencia` salta ahora con `tab:estado` y lleva el «!» en la pestaña. La pestaña del Alijo no se guardaba, así que las partidas antiguas cargan igual.
+
+- **Arreglo grilla del Almacén (Alijo, escritorio):** se pintaba a 10 columnas pero la lógica (`LAYOUTS.stash`) usa 8; los objetos grandes salían 1×1 y sus casillas tapadas desaparecían (119/120 ocupadas parecía media página). Ahora `stashCols = LAYOUTS.stash.cols`. Regla: cualquier `GridView` del almacén debe usar las columnas de su layout.
+- **Estaciones:** fuera los avisos «Te falta X (n/m)» bajo Reconstruir/Mejorar (las tarjetas de materiales ya lo marcan en rojo) y el texto «De la mochila y del almacén»; «Tus materiales» centrado con casillas de 64 px.
+- **Alijo › Equipo (25/11, v4):** personaje del Aventurero más alto (en el arco con noFoot el divisor de escala es 29); muñeco de ranuras en rejilla con forma de cuerpo (cabeza · amuleto · torso · pies en el eje, arma y secundaria junto a la cabeza, manos y anillo junto al torso, atuendo y mochila abajo; sin etiquetas si la pantalla mide menos de 1000 px de alto); bolsillo seguro en una franja bajo la mochila; fuera el recuadro de oro (ya está arriba) y el «Agrupar N» del pie; un solo «Ordenar» en mochila y almacén que agrupa el oro y ordena; almacén sin el texto «pág. · n/120» y con casillas que llenan el ancho (máx. 80 px). Tutorial de bienvenida: el paso del oro señala ahora «Ordenar» (sort-backpack).
+- **Alijo › Equipo (25/11, v5):** la columna Equipo mide justo la mochila (6 casillas) y todo se alinea a sus bordes (ranuras de los lados, Ordenar, bolsillo y pie); el Aventurero se queda el ancho que sobra (columnas 1fr · ancho fijo · 1,25fr); la rejilla del almacén va centrada.
+- **Alijo en móvil (25/11, v2):** dos columnas. Izquierda: selector «Aventurero | Atributos» (héroe grande a escala entera con clase, nivel y XP, o HeroStats). Derecha: selector «Equipo | Almacén» (seg-gear / seg-storage): Equipo = muñeco con forma de cuerpo y carga + mochila con «Vaciar», «Ordenar» y bolsillo; Almacén = mochila + almacén (StashPanel `bare`: sin título ni contador, «Ordenar» junto a las páginas, casillas que se ajustan al hueco hasta 40 px). Casillas a 36 px. La ficha va en un cajón a la derecha (pestaña «Ficha», item-sheet-open; brilla con un objeto elegido). Escritorio y tableta: la columna Almacén mide justo la rejilla (slot × 8) y el Aventurero se queda el resto. Maqueta en mockups/alijo-movil. almacen-check: salta el aviso de cookies, agrupa con «Ordenar» y abre el cajón de la ficha. Fallo previo sin cambios: en escritorio la página del almacén no cabe entera sin desplazar (comprobación de almacen-check).

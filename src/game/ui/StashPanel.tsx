@@ -15,19 +15,25 @@ import { sfx } from '../audio';
 /** Color propio de la página «Compartido» (verde azulado): se distingue de las páginas del personaje. */
 export const SHARED_COLOR = '#7fd6c9';
 
-export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode = 'lobby', compactHeader = false, title = 'Almacén', testId = 'alijo-storage', marked }: {
+export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode = 'lobby', compactHeader = false, title = 'Almacén', testId = 'alijo-storage', marked, hideShared = false, onlyShared = false, fill = false, ptitle = false, bare = false }: {
+  /** Móvil (Alijo): sin título ni contador; Ordenar junto a las pestañas de página. */
+  bare?: boolean;
+  /** Venta: el Compartido va en su propia pestaña (sin él en las páginas), o solo el Compartido. */
+  hideShared?: boolean; onlyShared?: boolean;
+  /** Venta: casillas tan grandes como quepan a lo ancho (hasta un tope); las filas que no quepan, con desplazamiento. */
+  fill?: boolean;
   /** Venta: casillas marcadas para vender. */
   marked?: (l: Loc) => boolean;
   cols: number; sel: Loc | null; onSelect: (l: Loc) => void; onEmpty?: (l: Loc) => void;
   onQuick?: (l: Loc, s: ItemStack) => void; onAlt?: (l: Loc, s: ItemStack) => void;
   /** Al tocar una pestaña con un objeto elegido, se lleva allí y se suelta la elección. */
-  mode?: InvMode; compactHeader?: boolean; title?: string; testId?: string;
+  mode?: InvMode; compactHeader?: boolean; title?: string; testId?: string; ptitle?: boolean;
 }) {
   const profile = useGame((s) => s.profile)!;
   const page = useGame((s) => s.stashPage);
   const layout = useLayout();
   const touchy = layout !== 'desktop';
-  const shownPage: StashPage = page === 'shared' ? (profile.shared ? 'shared' : 0) : Math.min(page, pageCount(profile.stash) - 1);
+  const shownPage: StashPage = onlyShared && profile.shared ? 'shared' : page === 'shared' && !hideShared ? (profile.shared ? 'shared' : 0) : Math.min(page === 'shared' ? 0 : page, pageCount(profile.stash) - 1);
   const grid = shownPage === 'shared' ? profile.shared! : pageSlice(profile.stash, shownPage);
   const used = grid.filter(Boolean).length;
   const label = shownPage === 'shared' ? 'Compartido' : `pág. ${shownPage + 1}`;
@@ -36,9 +42,15 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
   const [slot, setSlot] = useState<number | null>(null);
   useLayoutEffect(() => {
     const el = box.current;
-    if (touchy || !el) { setSlot(null); return; }
+    if (!el || ptitle || (touchy && !fill && !bare)) { setSlot(null); return; } // ptitle (Alijo): mismo tamaño que el resto de casillas; la columna mide justo la rejilla
     const rows = Math.ceil(STASH_PAGE_SIZE / cols);
     const fit = () => {
+      if (fill || bare) {
+        const max = layout === 'desktop' ? 80 : layout === 'tablet' ? 60 : bare ? 40 : 0;
+        const w = Math.floor((el.clientWidth - 24 - (cols - 1) * 4) / cols);
+        setSlot(max && w > 0 ? Math.min(max, w) : null);
+        return;
+      }
       const h = el.clientHeight;
       const base = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--slot')) || 52;
       const s = Math.floor((h - (rows - 1) * 4 - 16) / rows);
@@ -48,26 +60,29 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
     const ro = new ResizeObserver(fit);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [touchy, cols]);
+  }, [touchy, cols, fill, layout, ptitle, bare]);
   return (
     <section className="panel ui-panel min-h-0" data-testid={testId} style={shownPage === 'shared' ? { borderColor: '#3f8f8a' } : undefined}>
-      <div className="flex items-center justify-between gap-2" style={{ padding: compactHeader || touchy ? '6px 8px 0' : '10px 12px 0' }}>
+      {ptitle && <h2 className="ui-ptitle">{title}</h2>}
+      {!bare && <div className="flex items-center justify-between gap-2" style={{ padding: compactHeader || touchy ? '6px 8px 0' : '10px 12px 0' }}>
+        {ptitle ? <span /> :
         <h2 className="font-display text-parchment uppercase tracking-[0.1em] truncate" style={{ fontSize: 'var(--fs-title, 15px)' }}>
           {title} <span className="normal-case tracking-normal text-xs font-body" style={{ color: shownPage === 'shared' ? SHARED_COLOR : '#a8a29e' }} data-testid="stash-count">· {label} · {used}/{STASH_PAGE_SIZE}</span>
-        </h2>
+        </h2>}
         <span className="flex gap-1 shrink-0">
-          <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => actions.groupGold('stash')} data-testid="group-gold-stash" title="Mete las monedas sueltas de esta página en sus saquitos y sacos">Agrupar oro</button>
-          <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => actions.sortContainer('stash')} data-testid="sort-stash">Ordenar</button>
+          <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => { actions.groupGold('stash'); actions.sortContainer('stash'); }} data-testid="sort-stash" title="Agrupa el oro en sus saquitos y ordena esta página">Ordenar</button>
         </span>
-      </div>
+      </div>}
       <div style={{ padding: touchy ? '6px 8px' : '8px 12px' }} className="border-b border-[#2a2830]">
-        <PageTabs sel={sel} onMoved={() => sel && onSelect(sel)} />
+        {onlyShared ? null : bare ? <div className="flex gap-1 items-stretch"><div className="flex-1 min-w-0"><PageTabs sel={sel} onMoved={() => sel && onSelect(sel)} hideShared={hideShared} /></div>
+          <button className="btn text-xs shrink-0" style={{ minHeight: 44, padding: '0 8px' }} onClick={() => { actions.groupGold('stash'); actions.sortContainer('stash'); }} data-testid="sort-stash" title="Agrupa el oro en sus saquitos y ordena esta página">Ordenar</button></div>
+          : <PageTabs sel={sel} onMoved={() => sel && onSelect(sel)} hideShared={hideShared} />}
       </div>
       {shownPage === 'shared' && <p className="text-[11px] px-3 pt-2" style={{ color: SHARED_COLOR }}>Lo que dejes aquí lo verán y podrán coger todos tus personajes.</p>}
       <div className="ui-pbody min-h-0 flex flex-col">
         <div ref={box} className="flex-1 min-h-0 overflow-y-auto scroll-thin" style={slot ? ({ '--slot': `${slot}px` } as CSSProperties) : undefined}>
-          <GridView key={String(shownPage)} marked={marked} grid={grid} container={shownPage === 'shared' ? 'shared' : 'stash'} offset={shownPage === 'shared' ? 0 : pageStart(shownPage)}
-            cols={cols} equipment={profile.equipment} mode={mode} selected={sel} onSelect={onSelect} onEmpty={onEmpty} onQuick={onQuick} onAlt={onAlt} />
+          <div className={fill || ptitle || bare ? 'flex justify-center' : undefined}><GridView key={String(shownPage)} marked={marked} grid={grid} container={shownPage === 'shared' ? 'shared' : 'stash'} offset={shownPage === 'shared' ? 0 : pageStart(shownPage)}
+            cols={cols} equipment={profile.equipment} mode={mode} selected={sel} onSelect={onSelect} onEmpty={onEmpty} onQuick={onQuick} onAlt={onAlt} /></div>
         </div>
       </div>
     </section>
@@ -75,7 +90,7 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
 }
 
 /** Pestañas de páginas. Son destino de arrastre y, con un objeto elegido, un toque lo lleva a esa página. */
-function PageTabs({ sel, onMoved }: { sel: Loc | null; onMoved: () => void }) {
+function PageTabs({ sel, onMoved, hideShared = false }: { sel: Loc | null; onMoved: () => void; hideShared?: boolean }) {
   const profile = useGame((s) => s.profile)!;
   const page = useGame((s) => s.stashPage);
   const wide = useLayout() === 'desktop';
@@ -110,7 +125,7 @@ function PageTabs({ sel, onMoved }: { sel: Loc | null; onMoved: () => void }) {
   }
   const sharedOn = page === 'shared';
   const hasShared = !!profile.shared;
-  tabs.push(
+  if (!hideShared) tabs.push(
     <button key="shared" className={`pill ${overTab('shared', hasShared) ? 'drag-over' : ''}`} {...dnd('shared', hasShared)} onClick={() => tap('shared', hasShared)} data-testid="stash-page-shared"
       title={hasShared ? 'Compartido · para todos tus personajes' : `Compartido · ${SHARED_PAGE_COST} de oro`} aria-label="Página Compartido"
       style={{ flex: wide ? '2.4 1 0' : '1 1 0', minWidth: 44, minHeight: 44, padding: '0 6px', gap: 6, borderColor: '#3f8f8a', color: sharedOn ? '#07130c' : SHARED_COLOR,
