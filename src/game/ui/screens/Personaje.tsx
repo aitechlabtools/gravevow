@@ -29,7 +29,7 @@ type Src = keyof typeof C;
 interface Atk { id: string; name: string; desc: string; cost: number; cd: number; fx: string; src: Src }
 const MILESTONES = [1, ...CLASS_UNLOCK_LEVELS];
 
-function useKit() {
+export function useKit() {
   const profile = useGame((s) => s.profile)!;
   const ch = profile.character;
   const cls = CLASSES[ch.classId];
@@ -116,7 +116,7 @@ export function CostChips({ cost, cd, res, big, mana, labels }: { cost: number; 
 }
 
 // ── Centro: habilidad de clase arriba, mano derecha a un lado y mano izquierda al otro ──
-function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>; focus: string | null; onFocus: (id: string | null) => void; compact: boolean }) {
+export function SkillArc({ k, focus, onFocus, compact, noFoot }: { k: ReturnType<typeof useKit>; focus: string | null; onFocus: (id: string | null) => void; compact: boolean; noFoot?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
   const min = usePixelScale('heroSm');
   const [dim, setDim] = useState({ w: 600, h: 500 });
@@ -127,7 +127,7 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
   }, []);
   // Arco (25/11, v3): medio círculo arriba y dos líneas rectas que bajan; habilidad de clase arriba, mano derecha por el lado
   // derecho y mano izquierda por el izquierdo. El héroe dentro, de pie, con «Clase · Nivel» debajo.
-  const node = compact ? 44 : 54, big = compact ? 52 : 66, label = compact ? 0 : 24, foot = compact ? 22 : 30;
+  const node = compact ? 44 : 54, big = compact ? 52 : 66, label = compact ? 0 : 24, foot = noFoot ? 0 : compact ? 22 : 30;
   const top = big / 2 + 6;
   const yb = dim.h - foot - node / 2 - label - 6;
   const R = Math.max(50, Math.min(dim.w / 2 - node / 2 - (compact ? 6 : 64), (yb - top) * 0.5));
@@ -139,8 +139,9 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
     ? { x: cx + sgn * R * Math.cos(a0 - d / R), y: cy - R * Math.sin(a0 - d / R) }
     : { x: cx + sgn * R, y: cy + (d - arcLen) };
   const side = (n: number, sgn: number) => Array.from({ length: n }, (_, i) => along(n === 1 ? (arcLen + L) / 2 : ((arcLen + L) * i) / (n - 1), sgn));
-  const scale = Math.max(min, Math.min(Math.floor((yb - cy + R * 0.7) / 36), Math.floor((2 * R - node - 16) / 24)));
-  const feet = yb - 4;
+  // Pies algo por encima de la base del arco (25/11): el personaje no queda pegado abajo
+  const feet = yb - (compact ? 6 : Math.round(Math.max(24, L * 0.18)));
+  const scale = Math.max(min, Math.min(Math.floor((feet - cy + R * 0.95) / 36), Math.floor((2 * R - node - 16) / 24)));
   const at = (deg: number) => ({ x: cx + R * Math.cos((deg * Math.PI) / 180), y: cy - R * Math.sin((deg * Math.PI) / 180) });
   const rP = side(k.right.items.length, 1), lP = side(k.left.items.length, -1);
   const nodes: (Atk & { p: { x: number; y: number }; size: number })[] = [
@@ -159,7 +160,7 @@ function SkillArc({ k, focus, onFocus, compact }: { k: ReturnType<typeof useKit>
         <div className="pedestal" style={{ width: 22 * scale, height: 5 * scale, bottom: -2.5 * scale }} />
         <div className="relative"><PlayerSprite scale={scale} /></div>
       </div>
-      <div className="hb-arc-foot" style={{ bottom: 4 }}>{className(k.ch.classId, k.ch.appearance.sex)} · Nivel {k.ch.level}</div>
+      {!noFoot && <div className="hb-arc-foot" style={{ bottom: 4 }}>{className(k.ch.classId, k.ch.appearance.sex)} · Nivel {k.ch.level}</div>}
       {nodes.map((n) => {
         const on = focus === n.id;
         return (
@@ -225,7 +226,6 @@ function SkillStats({ skillId }: { skillId: string | null }) {
   const res = cls.resourceName.toLowerCase();
   const cost = skillId && skillId !== 'basic' ? skillCost(getSkill(skillId).cost, st.maxMp, cls.resource) : 0;
   const marks = skillMarks(skillId, cost, res);
-  const name = skillId && skillId !== 'basic' ? getSkill(skillId).name : null;
   return (
     <div className="font-body flex flex-col h-full" data-testid="skill-stats">
       {STAT_KEYS.map((key) => {
@@ -238,13 +238,6 @@ function SkillStats({ skillId }: { skillId: string | null }) {
           </div>
         );
       })}
-      <div className="hb-effbox" data-testid="skill-effects">
-        <div className="hb-cap text-center" style={{ color: '#8fd07a' }}>Efectos de la habilidad</div>
-        {name ? (effectLines(skillId, res).length ? <EffectList lines={effectLines(skillId, res)} /> : <p className="text-[13px] text-stone-400 text-center">{name}: sin cambios en tus atributos.</p>)
-          : skillId === 'basic' ? <p className="text-[13px] text-stone-400 text-center">Ataque básico: sin coste ni efectos.</p>
-          : <p className="text-[13px] text-stone-400 text-center">Toca una habilidad para ver qué cambia al usarla.</p>}
-        <p className="text-[12px] text-stone-500 text-center mt-auto">Previsualización en combate</p>
-      </div>
     </div>
   );
 }
@@ -255,7 +248,7 @@ function MiniTile({ a, on, onPick, res, mana }: { a: Atk; on: boolean; onPick: (
     <button type="button" className={`hb-mini ${on ? 'on' : ''}`} onClick={onPick} aria-pressed={on} data-testid={`atk-${a.id}`}>
       <ActionIcon fx={a.fx} color={on ? '#f2c75a' : C[a.src]} size={28} />
       <span className="hb-mini-name">{a.name}</span>
-      <span className="hb-mini-cost"><span className={mana ? 'text-[#7fe0e0]' : 'text-gold'}>{mana ? <Drop size={10} /> : <Bolt size={10} />}{a.cost}</span><span className="text-[#8ec0f2]"><Recharge size={10} />{a.cd || '—'}</span></span>
+      <span className="hb-mini-cost"><span className={mana ? 'text-[#7fe0e0]' : 'text-gold'}>{mana ? <Drop size={15} /> : <Bolt size={15} />}{a.cost}</span><span className="text-[#8ec0f2]"><Recharge size={15} />{a.cd || '—'}</span></span>
       <span className="sr-only">{res}</span>
     </button>
   );
@@ -341,5 +334,5 @@ function Detail({ k, focus, earned }: { k: ReturnType<typeof useKit>; focus: str
         {pick && remaining.includes(pick) ? `Elegir ${getSkill(pick).name}` : 'Toca una habilidad'}</button>}
     </>;
   }
-  return <div className="hb-det" data-testid="skill-detail">{body}</div>;
+  return <div className={`hb-det ${focus?.startsWith('hito:') ? 'hito' : ''}`} data-testid="skill-detail">{body}</div>;
 }

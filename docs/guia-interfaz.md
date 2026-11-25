@@ -345,3 +345,7 @@ Todo a la vista, sin pestañas (`screens/Personaje.tsx`). Escritorio 22/44/34 y 
 - Derecha «Habilidades» (`character-skills`): fichas pequeñas por mano (`.hb-mini`, `atk-<id>`: icono, nombre, coste y recarga pequeños), fila de hitos de clase Nv 1·20·40·60·80 (`.hb-hito`, `class-skill-<id>` o `hito-<nv>`; dorado la equipada, «!» por elegir, «?» bloqueados) y abajo el detalle (`skill-detail`): coste y recarga grandes con rótulo, efecto y «Equipar» (`equip-class-<id>`) o, en un hito, sus opciones (`class-choose` con «Elegir», o `class-next` con candado).
 - Móvil: héroe y Habilidades; los atributos en una ventana con el botón «Atributos».
 - Coste: ímpetu con rayo amarillo, maná con gota turquesa; recarga en azul («—» si no tiene).
+
+- **Alijo › Aventurero (25/11):** mismo arco que Habilidades (`SkillArc` con `compact noFoot`): clase arriba, mano derecha a la derecha, izquierda a la izquierda. Con una pieza elegida, `HeroStats preview` marca filas `hs-up`/`hs-down` con ▲/▼. El panel Equipo tiene el pie fijo `backpack-foot` (carga, en riesgo y botones).
+- **Habilidades (25/11):** sin recuadro de efectos a la izquierda; el detalle de un hito (`.hb-det.hito`) crece para llenar el panel.
+- **Estado (25/11):** apartado propio del menú (8 pestañas; con poco sitio, PillBar pasa a solo iconos como antes). Badge rojo con el número de lesiones (`PillTab.alert` + `badgeLabel`). Capturas: mockups/apartado-estado (index.html).

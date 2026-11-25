@@ -19,7 +19,7 @@ const BAG_DROP = JSON.stringify({ type: 'bag' });
 import { Modal } from '../common';
 import type { EquipSlot, ItemStack } from '../../../core/types';
 import { CarryBar } from '../CarryBar';
-import { ItemSlot, GridView, SLOT_LABELS, highlightItems, type InvMode } from '../inventory';
+import { ItemSlot, GridView, SLOT_LABELS, highlightItems, compareWithEquipped, type InvMode } from '../inventory';
 import { PlayerSprite, GoldAmount } from '../common';
 import { Panel, SubHead, Segmented, usePixelScale } from '../kit';
 import { BodyPanel } from '../BodyFigure';
@@ -38,22 +38,21 @@ const SIDE_ICONS: Record<string, string[]> = { gear: HELM, storage: TAB_ICONS.st
 import { sfx } from '../../audio';
 import { SkinSlot, SkinPicker } from './Atuendos';
 import { HeroStats, LevelBar } from '../HeroStats';
-import { combatLoadout } from '../../../core/loadout';
-import { getSkill } from '../../../core/data/skills';
-import { ActionIcon } from '../combatActions';
+import { SkillArc, useKit } from './Personaje';
+import type { Stats } from '../../../core/types';
 import { xpForNextLevel } from '../../../core/stats';
 
 const SLOT_ICON: Record<EquipSlot, string> = { mainHand: 'sword', offHand: 'shield', helmet: 'helm', armor: 'tunic', gloves: 'gloves', boots: 'boots', ring: 'ring', amulet: 'amulet' };
 const MODE: InvMode = 'lobby';
 
-export function Alijo({ onShop }: { onShop?: () => void }) {
+/** section «status»: el apartado Estado del menú (antes Alijo › Heridas). Sin él, el Alijo con el equipo (y el almacén en el móvil). */
+export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'status' }) {
   const profile = useGame((s) => s.profile)!;
   const layout = useLayout();
   const phone = layout === 'phone';
   const [sel, setSel] = useState<Loc | null>(null);
   useClearOnDrop(useCallback(() => setSel(null), []));
-  const [view, setView] = useState<'gear' | 'storage' | 'status'>('gear');
-  useEffect(() => { if (view === 'status') actions.tutorialEvent('stash:status'); }, [view]);
+  const [view, setView] = useState<'gear' | 'storage' | 'status'>(section === 'status' ? 'status' : 'gear');
   const [picker, setPicker] = useState(false);
   // Escritorio estrecho (p. ej. 1366 × 768): Aventurero más estrecho y casillas del panel Equipo a 44 px para que quepan las dos columnas
   const compact = layout === 'desktop' && typeof window !== 'undefined' && window.innerWidth < 1600;
@@ -74,7 +73,7 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
     const h = (e: Event) => {
       if (document.querySelector('[data-testid=alijo-backpack]')) return;
       const ids = (e as CustomEvent<string[]>).detail;
-      setView('gear'); window.setTimeout(() => highlightItems(ids), 120);
+      if (section !== 'status') setView('gear'); window.setTimeout(() => highlightItems(ids), 120);
     };
     window.addEventListener('gv-hint-items', h); return () => window.removeEventListener('gv-hint-items', h);
   }, []);
@@ -123,20 +122,20 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
     </div>
   );
   // El almacén tiene 8 columnas en todos los formatos (los objetos de 2×2 necesitan la misma forma siempre)
-  const stashCols = 8;
+  const selStack = sel?.kind === 'grid' ? (() => { const gr = sel.container === 'shared' ? profile.shared : sel.container === 'backpack' || sel.container === 'stash' || sel.container === 'pocket' ? profile[sel.container] : null; return gr?.[sel.index] ?? null; })() : null;
+  const cmp = selStack ? compareWithEquipped(selStack, profile.equipment) : null;
+  const preview = cmp ? Object.fromEntries(cmp.diffs) as Partial<Record<keyof Stats, number>> : undefined;
+  const stashCols = layout === 'desktop' && !compact ? 10 : 8;
   const storage = (
     <StashPanel cols={stashCols} ptitle={!phone} sel={sel} onSelect={onSelect} onEmpty={onEmpty}
       onQuick={(l, st) => { if (getItem(st.itemId).use?.kind === 'need') actions.eat(l); else actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
   );
   const card = <ItemCard loc={sel} mode={MODE} onClear={clear} compact={phone} stacked={(phone && view !== 'status') || (layout === 'tablet' && view === 'gear')} />;
   const status = <StatusView withNeeds={phone} />;
-  const seg = (opts: { id: 'gear' | 'storage' | 'status'; label: string }[]) => (
-    <Segmented options={opts} value={view} onChange={(v) => { setView(v); setSel(null); sfx('click'); }} testId="alijo-seg" />
-  );
 
   if (phone) {
     // Fase 3: pestañas en columna de iconos a la izquierda y ficha fija a la derecha (no tapa nada)
-    const opts = [{ id: 'gear', label: 'Equipo' }, { id: 'storage', label: 'Almacén' }, { id: 'status', label: 'Heridas' }] as const;
+    const opts = [{ id: 'gear', label: 'Equipo' }, { id: 'storage', label: 'Almacén' }] as const;
     const tabs = (
       <div className="vtabs-col alijo-side" role="tablist" aria-orientation="vertical" data-testid="alijo-seg">
         {opts.map((o) => (
@@ -149,12 +148,12 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
     const sheet = (
       <Panel className="min-h-0 alijo-sheet" bodyClassName="overflow-y-auto scroll-thin" testId="item-sheet">
         {sel ? <div className="relative"><button className="btn icon-btn absolute right-0 top-0" onClick={clear} aria-label="Cerrar la ficha">✕</button>{card}</div>
-          : <div className="h-full flex flex-col items-center justify-center text-center text-muted gap-2 px-2"><span className="font-display text-sm tracking-wide">{opts.find((o) => o.id === view)!.label}</span><span className="text-sm">Toca un objeto para ver su ficha aquí.</span></div>}
+          : <div className="h-full flex flex-col items-center justify-center text-center text-muted gap-2 px-2"><span className="font-display text-sm tracking-wide">{opts.find((o) => o.id === view)?.label}</span><span className="text-sm">Toca un objeto para ver su ficha aquí.</span></div>}
       </Panel>
     );
     return (
-      <div className="h-full flex" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' }} data-testid="screen-stash">
-        {tabs}
+      <div className="h-full flex" style={{ padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' }} data-testid={section === 'status' ? 'screen-estado' : 'screen-stash'}>
+        {section !== 'status' && tabs}
         <div className="flex-1 min-w-0 min-h-0 flex" style={{ gap: 'var(--gap)' }}>
           {view === 'status' ? (
             <>
@@ -186,11 +185,11 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
   }
 
   const side = layout === 'tablet' ? 256 : compact ? 280 : 340;
-  const deskSeg = <div className="flex justify-center shrink-0">{seg([{ id: 'gear', label: 'Equipo' }, { id: 'status', label: 'Heridas' }])}</div>;
+  const deskSeg = null; // 25/11: sin selector Equipo / Heridas (Heridas es ahora el apartado Estado)
   const padX = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
   if (view !== 'gear') {
     return (
-      <div className="h-full flex flex-col" data-testid="screen-stash" style={padX}>
+      <div className="h-full flex flex-col" data-testid="screen-estado" style={padX}>
         {deskSeg}
         <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: `${side}px minmax(0,1fr) ${layout === 'tablet' ? 300 : 360}px`, gap: 'var(--gap)' }}>
           <Panel title={g("{Aventurero|Aventurera}")} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero"><HeroColumn needs /></Panel>
@@ -206,8 +205,9 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
   // Alijo › Equipo (25/11, v3): Aventurero (héroe, nivel y atributos) · Equipo (muñeco de ranuras y mochila con bolsillo y oro) · Almacén
   const btnH = { minHeight: touchy ? 44 : 34 };
   const equipPanel = (
-    <Panel title="Equipo" className="min-h-0" bodyClassName="min-h-0 flex flex-col overflow-y-auto scroll-thin" testId="alijo-backpack-panel">
-      <div className="mx-auto flex flex-col" style={{ width: `calc(var(--slot) * 8 + 52px)` }}>
+    <Panel title="Equipo" className="min-h-0" bodyClassName="min-h-0 flex flex-col" testId="alijo-backpack-panel">
+      <div className="flex-1 min-h-0 overflow-y-auto scroll-thin">
+      <div className="mx-auto flex flex-col" style={{ width: `calc(var(--slot) * 8 + 52px)`, maxWidth: '100%' }}>
         <EquipDoll sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} />
         <div className="al-sec" data-testid="alijo-backpack">
           <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -225,7 +225,13 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
               <div className="al-box"><div className="al-box-t">Oro</div><div className="text-center"><GoldAmount value={profile.gold} /></div></div>
             </div>
           </div>
-          <CarryBar className="mt-2" />
+        </div>
+        {sel && layout !== 'tablet' && <div className="panel p-3 mt-3 shrink-0" data-testid="item-card-wrap">{card}</div>}
+      </div>
+      </div>
+      {/* Pie fijo: carga y botones de la mochila siempre a la vista */}
+      <div className="shrink-0 mx-auto pt-1 border-t border-stone-800" style={{ width: `calc(var(--slot) * 8 + 52px)`, maxWidth: '100%' }} data-testid="backpack-foot">
+          <CarryBar className="mt-1" />
           <div className="flex justify-between text-xs mt-1"><span className="text-stone-400">En riesgo si mueres</span><span className="text-ember" data-testid="gold-box">{gridValue(profile.backpack) + equippedValue(profile.equipment)}</span></div>
           <div className="grid grid-cols-2 gap-1 mt-2" data-testid="backpack-quick">
             <button className="btn text-xs" style={btnH} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén (no toca el equipo ni el bolsillo seguro)">Vaciar mochila</button>
@@ -235,15 +241,13 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
             <div className="flex items-center justify-between text-xs mt-1.5" data-testid="gold-carried"><span className="text-stone-300">Oro encima (se pierde si mueres)</span>
               <button className="btn text-xs" style={{ minHeight: touchy ? 44 : 30 }} onClick={() => actions.groupGold('backpack')} data-testid="group-gold-backpack" title="Mete las monedas sueltas en tus saquitos y sacos">Agrupar {gridGold(profile.backpack)}</button></div>
           )}
-        </div>
-        {sel && layout !== 'tablet' && <div className="panel p-3 mt-3 shrink-0" data-testid="item-card-wrap">{card}</div>}
       </div>
     </Panel>
   );
   return (
     <div className="h-full flex flex-col" data-testid="screen-stash" style={padX}>
     {deskSeg}
-    <div className="flex-1 min-h-0 grid" style={{ ...slotVar, gridTemplateColumns: `minmax(0,1fr) auto auto`, gap: 'var(--gap)' }}>
+    <div className="flex-1 min-h-0 grid" style={{ ...slotVar, gridTemplateColumns: 'minmax(0,25fr) minmax(calc(var(--slot) * 8 + 80px),35fr) minmax(0,40fr)', gap: 'var(--gap)' }}>
       {sel && layout === 'tablet' ? (
         <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="item-sheet">
           <div className="relative"><button className="btn icon-btn absolute right-0 top-0" onClick={clear} aria-label="Cerrar la ficha">✕</button>{card}</div>
@@ -251,7 +255,7 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
       ) : (
         <Panel title={g('{Aventurero|Aventurera}')} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col" testId="alijo-hero">
           <div className="mb-2"><RecruitOffer /></div>
-          <Adventurer />
+          <Adventurer preview={preview} />
         </Panel>
       )}
       {equipPanel}
@@ -262,49 +266,19 @@ export function Alijo({ onShop }: { onShop?: () => void }) {
   );
 }
 
-/** Aventurero: el héroe en su arco, «Clase · Nivel», experiencia y atributos. */
-function Adventurer() {
+/** Aventurero: el héroe en el mismo arco que Habilidades (rombos de lo que llevas), «Clase · Nivel», experiencia y atributos.
+ *  Con una pieza elegida, los atributos marcan lo que ganarías (verde) o perderías (rojo) al ponértela. */
+function Adventurer({ preview }: { preview?: Partial<Record<keyof Stats, number>> }) {
   const prof = useGame((s) => s.profile!);
   const ch = prof.character;
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [box, setBox] = useState({ w: 0, h: 0 });
-  useEffect(() => {
-    const el = ref.current; if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(([e]) => setBox({ w: e.contentRect.width, h: e.contentRect.height })); ro.observe(el); return () => ro.disconnect();
-  }, []);
-  const scale = box.h ? Math.max(2, Math.min(Math.floor((box.h - 24) / 26), Math.floor((box.w - 16) / 22))) : 4;
+  const k = useKit();
   const need = xpForNextLevel(ch.level);
   return (
     <div className="flex flex-col flex-1 min-h-0" data-testid="equipment-hero">
-      <div className="relative flex-1 flex mx-auto w-full" style={{ minHeight: 180, maxWidth: 380, padding: '14px 26px 0' }}>
-        <div ref={ref} className="ui-arch flex-1 flex items-end justify-center overflow-hidden"><div className="pb-3"><PlayerSprite scale={scale} /></div></div>
-        <EquippedSkills />
-      </div>
-      <div className="text-center font-display text-gold mt-2" data-testid="hero-level">{className(ch.classId, ch.appearance.sex)} · Nivel {ch.level}</div>
+      <div className="relative flex-1 w-full" style={{ minHeight: 220 }} data-testid="alijo-skills"><SkillArc k={k} focus={null} onFocus={() => {}} compact noFoot /></div>
+      <div className="text-center font-display text-gold mt-1" data-testid="hero-level">{className(ch.classId, ch.appearance.sex)} · Nivel {ch.level}</div>
       <div className="mt-1" title={`${ch.xp} / ${need} XP`}><div className="h-1.5 bg-stone-800"><div className="h-full bg-arcane" style={{ width: `${Math.min(100, (ch.xp / need) * 100)}%` }} /></div><div className="text-center text-[12px] text-stone-400 mt-0.5">{ch.xp} / {need} XP</div></div>
-      <div className="mt-2 border-t border-stone-700 pt-2"><HeroStats /></div>
-    </div>
-  );
-}
-
-/** Rombos de las habilidades que llevas, alrededor del arco: la de clase arriba, la mano derecha a la derecha y la izquierda a la izquierda. Se cambian en Habilidades. */
-function EquippedSkills() {
-  const prof = useGame((s) => s.profile!);
-  const kit = combatLoadout(prof.character.classId, prof.equipment, prof.classSkills.equipped);
-  const gem = (id: string, color: string, style: React.CSSProperties, big = false) => {
-    const s = getSkill(id); const sz = big ? 30 : 24;
-    return (
-      <span key={id + JSON.stringify(style)} className="al-gem" style={{ ...style, width: sz, height: sz, borderColor: color }} title={`${s.name}: ${s.description}`} data-testid={`alijo-skill-${id}`}>
-        <span className="-rotate-45 grid place-items-center"><ActionIcon fx={s.fx ?? 'slash'} color={color} size={Math.round(sz * 0.6)} /></span>
-      </span>
-    );
-  };
-  const side = (ids: string[], x: 'left' | 'right', color: string) => ids.map((id, i) => gem(id, color, { [x]: 0, top: `${30 + (i * 55) / Math.max(1, ids.length - 1 || 1)}%` }));
-  return (
-    <div className="absolute inset-0 pointer-events-none" aria-label="Habilidades equipadas" data-testid="alijo-skills">
-      {gem(kit.classSkill, '#e8b33a', { left: '50%', top: 0, marginLeft: -15 }, true)}
-      {side(kit.right.skills, 'right', '#a56bff')}
-      {side(kit.left.skills, 'left', '#8fa8c8')}
+      <div className="mt-2 border-t border-stone-700 pt-2"><HeroStats preview={preview} /></div>
     </div>
   );
 }
@@ -326,7 +300,7 @@ function EquipDoll({ sel, onSelect, onEmpty, onDone, onSkin }: { sel: Loc | null
     <div className="al-doll" data-testid="equipment">
       <div className="al-doll-top">
         {slot('mainHand', true)}
-        <div className="flex flex-col items-center gap-1.5">{slot('helmet')}{slot('armor')}</div>
+        <div className="flex flex-col items-center gap-0.5">{slot('helmet')}{slot('armor')}</div>
         {slot('offHand', true)}
       </div>
       <div className="al-doll-row">
@@ -391,7 +365,7 @@ function HeroColumn({ needs }: { needs?: boolean }) {
 }
 
 
-/** Vida total del cuerpo (Alijo › Heridas), encima de las necesidades. */
+/** Vida total del cuerpo (apartado Estado), encima de las necesidades. */
 function LifeBar() {
   const profile = useGame((s) => s.profile)!;
   const b = baseBody(profile), hp = bodyHp(b);
@@ -403,12 +377,13 @@ function LifeBar() {
   );
 }
 
-/** Mochila en Heridas: filtro Todo / Curación (apaga lo que no cura), carga y ordenar. */
+/** Mochila en Estado: filtro Todo / Curación (apaga lo que no cura), carga y ordenar. */
 function CureBag({ grids, quick, onStash }: { grids: Record<string, unknown>; quick: (l: Loc, s: ItemStack) => void; onStash: (l: Loc) => void }) {
   const profile = useGame((s) => s.profile)!;
   const touchy = useIsTouch();
-  const [only, setOnly] = useState<'all' | 'cure'>('all');
   const cures = [...new Set(profile.backpack.filter((x): x is ItemStack => !!x && !isCover(x)).map((x) => x.itemId))].filter((id) => { const u = getItem(id).use; return u?.kind === 'treat' || u?.kind === 'heal'; });
+  // Herido y con algo que cure: abre ya en «Curación»; sano, en «Todo» (25/11)
+  const [only, setOnly] = useState<'all' | 'cure'>(() => (profile.wounds && cures.length ? 'cure' : 'all'));
   const dimCss = only === 'cure' ? `.bag-cure .slot[data-item]:not([data-item=""])${cures.map((id) => `:not([data-item="${id}"])`).join('')}{opacity:.25}` : '';
   return (
     <div data-testid="alijo-backpack" className={only === 'cure' ? 'bag-cure' : ''}>

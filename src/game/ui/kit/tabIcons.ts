@@ -8,6 +8,8 @@ export const TAB_ICONS: Record<string, string[]> = {
   character: ['.....XX.....', '....XXXX....', '...XX..XX...', '..XX....XX..', '.XX..XX..XX.', 'XX..XXXX..XX', 'XX..XXXX..XX', '.XX..XX..XX.', '..XX....XX..', '...XX..XX...', '....XXXX....', '.....XX.....'],
   // Alijo: cofre
   stash: ['............', '..XXXXXXXX..', '.XX......XX.', 'XX........XX', 'XXXXXXXXXXXX', 'XXXXX..XXXXX', 'XXXXX..XXXXX', 'XXXXXXXXXXXX', 'XXXXXXXXXXXX', 'XXXXXXXXXXXX', 'XX........XX', '............'],
+  // Estado: cruz de hierro con remaches (no la de la Cruz Roja: brazos que se ensanchan y centro hueco)
+  estado: ['...XXXXXX...', '....XXXX....', '....XXXX....', 'X...XXXX...X', 'XXXXX..XXXXX', 'XXXX....XXXX', 'XXXX....XXXX', 'XXXXX..XXXXX', 'X...XXXX...X', '....XXXX....', '....XXXX....', '...XXXXXX...'],
   // Bastión: torre almenada
   merchants: ['XX.XX..XX.XX', 'XXXXXXXXXXXX', '.XXXXXXXXXX.', '.XXXX..XXXX.', '.XXX....XXX.', '.XXXX..XXXX.', '.XXXXXXXXXX.', '.XXXXXXXXXX.', '.XXXX..XXXX.', '.XXX....XXX.', '.XXX....XXX.', 'XXXXXXXXXXXX'],
   // Misiones: nota clavada

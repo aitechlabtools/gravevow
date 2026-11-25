@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { PixelIcon } from '../../../shared/community';
 import { TAB_ICONS } from './tabIcons';
 
-export interface PillTab<T extends string> { id: T; label: string; badge?: number; /** Mini tutorial pendiente en esta pestaña: «!» dorado. */ dot?: boolean }
+export interface PillTab<T extends string> { id: T; label: string; badge?: number; /** Texto para lectores de pantalla del número (por defecto «listas») */ badgeLabel?: string; /** Aviso de algo malo (heridas): número sobre rojo */ alert?: boolean; /** Mini tutorial pendiente en esta pestaña: «!» dorado. */ dot?: boolean }
 
 export function PillBar<T extends string>({ tabs, active, onChange }: { tabs: PillTab<T>[]; active: T; onChange: (id: T) => void }) {
   // Si los nombres no caben (p. ej. portátil de 1280–1450 px), se ven solo los iconos y el nombre de la activa, como en el móvil.
@@ -42,12 +42,12 @@ export function PillBar<T extends string>({ tabs, active, onChange }: { tabs: Pi
   return (
     <nav ref={ref} className={`ui-pills ${tight ? 'tight' : ''}`} role="tablist" aria-label="Secciones del refugio">
       {tabs.map((t) => (
-        <button key={t.id} role="tab" aria-label={`${t.label}${t.badge ? `, ${t.badge} listas` : ''}${t.dot ? ', novedad por ver' : ''}`} aria-selected={t.id === active} className={`pill ${t.id === active ? 'on' : ''}`} title={tight && t.id !== active ? t.label : undefined}
+        <button key={t.id} role="tab" aria-label={`${t.label}${t.badge ? `, ${t.badge} ${t.badgeLabel ?? 'listas'}` : ''}${t.dot ? ', novedad por ver' : ''}`} aria-selected={t.id === active} className={`pill ${t.id === active ? 'on' : ''}`} title={tight && t.id !== active ? t.label : undefined}
           onClick={() => onChange(t.id)} data-testid={`tab-${t.id}`}>
           {TAB_ICONS[t.id] && <PixelIcon rows={TAB_ICONS[t.id]} size={24} color={t.id === active ? '#1a1206' : 'currentColor'} />}
           <span className="pill-lbl">{t.label}</span>
           {t.dot && <span className={`tut-dot ${t.badge ? 'left' : ''}`} aria-label="Novedad por ver" data-testid={`tut-dot-tab-${t.id}`}>!</span>}
-          {!!t.badge && <span className="nb" aria-label={`${t.badge} listas`}>{t.badge}</span>}
+          {!!t.badge && <span className={`nb ${t.alert ? 'alert' : ''}`} aria-label={`${t.badge} ${t.badgeLabel ?? 'listas'}`} data-testid={`tab-badge-${t.id}`}>{t.badge}</span>}
         </button>
       ))}
     </nav>

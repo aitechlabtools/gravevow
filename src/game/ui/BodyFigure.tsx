@@ -139,7 +139,7 @@ const DOLL: Record<Region, { area: string; label: string }> = {
   head: { area: '1 / 2 / 2 / 4', label: 'Cabeza' }, thorax: { area: '2 / 2 / 3 / 4', label: 'Tórax' }, abdomen: { area: '3 / 2 / 4 / 4', label: 'Abdomen' },
   armR: { area: '2 / 1 / 4 / 2', label: 'BD' }, armL: { area: '2 / 4 / 4 / 5', label: 'BI' }, legR: { area: '4 / 2 / 5 / 3', label: 'PD' }, legL: { area: '4 / 3 / 5 / 4', label: 'PI' },
 };
-/** Figura de bloques (Alijo › Heridas): cada parte es un botón con su vida; el color del borde dice cómo está. */
+/** Figura de bloques (apartado Estado): cada parte es un botón con su vida; el color del borde dice cómo está. */
 function BlockBody({ body, sel, onPick, drop }: { body: Body; sel: Region; onPick: (r: Region) => void; drop: (r: Region) => 'yes' | 'no' | null }) {
   return (
     <div className="doll" data-testid="body-map">

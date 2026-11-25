@@ -105,7 +105,7 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   },
   // ── Pestañas y pantallas ──
   {
-    id: 'tab.intendencia', topic: 'cuerpo', trigger: 'stash:status',
+    id: 'tab.intendencia', topic: 'cuerpo', trigger: 'tab:estado', badge: 'tab-estado',
     steps: [
       { text: 'Aquí ves tu **cuerpo** parte por parte y tus **necesidades**: saciedad, hidratación y descanso.', target: 'intendencia-status' },
       { text: 'Si algo está herido y llevas con qué curarlo, sale un botón. **Pruébalo**.', target: 'body-quick', action: 'click' },

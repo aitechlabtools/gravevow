@@ -1693,7 +1693,7 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 .hb-mini{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;min-height:44px;background:#15131a;border:1px solid #3a3741;cursor:pointer;font:inherit;color:inherit;min-width:0}
 .hb-mini:hover{border-color:#6b6772}.hb-mini.on{border-color:#e8b33a;background:#221c10;box-shadow:0 0 0 1px #e8b33a55}
 .hb-mini-name{font-family:var(--font-display);font-size:13px;color:#e9e1cc;line-height:1.1;text-align:center}
-.hb-mini-cost{display:flex;gap:8px;font-size:12px}.hb-mini-cost span{display:inline-flex;align-items:center;gap:2px}
+.hb-mini-cost{display:flex;gap:12px;font-size:16px;font-weight:600}.hb-mini-cost span{display:inline-flex;align-items:center;gap:2px}
 .hb-hitos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
 .hb-hito{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;cursor:pointer;padding:4px 0;min-height:44px;font:inherit;color:inherit}
 .hb-hito-d{width:40px;height:40px;transform:rotate(45deg);display:grid;place-items:center;border:2px solid #3a3741;background:#0d0c11}
@@ -1706,6 +1706,7 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 .hb-hito.on .hb-hito-d{outline:2px solid #f2e6c8;outline-offset:2px}
 .hb-hito-lv{font-size:12px;color:#a8a29e}
 .hb-det{margin-top:auto;border:1px solid #8a6a2a;background:#1a160e;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:150px}
+.hb-det.hito{margin-top:0;flex:1 1 auto;min-height:0;overflow:auto}
 .hb-det-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
 .hb-det-name{font-family:var(--font-display);font-size:18px;color:#e8b33a;text-transform:uppercase;letter-spacing:.05em}
 .hb-opt{display:block;text-align:left;width:100%;padding:8px 10px;background:#15131a;border:1px solid #3a3741;font:inherit;color:inherit;cursor:pointer}
@@ -1718,10 +1719,13 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 .hb-band{font-family:var(--font-display);font-size:14px;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;margin-bottom:6px;background:#1b1922;border-left:3px solid currentColor}
 @media (max-height:560px){.hb-effbox{min-height:0}}
 /* Alijo › Equipo (v3): muñeco de ranuras y mochila con bolsillo y oro al lado */
-.al-doll{display:flex;flex-direction:column;gap:8px;padding-bottom:10px;border-bottom:1px solid #2a2730}
+.al-doll{display:flex;flex-direction:column;gap:4px;padding-bottom:6px;border-bottom:1px solid #2a2730}
 .al-doll-top{display:flex;justify-content:space-between;align-items:flex-start}
 .al-doll-row{display:flex;justify-content:space-between;align-items:flex-start;gap:4px}
-.al-sec{padding-top:10px}
+.al-sec{padding-top:6px}
 .al-box{border:1px solid #3a3741;background:#141318;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .al-box-t{font-family:var(--font-display);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#a8a29e;text-align:center}
 .al-gem{position:absolute;display:grid;place-items:center;transform:rotate(45deg);border:2px solid;background:#0d0c11;pointer-events:auto;box-shadow:0 0 0 2px #0d0c11}
+
+.alijo-stats .hs-up{background:#132313}.alijo-stats .hs-down{background:#2a1214}
+.pill .nb.alert{background:#c4283b;color:#fff}
