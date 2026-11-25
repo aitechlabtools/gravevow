@@ -10,12 +10,10 @@ import { Segmented } from '../kit';
 import { getEnemy } from '../../../core/data/enemies';
 import { countItem, equippedValue, gridValue } from '../../../core/inventory';
 import { EXPEDITION_DURATION_MS } from '../../../core/expedition';
-import { xpForNextLevel } from '../../../core/stats';
 import { getMerc } from '../../../core/data/mercenaries';
-import { pinnedQuests, questDef, questProgress, readyQuestCount } from '../../../core/quests';
+import { pinnedQuests, questDef, questProgress } from '../../../core/quests';
 import { PlayerSprite, MonsterSprite, Modal } from '../common';
 import { zoneBackdrop, zoneFor } from '../combatZones';
-import { iconUrl } from '../../../shared/art';
 import { usePixelScale } from '../kit';
 import { useLayout } from '../../../config/ui';
 import { DISCORD_HINT, DISCORD_URL, DiscordIcon, EXTERNAL, HeartIcon, SUPPORT_HINT, SUPPORT_URL } from '../../../shared/community';
@@ -59,9 +57,7 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
   const potions = countItem(profile.backpack, 'health_potion');
   const risk = gridValue(profile.backpack) + equippedValue(profile.equipment);
   const merc = profile.contract ? getMerc(profile.contract.mercId) : null;
-  const questsReady = readyQuestCount(profile);
   const pins = pinnedQuests(profile);
-  const xpPct = Math.round((ch.xp / xpForNextLevel(ch.level)) * 100);
   // El mercenario, un poco más pequeño y detrás: el protagonista eres tú (escala entera)
   const mercScale = Math.max(2, heroScale - Math.max(1, Math.round(heroScale / 4)));
 
@@ -143,27 +139,18 @@ export function Jugar({ onNavigate }: { onNavigate: (t: QuickTarget) => void }) 
       </HoldTip>
       </div>
 
-      {/* Nivel y accesos rápidos */}
+      {/* Comunidad (Apoyar y Discord) y misiones fijadas; el nivel ya sale sobre el personaje y los accesos están en el menú */}
       <div className="absolute flex flex-col items-end gap-3" style={{ right: edge.right, bottom: edge.bottom }}>
         {/* Comunidad: enlaces externos en otra pestaña (la partida sigue aquí) */}
         <div className="flex flex-col items-center gap-2" data-testid="jugar-community">
           <QuickLink label="Apoyar" href={SUPPORT_URL} hint={SUPPORT_HINT} icon={<HeartIcon size={22} />} testId="quick-kofi" />
           <QuickLink label="Discord" href={DISCORD_URL} hint={DISCORD_HINT} icon={<DiscordIcon size={24} />} testId="quick-discord" />
         </div>
-        <div className="flex flex-col items-center gap-1" title={`Nivel ${ch.level} · experiencia ${xpPct} %`} aria-label={`Nivel ${ch.level}, experiencia ${xpPct} %`} data-testid="level-ring">
-          <div className="lvl-ring" style={{ ['--p' as string]: xpPct }}><span>{ch.level}</span></div>
-        </div>
         {pins.length > 0 && (
           <button className="panel p-2 text-left border-gold max-w-[260px]" onClick={() => onNavigate('quests')} data-testid="jugar-pinned">
             {pins.map((p) => { const q = questDef(p.id); const n = questProgress(p, profile); return <div key={p.id} className="text-sm flex justify-between gap-3"><span className="truncate text-gold">★ {q.name}</span><span className={n >= q.count ? 'text-heal' : 'text-stone-300'}>{n}/{q.count}</span></div>; })}
           </button>
         )}
-        <div className="flex gap-2">
-          <Quick label="Misiones" icon="chalice" badge={questsReady} onClick={() => onNavigate('quests')} testId="quick-quests" />
-          <Quick label="Reputación" icon="coin" onClick={() => onNavigate('merchants')} testId="quick-rep" />
-          <Quick label="Bestiario" icon="tome" onClick={() => onNavigate('bestiary')} testId="quick-bestiary" />
-          <Quick label="Contrato" icon="sword" onClick={() => onNavigate('contracts')} testId="quick-contract" />
-        </div>
       </div>
 
       {map && <ZoneMap current={subId} onPick={(z) => { setSubId(z); setMap(false); sfx('click'); }} onClose={() => setMap(false)} />}
@@ -242,16 +229,6 @@ function QuickLink({ label, href, hint, icon, testId }: { label: string; href: s
       {icon}
       <span className="leading-none">{label}</span>
     </a>
-  );
-}
-
-function Quick({ label, icon, badge, onClick, testId }: { label: string; icon: string; badge?: number; onClick: () => void; testId: string }) {
-  return (
-    <button className="btn quick" onClick={onClick} aria-label={badge ? `${label} (${badge} listas)` : label} data-testid={testId}>
-      <img src={iconUrl(icon, 2)} width={24} height={24} className="pixelated" alt="" />
-      <span className="leading-none">{label}</span>
-      {!!badge && <span className="nb">{badge}</span>}
-    </button>
   );
 }
 
