@@ -35,7 +35,8 @@ export function LevelBar({ compact }: { compact?: boolean }) {
   );
 }
 
-export function HeroStats() {
+/** preview: diferencia por atributo si te pusieras la pieza elegida (verde sube, rojo baja). */
+export function HeroStats({ preview }: { preview?: Partial<Record<keyof Stats, number>> } = {}) {
   const profile = useGame((s) => s.profile)!;
   const touch = useIsTouch();
   const ch = profile.character;
@@ -65,12 +66,14 @@ export function HeroStats() {
         {STAT_KEYS.map((k) => {
           const bonus = stats[k] - base[k];
           const on = tip?.k === k;
+          const d = preview?.[k] ?? 0;
           return (
-            <button key={k} type="button" data-stat={k} className={`w-full flex justify-between text-left ${on ? 'bg-[#2a2116]' : ''}`} style={{ minHeight: touch ? 44 : undefined }}
+            <button key={k} type="button" data-stat={k} data-preview={d || undefined} className={`w-full flex justify-between text-left ${on ? 'bg-[#2a2116]' : d > 0 ? 'hs-up' : d < 0 ? 'hs-down' : ''}`} style={{ minHeight: touch ? 44 : undefined }}
               onMouseEnter={(e) => !touch && show(k, e.currentTarget)} onClick={(e) => (on ? setTip(null) : show(k, e.currentTarget))}
               aria-label={`${label(k)} ${stats[k]}: base ${base[k]}${src[k].map((s) => `, ${s.label.toLowerCase()} ${s.v > 0 ? '+' : ''}${s.v}`).join('')}`}>
               <span className="text-stone-300">{label(k)}</span>
-              <span>{stats[k]}{bonus !== 0 && <span className={bonus > 0 ? 'text-heal' : 'text-blood'}> ({bonus > 0 ? '+' : ''}{bonus})</span>}</span>
+              <span>{stats[k]}{bonus !== 0 && <span className={bonus > 0 ? 'text-heal' : 'text-blood'}> ({bonus > 0 ? '+' : ''}{bonus})</span>}
+                {d !== 0 && <span className={d > 0 ? 'text-heal' : 'text-blood'}> {d > 0 ? '▲ +' : '▼ '}{d}</span>}</span>
             </button>
           );
         })}

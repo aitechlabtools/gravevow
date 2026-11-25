@@ -8,6 +8,8 @@ export const TAB_ICONS: Record<string, string[]> = {
   character: ['.....XX.....', '....XXXX....', '...XX..XX...', '..XX....XX..', '.XX..XX..XX.', 'XX..XXXX..XX', 'XX..XXXX..XX', '.XX..XX..XX.', '..XX....XX..', '...XX..XX...', '....XXXX....', '.....XX.....'],
   // Alijo: cofre
   stash: ['............', '..XXXXXXXX..', '.XX......XX.', 'XX........XX', 'XXXXXXXXXXXX', 'XXXXX..XXXXX', 'XXXXX..XXXXX', 'XXXXXXXXXXXX', 'XXXXXXXXXXXX', 'XXXXXXXXXXXX', 'XX........XX', '............'],
+  // Estado: cruz de hierro con remaches (no la de la Cruz Roja: brazos que se ensanchan y centro hueco)
+  estado: ['...XXXXXX...', '....XXXX....', '....XXXX....', 'X...XXXX...X', 'XXXXX..XXXXX', 'XXXX....XXXX', 'XXXX....XXXX', 'XXXXX..XXXXX', 'X...XXXX...X', '....XXXX....', '....XXXX....', '...XXXXXX...'],
   // Bastión: torre almenada
   merchants: ['XX.XX..XX.XX', 'XXXXXXXXXXXX', '.XXXXXXXXXX.', '.XXXX..XXXX.', '.XXX....XXX.', '.XXXX..XXXX.', '.XXXXXXXXXX.', '.XXXXXXXXXX.', '.XXXX..XXXX.', '.XXX....XXX.', '.XXX....XXX.', 'XXXXXXXXXXXX'],
   // Misiones: nota clavada
@@ -20,6 +22,8 @@ export const TAB_ICONS: Record<string, string[]> = {
 
 /** Pestañas del interior de un mercader (fase 2, 19/11). Mismo estilo: 12×12, un color. */
 export const VENDOR_TAB_ICONS: Record<string, string[]> = {
+  // Seguro: escudo con una marca (24/11)
+  insure: ['..XXXXXXXX..', '.XXXXXXXXXX.', 'XXXXXXXXXXXX', 'XXXXXXXX.XXX', 'XXXXXXX..XXX', 'XX.XXXX.XXXX', 'XX..XX..XXXX', 'XXX....XXXXX', '.XXX..XXXXX.', '..XXXXXXXX..', '...XXXXXX...', '....XXXX....'],
   // Tienda: bolsa con cordón
   shop: ['....XXXX....', '.....XX.....', '....XXXX....', '...XX..XX...', '..XXXXXXXX..', '.XXXXXXXXXX.', 'XXXXX..XXXXX', 'XXXX.XX.XXXX', 'XXXXX..XXXXX', 'XXXXXXXXXXXX', '.XXXXXXXXXX.', '..XXXXXXXX..'],
   // Vender: monedas apiladas

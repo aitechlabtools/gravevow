@@ -38,7 +38,7 @@ export function regionStatus(b: Body, r: Region): string[] {
 }
 
 /** Silueta pixelada (escala entera). `unit`: píxeles por casilla. */
-export function BodyFigure({ body, unit = 3, onClick, testId, label = 'Heridas' }: { body: Body; unit?: number; onClick?: () => void; testId?: string; label?: string }) {
+export function BodyFigure({ body, unit = 3, onClick, testId, label = 'Heridas', flash }: { body: Body; unit?: number; onClick?: () => void; testId?: string; label?: string; /** Regiones que acaban de cambiar: parpadean con borde blanco. */ flash?: Region[] }) {
   const w = 9 * unit, h = 15 * unit;
   const hurt = urgencies(body).length > 0;
   const svg = (
@@ -50,7 +50,7 @@ export function BodyFigure({ body, unit = 3, onClick, testId, label = 'Heridas' 
         const m = Math.max(1, Math.floor(unit / 3));
         return (
           <g key={r} data-region={r}>
-            <rect x={X + m / 2} y={Y + m / 2} width={W - m} height={H - m} fill={regionColor(body, r)} stroke={BODY_COLOR.outline} strokeWidth={m} />
+            <rect x={X + m / 2} y={Y + m / 2} width={W - m} height={H - m} fill={regionColor(body, r)} stroke={BODY_COLOR.outline} strokeWidth={m} className={flash?.includes(r) ? 'body-flash' : undefined} />
             {isDisabled(body, r) && <line x1={X + m} y1={Y + H - m} x2={X + W - m} y2={Y + m} stroke="#8c8693" strokeWidth={m} />}
             {p.fracture && <><line x1={X + m} y1={Y + H / 2 - unit} x2={X + W - m} y2={Y + H / 2 + unit} stroke="#f2ead8" strokeWidth={m} /><line x1={X + W - m} y1={Y + H / 2 - unit} x2={X + m} y2={Y + H / 2 + unit} stroke="#f2ead8" strokeWidth={m} /></>}
             {p.bleed > 0 && <rect x={X + W - unit - m} y={Y + m} width={unit} height={p.bleed === 2 ? unit * 2 : unit} fill="#ff2030" stroke={BODY_COLOR.outline} strokeWidth={m / 2} />}
@@ -132,6 +132,32 @@ function RegionTag({ body, r, on, onPick, drop }: { body: Body; r: Region; on: b
       </span>
       <span className={`body-tag-state ${word.cls}`} data-testid={`body-state-${r}`}>{word.ico} {word.word}</span>
     </button>
+  );
+}
+
+const DOLL: Record<Region, { area: string; label: string }> = {
+  head: { area: '1 / 2 / 2 / 4', label: 'Cabeza' }, thorax: { area: '2 / 2 / 3 / 4', label: 'Tórax' }, abdomen: { area: '3 / 2 / 4 / 4', label: 'Abdomen' },
+  armR: { area: '2 / 1 / 4 / 2', label: 'BD' }, armL: { area: '2 / 4 / 4 / 5', label: 'BI' }, legR: { area: '4 / 2 / 5 / 3', label: 'PD' }, legL: { area: '4 / 3 / 5 / 4', label: 'PI' },
+};
+/** Figura de bloques (apartado Estado): cada parte es un botón con su vida; el color del borde dice cómo está. */
+function BlockBody({ body, sel, onPick, drop }: { body: Body; sel: Region; onPick: (r: Region) => void; drop: (r: Region) => 'yes' | 'no' | null }) {
+  return (
+    <div className="doll" data-testid="body-map">
+      {REGIONS.map((r) => {
+        const p = body.parts[r], cap = regionCap(body, r), d = drop(r), word = regionWord(body, r);
+        return (
+          <button key={r} type="button" className={`doll-part ${sel === r ? 'on' : ''} ${isDisabled(body, r) ? 'off' : ''} ${d === 'yes' ? 'drop-yes' : d === 'no' ? 'drop-no' : ''}`}
+            style={{ gridArea: DOLL[r].area, ['--rc' as string]: regionColor(body, r) }} title={REGION_NAME[r]}
+            data-drop={JSON.stringify({ type: 'body', region: r })} onClick={() => onPick(r)} aria-pressed={sel === r}
+            aria-label={`${REGION_NAME[r]}: ${p.hp} de ${cap}. ${regionStatus(body, r).join(', ')}`} data-testid={`body-row-${r}`}>
+            <span className="doll-name">{VITAL_REGIONS.includes(r) && <span className="body-vital" aria-hidden>◆</span>}{DOLL[r].label}</span>
+            <span className="doll-hp">{p.hp}/{cap}</span>
+            {(p.bleed > 0 || p.fracture) && <span className="doll-ico">{p.bleed > 0 && <i className="body-ico bleed">{p.bleed === 2 ? '◆◆' : '◆'}</i>}{p.fracture && <i className="body-ico frac">✕</i>}</span>}
+            <span className={`sr-only body-tag-state ${word.cls}`} data-testid={`body-state-${r}`}>{word.word}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -228,12 +254,19 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, comb
   const btnCls = `btn body-treat ${touch ? 'touch' : ''}`;
   return (
     <div className={`body-panel ${full ? 'full' : ''}`} data-testid="body-panel">
+      {full && (
+        <div className={`body-banner ${hurtCount || dead ? 'hurt' : ''}`} data-testid="body-banner">
+          <span>{hurtCount ? `✕ ${hurtCount} ${hurtCount === 1 ? 'parte con lesiones' : 'partes con lesiones'}` : total < body.total ? '✓ Sin lesiones, falta vida' : '✓ Estado saludable'}</span>
+          <span className="body-banner-r">{hurtCount ? 'Cúralas con lo que llevas' : 'Sin lesiones'}</span>
+        </div>
+      )}
       <div className="body-box">
         <div className="body-box-head"><span className="font-display text-parchment">Cuerpo</span><span className="body-legend">◆ zona vital</span></div>
+        {full ? <BlockBody body={body} sel={sel} onPick={tapRegion} drop={(r) => shown ? (usefulOn(body, shown, r) ? 'yes' : 'no') : null} /> : (
         <div className="body-map" data-testid="body-map">
           <Ghost body={body} />
           {REGIONS.map((r) => <RegionTag key={r} body={body} r={r} on={sel === r} onPick={() => tapRegion(r)} drop={shown ? (usefulOn(body, shown, r) ? 'yes' : 'no') : null} />)}
-        </div>
+        </div>)}
         <div className={`body-total ${dead ? 'dead' : ''}`} data-testid="body-total">
           <span>Vida <b>{dead ? 0 : total}</b> / {body.total}</span>
           <span className="body-total-r">{hurtCount ? `${hurtCount} ${hurtCount === 1 ? 'parte con lesiones' : 'partes con lesiones'}` : 'Sin lesiones'}</span>
@@ -272,6 +305,7 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, comb
         )}
         <div className="body-detail" data-testid="body-detail">
           <div className="body-detail-title">{VITAL_REGIONS.includes(sel) && <span className="text-gold">◆ </span>}{REGION_NAME[sel]} <span className="text-stone-400 text-sm">{body.parts[sel].hp}/{regionCap(body, sel)}</span></div>
+          {full && <div className="body-detail-bar"><span style={{ width: `${Math.max(0, Math.min(100, body.parts[sel].hp / Math.max(1, regionMaxes(body.total)[sel]) * 100))}%`, background: regionColor(body, sel) }} /></div>}
           {!wounds.length && <div className="text-xs text-stone-400" data-testid="body-sound">{isDisabled(body, sel) ? regionStatus(body, sel).join(' · ') : 'Sana. Sin lesiones.'}</div>}
           {wounds.map((k) => {
             const w = WOUND_TEXT[k];
@@ -317,7 +351,17 @@ export function BodyPanel({ body, backpack, onTreat, onHeal, surgery, note, comb
           </div>
         )}
         {onTreat && !REGIONS.some((r) => options(r).length) && urgencies(body).length > 0 && <p className="body-note mt-2">No llevas nada que sirva para estas heridas. Hermana Vesper vende vendas, torniquetes, férulas y hemostáticos.</p>}
-        {!urgencies(body).length && <p className="body-note mt-2">Sin sangrados ni fracturas.{REGIONS.some((r) => isLimb(r) && body.parts[r].hp < regionCap(body, r)) ? ' La vida perdida se recupera con pociones.' : ''}</p>}
+        {full && (
+          <div className="body-states" data-testid="body-states">
+            <div className="body-states-cap">Estados activos</div>
+            {(() => { const bl = REGIONS.filter((r) => body.parts[r].bleed > 0), fr = REGIONS.filter((r) => body.parts[r].fracture);
+              return (<>
+                <div className="body-states-row"><span>Sangrados</span><span className={bl.length ? 'bad' : 'ok'}>{bl.length ? bl.map((r) => TAG_NAME[r]).join(', ') : 'Ninguno'}</span></div>
+                <div className="body-states-row"><span>Fracturas</span><span className={fr.length ? 'bad' : 'ok'}>{fr.length ? fr.map((r) => TAG_NAME[r]).join(', ') : 'Ninguna'}</span></div>
+              </>); })()}
+          </div>
+        )}
+        {!full && !urgencies(body).length && <p className="body-note mt-2">Sin sangrados ni fracturas.{REGIONS.some((r) => isLimb(r) && body.parts[r].hp < regionCap(body, r)) ? ' La vida perdida se recupera con pociones.' : ''}</p>}
         <p className="body-note body-hint">{kit.length ? `${touch ? 'Toca' : 'Haz clic en'} una cura y luego la parte del cuerpo${touch ? '' : ', o arrástrala hasta ella'}.` : `${touch ? 'Toca' : 'Haz clic en'} otra parte del cuerpo para ver sus heridas.`}</p>
       </div>
       {children && <div className="body-needs">{children}</div>}

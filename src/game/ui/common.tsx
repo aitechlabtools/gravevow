@@ -8,6 +8,8 @@ import type { Loc } from '../../core/inventory';
 import { stackAt } from '../../core/inventory';
 import { getItem } from '../../core/data/items';
 import { buysThis, vendorSellPrice } from '../../core/economy';
+import { wrongBuyerText } from '../../core/sellRoutes';
+import { VENDORS } from '../../core/data/vendors';
 import type { Appearance, ClassId, Equipment } from '../../core/types';
 import { heroUrl, monsterUrl, iconUrl } from '../../shared/art';
 import { actions, containersFor, getState, holdsToasts, useGame } from '../state/store';
@@ -118,11 +120,14 @@ export function ItemActions({ loc, mode, onClear, lootId, buttonsOnly = false }:
   if (inGrid && loc.container !== 'loot' && !isCoins(st) && st.qty > 1 && mode !== 'merchant') btns.push(b('Dividir', () => setPicker('stack'), '', 'act-split-stack'));
   const unsellable = isCoins(st) || (st.gold ?? 0) > 0;
   if (mode === 'merchant' && inGrid && unsellable && (loc.container === 'backpack' || loc.container === 'stash')) btns.push(<span key="nosell" className="text-xs text-stone-400 self-center">{isCoins(st) ? 'Las monedas ya son oro.' : 'Vacía el saco para venderlo.'}</span>);
-  if (mode === 'merchant' && inGrid && !unsellable && (loc.container === 'backpack' || loc.container === 'stash')) {
+  // Candado: protege el objeto de la venta y del desguace (mochila, almacén y compartido, en el Bastión)
+  if ((mode === 'lobby' || mode === 'merchant') && inGrid && (loc.container === 'backpack' || loc.container === 'stash' || loc.container === 'shared') && !isCoins(st))
+    btns.push(b(st.locked ? 'Quitar candado' : 'Proteger', () => actions.toggleLock(loc), '', 'act-lock'));
+  if (mode === 'merchant' && inGrid && !unsellable && !st.locked && (loc.container === 'backpack' || loc.container === 'stash')) {
     const vend = s.activeVendor ?? 'nira';
-    if (!buysThis(vend, def.id)) btns.push(<span key="nobuy" className="text-xs text-stone-400 self-center">Grizk solo compra joyas y tesoros.</span>);
+    if (!buysThis(vend, def.id, s.profile!)) btns.push(<span key="nobuy" className="text-xs text-stone-400 self-center" data-testid="nobuy-hint">{wrongBuyerText(VENDORS[vend].name, s.profile!, def.id)}</span>);
     else btns.push(b(`Vender (${vendorSellPrice(vend, def.id, st)})`, () => { actions.sell(loc.container as 'backpack' | 'stash', loc.index); if (st.qty <= 1) onClear(); }, 'btn-gold', 'act-sell'));
-    if (st.qty > 1 && buysThis(vend, def.id)) btns.push(b(`Vender todo (${vendorSellPrice(vend, def.id, st) * st.qty})`, () => { actions.sell(loc.container as 'backpack' | 'stash', loc.index, true); onClear(); }));
+    if (st.qty > 1 && buysThis(vend, def.id, s.profile!)) btns.push(b(`Vender todas (${vendorSellPrice(vend, def.id, st) * st.qty})`, () => { actions.sell(loc.container as 'backpack' | 'stash', loc.index, true); onClear(); }));
   }
   if ((mode === 'lobby' || mode === 'dungeon') && inGrid && loc.container === 'backpack' && canPocket(st.itemId)) btns.push(b('Al bolsillo seguro', () => { actions.quickMove(loc, 'pocket'); onClear(); }, '', 'act-pocket'));
   if (inGrid && loc.container === 'pocket') btns.push(b('A la mochila', () => { actions.quickMove(loc, 'backpack'); onClear(); }, '', 'act-unpocket'));

@@ -47,6 +47,7 @@ export interface SalvageInfo {
 export function salvageBlock(stack: ItemStack): string | null {
   const def = getItem(stack.itemId);
   if (def.recruit) return 'Es equipo de recluta: el Bastión te lo presta, no se desguaza.';
+  if (stack.locked) return 'Está protegido: quítale el candado para desguazarlo.';
   if (isCover(stack) || (stack.gold ?? 0) > 0 || !scrapMaterial(stack.itemId)) return `Orik no saca nada útil de ${def.name.toLowerCase()}.`;
   return null;
 }

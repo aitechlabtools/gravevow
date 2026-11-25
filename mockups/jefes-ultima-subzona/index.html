@@ -1,0 +1,11 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Jefes de zona en la última subzona</title>
+<style>body{background:#0d0c11;color:#e8dcc0;font-family:Georgia,serif;margin:24px}h1{color:#d8a531;font-weight:400}h2{color:#d8a531;font-weight:400;margin-top:32px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}figure{margin:0}figcaption{font:13px sans-serif;color:#a8a29e;margin:6px 0}img{width:100%;border:1px solid #3a3741;image-rendering:pixelated}</style></head><body>
+<h1>Jefes de zona: solo en la última subzona</h1>
+<p>Cambios de pantalla: el mapa de zonas dice en qué subzona está el jefe de zona, y la ficha del Bestiario de cada jefe o élite muestra su subzona y «Jefe de zona».</p>
+<script>
+for (const [t, k] of [['Mapa de zonas', 'mapa'], ['Bestiario: ficha del Señor del Osario', 'bestiario']]) {
+  document.write(`<h2>${t}</h2>`);
+  for (const s of ['escritorio', 'tableta', 'movil']) document.write(`<div class="row"><figure><figcaption>Antes · ${s}</figcaption><img src="antes/${s}-${k}.png"></figure><figure><figcaption>Después · ${s}</figcaption><img src="despues/${s}-${k}.png"></figure></div>`);
+}
+</script></body></html>

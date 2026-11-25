@@ -28,7 +28,7 @@ export const QUESTS: QuestDef[] = [
   { id: 'q_orvel_hell', vendor: 'nira', name: 'Mercancía caliente', description: 'Extrae con vida desde el Infierno.', type: 'extract_zone', target: 'infierno', count: 1, reward: { gold: 60, xp: 2000, rep: 200 }, minLevel: 60 },
   // ── Hermana Vesper ──
   { id: 'q_bones', vendor: 'vesper', name: 'Polvo eres', description: 'Derrota a 3 esqueletos guerreros.', type: 'kill', target: 'skeleton', count: 3, reward: { gold: 4, xp: 40, rep: 50 } },
-  { id: 'q_lord', vendor: 'vesper', name: 'El trono vacío', description: 'Derrota al Señor del Osario.', type: 'kill_boss', target: 'ossuary_lord', count: 1, reward: { gold: 12, xp: 100, rep: 150 } },
+  { id: 'q_lord', vendor: 'vesper', name: 'El trono vacío', description: 'Derrota al Señor del Osario en Las mazmorras del Bastión.', type: 'kill_boss', target: 'ossuary_lord', count: 1, reward: { gold: 12, xp: 100, rep: 150 }, minLevel: 20 },
   { id: 'q_vesper_wraiths', vendor: 'vesper', name: 'Silenciar el lamento', description: 'Derrota a 5 espectros lamentadores.', type: 'kill', target: 'wraith', count: 5, reward: { gold: 22, xp: 700, rep: 120 }, minLevel: 30 },
   { id: 'q_vesper_ecto', vendor: 'vesper', name: 'Relicario vacío', description: 'Entrega 5 de ectoplasma.', type: 'deliver', target: 'ectoplasm', count: 5, reward: { gold: 15, xp: 300, rep: 60 }, minLevel: 30, repeatable: true },
   { id: 'q_vesper_queen', vendor: 'vesper', name: 'Levantar el velo', description: 'Derrota a la Reina Velada.', type: 'kill_boss', target: 'veiled_queen', count: 1, reward: { gold: 50, xp: 1500, rep: 250 }, minLevel: 30 },

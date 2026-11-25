@@ -57,6 +57,8 @@ import { healBody } from '../../core/anatomy';
 import { applyContainers, loadNow, containersFor, dev, equipCtx, getSave, getState, initial, invError, kept, recordFound, refreshRoster, requestPersist, saveNow, set, ss, state, toast } from './internals';
 import type { Bag, GameState, Screen } from './internals';
 
+import { collectReforged } from '../../core/insurance';
+import type { EquipSlot } from '../../core/types';
 export type { Screen, RosterEntry, Toast, CombatKind, CombatSession, LootSession, Modal, Bag, DungeonHud, TutorialRun, GameState } from './internals';
 export { getState, subscribe, useGame, getSave, getActiveCharacterId, toast, containersFor, holdsToasts, tutorialFrozen, dev, tutorialDoneOnDevice } from './internals';
 
@@ -475,6 +477,20 @@ export const actions = {
     toast(`Te pones la ${getItem(r.profile.bag.itemId).name.toLowerCase()}: ${r.profile.backpack.length} casillas.`, 'good');
   },
 
+  /** Pone o quita el candado de un objeto de la mochila, el almacén o el compartido (no se vende ni se desguaza). */
+  toggleLock(loc: Loc) {
+    const p = state.profile;
+    if (!p || loc.kind !== 'grid' || !(loc.container === 'backpack' || loc.container === 'stash' || loc.container === 'shared')) return;
+    const grid = (loc.container === 'shared' ? p.shared : p[loc.container]);
+    const st = grid?.[loc.index];
+    if (!grid || !st || isCover(st)) return;
+    const next = grid.slice(); next[loc.index] = { ...st, locked: !st.locked };
+    if (!next[loc.index]!.locked) delete next[loc.index]!.locked;
+    sfx('click');
+    set({ profile: { ...p, [loc.container]: next } as Profile });
+    toast(st.locked ? `${getItem(st.itemId).name}: sin candado.` : `${getItem(st.itemId).name}: protegido. No se venderá ni se desguazará.`, 'info');
+  },
+
   /** Cambia la página del almacén que se ve. */
   setStashPage(page: StashPage) {
     const p = state.profile;
@@ -526,7 +542,7 @@ export const actions = {
     if (def.use.kind === 'need') return actions.eat(loc);
     if (def.use.kind === 'bomb') return invError('Las bombas se lanzan en combate, desde la mochila.');
     if (!s.expedition && def.use.kind === 'heal' && loc.kind === 'grid' && loc.container === 'backpack') return actions.baseHeal(st.itemId);
-    if (!s.expedition && def.use.kind === 'treat') return invError('En el Bastión, las heridas se tratan en el Alijo → Heridas.');
+    if (!s.expedition && def.use.kind === 'treat') return invError('En el Bastión, las heridas se tratan en Estado.');
     if (s.screen !== 'dungeon' || !s.expedition) return invError(def.use.kind === 'repair' ? 'El kit se usa en la mazmorra; en la base, Maese Brand repara mejor.' : 'Las pociones solo se usan durante una expedición.');
     const stats = computeStats(s.profile.character.classId, s.profile.character.level, s.expedition.equipment);
     const exp = { ...s.expedition };
@@ -893,7 +909,8 @@ export const actions = {
   },
 
   /** Vender de una vez todo lo marcado (casillas de la mochila y del almacén). Devuelve cuánto se ha ganado. */
-  sellMany(locs: { container: 'backpack' | 'stash'; index: number }[]): number {
+  /** `quiet`: sin aviso (la pantalla de venta ya enseña «+N oro» junto al botón). */
+  sellMany(locs: { container: 'backpack' | 'stash'; index: number; qty?: number }[], quiet = false): number {
     const p0 = state.profile;
     if (!p0 || !locs.length) return 0;
     const vendor = state.activeVendor ?? 'nira';
@@ -901,20 +918,21 @@ export const actions = {
     for (const l of locs) {
       const item = p[l.container][l.index];
       if (!item) continue;
-      let r = sell(p, l.container, l.index, true, vendor);
+      const part = l.qty !== undefined && l.qty < item.qty;
+      let r = sell(p, l.container, l.index, !part, vendor, l.qty ?? 1);
       if (!r.ok && r.error === NO_ROOM_FOR_GOLD) {
         const grouped = joinPages(splitPages(p.stash).map((pg) => groupGold(pg).grid));
-        r = sell({ ...p, stash: grouped }, l.container, l.index, true, vendor);
+        r = sell({ ...p, stash: grouped }, l.container, l.index, !part, vendor, l.qty ?? 1);
       }
       if (!r.ok) { fail = r.error; continue; }
-      bought.push({ stack: item, price: r.profile.gold - p.gold });
+      bought.push({ stack: part ? { ...item, qty: l.qty! } : item, price: r.profile.gold - p.gold });
       p = r.profile; sold++;
     }
     const gain = p.gold - p0.gold;
     if (sold) {
       sfx('coin');
       set({ profile: p, buyback: [...bought.reverse(), ...state.buyback].slice(0, 5) });
-      toast(`Vendes ${sold === 1 ? '1 objeto' : `${sold} objetos`} por ${gain} de oro.`, 'good', 'coin');
+      if (!quiet) toast(`Vendes ${sold === 1 ? '1 objeto' : `${sold} objetos`} por ${gain} de oro.`, 'good', 'coin');
       actions.tutorialEvent('bastion:sale');
     }
     if (fail) invError(sold ? `No se pudo vender todo: ${fail}` : fail);
@@ -1032,6 +1050,34 @@ export const actions = {
   },
   backToLobby() {
     set({ screen: 'lobby', summary: null });
+    // Seguro: al volver al Bastión con piezas reforjadas esperando, un aviso con quién las tiene
+    const rf = state.profile?.reforged ?? [];
+    if (rf.length) {
+      const who = [...new Set(rf.map((r) => VENDORS[r.vendor].name))];
+      toast(`${who.join(' y ')} ${who.length > 1 ? 'te han' : 'te ha'} reforjado ${rf.length === 1 ? 'una pieza' : `${rf.length} piezas`}. Pasa a recogerla${rf.length === 1 ? '' : 's'}.`, 'good');
+    }
+  },
+
+  // ── Seguro de equipo por bajada ──
+  /** Recoge las piezas reforjadas de un mercader (una o todas). */
+  collectReforged(vendor: VendorId, uid?: string) {
+    const p = state.profile;
+    if (!p) return;
+    const r = collectReforged(p, vendor, uid);
+    if (!r.taken) return invError('No te cabe: haz sitio en la mochila o en el almacén.');
+    sfx('pickup');
+    set({ profile: r.profile });
+    toast(r.left ? `Recoges ${r.taken}. Te quedan ${r.left}: haz sitio.` : r.taken === 1 ? 'Recoges la pieza reforjada.' : `Recoges ${r.taken} piezas reforjadas.`, 'good');
+    void saveNow();
+  },
+  /** Ranuras marcadas para asegurar en la próxima bajada (se recuerdan). */
+  setInsurePlan(slots: EquipSlot[]) {
+    const p = state.profile;
+    if (p) set({ profile: { ...p, insurePlan: slots } });
+  },
+  setInsureAsk(on: boolean) {
+    const p = state.profile;
+    if (p) set({ profile: { ...p, insureAsk: on } });
   },
   ...expeditionActions,
   ...combatActions,

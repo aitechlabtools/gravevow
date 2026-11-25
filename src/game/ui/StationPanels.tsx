@@ -1,6 +1,6 @@
 // Bloque 2: estaciones del Bastión (partes en ruinas que se reconstruyen; tarjeta con encargado, coste y beneficio), el menú de crafteo común de todas las
 // estaciones con recetas (fase 3: sin minijuegos) y la vista de runas. Todo se decide tocando; objetivos de 44 px.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { actions, useGame } from '../state/store';
 import { MODULES, type ModuleId } from '../../core/data/refuge';
 import { needsOf } from '../../core/needs';
@@ -9,7 +9,6 @@ import { Card, usePixelScale } from './kit';
 import { useLayout } from '../../config/ui';
 import { STAT_LABELS } from '../../core/data/classes';
 import { SLOT_LABELS } from './inventory';
-import { MonsterSprite } from './common';
 import { stationArtUrl, STATION_ART_W, STATION_ART_H } from './stationArt';
 import { MATERIAL_SOURCES, STATION_FX } from '../../config/stations';
 import { VENDORS, type VendorId } from '../../core/data/vendors';
@@ -51,7 +50,7 @@ function CostLines({ id, onGo, hints = true }: { id: ModuleId; onGo?: GoTo; hint
         return (
           <div key={m.itemId} className="flex items-center gap-2 text-[12px] text-stone-400 bg-black/30 border border-stone-800 px-2 py-1" data-testid={`source-${id}-${m.itemId}`}>
             <span className="flex-1 min-w-0"><b className="text-stone-300">{getItem(m.itemId).name}:</b> {src.text}</span>
-            {src.go && onGo && <button className="btn text-xs shrink-0" style={BTN} onClick={() => { sfx('click'); onGo(src.go!.vendor, src.go!.view); }}>Ir</button>}
+            {src.go && onGo && <button className="btn text-xs shrink-0" style={{ ...BTN, minWidth: 44 }} onClick={() => { sfx('click'); onGo(src.go!.vendor, src.go!.view); }}>Ir</button>}
           </div>
         );
       })}
@@ -93,7 +92,6 @@ export function StationCard({ id, onGo, onEnter }: { id: ModuleId; onGo?: GoTo; 
           <button className="btn btn-gold" style={BTN} disabled={!!block} onClick={() => actions.upgradeModule(id)} data-testid={`upgrade-${id}`}>
             {locked ? 'Reconstruir' : `Mejorar · nivel ${lvl + 1}`}
           </button>
-          {block && <div className="text-xs text-[#d0905a]" data-testid={`upgrade-block-${id}`}>{block}</div>}
         </div>
       ) : <div className="text-xs text-gold mt-auto" data-testid={`upgrade-max-${id}`}>Nivel 3/3 · está al máximo.</div>}
     </div>
@@ -183,6 +181,9 @@ function StationPresent({ id }: { id: ModuleId }) {
   );
 }
 
+/** Ancho mínimo del panel de estación para enseñar niveles y mejora en columna propia (280) + recetas (200) + ficha legible (~480). */
+const STATION_WIDE_MIN = 1000;
+
 /** Detalle de una estación: reconstruirla o mejorarla, con los tres niveles, el coste y el retrato del encargado. */
 export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (id: ModuleId) => void; onGo?: GoTo; children?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
@@ -191,9 +192,21 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
   const lvl = refugeOf(profile)[id];
   const next = m.levels[lvl + 1];
   const block = next ? upgradeBlock(profile, id) : null;
-  const by = VENDORS[m.by];
   const locked = lvl < 1;
   const tablet = useLayout() === 'tablet';
+  // Plegar niveles y mejora en una cabecera también en escritorio cuando el sitio no da para cinco columnas (portátil 1280–1600 px):
+  // se mide el ancho real del panel, no el de la pantalla.
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [boxW, setBoxW] = useState(0);
+  useLayoutEffect(() => {
+    const el = boxRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setBoxW(el.clientWidth));
+    ro.observe(el);
+    setBoxW(el.clientWidth);
+    return () => ro.disconnect();
+  }, [boxW > 0 && boxW < STATION_WIDE_MIN, locked]);
+  const narrow = boxW > 0 && boxW < STATION_WIDE_MIN;
   const [open, setOpen] = useState(Math.min(3, lvl + 1));
   const [showSide, setShowSide] = useState(false);
   const cost = next ? (
@@ -201,16 +214,14 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
               <div className="font-display text-gold text-[13px] tracking-[0.1em] uppercase">{locked ? 'Para reconstruirla' : `Mejora · nivel ${lvl + 1}`}</div>
               <CostLines id={id} onGo={onGo} hints={locked || id === 'cot'} />
               <button className={`btn font-display tracking-[0.12em] uppercase ${block ? '' : 'btn-gold'}`} style={{ minHeight: 'max(44px, var(--btn-h))' }} disabled={!!block}
-                onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`} aria-describedby={block ? `upgrade-block-${id}` : undefined}>
+                onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`}>
                 {locked ? 'Reconstruir' : `▲ Mejorar · nivel ${lvl + 1}`}
               </button>
-              {block
-                ? <div className="text-[13px] text-[#d0905a]" id={`upgrade-block-${id}`} data-testid={`upgrade-block-${id}`}>{block}</div>
-                : <div className="text-[13px] text-[#7fbf6a]" data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
+              {!block && <div className="text-[13px] text-[#7fbf6a]" data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
             </div>
           ) : <div className="panel p-3 text-[13px] text-gold" data-testid={`upgrade-max-${id}`}>Nivel 3/3 · está al máximo.</div>;
-  if (!locked && (phone || tablet)) return (
-    <div className="flex flex-col w-full" style={{ gap: 'var(--gap)' }} data-testid={`station-detail-${id}`} data-detail-built="">
+  if (!locked && (phone || tablet || narrow)) return (
+    <div ref={boxRef} className="flex flex-col w-full" style={{ gap: 'var(--gap)' }} data-testid={`station-detail-${id}`} data-detail-built="">
       <button type="button" className="btn flex items-center gap-3 text-left" style={{ minHeight: 44 }} aria-expanded={showSide} onClick={() => { sfx('click'); setShowSide(!showSide); }} data-testid={`station-upgrade-${id}`}>
         <span style={{ lineHeight: 0 }}><StationArt id={id} scale={1} /></span>
         <span className="font-display text-parchment text-[14px] flex-1">{m.name} · Nivel {lvl}/3</span>
@@ -229,11 +240,11 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
           })}</div>
         {cost}
       </div>}
-      <div className="min-w-0 min-h-0" style={{ height: tablet && !showSide ? 'calc(100vh - 190px)' : undefined }}>{children}</div>
+      <div className="min-w-0 min-h-0" style={{ height: (tablet || (narrow && !phone)) && !showSide ? 'calc(100vh - 190px)' : undefined }}>{children}</div>
     </div>
   );
   if (!locked) return (
-    <div className="grid w-full" style={{ gridTemplateColumns: phone ? '190px minmax(0,1fr)' : tablet ? '230px minmax(0,1fr)' : '280px minmax(0,1fr)', gap: 'var(--gap)', height: !phone && !tablet ? 'calc(100vh - 128px)' : undefined }} data-testid={`station-detail-${id}`} data-detail-built="">
+    <div ref={boxRef} className="grid w-full" style={{ gridTemplateColumns: phone ? '190px minmax(0,1fr)' : tablet ? '230px minmax(0,1fr)' : '280px minmax(0,1fr)', gap: 'var(--gap)', height: !phone && !tablet ? 'calc(100vh - 128px)' : undefined }} data-testid={`station-detail-${id}`} data-detail-built="">
       <div className="flex flex-col min-w-0 min-h-0" style={{ gap: 'var(--gap)' }}>
         <div className="flex flex-col" style={{ gap: 'var(--gap)' }}>
           <StationPresent id={id} />
@@ -257,42 +268,80 @@ export function StationDetail({ id, onGo, children }: { id: ModuleId; onUse?: (i
       <div className="min-w-0 min-h-0 h-full">{children}</div>
     </div>
   );
+  // En ruinas: cabecera con nombre y estado, arte ancho, escalones de nivel, siguiente mejora, requisitos en fichas y «Reconstruir»
+  return <RuinPanel id={id} onGo={onGo} block={block}>{children}</RuinPanel>;
+}
+
+/** Estación en ruinas (antes de reconstruirla). */
+function RuinPanel({ id, onGo, block, children }: { id: ModuleId; onGo?: GoTo; block: string | null; children?: React.ReactNode }) {
+  const profile = useGame((s) => s.profile)!;
+  const phone = useLayout() === 'phone';
+  const m = MODULES[id];
+  const cost = nextCost(profile, id);
+  const artRef = useRef<HTMLDivElement>(null);
+  const [art, setArt] = useState({ w: 0, h: 0 });
+  useLayoutEffect(() => {
+    const el = artRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
+    const f = () => setArt({ w: el.clientWidth, h: el.clientHeight }); const ro = new ResizeObserver(f); ro.observe(el); f(); return () => ro.disconnect();
+  }, []);
+  // Escritorio y tableta: el dibujo ocupa todo el alto libre (escala entera); móvil: franja fija
+  const scale = art.h ? Math.max(1, Math.min(Math.floor((art.h - 12) / STATION_ART_H), Math.floor((art.w - 24) / STATION_ART_W))) : 2;
+  const reqs = cost ? [...cost.items.map((it) => ({ key: it.itemId, name: getItem(it.itemId).name, have: ownedQty(profile, it.itemId), need: it.qty, icon: it.itemId, src: MATERIAL_SOURCES[it.itemId] })),
+    ...(cost.gold > 0 ? [{ key: 'gold', name: 'Oro', have: profile.gold, need: cost.gold, icon: null as string | null, src: undefined }] : [])] : [];
   return (
-    <div className="grid w-full" style={{ gridTemplateColumns: phone ? '170px minmax(0,1fr)' : tablet ? '240px minmax(0,1fr)' : '300px minmax(0,1fr)', gap: 'var(--gap)' }} data-testid={`station-detail-${id}`}>
-      <div className="flex flex-col min-w-0" style={{ gap: 'var(--gap)' }}>
-        <StationPresent id={id} />
-          {!locked && cost}
+    <div className="flex flex-col w-full ruin mx-auto" style={{ gap: phone ? 8 : 14, maxWidth: 980, height: phone ? '100%' : 'calc(100vh - 128px)' }} data-testid={`station-detail-${id}`}>
+      <h3 className="font-display text-gold uppercase tracking-[0.08em] text-center" style={{ fontSize: phone ? 16 : 20 }} data-testid={`module-${id}`}>{m.name}</h3>
+      <div className="text-center text-[12px] uppercase tracking-[0.1em] text-[#d0905a] -mt-2" data-testid={`module-level-${id}`}>En ruinas</div>
+      {phone ? (
+        <div className="flex flex-1 min-h-0" style={{ gap: 10 }}>
+        <div ref={artRef} className="ruin-art" style={phone ? { width: '38%', flex: 'none' } : { flex: 1, minHeight: 140 }}><img src={stationArtUrl(id, true)} className="pixelated" alt="En ruinas" draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} /></div>
+          <div className="flex-1 min-w-0 flex flex-col justify-center" style={{ gap: 8 }}>
+      <div className="ruin-cap text-center">Materiales necesarios</div>
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${reqs.length}, minmax(0,1fr))` }} data-testid={`station-cost-${id}`}>
+        {reqs.map((r) => {
+          const ok = r.have >= r.need;
+          const go = !ok && r.src?.go && onGo ? r.src.go : null;
+          const body = (<>
+            {r.icon ? <ItemIcon itemId={r.icon} size={28} /> : <span className="text-gold text-[22px] leading-none">●</span>}
+            <span className="text-[13px] text-parchment">{r.name}</span>
+            <span className="ruin-qty">{r.have} / {r.need}</span>
+          </>);
+          return go
+            ? <button key={r.key} type="button" className="ruin-req bad" title={`${r.src!.text} Toca para ir.`} onClick={() => { sfx('click'); onGo!(go.vendor, go.view); }} data-testid={`req-${id}-${r.key}`}>{body}</button>
+            : <div key={r.key} className={`ruin-req ${ok ? 'ok' : 'bad'}`} title={ok ? undefined : r.src?.text} data-testid={`req-${id}-${r.key}`}>{body}</div>;
+        })}
       </div>
-      <div className="panel p-3 flex flex-col gap-2 min-w-0">
-        <div className="flex gap-3 items-center">
-          <div className="ui-arch shrink-0" style={{ width: phone ? 60 : 96, height: phone ? 70 : 112 }}><div className="pb-1"><MonsterSprite sprite={by.sprite} scale={phone ? 2 : 3} /></div></div>
-          <div className="min-w-0">
-            <div className="font-display text-parchment text-[14px]">Encargado: <span style={{ color: by.color }}>{by.name}</span></div>
-            <div className="text-[14px] text-stone-300 italic leading-snug">{m.purpose}</div>
+      <div className="flex flex-col gap-1">
+        <button className={`btn font-display tracking-[0.12em] uppercase ${block ? '' : 'btn-gold'}`} style={{ minHeight: 'max(44px, var(--btn-h))' }} disabled={!!block}
+          onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`}>Reconstruir</button>
+        {!block && <div className="text-[12px] text-center" style={{ color: OK }} data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
+      </div>
           </div>
         </div>
-        {locked ? (
-          <>
-            <div className="border border-stone-700 px-3 py-2 bg-[#19171f] text-[13px] leading-snug" data-testid={`station-level-${id}-1`}>
-              <b className="block font-display text-gold text-[13px]">Al reconstruirla · Nivel 1 · {m.levels[1].name}</b>
-              <span className="text-stone-300">{m.levels[1].effect}</span>
-            </div>
-            <div className="mt-auto">{cost}</div>
-          </>
-        ) : <div className="flex flex-col gap-2">
-          {[1, 2, 3].map((k) => {
-            const isOpen = k === open;
-            return (
-              <button key={k} type="button" aria-expanded={isOpen} onClick={() => { sfx('click'); setOpen(isOpen ? 0 : k); }}
-                className={`text-left border px-3 py-2 bg-[#19171f] text-[13px] leading-snug ${k === lvl ? 'border-gold' : 'border-stone-700'}`} style={{ minHeight: 44 }} data-testid={`station-level-${id}-${k}`}>
-                <span className="flex items-center gap-2"><b className="font-display text-gold text-[13px] flex-1">Nivel {k} · {m.levels[k].name}{k <= lvl ? ' ✓' : ''}</b><span className="text-stone-400 text-[12px]">{isOpen ? '▴' : '▾'}</span></span>
-                {isOpen && <span className="block text-stone-300 mt-1">{m.levels[k].effect}</span>}
-              </button>
-            );
-          })}
-        </div>}
-        {children}
+      ) : (<>
+      <div ref={artRef} className="ruin-art" style={phone ? { width: '38%', flex: 'none' } : { flex: 1, minHeight: 140 }}><img src={stationArtUrl(id, true)} className="pixelated" alt="En ruinas" draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} /></div>
+      <div className="ruin-cap text-center">Materiales necesarios</div>
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${reqs.length}, minmax(0,1fr))` }} data-testid={`station-cost-${id}`}>
+        {reqs.map((r) => {
+          const ok = r.have >= r.need;
+          const go = !ok && r.src?.go && onGo ? r.src.go : null;
+          const body = (<>
+            {r.icon ? <ItemIcon itemId={r.icon} size={28} /> : <span className="text-gold text-[22px] leading-none">●</span>}
+            <span className="text-[13px] text-parchment">{r.name}</span>
+            <span className="ruin-qty">{r.have} / {r.need}</span>
+          </>);
+          return go
+            ? <button key={r.key} type="button" className="ruin-req bad" title={`${r.src!.text} Toca para ir.`} onClick={() => { sfx('click'); onGo!(go.vendor, go.view); }} data-testid={`req-${id}-${r.key}`}>{body}</button>
+            : <div key={r.key} className={`ruin-req ${ok ? 'ok' : 'bad'}`} title={ok ? undefined : r.src?.text} data-testid={`req-${id}-${r.key}`}>{body}</div>;
+        })}
       </div>
+      <div className="flex flex-col gap-1">
+        <button className={`btn font-display tracking-[0.12em] uppercase ${block ? '' : 'btn-gold'}`} style={{ minHeight: 'max(44px, var(--btn-h))' }} disabled={!!block}
+          onClick={() => { sfx('click'); actions.upgradeModule(id); }} data-testid={`upgrade-${id}`}>Reconstruir</button>
+        {!block && <div className="text-[12px] text-center" style={{ color: OK }} data-testid={`upgrade-ok-${id}`}>Tienes todo lo que hace falta.</div>}
+      </div>
+      </>)}
+      {children}
     </div>
   );
 }
@@ -365,8 +414,20 @@ const groupOf = (r: CraftRecipe) => GROUPS.find((g) => g.test(r))!.id;
 
 export function CraftPanel({ station, onBack, extra }: { station: CraftStation; onBack?: () => void; extra?: React.ReactNode }) {
   const profile = useGame((s) => s.profile)!;
-  const craftLayout = useLayout();
-  const bigIcon = craftLayout === 'phone' ? 64 : craftLayout === 'tablet' ? 128 : 192;
+  const screenLayout = useLayout();
+  // En escritorio estrecho (portátil, la estación plegada) la ficha usa los tamaños de tableta: se mide el ancho del panel.
+  const craftRef = useRef<HTMLDivElement>(null);
+  const [craftW, setCraftW] = useState(0);
+  useLayoutEffect(() => {
+    const el = craftRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setCraftW(el.clientWidth));
+    ro.observe(el);
+    setCraftW(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+  const craftLayout = screenLayout === 'desktop' && craftW > 0 && craftW < 900 ? 'tablet' : screenLayout;
+  const bigIcon = craftLayout === 'phone' ? 64 : craftLayout === 'tablet' ? (screenLayout === 'desktop' && craftW < 640 ? 96 : 128) : 192;
   const statLbl = craftLayout === 'phone' ? 12 : 14;
   const statVal = craftLayout === 'desktop' ? 24 : craftLayout === 'tablet' ? 20 : 15;
   const all = useMemo(() => stationRecipes(station).sort((a, b) => a.level - b.level || getItem(a.result).value - getItem(b.result).value), [station]);
@@ -386,7 +447,7 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
   // Primera vez en la estación: su encargado la explica (data/tutorials.ts, «station.<id>»)
   useEffect(() => { if (lvl >= 1) actions.tutorialEvent(`station:${station}`); }, [station, lvl >= 1]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className={`flex flex-col gap-2 ${craftLayout !== 'phone' ? 'h-full min-h-0' : ''}`} data-testid={`craft-${station}`}>
+    <div ref={craftRef} className={`flex flex-col gap-2 ${craftLayout !== 'phone' ? 'h-full min-h-0' : ''}`} data-testid={`craft-${station}`}>
       {(extra || onBack) && <div className="flex flex-wrap items-center gap-2 justify-end">
         {extra}
         {onBack && <button className="btn text-xs" style={BTN} onClick={onBack} data-testid="craft-back">◂ Volver</button>}
@@ -410,7 +471,7 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
                     return (
                       <button key={x.id} className={`flex items-center gap-2 px-2 text-left border ${x.id === r?.id ? 'border-parchment bg-stone-800' : 'border-stone-800 bg-black/30'} ${lk ? 'opacity-55' : ''}`} style={BTN} onClick={() => pick(x.id)} data-testid={`recipe-${x.id}`}>
                         <ItemIcon itemId={x.result} size={22} />
-                        <span className="truncate text-sm" style={{ color: RARITY_INFO[it.rarity].color }}>{it.name}</span>
+                        <span className="text-sm leading-tight min-w-0 break-words" style={{ color: RARITY_INFO[it.rarity].color }}>{it.name}</span>
                         {lk ? <span className="ml-auto text-[12px] text-stone-400 whitespace-nowrap">🔒 {lk.includes('plano') ? 'Plano' : `Nv ${x.level}`}</span>
                           : <span className="ml-auto w-2.5 h-2.5 rounded-full shrink-0" style={{ background: can ? OK : '#3a3530' }} />}
                       </button>
@@ -427,7 +488,7 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
             <div className="flex items-start gap-3">
               <div className="slot shrink-0 flex items-center justify-center" style={{ borderColor: RARITY_INFO[def.rarity].color + 'aa', width: bigIcon + 24, height: bigIcon + 24 }}><ItemIcon itemId={def.id} size={bigIcon} /></div>
               <div className="min-w-0 self-center">
-                <div className="font-display text-parchment leading-tight" style={{ fontSize: craftLayout === 'desktop' ? 28 : craftLayout === 'tablet' ? 22 : 17 }}>{def.name}{r.qty > 1 ? ` ×${r.qty}` : ''}</div>
+                <div className="font-display text-parchment leading-tight" style={{ fontSize: craftLayout === 'desktop' ? 28 : craftLayout === 'tablet' ? (screenLayout === 'desktop' && craftW < 640 ? 20 : 22) : 17 }}>{def.name}{r.qty > 1 ? ` ×${r.qty}` : ''}</div>
                 <div style={{ color: RARITY_INFO[def.rarity].color, fontSize: craftLayout === 'phone' ? 12 : 16 }}>{RARITY_INFO[def.rarity].name} · receta de nivel {r.level}</div>
                 {fineChance(profile, r, fine) > 0 && <div className="text-[12px] text-stone-400">Acabado fino: {Math.round(fineChance(profile, r, fine) * 100)} % de salir con una rareza más.</div>}
               </div>
@@ -468,9 +529,9 @@ export function CraftPanel({ station, onBack, extra }: { station: CraftStation; 
             </div>
             <div className="flex flex-wrap items-center gap-2 border-t border-stone-800 pt-2">
               <div className="flex items-center border border-stone-700">
-                <button className="btn w-11" style={BTN} onClick={() => setQty(Math.max(1, n - 1))} disabled={n <= 1} aria-label="Menos">−</button>
+                <button className="btn w-11 shrink-0" style={BTN} onClick={() => setQty(Math.max(1, n - 1))} disabled={n <= 1} aria-label="Menos">−</button>
                 <b className="w-11 text-center" data-testid="craft-qty">{n}</b>
-                <button className="btn w-11" style={BTN} onClick={() => setQty(n + 1)} disabled={n >= batchLimit(profile, station)} aria-label="Más" data-testid="craft-more">+</button>
+                <button className="btn w-11 shrink-0" style={BTN} onClick={() => setQty(n + 1)} disabled={n >= batchLimit(profile, station)} aria-label="Más" data-testid="craft-more">+</button>
                 <button className="btn text-xs" style={BTN} onClick={() => setQty(Math.max(1, max))} disabled={max < 1}>Máx.</button>
               </div>
               <button className="btn" style={BTN} disabled={!!block} onClick={() => actions.craft(r.id, n, fine, 'backpack')} data-testid="craft-to-backpack">A la mochila</button>

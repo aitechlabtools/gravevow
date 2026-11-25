@@ -1,4 +1,7 @@
-import { capacityOf } from '../../../core/gold';
+import { capacityOf, isCoins } from '../../../core/gold';
+import { BUYER_NAME, PLACE, sellable, whoBuys } from '../../../core/sellRoutes';
+import { vendorSellPrice } from '../../../core/economy';
+import { VENDORS } from '../../../core/data/vendors';
 import { durability, isBroken, maxDurability, wearLevel } from '../../../core/durability';
 import { WEAR_COLOR } from '../../../config/durability';
 // Ficha del objeto elegido: qué es, qué da y qué puedes hacer con él. Si es un arma o una secundaria,
@@ -80,6 +83,15 @@ export function ItemCard({ loc, mode, onClear, compact = false, stacked = false 
           </div>
         )}
         {(wrongClass || tooHigh) && <div className="text-xs text-blood mt-0.5">{wrongClass ? `Solo para: ${def.classes!.map((k) => CLASSES[k].name).join(', ')}` : `Requiere nivel ${def.levelReq} (tienes ${who!.level})`}</div>}
+        {(mode === 'lobby' || mode === 'merchant') && loc.kind === 'grid' && s.profile && !isCoins(st) && sellable(st.itemId) && (() => { const w = whoBuys(s.profile, st.itemId); const a = s.activeVendor;
+          if (mode === 'merchant' && a) return (
+            <div className="text-[13px] mt-1" data-testid="item-card-buyer">
+              {st.locked ? <span className="text-stone-300">🔒 Protegido: no se vende.</span>
+                : loc.container === 'shared' ? <span style={{ color: '#e0a060' }}>Lo del Compartido no se vende: pásalo antes a tu almacén.</span>
+                : w === a ? <span className="text-heal">✓ {BUYER_NAME[a]} compra este objeto · {vendorSellPrice(a, st.itemId, st)} oro{st.qty > 1 ? ' c/u' : ''}</span>
+                : <span style={{ color: '#e0a060' }}>✗ {BUYER_NAME[a]} no lo compra. Lo compra <b style={{ color: VENDORS[w].color }}>{BUYER_NAME[w]}</b> · {PLACE[w]}.</span>}
+            </div>);
+          return <div className="text-[13px] mt-1 text-parchment" data-testid="item-card-buyer">Lo compra <b style={{ color: VENDORS[w].color }}>{BUYER_NAME[w]}</b> · {PLACE[w]}{st.locked ? ' · 🔒 protegido' : ''}</div>; })()}
         <div className="mt-2"><ItemActions loc={loc} mode={mode} onClear={onClear} buttonsOnly /></div>
       </div>
     </div>

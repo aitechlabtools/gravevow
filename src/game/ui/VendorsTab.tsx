@@ -23,7 +23,7 @@ export function RepBar({ rep }: { rep: number }) {
 }
 
 /** Pestañas de un mercader. 'station': su estación del Bastión (una por mercader). */
-export type VendorView = 'shop' | 'quests' | 'sell' | 'repair' | 'contracts' | 'infirmary' | 'scrap' | 'station';
+export type VendorView = 'shop' | 'quests' | 'sell' | 'repair' | 'contracts' | 'infirmary' | 'scrap' | 'station' | 'insure';
 export interface VendorTarget { vendor: VendorId; view: VendorView }
 
 /** Mercancía de un mercader (fase 2): filas que se tocan para ver la ficha; el precio es texto dorado con moneda.
@@ -46,7 +46,7 @@ export function ShopStock({ vid, cols = 'shop-list', sel, onSel }: { vid: Vendor
             onClick={() => onSel?.(itemId)} onDoubleClick={() => !locked && profile.gold >= price && actions.buy(itemId, vid)} data-testid={`shop-row-${itemId}`}>
             <span className="slot shop-ico" style={{ borderColor: RARITY_INFO[d.rarity].color + 'aa' }}><ItemIcon itemId={itemId} /></span>
             <span className="flex-1 min-w-0 text-left">
-              <span className="block truncate shop-name" style={{ color: RARITY_INFO[d.rarity].color }}>{d.name}</span>
+              <span className="block shop-name leading-tight line-clamp-2" style={{ color: RARITY_INFO[d.rarity].color }}>{d.name}</span>
               <span className="block truncate shop-sub">
                 {d.slot && d.levelReq ? <span className={ch.level < d.levelReq ? 'text-danger' : ''}>Nv {d.levelReq} · </span> : null}
                 {!usable ? <span className="text-danger">Otra clase</span> : d.stats ? Object.entries(d.stats).map(([k, val]) => `${val! > 0 ? '+' : ''}${val} ${k}`).join(' ') : d.description}

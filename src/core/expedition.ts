@@ -1,4 +1,5 @@
 import type { BossMemory } from './combat';
+import { reforgeLost, type Reforged } from './insuranceLoss';
 import { baseSupply, needsOf, toSaved, type Needs } from './needs';
 import { gridGold, isCoins } from './gold';
 import type { Equipment, Grid, ItemStack, Profile } from './types';
@@ -30,6 +31,8 @@ export interface ExpeditionState {
   /** Bolsillo seguro durante la expedición (vuelve al perfil pase lo que pase). */
   pocket: Grid;
   equipment: Equipment;
+  /** Seguro de esta bajada: `uid` de las piezas puestas que se aseguraron al bajar. */
+  insured?: string[];
   /** Resumen de la vida: la suma de las regiones de `body` (0 si ha muerto). */
   hp: number;
   /** Anatomía de siete regiones (Fase 4). */
@@ -78,6 +81,8 @@ export type EndReason = 'extracted' | 'died' | 'timeout';
 
 export interface ExpeditionSummary {
   reason: EndReason;
+  /** Seguro: piezas aseguradas perdidas que te esperan reforjadas en su mercader. */
+  reforged?: Reforged[];
   durationMs: number;
   goldGained: number;
   goldLost: number;
@@ -189,6 +194,8 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
   const xpGained = e.xpGained + (extracted ? EXTRACTION_XP : 0);
   const xp = applyXp(p.character.level, p.character.xp, xpGained);
   const totalKills = Object.values(e.kills).reduce((a, b) => a + b, 0);
+  // Seguro por bajada: lo asegurado que llevabas puesto al caer te espera reforjado en el Bastión
+  const reforged = extracted ? [] : reforgeLost(e.equipment, e.insured);
   const extractedValue = extracted ? gridValue(e.backpack) + equippedValue(e.equipment) : 0;
   const quests = updateQuests(p.quests, { extracted, kills: e.kills, extractedValue: extracted ? gridValue(e.backpack) : 0, zone: e.zone, chestsOpened: e.chestsOpened, veinsMined: e.veinsMined ?? 0 });
 
@@ -202,6 +209,7 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
     quests,
     activeExpedition: null,
     fallen: !extracted,
+    ...(reforged.length ? { reforged: [...(p.reforged ?? []), ...reforged] } : {}),
     // Estabilización gratuita del Bastión: sin sangrados y cada región al menos al 50 % (las fracturas siguen)
     wounds: e.body ? toWounds(stabilize(e.body)) : p.wounds ?? null,
     // Suministro comunitario: Saciedad e Hidratación vuelven al menos a 60 (el Descanso se recupera en el catre)
@@ -219,6 +227,7 @@ export function endExpedition(p: Profile, e: ExpeditionState, reason: EndReason,
     profile,
     summary: {
       reason,
+      ...(reforged.length ? { reforged } : {}),
       durationMs: Math.min(e.durationMs, now - e.startedAt),
       goldLost: extracted ? 0 : gridGold(e.backpack),
       xpGained,

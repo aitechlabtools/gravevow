@@ -82,6 +82,8 @@ export interface ItemDef {
   grants?: string[];
   /** Equipo de recluta (Bloque 1, fase 9): prestado por el Bastión. No se vende, no se desguaza y no se pierde al morir. */
   recruit?: boolean;
+  /** Armadura pesada aunque no tenga restricción de clase (decide si la compra Valerius en vez de Nira). */
+  heavy?: boolean;
 }
 
 export interface ItemStack {
@@ -106,6 +108,8 @@ export interface ItemStack {
   affixes?: string[];
   /** Runas grabadas en el Atril rúnico (un id por hueco; null = hueco vacío). */
   runes?: (string | null)[];
+  /** Protegido por el jugador: no se vende ni se desguaza hasta quitarle el candado. */
+  locked?: boolean;
 }
 
 export type Grid = (ItemStack | null)[];
@@ -304,5 +308,11 @@ export interface Profile {
   /** Subzonas a las que ya se ha bajado (para «primera vez» del resumen). Sin valor en partidas antiguas: se deducen de `lastSubzone`. */
   visitedSubzones?: string[];
   settings: Settings;
+  /** Seguro por bajada (24/11): ranuras marcadas la última vez (la ventana de «Descender» sale con ellas). */
+  insurePlan?: EquipSlot[];
+  /** Preguntar por el seguro al pulsar «Descender» (sin valor: sí). */
+  insureAsk?: boolean;
+  /** Piezas reforjadas pendientes de recoger, cada una en su mercader. */
+  reforged?: { vendor: import('./data/vendors').VendorId; item: ItemStack }[];
   createdAt: number;
 }

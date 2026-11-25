@@ -515,6 +515,8 @@ function LootModal() {
   const layout = useLayout();
   const [sel, setSel] = useState<Loc | null>(null);
   useClearOnDrop(useCallback(() => setSel(null), []));
+  // El fondo solo cierra si el toque empezó en él: el «clic» del dedo que abrió el cofre (botón «Usar») no la cierra
+  const bgDown = useRef(false);
   if (s.modal?.type !== 'loot' || !s.expedition) return null;
   const session = s.modal.session;
   const grid = s.chests[session.id] ?? s.bags[session.id]?.grid ?? [];
@@ -539,8 +541,35 @@ function LootModal() {
     <GridView grid={bp} container="backpack" cols={cols} lootId={session.id} equipment={s.expedition!.equipment} mode="dungeon"
       onQuick={(l) => actions.quickMove(l, 'loot', session.id)} onAlt={(l) => actions.quickMove(l, 'loot', session.id)} />
   );
+  if (layout === 'phone') {
+    // Móvil (23/11): ventana flotante con la mazmorra detrás; abajo, «Coger el oro» y «Cogerlo todo» o, con algo tocado, cuántos coger
+    return (
+      <div className="absolute inset-0 z-50 fade-in" data-testid="loot-modal">
+        <div className="absolute inset-0 bg-black/45" onPointerDown={() => { bgDown.current = true; }} onClick={() => { if (bgDown.current) actions.closeLoot(); bgDown.current = false; }} aria-hidden />
+        <div className="loot-win" role="dialog" aria-label={session.title}>
+          <div className="loot-win-hd">
+            {share ? <div className="flex-1 min-w-0">{strip(true)}</div> : <span className="font-display text-gold text-[15px] tracking-[0.06em] truncate flex-1">{session.title}</span>}
+            {fair}{close}
+          </div>
+          <div className="loot-win-bd">
+            <div className="min-w-0 shrink-0 overflow-y-auto scroll-thin"><div className="loot-win-h">{share ? 'Saco' : 'Dentro'}</div>{lootGrid(3)}{grid.every((x) => !x) && <p className="text-stone-400 text-[13px] mt-2 italic">Vacío.</p>}</div>
+            {share && <div className="min-w-0 shrink-0 overflow-y-auto scroll-thin"><SharePile pile={pile} lootId={session.id} name={who} cols={2} /></div>}
+            <div className="w-px bg-[#2a2830] shrink-0" />
+            <div className="min-w-0 flex-1 overflow-y-auto scroll-thin"><div className="loot-win-h">Tuyo · {bp.filter(Boolean).length}/{bp.length}</div>{packGrid(share ? 4 : 7)}</div>
+          </div>
+          <div className="loot-win-ft" data-testid="loot-bar">
+            {picker ?? (<>
+              <span className="min-w-0 flex-1 text-[12px] text-stone-400 leading-tight">{share ? `Toca algo para repartirlo con ${who}.` : 'Toca algo para elegir cuántos coger.'}</span>
+              {takeGold}
+              <button className="btn btn-gold" style={{ minHeight: 44 }} onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
+            </>)}
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (layout !== 'desktop') {
-    const phone = layout === 'phone';
+    const phone = false;
     return (
       <div className="absolute inset-0 z-50 flex flex-col fade-in loot-touch" data-testid="loot-modal">
         <div className="loot-top">

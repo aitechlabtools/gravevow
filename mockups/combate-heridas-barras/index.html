@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><title>Combate: esqueleto de heridas y barras de vida</title>
+<style>
+body{margin:0;background:#0a090c;color:#e6e0d2;font:16px/1.5 Georgia,serif}main{max-width:1500px;margin:0 auto;padding:24px}
+h1,h2,h3{font-family:Cinzel,Georgia,serif;font-weight:600;color:#e8b33a}h2{border-bottom:1px solid #3a3841;padding-bottom:4px;margin-top:40px}
+p,li{color:#d6d0c2;max-width:1000px}.dim{color:#a7a4ae}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px}
+figure{margin:0;background:#151419;border:1px solid #3a3841;padding:8px}figure img{width:100%;display:block}figcaption{font-size:14px;color:#a7a4ae;margin-top:4px}
+table{border-collapse:collapse;margin:10px 0}td,th{border:1px solid #3a3841;padding:6px 10px;text-align:left;vertical-align:top;font-size:15px}th{color:#e8b33a}
+a{color:#e8b33a}nav a{margin-right:14px}
+</style></head><body><main>
+<h1>Combate: esqueleto de heridas y barras de vida</h1>
+<nav><a href="#encontrado">Lo encontrado</a><a href="#antes">Antes</a><a href="#esqueleto">Esqueleto</a><a href="#A">Opción A</a><a href="#B">Opción B</a><a href="#C">Opción C</a><a href="#movil">Móvil: botones</a><a href="#menu">Menú de heridas</a><a href="#elegir">Qué elegir</a></nav>
+
+<h2 id="real">Resultado real (implementado)</h2>
+<div class="g">
+<figure><img src="real-movil-2v2.png"><figcaption>Móvil · 2 contra 2</figcaption></figure><figure><img src="real-movil-1v1.png"><figcaption>Móvil · 1 contra 1</figcaption></figure>
+<figure><img src="real-tableta-2v2.png"><figcaption>Tableta · 2 contra 2</figcaption></figure><figure><img src="real-tableta-1v1.png"><figcaption>Tableta · 1 contra 1</figcaption></figure>
+<figure><img src="real-escritorio-2v2.png"><figcaption>Escritorio · 2 contra 2</figcaption></figure><figure><img src="real-escritorio-1v1.png"><figcaption>Escritorio · 1 contra 1</figcaption></figure>
+<figure><img src="real-movil-2v1.png"><figcaption>Móvil · 2 contra 1</figcaption></figure><figure><img src="real-tableta-2v1.png"><figcaption>Tableta · 2 contra 1</figcaption></figure><figure><img src="real-escritorio-2v1.png"><figcaption>Escritorio · 2 contra 1</figcaption></figure>
+<figure><img src="real-menu-esqueleto-movil.png"><figcaption>Menú de heridas abierto desde el esqueleto (móvil)</figcaption></figure>
+<figure><img src="real-menu-esqueleto-tableta.png"><figcaption>Tableta</figcaption></figure><figure><img src="real-menu-esqueleto-escritorio.png"><figcaption>Escritorio</figcaption></figure>
+<figure><img src="real-parpadeo-escritorio.png"><figcaption>Parpadeo del brazo derecho al recibir una herida</figcaption></figure>
+</div>
+<h2 id="estructura">Estructura elegida (móvil, tableta y escritorio)</h2>
+<p>Fichas de los enemigos arriba a la izquierda (sin barras sobre los sprites, solo el ▼ del objetivo); tu ficha con el esqueleto y la tira del aliado encima de los botones; abajo, el texto a la izquierda y los botones a la derecha, sin texto de ayuda. Los números de teclado solo en escritorio. Las sombras van pegadas a los pies.</p>
+<div class="g">
+<figure><img src="estructura-movil-2v2.png"><figcaption>Móvil · 2 contra 2</figcaption></figure><figure><img src="estructura-movil-1v1.png"><figcaption>Móvil · 1 contra 1</figcaption></figure>
+<figure><img src="estructura-tableta-2v2.png"><figcaption>Tableta · 2 contra 2</figcaption></figure><figure><img src="estructura-tableta-1v1.png"><figcaption>Tableta · 1 contra 1</figcaption></figure>
+<figure><img src="estructura-escritorio-2v2.png"><figcaption>Escritorio · 2 contra 2</figcaption></figure><figure><img src="estructura-escritorio-1v1.png"><figcaption>Escritorio · 1 contra 1</figcaption></figure>
+</div>
+<h2 id="encontrado">Lo encontrado</h2>
+<ul>
+<li><b>El esqueleto existe y no se ha borrado:</b> es <code>BodyFigure</code> (<code>src/game/ui/BodyFigure.tsx</code>). Es una silueta de 7 zonas en pixel art con los mismos colores y marcas que el menú de heridas: aspa blanca si hay fractura, cuadro rojo si sangra (doble si es grave) y raya si está inutilizada. Fuera del combate es el botón del HUD de la mazmorra (<code>hud-body</code>), y también sale en el resumen al volver.</li>
+<li><b>En combate está desde el 11/11</b> (commit 321f899), dentro de tu ficha, pero muy pequeño: a ×3 mide 27×45 px y con dos enemigos baja a ×2, 18×30 px. Además no se puede pulsar: el menú se abre con el botón aparte de la gota 🩸.</li>
+<li><b>Por qué dejó de verse:</b> el 19/11 (commit 6670ce6, fase 5 del plan de interfaz, «tiras finas» del móvil) se ocultó en el móvil con <code>.frame-body{display:none}</code> en <code>game.css</code>. En escritorio y tableta sigue ahí, pero es tan pequeño que pasa desapercibido.</li>
+<li><b>Turno:</b> abrir el menú de heridas no gasta nada. Curar o vendar desde él va por <code>combatAct</code> y gasta el turno, y solo se puede en tu turno (fuera de él el menú avisa «Espera a tu turno»). Al cerrar, el combate sigue igual. Eso no cambia.</li>
+<li><b>Barras:</b> son las fichas <code>InfoFrame</code>, en dos pilas fijas (enemigos arriba a la izquierda, tu grupo abajo a la derecha), no encima de los personajes. En escritorio y tableta no tapan a los enemigos, pero se cruzan con tu bando y en 2 contra 2 ocupan mucho. <b>En el móvil sí los tapan:</b> las dos fichas de enemigo miden casi 150 px de alto en una escena de 290 y quedan encima de los esqueletos (captura de abajo). Hay 1 contra 1, 1 contra 2 y 2 contra 2 (con Kael o el mercenario). No hay más de dos por bando.</li>
+</ul>
+
+<h2 id="antes">Antes (estado actual)</h2>
+<div class="g">
+<figure><img src="antes-movil-2v2.png"><figcaption>Móvil, 2 contra 2: las fichas tapan a los dos esqueletos y no hay esqueleto de heridas</figcaption></figure>
+<figure><img src="antes-movil-1v2.png"><figcaption>Móvil, 1 contra 2</figcaption></figure>
+<figure><img src="antes-movil-1v1.png"><figcaption>Móvil, 1 contra 1</figcaption></figure>
+<figure><img src="antes-escritorio-2v2.png"><figcaption>Escritorio, 2 contra 2: esqueleto de 18×30 px al lado de tu nombre</figcaption></figure>
+<figure><img src="antes-tableta-2v2.png"><figcaption>Tableta, 2 contra 2</figcaption></figure>
+<figure><img src="antes-escritorio-1v1.png"><figcaption>Escritorio, 1 contra 1</figcaption></figure>
+</div>
+
+<h2 id="esqueleto">Esqueleto de heridas (común a las tres opciones)</h2>
+<ul>
+<li>Tu ficha pasa arriba a la izquierda, en todas las opciones. Es el mismo sitio que el HUD de la mazmorra y deja libre a tu personaje, que está abajo.</li>
+<li>El esqueleto es el mismo <code>BodyFigure</code>, más grande y como botón: ×5 en escritorio (45×75 px), ×4 en tableta (36×60) y ×3 en el móvil (botón de 44×55). Al pulsarlo se abre el menú de heridas de siempre. El botón de la gota desaparece porque el esqueleto lo sustituye.</li>
+<li>En escritorio y tableta, al lado, la lista de lesiones con los símbolos del menú: ◆◆ sangra mucho, ◆ sangra, ✕ rota, ⊘ inutilizada y ! herida. En el móvil solo caben los símbolos, junto a tu nombre.</li>
+<li>Al recibir una herida o curarte, la zona afectada parpadea con un borde blanco durante 0,6 s. Si el sistema tiene activado «reducir movimiento», no parpadea.</li>
+</ul>
+<div class="g">
+<figure><img src="parpadeo-escritorio.png"><figcaption>Escritorio: ficha con esqueleto y lesiones; la pierna derecha parpadea</figcaption></figure>
+<figure><img src="parpadeo-tableta.png"><figcaption>Tableta</figcaption></figure>
+<figure><img src="parpadeo-movil.png"><figcaption>Móvil: el esqueleto es el botón de la izquierda de tu tira</figcaption></figure>
+</div>
+
+<h2 id="A">Opción A · Placas sobre la cabeza</h2>
+<p>Cada enemigo y cada aliado lleva encima una placa fina con el nombre corto, la vida (número y barra) y los estados con icono. El objetivo lleva borde rojo, ▶ y ▼. La placa entera es la zona para elegir objetivo (44 px de alto o más). En escritorio, la intención del enemigo marcado va en la misma placa. Se sabe enseguida de quién es cada barra, pero las placas se mueven con el combate y, con estados largos, crecen hacia arriba.</p>
+<div class="g">
+<figure><img src="opA-escritorio-2v2.png"><figcaption>Escritorio · 2 contra 2</figcaption></figure><figure><img src="opA-escritorio-1v1.png"><figcaption>Escritorio · 1 contra 1</figcaption></figure>
+<figure><img src="opA-tableta-2v2.png"><figcaption>Tableta · 2 contra 2</figcaption></figure><figure><img src="opA-tableta-1v1.png"><figcaption>Tableta · 1 contra 1</figcaption></figure>
+<figure><img src="opA-movil-2v2.png"><figcaption>Móvil · 2 contra 2</figcaption></figure><figure><img src="opA-movil-1v1.png"><figcaption>Móvil · 1 contra 1</figcaption></figure>
+</div>
+
+<h2 id="B">Opción B · Marcos fijos</h2>
+<p>Ningún dato encima de los personajes. Tu ficha y la de tu aliado van a la izquierda y los enemigos a la derecha: en columna en escritorio y tableta, y en fila en el móvil (Kael, Esqueleto I, Esqueleto II, en el orden en que se ven). Sobre el sprite marcado solo queda el ▼ rojo. Es lo más limpio y lo más parecido a lo de ahora, pero hay que mirar arriba para saber cuánta vida le queda a cada uno.</p>
+<div class="g">
+<figure><img src="opB-escritorio-2v2.png"><figcaption>Escritorio · 2 contra 2</figcaption></figure><figure><img src="opB-escritorio-1v1.png"><figcaption>Escritorio · 1 contra 1</figcaption></figure>
+<figure><img src="opB-tableta-2v2.png"><figcaption>Tableta · 2 contra 2</figcaption></figure><figure><img src="opB-tableta-1v1.png"><figcaption>Tableta · 1 contra 1</figcaption></figure>
+<figure><img src="opB-movil-2v2.png"><figcaption>Móvil · 2 contra 2</figcaption></figure><figure><img src="opB-movil-1v1.png"><figcaption>Móvil · 1 contra 1</figcaption></figure>
+</div>
+
+<h2 id="C">Opción C · Mezcla</h2>
+<p>Los marcos fijos de B más una barra mínima, sin texto, encima de cada personaje, con los estados en iconos pequeños al lado. El objetivo lleva contorno rojo en su barra y ▼. La información completa (nombre, número, estados e intención) está en el marco, y se elige objetivo tocando el marco o el sprite.</p>
+<div class="g">
+<figure><img src="opC-escritorio-2v2.png"><figcaption>Escritorio · 2 contra 2</figcaption></figure><figure><img src="opC-escritorio-1v1.png"><figcaption>Escritorio · 1 contra 1</figcaption></figure>
+<figure><img src="opC-tableta-2v2.png"><figcaption>Tableta · 2 contra 2</figcaption></figure><figure><img src="opC-tableta-1v1.png"><figcaption>Tableta · 1 contra 1</figcaption></figure>
+<figure><img src="opC-movil-2v2.png"><figcaption>Móvil · 2 contra 2</figcaption></figure><figure><img src="opC-movil-1v1.png"><figcaption>Móvil · 1 contra 1</figcaption></figure>
+</div>
+
+<h2 id="movil">Móvil: cómo encajar los botones (sobre la opción C)</h2>
+<p>Son capturas del juego real con el CSS cambiado y las fichas de la opción C encima.</p>
+<div class="g">
+<figure><img src="movil-final2.png"><figcaption><b>Boceto 3, compacto:</b> botones de 44 px justos (pequeños sin texto de ayuda), tu ficha de 50 px con el esqueleto en un botón de 44×44 y Kael en una tira de 28 px; unos 35 px menos de alto</figcaption></figure>
+<figure><img src="movil-final.png"><figcaption><b>Boceto 3:</b> fichas de los enemigos arriba a la izquierda; enemigos más arriba; tu ficha (con el esqueleto) y la de Kael encima de los botones; texto a la izquierda abajo</figcaption></figure>
+<figure><img src="movil-texto-izq.png"><figcaption><b>Boceto 2:</b> franja abajo a todo el ancho: registro (3 líneas) a la izquierda y botones a la derecha; la escena se queda en unos 265 px y los personajes se ven algo más pequeños</figcaption></figure>
+<figure><img src="movil-boceto.png"><figcaption><b>Tu boceto:</b> la barra de siempre (2 grandes arriba y 4 pequeñas abajo) en el 56 % derecho; tu personaje y Kael llegan hasta abajo; el registro, en una línea encima</figcaption></figure>
+<figure><img src="movil-ahora.png"><figcaption>Ahora: barra a todo el ancho, en 2 filas (unos 95 px)</figcaption></figure>
+<figure><img src="movil-fila.png"><figcaption>Una fila: 6 botones de 44 px de alto; la escena gana unos 45 px; los nombres largos pasan a dos líneas</figcaption></figure>
+<figure><img src="movil-mitad-der.png"><figcaption><b>Media pantalla a la derecha (recomendada):</b> tu personaje y Kael bajan hasta el borde inferior y se ven grandes; los botones, en 3 filas de 205×44, quedan bajo los enemigos; el registro, en una línea encima</figcaption></figure>
+<figure><img src="movil-mitad-izq.png"><figcaption>Media pantalla a la izquierda: hay que subir y encoger a tu personaje y a Kael para que no queden detrás de los botones; la mitad derecha queda vacía bajo los enemigos</figcaption></figure>
+</div>
+<h2 id="menu">Menú de heridas abierto desde el esqueleto</h2>
+<p>Es el menú que ya existe (<code>BodyPanel</code> con las necesidades), sin cambios: lo abre el esqueleto en lugar de la gota. Estas capturas son reales.</p>
+<div class="g">
+<figure><img src="real-menu-escritorio.png"><figcaption>Escritorio</figcaption></figure>
+<figure><img src="real-menu-tableta.png"><figcaption>Tableta</figcaption></figure>
+<figure><img src="real-menu-movil.png"><figcaption>Móvil</figcaption></figure>
+</div>
+
+<h2 id="elegir">Qué elegir</h2>
+<table><tr><th></th><th>A · Placas</th><th>B · Marcos fijos</th><th>C · Mezcla</th></tr>
+<tr><td>Tapa sprites</td><td>No (encima de la cabeza)</td><td>No</td><td>No</td></tr>
+<tr><td>De quién es cada barra</td><td>Inmediato</td><td>Por el orden y el ▼</td><td>Inmediato</td></tr>
+<tr><td>Vida de un vistazo sin apartar la vista</td><td>Sí</td><td>No</td><td>Sí (barra sin número)</td></tr>
+<tr><td>Espacio para estados e intención</td><td>Justo</td><td>Holgado</td><td>Holgado</td></tr>
+<tr><td>Elementos en pantalla</td><td>Pocos</td><td>Pocos</td><td>Más</td></tr></table>
+<p class="dim">Recomiendo C: no tapa nada y la vida se ve sobre cada personaje. B es la más sobria. A es la más directa, pero en el móvil se queda corta para los estados largos.</p>
+</main></body></html>

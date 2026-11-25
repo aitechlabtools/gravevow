@@ -253,6 +253,8 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - **Columna izquierda (los tres formatos):** tarjeta del mercader igual que en la página Bastión (`vtile vcard`: nombre, busto, lugar, estado de la estación, reputación y descuento), debajo las pestañas en columna (`.vtabs-col`, botones de 48 px —44 en móvil— con icono 12×12 a ×2 de `VENDOR_TAB_ICONS`; la activa en dorado), el aviso «Pendiente» y, al final, la tarjeta «◂ Volver al Bastión» (`.vback-card`, silueta `BASTION_SKYLINE` a ×6 en escritorio y ×4 en tableta; en tableta el rótulo es «◂ Bastión»). En el móvil: retrato pequeño y nombre, pestañas y el botón `.vback`. El `data-testid` `vendor-back` está en la tarjeta o el botón.
 - **Tienda:** `ShopStock` pinta filas `.shop-row` (`shop-row-<id>`); tocar elige (borde dorado). La ficha es `ShopCard`, con el único botón dorado `buy-<id>` («Comprar · N oro»; si no llega el oro, botón secundario «Te faltan N de oro»). En escritorio y tableta va en la columna derecha encima de «Tu mochila · n/24»; en el móvil sale encima (`shop-card-overlay`, cerrar con `shop-card-close`). Doble clic en una fila compra. Precio: `PriceTag` (texto dorado con moneda; rojo si no llega). Bloqueado: atenuado con candado y rango; «Otra clase» en rojo.
 - **Sin título de panel** en el centro (el nombre ya está en la tarjeta). Los scripts que compran tocan antes `shop-row-<id>`.
+- **Vender (los 8 mercaderes, 24/11):** tres columnas. Izquierda: la tarjeta del mercader, sin «Compra: …» (quitado el 24/11; si su estación está en ruinas, lo dice la lista «A vender»). Centro: pestañas Mochila · Almacén · Compartido (pills de 44 px, la elegida en dorado; en el almacén las casillas crecen a lo ancho hasta 80 px en ordenador y 60 en tableta, con icono a ×4 en ordenador grande, y las filas que no caben se desplazan) y barra de herramientas (botones de 36 px con ratón y 44 en táctil): «Vendibles», rareza, tipo, «Todo lo vendible», «Comunes», «Limpiar»; la selección rápida dice su alcance («mochila» o «esta página»). Estados de casilla: vendible normal; no lo compra, en gris (`.slot-nobuy`); fuera del filtro, casi invisible (`.slot-filtered`); marcada, doble contorno dorado y moneda; protegida, candado dorado de 7×8 arriba a la derecha. Derecha: lista con cantidad (− / número / + / ×N) y, abajo fija, total y botón «Vender N objetos · X oro» (48 px; en el móvil, resumen en una línea y 44 px). Al vender, «+N oro» sube junto al botón.
+- **Comprador en el inventario:** sin iniciales en las casillas (quitadas el 24/11); la ficha (`item-card-buyer`) y la ventanita (`tooltip-buyer`) dicen «Lo compra X · lugar».
 
 ## Ficha de objeto (fase 3)
 - Regla: la ficha nunca se pone encima de la mochila ni del contenedor del que sale el objeto. Ocupa una columna propia o la de algo secundario (Aventurero en tableta, la mochila en la vista Almacén del móvil).
@@ -267,13 +269,16 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - **Pausa:** «Continuar» dorado, «Ajustes» secundario y, tras una línea, «Abandonar la expedición…» en rojo con confirmación.
 - Retratos pequeños de personaje: siempre en busto (cabeza y hombros), no la figura entera.
 
-## Combate (fase 5)
-- Arriba en el centro solo la zona y el orden de turnos; el nombre del enemigo sale solo en su ficha (`combat-title` es ahora la línea de la zona, con el nombre en el `title`).
-- No hay «¿Qué hará…?»: el botón resaltado marca el turno. En el turno ajeno, «X está actuando…».
+## Combate (24/11: fichas, esqueleto de heridas y barra)
+Maqueta y capturas: `mockups/combate-heridas-barras/` (índice; `real.cjs` repite las capturas reales y las comprobaciones).
+- **Escala:** todo se mide con `--k` sobre `[data-testid=combat]`: 1 en el móvil horizontal (alto ≤ 560), 1,5 en tableta y 2 en pantallas de 1600×900 o más. Letra de las fichas y botones `4px + 8px·k` (12, 16 y 20 px).
+- **Sin título:** ni zona ni orden de turnos arriba. El turno lo marca el ▼ dorado sobre quien actúa y «X está actuando…» en el registro.
+- **Enemigos** (`FoeCard`, `.cb-foes`): fichas arriba a la izquierda, en fila y en el orden del campo (190 px·k; 240 si va solo). Escudo dorado con el nivel (`.lvl`, rojo si es jefe), nombre y vida con número (`hpnum-<id>`); debajo, los estados con icono, nombre y turnos («☠ Veneno 3», «❄ Congelación 2»), «Expuesto», «En guardia» y el golpe que prepara («⚠ Golpe pesado → ti ≈16 · Guardia», `intent-<id>`). En el móvil, todo en una línea y solo con icono y número («☠ 3», «⚠ a ti ≈16»; `.cb-full` / `.cb-short`); el nombre sale en el `title`. Con dos, tocar la ficha o el sprite elige objetivo: borde rojo de 2 px y ▶ (`target-<id>`), y ▼ rojo sobre el sprite. Nada de barras encima de los sprites.
+- **Tu grupo** (`.cb-party`), abajo a la derecha, sobre los botones: el aliado en una tira fina (`AllyStrip`, nombre, vida y número) y tu ficha (`HeroCard`, 240 px·k). Las dos llevan el escudo del nivel delante del nombre (el aliado, si lo tiene) y tu ficha tus estados («◆ Sangrado 2»).
+- **Esqueleto de heridas:** en tu ficha, `BodyFigure` como botón (`combat-body`, borde rojo si hay heridas) a ×2, ×4 o ×5. Abre «Heridas y necesidades» (el mismo `BodyPanel`); abrirlo no gasta el turno; curar sí, y solo en tu turno. Las lesiones se ven en la figura (cuadro rojo si sangra, aspa si está rota, raya si está inutilizada); no hay resumen en texto. La zona que cambia parpadea 0,6 s con borde blanco (`flash` → `.body-flash`; sin animación con «reducir movimiento»).
+- **Barra inferior:** texto del combate a la izquierda (44 %, hasta 3 líneas) y botones a la derecha. En el menú principal (`.cmdgrid.main`) solo el nombre: sin subtítulo (el coste sale en el texto al señalar o mantener pulsado y en los submenús) y con los números de tecla solo con ratón. Botones de 44 px·k de alto.
+- **Escena:** enemigos con los pies en `bottom: 41 %` (voladores 52 %); en el móvil bajan 18 px (`.foe`). Sombras pegadas a los pies (`.fighter-shadow`, `translate: -50% 15%`).
 - Los avisos (`Toasts`) no salen en combate: el último aparece como línea dorada en el registro (`combat-note`).
-- Botones: el nombre y el subtítulo pasan a dos líneas en vez de cortarse (`.cmd-sub`).
-- Ficha del jugador con busto (`.frame-bust`) y el nivel en la esquina.
-- Móvil (alto ≤ 560 px): dos tiras finas arriba, tú a la izquierda (busto, «Nv N» junto al nombre, PV y recurso) y el enemigo a la derecha; sin zona en el título. Toda tu tira es el botón `combat-body` (Heridas y necesidades; gota roja si hay heridas). Los enemigos bajan 26 px (`.foe`) para que la tira no los tape.
 
 ## Menús y fichas (fase 6)
 - Ningún texto por debajo de 12 px en el móvil (raíz de 11 px: botones y selectores fijados a 12 px; clase `.min12` para casos sueltos).
@@ -288,3 +293,59 @@ Sin botón «Ver detalles». En el móvil, nivel y atributos van bajo el equipo,
 - Ficha de receta: objeto a 192/128/64 px, nombre a 28/22/17 px, estadísticas en casillas (Hueco, Nivel y cada estadística, en verde o rojo) y «Necesitas» pegado a los botones de fabricar. Sin la descripción del objeto. «Solo las que puedo hacer» es una casilla (`craft-only-can`) al principio de la lista.
 - Textos: 12 px como mínimo en toda la interfaz; solo se aceptan más pequeños los signos ◆ y ▶ y el número de nivel del escudo en combate.
 
+
+## Seguro de equipo por bajada (24/11)
+Plan: `docs/plan-seguro-equipo.md`. Maquetas y capturas reales: `mockups/seguro-equipo/` (`real.cjs` las repite con 42 comprobaciones).
+- **Ventana al pulsar «Descender»** (`InsureModal`, `ui/InsurePanels.tsx`, `insure-modal`): título; a la izquierda la cuadrícula de 2 × 4 casillas (`insure-<ranura>`, en el orden Arma, Secundaria, Cabeza, Torso / Manos, Pies, Anillo, Amuleto), cada una con el icono, el coste arriba a la izquierda y el nombre de la ranura debajo. Marcada: borde dorado de 2 px, fondo #201a10 y sello. Vacía: apagada con «—». Estación en ruinas: candado y apagada; al tocarla, aviso. A la derecha el recibo: «Asegurado» con «Todo»/«Nada», una línea por pieza marcada (sello, nombre y precio), «Tienes N» y «Total N ●», y los botones «Asegurar y bajar» (dorado; «Te faltan N» sin oro) y «Bajar sin asegurar». Casillas de 72 px (80 en pantallas grandes, 50 en el móvil). No sale en la primera bajada, si no hay nada asegurable o si se desactiva en Ajustes › Partida (`insure-ask`).
+- **Sello** (`kit/Seal.tsx`): escudo dorado con marca, 12×12 a escala entera, con `title`. En las casillas del inventario de la bajada (`.slot-seal`, abajo a la derecha, ×2 en pantallas de 1600 px o más), en la ficha del objeto («Asegurada esta bajada»), en el resumen, en la tarjeta del mercader y en el recibo.
+- **Resumen al caer** (`summary-reforged`): «Te esperan N piezas reforjadas en el Bastión: Maese Brand (…) y Valerius (…)».
+- **Bastión:** aviso al volver; la tarjeta del mercader lleva «Pieza reforjada» con el sello (solo el sello en el móvil); en su interior, punto dorado en la pestaña **Seguro** y caja «Pendiente · Recoger».
+- **Pestaña «Seguro»** (`InsureTab`, `insure-tab`): **solo Valerius** (24/11, una función por mercader), con la Forja, la Forja de armaduras o el Laboratorio reconstruidos, o con piezas pendientes. Si hay piezas pendientes, el mercader se abre directamente en esta pestaña. Contenido:
+  - arriba, «Piezas reforjadas» con «Recoger» y «Recoger todo» (`reforged-*`), cada pieza con el color de su rareza;
+  - «Cómo funciona» (`insure-how`): cuatro cajas con sello (Solo una bajada · Si caes, te la reforjo · Solo lo que llevas puesto · El 4 % de su valor); en el móvil, solo los títulos en una fila;
+  - «Lo que <mercader> te reforja»: una ficha por ranura que cubre (`insure-card-<ranura>`) con borde izquierdo del color de la rareza, nombre en ese color, rareza, ranura, durabilidad, estadísticas (verde suma, rojo resta), atributos y runas, coste y botón «Asegurar»/«Asegurada» (dorado, 44 px). Estación en ruinas: candado. Ranura vacía: apagada;
+  - «Próxima bajada»: recibo con las piezas marcadas, «Tienes», «Total» y que se cobra al pulsar «Descender». A la derecha en pantallas de más de 1300 px; debajo en tableta y móvil.
+- **Quién asegura:** siempre Valerius (reforja con Brand). Cada pieza necesita reconstruida la estación de quien la fabrica: Forja (armas, anillos, dagas y tomos), Forja de armaduras (armaduras y escudos) o Laboratorio (amuletos) (`reforgerFor` en `core/insuranceLoss.ts`).
+- **Una función por mercader (24/11):** «Reparar» solo en Brand (ya no en Orik ni en Nira); «Desguace» solo en Orik; «Seguro» solo en Valerius. Tiendas, venta y estaciones, sin cambios. Plan: `docs/plan-mercaderes-funciones.md`.
+
+## Barra superior que se ajusta sola (25/11)
+- `kit/PillBar.tsx` mide el ancho que necesitan las pestañas con nombre y el sitio libre (barra menos retrato y oro/botones). Si no cabe, añade `.tight`: iconos solos, nombre en la activa y en el `title` de las demás. No depende de cortes fijos de anchura; al ensanchar vuelven los nombres.
+- Zonas táctiles: también el retrato (`nav-chip`) tiene 44 px de ancho mínimo.
+
+## Estaciones que se pliegan según su sitio (25/11)
+- La estación reconstruida decide por el ancho real de su panel, no por el formato: si no llega a 1000 px, niveles y mejora van plegados en la cabecera (como en tableta y móvil). La ficha de receta también mide su ancho y reduce icono y título. Los nombres largos pasan a dos líneas, nunca «…».
+
+## Textos y nombres (25/11)
+- En móvil horizontal la letra base es 12 px: ningún texto por debajo. Los nombres de objetos, piezas y mercaderes van a dos líneas (o con guiones) en vez de «…»; las descripciones de una línea en listas sí pueden cortarse porque la ficha las muestra enteras.
+
+## Mapa de zonas ilustrado (25/11)
+- Dibujo del descenso en `src/game/ui/mapArt.ts` (160×150 px, provisional; el definitivo puede ser un PNG del mismo tamaño). `MAP_NODES` y `MAP_BANDS` colocan marcadores y franjas en %. Escala entera según alto; en móvil los marcadores son decorativos y se elige en la lista (44 px).
+
+### Ventana del seguro (Descender)
+`InsureModal` (InsurePanels.tsx, clases `.insm*`): columna de casillas + lista de filas conmutables + pie con cifras y botones. En pantallas bajas (≤560 px) casillas de 46 px y la lista se desplaza (`max-height: calc(100vh - 236px)`). La pestaña «Seguro» de los mercaderes conserva su diseño (`InsureTab`).
+
+### Alijo
+- Mismo diseño en los tres formatos; el móvil lo adapta al espacio.
+- Equipo (escritorio y tableta, v3 25/11): «Aventurero» (`Adventurer`: héroe en su arco a escala entera, «Clase · Nivel», experiencia y atributos) · «Equipo» (`EquipDoll`: arma y secundaria grandes a los lados, cabeza y torso en el centro; debajo atuendo, manos, pies, amuleto, anillo y mochila; luego la mochila de 6 columnas con «Bolsillo seguro» (2 columnas) y «Oro» al lado, carga, «Vaciar mochila» y «Guardar materiales») · «Almacén».
+- Móvil: `CharacterEquip` (Alijo.tsx) mide el arco con ResizeObserver y escala el personaje a entero. Mochila en panel propio. Móvil: `CharacterEquip compact` (270 px, casillas de 44) + mochila + ficha. Almacén (`StashPanel ptitle`): título entre rombos como los demás paneles y casillas del mismo tamaño que el equipo y la mochila (60/48/44 px); lo que no cabe se desplaza.
+- Heridas: `BodyPanel full` pinta `BlockBody` (clases `.doll*`), `.body-banner` y `.body-states`; fuera del Alijo se usa la figura con etiquetas. Mochila: `CureBag` (filtro Curación apaga por `data-item`). Móvil: estado físico + `CureBag` (las necesidades van dentro del estado). El cuerpo pasa a una columna con contenedor ≤500 px (tableta: dos columnas).
+
+### Estación en ruinas
+`StationDetail` con nivel 0 devuelve `RuinPanel`: solo nombre, dibujo (flex:1, alto `calc(100vh - 128px)` en escritorio/tableta), fichas `.ruin-req` (ok/bad; la que falta es botón a su fuente, texto en `title`) y «Reconstruir». Móvil: dibujo a la izquierda (38 %) y materiales y «Reconstruir» a la derecha.
+
+### Misiones (diario)
+Tres columnas 28/42/30 (`.qj`). Estados por color del borde izquierdo: dorado en progreso, verde completada. Sin historial de entregadas (el juego no lo guarda). Móvil (`QuestJournal phone`, `.qj-phone`): misiones a la izquierda y, a la derecha, pestañas Detalle · Tablón (`quests-tab-*`); filtro del tablón en fichas horizontales. Sin misiones, salta al Tablón; tocar una misión abre Detalle.
+
+### Habilidades (25/11, versión 3)
+Todo a la vista, sin pestañas (`screens/Personaje.tsx`). Escritorio 22/44/34 y tableta 24/38/38:
+- Izquierda «Atributos» (`character-stats`, `SkillStats`): los atributos del Alijo; al elegir una habilidad, cada fila que cambia se tiñe (`.hb-stat.up` verde, `.down` rojo) con «▲ +30 % de daño · 3 turnos» o «▼ −4 de ímpetu» (`skillMarks`: golpe ×N, perforación, robo de vida, curación, escudo, coste, estados propios de Furia, Protección, Bloqueo, Aguante, Parpadeo, Regeneración y Escudo de maná). Solo informa: los cambios duran en combate.
+- Centro, sin marco: arco (medio círculo arriba y dos rectas que bajan) con la habilidad de clase arriba, la mano derecha por la derecha y la izquierda por la izquierda (empezando a 45°); el héroe dentro y «Clase · Nivel» debajo.
+- Abajo de Atributos, «Efectos de la habilidad» (`skill-effects`): las líneas de efecto en verde (o rojo) de lo elegido; el detalle de la derecha repite esas líneas sobre la descripción.
+- Cabeceras de mano: el nombre del arma en una franja con el color de la mano (`.hb-band`).
+- Derecha «Habilidades» (`character-skills`): fichas pequeñas por mano (`.hb-mini`, `atk-<id>`: icono, nombre, coste y recarga pequeños), fila de hitos de clase Nv 1·20·40·60·80 (`.hb-hito`, `class-skill-<id>` o `hito-<nv>`; dorado la equipada, «!» por elegir, «?» bloqueados) y abajo el detalle (`skill-detail`): coste y recarga grandes con rótulo, efecto y «Equipar» (`equip-class-<id>`) o, en un hito, sus opciones (`class-choose` con «Elegir», o `class-next` con candado).
+- Móvil: héroe y Habilidades; los atributos en una ventana con el botón «Atributos».
+- Coste: ímpetu con rayo amarillo, maná con gota turquesa; recarga en azul («—» si no tiene).
+
+- **Alijo › Aventurero (25/11):** mismo arco que Habilidades (`SkillArc` con `compact noFoot`): clase arriba, mano derecha a la derecha, izquierda a la izquierda. Con una pieza elegida, `HeroStats preview` marca filas `hs-up`/`hs-down` con ▲/▼. El panel Equipo tiene el pie fijo `backpack-foot` (carga, en riesgo y botones).
+- **Habilidades (25/11):** sin recuadro de efectos a la izquierda; el detalle de un hito (`.hb-det.hito`) crece para llenar el panel.
+- **Estado (25/11):** apartado propio del menú (8 pestañas; con poco sitio, PillBar pasa a solo iconos como antes). Badge rojo con el número de lesiones (`PillTab.alert` + `badgeLabel`). Capturas: mockups/apartado-estado (index.html).

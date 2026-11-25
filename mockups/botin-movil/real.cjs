@@ -1,0 +1,28 @@
+// Botín real en el móvil: node mockups/botin-movil/real.cjs [url]
+const { chromium, devices } = require('playwright'); const path = require('path');
+const URL = process.argv[2] || 'http://localhost:5173/play/';
+(async () => { const b = await chromium.launch(); const c = await b.newContext({ ...devices['iPhone 13 landscape'] }); const p = await c.newPage();
+  const errs = []; p.on('pageerror', (e) => errs.push(e.message));
+  const tap = async (s) => { await p.waitForSelector(s); await p.tap(s); await p.waitForTimeout(350); };
+  const shot = (n) => p.screenshot({ path: path.join(__dirname, n + '.png') });
+  const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); if (!c) process.exitCode = 1; };
+  await p.goto(URL + '?debug'); await p.evaluate(() => indexedDB.deleteDatabase('gravevow')); await p.reload(); await p.waitForTimeout(600);
+  await tap('[data-testid=btn-play]'); await p.fill('[data-testid=name-input]', 'Pau'); await tap('[data-testid=btn-create]');
+  await p.evaluate(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; pr.tutorialDone = true; pr.tutorialSeen.dungeon = true; g.setState({ tutorial: null, profile: { ...pr } }); });
+  await tap('[data-testid=tab-play]'); await tap('[data-testid=btn-enter-dungeon]'); await p.waitForTimeout(2000);
+  await p.evaluate(() => { const D = window.__GRAVEVOW__; const g = Array.from({ length: 9 }, () => null);
+    g[0] = { uid: 'gc', itemId: 'gold_coins', qty: 4 }; g[1] = { uid: 'pp', itemId: 'health_potion', qty: 3 }; g[2] = { uid: 'ax', itemId: 'chain_axe', qty: 1, rarity: 'epic' };
+    D.setState({ chests: { ...D.getState().chests, prueba: g } }); D.actions.openChest('prueba', 'common', true); });
+  await p.waitForSelector('[data-testid=loot-modal] .loot-win'); await p.waitForTimeout(400); await shot('real');
+  const slots = [await p.$('[data-testid=slot-loot-0]'), await p.$('[data-testid=slot-loot-1]')];
+  await slots[1].tap(); await p.waitForTimeout(300); await shot('real-dividir');
+  ok(!!(await p.$('[data-testid=qty-picker]')), 'al tocar un montón sale cuántos coger');
+  await tap('[data-testid=qty-all]'); await tap('[data-testid=btn-take-part]');
+  ok(!(await p.evaluate(() => window.__GRAVEVOW__.getState().chests.prueba[1])), 'coge las 3 pociones');
+  await (await p.$('[data-testid=slot-loot-0]')).tap(); await p.waitForTimeout(300); await tap('[data-testid=qty-half]'); await tap('[data-testid=btn-take-part]');
+  const left = await p.evaluate(() => window.__GRAVEVOW__.getState().chests.prueba[0]?.qty ?? 0);
+  ok(left === 2, `monedas: coge 2 y quedan ${left}`);
+  const box = await p.$eval('.loot-win', (e) => { const r = e.getBoundingClientRect(); return [r.width, r.height]; });
+  ok(box[0] < 844 && box[1] < 390, `ventana más pequeña que la pantalla (${box.map(Math.round).join('×')})`);
+  await tap('[data-testid=btn-take-all]'); await tap('[data-testid=btn-close-loot]');
+  ok(!(await p.$('[data-testid=loot-modal]')), 'se cierra'); console.log('errores', errs.length ? errs : 'ninguno'); await b.close(); })();

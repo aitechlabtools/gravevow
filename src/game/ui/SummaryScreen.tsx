@@ -3,6 +3,8 @@
 //  2 · Botín conseguido (solo lo nuevo, por rareza) o, al morir, lo que se queda abajo y lo que salvó el bolsillo.
 //  3 · Tu cuerpo: solo si Vesper tiene algo que curar (heridas, sangrado, fracturas, vida baja o tras caer).
 // Siguiente / ◂ Atrás, Intro y flechas, deslizar en táctil. «Saltar» va al Bastión, salvo si vuelves herido: entonces a «Tu cuerpo».
+import { Seal } from './kit/Seal';
+import { VENDORS } from '../../core/data/vendors';
 import { useEffect, useRef, useState } from 'react';
 import { RECRUIT_NOTE } from '../../config/recruit';
 import { COIN_ID } from '../../config/gold';
@@ -88,7 +90,7 @@ export function SummaryScreen() {
         {!last && <button className="btn btn-gold px-10 text-lg" style={{ minHeight: 'var(--btn-h)' }} onClick={next} data-testid="summary-next" autoFocus>Siguiente ▸</button>}
         {last && page === 3 && cure && (
           <button className="btn px-5" style={{ minHeight: 'var(--btn-h)' }} data-testid="cure-later"
-            onClick={() => { toast('Puedes curarte más tarde en la Enfermería o en el Alijo › Heridas.', 'info'); leave(); }}>Ahora no</button>
+            onClick={() => { toast('Puedes curarte más tarde en la Enfermería o en Estado.', 'info'); leave(); }}>Ahora no</button>
         )}
         {last && !(page === 3 && cure) && <button className="btn btn-gold px-10 text-lg" style={{ minHeight: 'var(--btn-h)' }} onClick={leave} data-testid="btn-back-lobby" autoFocus>Volver al Bastión</button>}
       </div>
@@ -118,6 +120,9 @@ function PageRun({ phone, title, ok }: { phone: boolean; title: string; ok: bool
         <p className={`font-body text-stone-300 ${phone ? 'text-sm' : 'text-xl'} mt-1`}>
           {ok ? 'El portal te escupe en el patio del Bastión. Todo lo que traes es tuyo.' : summary.reason === 'timeout' ? 'El reloj llegó a cero. Las puertas de piedra se sellaron contigo dentro.' : 'Tu cuerpo queda en las criptas. Tu equipo, también.'}
         </p>
+        {summary.reforged?.length ? (() => { const by = [...new Set(summary.reforged.map((r) => r.vendor))];
+          return <div className={`panel flex items-center gap-2 px-3 py-2 ${phone ? 'mt-2 text-[13px]' : 'mt-3 text-base'} text-left`} style={{ borderColor: '#e8b33a' }} data-testid="summary-reforged">
+            <Seal scale={2} title="Piezas aseguradas" /><span><b className="text-gold">Te {summary.reforged.length === 1 ? 'espera 1 pieza reforjada' : `esperan ${summary.reforged.length} piezas reforjadas`}</b> en el Bastión: {by.map((v) => `${VENDORS[v].name} (${summary.reforged!.filter((r) => r.vendor === v).map((r) => getItem(r.item.itemId).name).join(', ')})`).join(' y ')}.</span></div>; })() : null}
         <div className={`flex flex-wrap gap-2 ${phone ? 'mt-2' : 'mt-4 justify-center'}`}>
           <span className="panel px-3 py-1.5 text-sm">Tiempo <b className="text-parchment">{formatTime(summary.durationMs)}</b></span>
           {sub && <span className="panel px-3 py-1.5 text-sm" data-testid="summary-subzone">{sub.name}{summary.firstVisit && <span className="text-gold"> · primera vez</span>}</span>}

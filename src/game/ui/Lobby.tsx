@@ -24,7 +24,7 @@ import { PillBar, type PillTab } from './kit';
 import { useLayout } from '../../config/ui';
 import { ClassUnlockNotice } from './ClassSkills';
 
-export type LobbyTab = 'play' | 'character' | 'stash' | 'merchants' | 'quests' | 'bestiary' | 'shop';
+export type LobbyTab = 'play' | 'character' | 'stash' | 'estado' | 'merchants' | 'quests' | 'bestiary' | 'shop';
 
 export function Lobby() {
   const profile = useGame((s) => s.profile)!;
@@ -50,9 +50,11 @@ export function Lobby() {
   const ch = profile.character;
   const questsReady = readyQuestCount(profile);
   const stationsReady = readyStations(profile).length;
+  // Lesiones que traes (partes dañadas o con fractura): aviso «!n» en Estado
+  const injuries = (() => { const w = profile.wounds; if (!w) return 0; const set = new Set<string>(w.fractures ?? []); for (const [r, v] of Object.entries(w.pct ?? {})) if ((v ?? 1) < 1) set.add(r); return set.size; })();
   const tutBadges = pendingBadges(useGame((s) => s.tutorials));
   const tabs: PillTab<LobbyTab>[] = ([
-    { id: 'play', label: 'Jugar' }, { id: 'character', label: 'Habilidades' }, { id: 'stash', label: 'Alijo' }, { id: 'merchants', label: 'Bastión', badge: stationsReady },
+    { id: 'play', label: 'Jugar' }, { id: 'character', label: 'Habilidades' }, { id: 'stash', label: 'Alijo' }, { id: 'estado', label: 'Estado', badge: injuries, badgeLabel: injuries === 1 ? 'lesión' : 'lesiones', alert: true }, { id: 'merchants', label: 'Bastión', badge: stationsReady },
     { id: 'quests', label: 'Misiones', badge: questsReady }, { id: 'bestiary', label: 'Bestiario' }, { id: 'shop', label: 'Tienda' },
   ] as PillTab<LobbyTab>[]).map((t) => ({ ...t, dot: !dev.skipMinis && tutBadges.has(`tab-${t.id}`) }));
   // Cada pestaña lanza su disparador de mini tutorial («tab:<id>»): solo sale la primera vez
@@ -72,7 +74,7 @@ export function Lobby() {
       <header className="ui-nav" data-testid="lobby-nav">
         <div className="flex items-center min-w-0">
         {/* Retrato, nombre y experiencia. Tocarlo abre el cambio de personaje. En el móvil, más compacto */}
-        <button className={`flex items-center shrink-0 text-left ${layout === 'phone' ? 'gap-1.5' : 'gap-2'}`} style={{ minHeight: 44 }} data-testid="nav-chip"
+        <button className={`flex items-center shrink-0 text-left ${layout === 'phone' ? 'gap-1.5' : 'gap-2'}`} style={{ minHeight: 44, minWidth: 44 }} data-testid="nav-chip"
           onClick={() => { sfx('click'); setSwitcher(!switcher); }} aria-label="Cambiar de personaje" aria-expanded={switcher}>
           <div className={`${layout === 'phone' ? 'w-8 h-8' : 'w-10 h-10'} flex items-end justify-center overflow-hidden bg-[#0d0c11] border-2 ${switcher ? 'border-gold' : 'border-stone-700'}`}><PlayerSprite scale={layout === 'phone' ? 1 : 2} animate={false} /></div>
           <div className={`nav-chip-txt min-w-0 ${layout === 'phone' ? 'w-[74px]' : 'w-28'} leading-tight`}>
@@ -100,8 +102,9 @@ export function Lobby() {
           {tab === 'play' && <Jugar onNavigate={(t) => { if (t === 'contracts') setVendorTarget({ vendor: 'grizk', view: 'contracts' }); go(t === 'contracts' ? 'merchants' : t); }} />}
           {tab === 'character' && <Personaje onStash={() => go('stash')} />}
           {tab === 'stash' && <Alijo onShop={() => go('shop')} />}
+          {tab === 'estado' && <Alijo section="status" onShop={() => go('shop')} />}
           {tab === 'merchants' && <Mercaderes target={vendorTarget} onConsumed={() => setVendorTarget(null)} onQuests={(v) => { setQuestVendor(v); go('quests'); }} />}
-          {tab === 'quests' && <Misiones vendor={questVendor} />}
+          {tab === 'quests' && <Misiones vendor={questVendor} onVisit={(v) => { setVendorTarget({ vendor: v, view: 'quests' }); go('merchants'); }} />}
           {tab === 'shop' && <Tienda />}
           {tab === 'bestiary' && <BestiaryTab />}
         </div>
