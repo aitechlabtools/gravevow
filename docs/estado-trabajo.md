@@ -939,9 +939,9 @@ bienvenida explica ficha, arrastrar y doble clic (antes iba en la barra). Captur
 - Heridas: Aventurero con barra de Vida + necesidades · «Estado físico» (franja de estado, cuerpo de bloques `BlockBody` solo en modo `full`, ficha con barra, «Estados activos») · Mochila con filtro Todo/Curación y «Ordenar mochila».
 - Móvil sin cambios de estructura. Capturas y script: mockups/plan-interfaz-2/alijo/ (VISTA=heridas, SOLO=).
 
-## 25/11 · Estaciones en ruinas reestructuradas
-- `RuinPanel` (StationPanels.tsx, clases `.ruin*`): cabecera con nombre, propósito y encargado; fichas «Estado actual» (ruinas) y «Siguiente mejora» (arte reconstruido, borde dorado) lado a lado; escalones 0–3, «Siguiente mejora», fichas de requisitos (tienes/necesitas, ✓ Disponible o enlace «Comprar a… / Ir a…») y «Reconstruir <estación>» con el motivo del bloqueo.
-- Estaciones reconstruidas sin cambios. Capturas y script: mockups/plan-interfaz-2/ruinas/ (MERC=, SOLO=).
+## 25/11 · Estaciones en ruinas (página intermedia simple)
+- `RuinPanel` (StationPanels.tsx, clases `.ruin*`): nombre + «En ruinas», dibujo en ruinas que llena el alto libre (escala entera; móvil franja de 70 px), «Materiales necesarios» en fichas centradas (icono, nombre, tienes/necesitas; la que falta lleva a su fuente al tocarla) y «Reconstruir» con el motivo del bloqueo.
+- Columnas izquierda (mercader) y derecha (tus materiales) sin cambios; estaciones reconstruidas sin cambios. Capturas y script: mockups/plan-interfaz-2/ruinas/.
 
 ## 25/11 · Misiones como diario en tres columnas
 - `QuestJournal` (src/game/ui/QuestJournal.tsx, clases `.qj*`), escritorio y tableta: «Tus misiones» (tarjetas compactas con clavo/chincheta, estado y sello «Lista/Cumplida»; listas primero; «+N espacios disponibles») · «Detalle de misión» (arte, objetivo con barra, recompensas en fichas, Cobrar/Entregar, Visitar a…, Fijar, Abandonar con confirmación) · «Tablón de encargos» (filtro Todos/mercader, encargos en fichas horizontales).

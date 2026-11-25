@@ -1539,8 +1539,10 @@ button.share-slot{cursor:pointer}
 .ruin-step.now{background:#3a1e1a;border-color:#7a3a30;color:#e0a090}.ruin-step.next{border-color:#e8b33a;color:#e8b33a;background:#221c10}
 .ruin-box{border:1px solid #3a3841;background:#19171f;padding:8px 12px}
 .ruin-cap{font-family:var(--font-display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#e8b33a;margin-bottom:2px}
-.ruin-req{border:1px solid #3a3841;background:#141318;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.ruin-req.bad{border-color:#6a3030}.ruin-qty{font-size:20px;line-height:1.1}.ruin-req.ok .ruin-qty{color:#7fbf6a}.ruin-req.bad .ruin-qty{color:#d0605a}
+.ruin-req{border:1px solid #3a3841;background:#141318;padding:10px 6px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;min-width:0;font:inherit;color:inherit}
+button.ruin-req{cursor:pointer}button.ruin-req:hover{border-color:#d0605a;background:#1e1416}
+.ruin-req.bad{border-color:#6a3030}.ruin-qty{font-size:16px;line-height:1.1}
+@media (min-height:700px){.ruin-req{padding:16px 8px}.ruin-qty{font-size:20px}}.ruin-req.ok .ruin-qty{color:#7fbf6a}.ruin-req.bad .ruin-qty{color:#d0605a}
 .ruin-go{align-self:flex-start;font:inherit;font-size:12px;color:#e8a070;background:none;border:0;padding:0;cursor:pointer;min-height:24px;text-align:left}.ruin-go:hover{text-decoration:underline}
 .is-touch .ruin-go{min-height:44px}
 @media (max-height:560px){.ruin-step{min-height:30px}.ruin-qty{font-size:15px}.ruin-req{padding:4px 8px}}
