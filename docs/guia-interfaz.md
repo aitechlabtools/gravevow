@@ -349,3 +349,7 @@ Todo a la vista, sin pestañas (`screens/Personaje.tsx`). Escritorio 22/44/34 y 
 - **Alijo › Aventurero (25/11):** mismo arco que Habilidades (`SkillArc` con `compact noFoot`): clase arriba, mano derecha a la derecha, izquierda a la izquierda. Con una pieza elegida, `HeroStats preview` marca filas `hs-up`/`hs-down` con ▲/▼. El panel Equipo tiene el pie fijo `backpack-foot` (carga, en riesgo y botones).
 - **Habilidades (25/11):** sin recuadro de efectos a la izquierda; el detalle de un hito (`.hb-det.hito`) crece para llenar el panel.
 - **Estado (25/11):** apartado propio del menú (8 pestañas; con poco sitio, PillBar pasa a solo iconos como antes). Badge rojo con el número de lesiones (`PillTab.alert` + `badgeLabel`). Capturas: mockups/apartado-estado (index.html).
+
+## Arte de estaciones y retratos de mercader
+- Panel de la estación: `stationArtUrl(id, enRuinas, nivel)` dibuja el nivel actual (1–3). Tarjetas pequeñas del mercader (40 × 52 en escritorio, 20 × 26 en móvil): `stationIconUrl(id, enRuinas)`, un solo objeto grande que no cambia con el nivel (el nivel ya lo dice el texto).
+- Retratos: los detalles de oficio van de cintura para arriba, porque la tarjeta del Bastión recorta a cabeza y pecho.

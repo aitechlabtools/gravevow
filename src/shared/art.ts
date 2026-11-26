@@ -4,6 +4,7 @@
 // archivos externos y se comparte entre el juego (Phaser), la interfaz y la web.
 // Son placeholders coherentes: ver docs/ASSETS.md para su sustitución.
 // ════════════════════════════════════════════════════════════════════
+import { VENDOR_DETAIL } from './vendorDetail';
 import { PAL, shade, CLOAK_COLORS, SKIN_COLORS } from './palette';
 import type { Appearance, ClassId, Equipment } from '../core/types';
 import { EQUIP_SLOTS } from '../core/types';
@@ -94,6 +95,8 @@ export interface HumanoidSpec {
   /** Colgante visible en el pecho. */
   amulet?: string;
   ribs?: boolean;
+  /** Detalle de oficio pintado encima (retratos de mercader, vista frontal en reposo): src/shared/vendorDetail.ts. */
+  detail?: [number, number, number, number, string][];
   /** Peinado (con la cabeza al aire, o asomando bajo el sombrero de mago). */
   hairStyle?: HairStyle;
   /** Barba: se ve siempre que la pieza de cabeza deje la cara al aire. */
@@ -412,6 +415,7 @@ export function drawHumanoid(s: HumanoidSpec, frame = 0, pose: 'idle' | 'attack'
     p.ctx.putImageData(img, 0, 0);
   }
   p.outline();
+  if (s.detail && frame === 0 && pose === 'idle') for (const [x, y, w, h, col] of s.detail) { p.ctx.fillStyle = col; p.ctx.fillRect(x, y, w, h); }
   return p.c;
 }
 
@@ -589,13 +593,13 @@ export const MONSTER_SPECS: Record<string, HumanoidSpec> = {
   vendor_garra: { skin: SKIN_COLORS[1], torso: PAL.steel1, trim: PAL.threat2, legs: PAL.stone2, boots: PAL.earth0, cape: PAL.threat1, head: 'hair', headColor: PAL.threat1, weapon: 'sword', weaponColor: PAL.steel3, offhand: 'shield', shieldColor: PAL.threat1, shieldRim: PAL.steel2, torsoStyle: 'mail' },
   // Marcador de Grizk (duende; antes, el Coleccionista): piel verde y túnica morada. Sprite definitivo pendiente (lo diseña el usuario).
   vendor_collector: { skin: '#5d8f3c', torso: '#6a3aa8', trim: PAL.gold1, legs: PAL.earth1, boots: PAL.earth0, head: 'hair', headColor: '#3f6b2a', weapon: 'none', torsoStyle: 'tunic', amulet: PAL.gold2 },
-  vendor_brand: { skin: SKIN_COLORS[2], torso: PAL.earth1, trim: PAL.fire1, legs: PAL.stone1, boots: PAL.earth0, head: 'hair', headColor: PAL.outline, weapon: 'mace', torsoStyle: 'tunic', hands: PAL.steel1 },
+  vendor_brand: { detail: VENDOR_DETAIL.vendor_brand, skin: SKIN_COLORS[2], torso: PAL.earth1, trim: PAL.fire1, legs: PAL.stone1, boots: PAL.earth0, head: 'hair', headColor: PAL.outline, weapon: 'mace', torsoStyle: 'tunic', hands: PAL.steel1 },
   // Mercaderes de la Fase 5b (marcadores provisionales hasta el arte definitivo)
-  vendor_garth: { skin: SKIN_COLORS[2], torso: PAL.bone1, trim: PAL.earth2, legs: PAL.earth1, boots: PAL.earth0, head: 'hair', headColor: PAL.earth0, weapon: 'dagger', weaponColor: PAL.steel2, torsoStyle: 'shirt', hands: PAL.bone2 },
-  vendor_nira: { skin: SKIN_COLORS[0], torso: PAL.earth2, trim: PAL.gold1, legs: PAL.earth1, boots: PAL.earth0, cape: PAL.moss0, head: 'hood', headColor: PAL.earth2, weapon: 'none', torsoStyle: 'tunic', amulet: PAL.gold2, eye: PAL.gold3 },
-  vendor_orik: { skin: SKIN_COLORS[1], torso: PAL.stone2, trim: PAL.steel2, legs: PAL.stone1, boots: PAL.earth0, head: 'hair', headColor: PAL.bone1, weapon: 'mace', weaponColor: PAL.steel1, torsoStyle: 'shirt', hands: PAL.earth2 },
+  vendor_garth: { detail: VENDOR_DETAIL.vendor_garth, skin: SKIN_COLORS[2], torso: PAL.bone1, trim: PAL.earth2, legs: PAL.earth1, boots: PAL.earth0, head: 'hair', headColor: PAL.earth0, weapon: 'dagger', weaponColor: PAL.steel2, torsoStyle: 'shirt', hands: PAL.bone2 },
+  vendor_nira: { detail: VENDOR_DETAIL.vendor_nira, skin: SKIN_COLORS[0], torso: PAL.earth2, trim: PAL.gold1, legs: PAL.earth1, boots: PAL.earth0, cape: PAL.moss0, head: 'hood', headColor: PAL.earth2, weapon: 'none', torsoStyle: 'tunic', amulet: PAL.gold2, eye: PAL.gold3 },
+  vendor_orik: { detail: VENDOR_DETAIL.vendor_orik, skin: SKIN_COLORS[1], torso: PAL.stone2, trim: PAL.steel2, legs: PAL.stone1, boots: PAL.earth0, head: 'hair', headColor: PAL.bone1, weapon: 'mace', weaponColor: PAL.steel1, torsoStyle: 'shirt', hands: PAL.earth2 },
   vendor_valerius: { skin: SKIN_COLORS[0], torso: PAL.steel2, trim: PAL.gold1, legs: PAL.steel1, boots: PAL.stone1, cape: PAL.night1, head: 'helmet', headColor: PAL.steel2, weapon: 'none', offhand: 'shield', shieldColor: PAL.steel1, shieldRim: PAL.gold1, torsoStyle: 'mail' },
-  vendor_eldrin: { skin: SKIN_COLORS[0], torso: PAL.magic0, trim: PAL.magic2, legs: PAL.night1, boots: PAL.night0, head: 'wizard', headColor: PAL.magic1, hatTrim: PAL.gold1, weapon: 'staff', weaponColor: PAL.earth2, orb: PAL.fire2, torsoStyle: 'robe' },
+  vendor_eldrin: { detail: VENDOR_DETAIL.vendor_eldrin, skin: SKIN_COLORS[0], torso: PAL.magic0, trim: PAL.magic2, legs: PAL.night1, boots: PAL.night0, head: 'wizard', headColor: PAL.magic1, hatTrim: PAL.gold1, weapon: 'staff', weaponColor: PAL.earth2, orb: PAL.fire2, torsoStyle: 'robe' },
   // ── Mercenarios de Garra Roja ──
   merc_bram: { skin: SKIN_COLORS[1], torso: PAL.moss1, trim: PAL.earth1, legs: PAL.earth1, boots: PAL.earth0, head: 'hair', headColor: PAL.earth3, weapon: 'axe', weaponColor: PAL.steel2, torsoStyle: 'shirt', hands: PAL.earth2 },
   merc_lysa: { skin: SKIN_COLORS[0], torso: PAL.earth2, trim: PAL.moss2, legs: PAL.stone2, boots: PAL.earth0, cape: PAL.moss0, head: 'hood', headColor: PAL.moss1, weapon: 'dagger', weaponColor: PAL.steel3, offhand: 'dagger', torsoStyle: 'tunic', eye: PAL.gold3 },

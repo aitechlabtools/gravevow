@@ -129,7 +129,7 @@ export function StationArt({ id, scale }: { id: ModuleId; scale: number }) {
   return (
     <>
       <div className="pb-2 pt-4">
-        <img src={stationArtUrl(id, locked)} className="pixelated" alt={locked ? 'En ruinas' : ''} draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} />
+        <img src={stationArtUrl(id, locked, lvl)} className="pixelated" alt={locked ? 'En ruinas' : ''} draggable={false} style={{ width: STATION_ART_W * scale, height: STATION_ART_H * scale }} />
       </div>
       {!locked && ready && <span className="st-up" data-testid={`upgrade-ready-${id}`}>▲ Mejora</span>}
       {locked && ready && <span className="st-dot" aria-label="Ya puedes reconstruirla" data-testid={`ask-ready-${id}`}>!</span>}
@@ -372,7 +372,7 @@ export function CotPanel({ extra }: { extra?: React.ReactNode }) {
       <div className="grid gap-3" style={{ gridTemplateColumns: phone ? '1fr' : 'minmax(0,1fr) minmax(0,1fr)' }}>
         <div className="panel p-3 flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <img src={stationArtUrl('cot')} className="pixelated shrink-0" alt="" draggable={false} style={{ width: STATION_ART_W * (phone ? 2 : 4), height: STATION_ART_H * (phone ? 2 : 4) }} />
+            <img src={stationArtUrl('cot', false, refugeOf(profile).cot)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: STATION_ART_W * (phone ? 2 : 4), height: STATION_ART_H * (phone ? 2 : 4) }} />
             <div className="flex-1 min-w-0">
               <div className="text-[13px] uppercase tracking-[0.12em] text-stone-400">Descanso</div>
               <div className="font-display text-[34px] leading-none" style={{ color: '#9fb4ff' }} data-testid="cot-rest">{rest}<span className="text-[15px] text-stone-400"> / 100</span></div>

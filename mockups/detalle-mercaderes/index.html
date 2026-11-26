@@ -1,0 +1,37 @@
+<!doctype html><meta charset=utf-8><title>Detalle de mercaderes y estaciones · propuesta</title>
+<style>body{background:#16141b;color:#d8d2c4;font:14px system-ui;margin:24px}h1{font-size:20px;color:#e8b33a;margin:0 0 4px}p.l{color:#a8a29e;margin:0 0 20px}
+section{border-top:1px solid #2f2c36;padding:18px 0}h2{font-size:16px;color:#e8b33a;margin:0 0 2px}small{color:#a8a29e}
+.row{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}.c{text-align:center}.c span{display:block;margin-top:4px;font-size:11px;color:#a8a29e}
+canvas{image-rendering:pixelated;background:#1d1b22;border:1px solid #2f2c36;display:block}.sep{width:2px;align-self:stretch;background:#3a3741}
+.crop{background:radial-gradient(#2a2622,#141318)}</style>
+<h1>Detalle de mercaderes y estaciones · propuesta (antes / después)</h1>
+<p class=l>Retratos: los detalles van de cintura para arriba porque la tarjeta del Bastión recorta a cabeza y pecho. Estaciones: dibujo por niveles para el panel grande e iconito simple (opción A) para la tarjeta.</p>
+<div id=o></div>
+<script type=module>
+import { drawHumanoid, MONSTER_SPECS } from '/src/shared/art.ts';
+import { stationArtUrl } from '/src/game/ui/stationArt.ts';
+import { VENDORS, STATIONS, RUBBLE } from './data.js';
+const cv=(w=20,h=26)=>Object.assign(document.createElement('canvas'),{width:w,height:h});
+const px=(c,l)=>{const g=c.getContext('2d');for(const[x,y,w,h,col]of l){g.fillStyle=col;g.fillRect(x,y,w,h)}return c};
+const sc=(src,s,crop)=>{const [sx,sy,sw,sh]=crop||[0,0,src.width,src.height];const c=cv(sw*s,sh*s);const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(src,sx,sy,sw,sh,0,0,sw*s,sh*s);return c};
+const box=(row,c,label,cls)=>{const d=document.createElement('div');d.className='c';if(cls)c.classList.add(cls);d.append(c);d.insertAdjacentHTML('beforeend',`<span>${label}</span>`);row.append(d)};
+const img=u=>new Promise(r=>{const i=new Image();i.onload=()=>{const c=cv();c.getContext('2d').drawImage(i,0,0);r(c)};i.src=u});
+const sep=row=>row.append(Object.assign(document.createElement('div'),{className:'sep'}));
+for(const [vid,v] of Object.entries(VENDORS)){
+  const sec=document.createElement('section');o.append(sec);
+  const st=Object.entries(STATIONS).find(([,s])=>s.by===vid);
+  sec.innerHTML=`<h2>${v.name}</h2><small>${v.note}</small>`;
+  const r1=document.createElement('div');r1.className='row';sec.append(r1);
+  const before=drawHumanoid(MONSTER_SPECS[v.sprite]), after=px(drawHumanoid(MONSTER_SPECS[v.sprite]),v.add);
+  box(r1,sc(before,1),'antes ×1');box(r1,sc(before,4),'antes ×4');box(r1,sc(before,8,[0,0,20,19]),'antes · tarjeta','crop');sep(r1);
+  box(r1,sc(after,1),'después ×1');box(r1,sc(after,4),'después ×4');box(r1,sc(after,8,[0,0,20,19]),'después · tarjeta','crop');
+  if(!st)continue;const [sid,s]=st;
+  sec.insertAdjacentHTML('beforeend',`<div style="margin-top:14px"><small><b style="color:#d8d2c4">${s.name}</b> · antes: un dibujo para todos los niveles</small></div>`);
+  const r2=document.createElement('div');r2.className='row';sec.append(r2);
+  box(r2,sc(await img(stationArtUrl(sid)),4),'antes · en pie');box(r2,sc(await img(stationArtUrl(sid,true)),4),'antes · ruina');box(r2,sc(await img(stationArtUrl(sid)),2),'antes · iconito ×2');sep(r2);
+  box(r2,sc(px(cv(),[...s.art[0].map(([x,y,w,h])=>[x,y,w,h,'#3a3741']),...RUBBLE]),4),'ruina');
+  s.art.forEach((a,i)=>box(r2,sc(px(cv(),a),4),`nivel ${i+1} · ${s.levels[i]}`));sep(r2);
+  box(r2,sc(px(cv(),s.mini),2),'iconito ×2');box(r2,sc(px(cv(),s.mini),1),'iconito ×1');
+}
+document.body.dataset.ready=1;
+</script>

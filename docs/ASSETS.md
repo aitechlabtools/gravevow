@@ -52,7 +52,7 @@ Hoy son glifos dentro de un recuadro discontinuo (`TABS` en `src/game/ui/Setting
 | Sonido, Pantalla, Controles, Partida, Comunidad, Información | 16×16 cada uno (se ven a ×2, 32 px) | Uno por sección; activos en dorado #e8b33a y el resto en hueso #e9e1cc (o dos versiones) |
 
 ## Bastión y estaciones (provisionales, para diseñar)
-Marcadores dibujados por código en `src/game/ui/stationArt.ts`. Misma proporción que los retratos de los mercaderes (20 × 26 px de base; en escritorio se ven a ×6, 120 × 156). PNG con transparencia, apoyado en la parte de abajo. Las estaciones son partes del Bastión en ruinas que el jugador reconstruye: cada una necesita también una **versión en ruinas** (`<clave>-ruina`, misma medida: piedra derrumbada, cascotes delante, sin candado). Hoy la versión en ruinas se genera por código (silueta apagada + cascotes).
+Marcadores dibujados por código en `src/game/ui/stationArt.ts`. Misma proporción que los retratos de los mercaderes (20 × 26 px de base; en escritorio se ven a ×6, 120 × 156). PNG con transparencia, apoyado en la parte de abajo. Las estaciones son partes del Bastión en ruinas que el jugador reconstruye: cada una necesita también una **versión en ruinas** (`<clave>-ruina`, misma medida: piedra derrumbada, cascotes delante, sin candado). Hoy la versión en ruinas se genera por código (silueta apagada + cascotes). Desde la mejora de detalle hay un dibujo por nivel (`<clave>-1`, `-2`, `-3`) y un iconito simple de un solo objeto para la tarjeta del mercader (`<clave>-icono`); los PNG definitivos pueden sustituirlos con esas claves y la misma medida.
 
 | Clave | Qué es | Medida |
 |---|---|---|

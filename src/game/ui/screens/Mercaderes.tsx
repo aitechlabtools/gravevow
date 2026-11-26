@@ -15,7 +15,7 @@ import { PLACES, VENDORS, type VendorId } from '../../../core/data/vendors';
 import { prepText, refugeOf, upgradeBlock } from '../../../core/refuge';
 import { CotPanel, CraftPanel, RunePanel, StationDetail, UpgradeButton } from '../StationPanels';
 import { MODULES, MODULE_ORDER, type ModuleId } from '../../../core/data/refuge';
-import { stationArtUrl } from '../stationArt';
+import { stationIconUrl } from '../stationArt';
 import { REP_RANKS, rankOf } from '../../../config/reputation';
 import { readyQuestCount, boardQuests, activeQuests, isOldQuest } from '../../../core/quests';
 import { getItem } from '../../../core/data/items';
@@ -162,7 +162,7 @@ function VendorTile({ id, onTalk }: { id: VendorId; onTalk: (v: VendorId) => voi
         {pend && <span className={`vtile-pend ${pend.kind === 'upgrade' || pend.kind === 'reforge' ? 'gold' : ''}`} data-testid={`vendor-pending-${id}`}>{pend.kind === 'reforge' ? <span className="inline-flex items-center gap-1"><Seal scale={1} title={pend.text} />{phone ? '' : pend.text}</span> : <>{pend.kind === 'upgrade' ? (phone ? '▲' : pend.text) : <>{'●'}{phone ? '' : ` ${pend.text}`}</>}</>}</span>}
       </span>
       <span className="vtile-info">
-        {st && <img src={stationArtUrl(st, lvl < 1)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: phone ? 20 : 40, height: phone ? 26 : 52 }} />}
+        {st && <img src={stationIconUrl(st, lvl < 1)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: phone ? 20 : 40, height: phone ? 26 : 52 }} />}
         <span className="min-w-0">
           <span className="block text-gold uppercase tracking-[0.12em] text-[13px] [@media(max-height:520px)]:text-[12px] truncate" data-testid={`vendor-place-${id}`}>{PLACES[v.place].name}</span>
           {!phone && st && <span className="block text-[14px] text-stone-300 truncate" data-testid={`vendor-station-${id}`}>{status}</span>}
@@ -297,7 +297,7 @@ function VendorInterior({ vendor, initial, onBack, onGo, onQuests }: { vendor: V
         <span className="vtile-name font-display" data-testid="vendor-name">{v.name}</span>
         <span className="vtile-port"><Bust sprite={v.sprite} /></span>
         <span className="vtile-info">
-          {st && <img src={stationArtUrl(st, refugeOf(profile)[st] < 1)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: 40, height: 52 }} />}
+          {st && <img src={stationIconUrl(st, refugeOf(profile)[st] < 1)} className="pixelated shrink-0" alt="" draggable={false} style={{ width: 40, height: 52 }} />}
           <span className="min-w-0">
             <span className="block text-gold uppercase tracking-[0.12em] text-[13px] truncate">{PLACES[v.place].name}</span>
             <span className="block text-[14px] text-stone-300 leading-snug">{st ? `${MODULES[st].name} · ${refugeOf(profile)[st] < 1 ? 'En ruinas' : `Nv ${refugeOf(profile)[st]}/3`}` : v.role}</span>
