@@ -35,7 +35,7 @@ const URL = process.argv[2] || 'http://localhost:5173/play/'; const OUT = path.j
   // 4) Sin monedas: botón desactivado con lo que falta
   await p.evaluate(() => { const g = window.__GRAVEVOW__, pr = g.getState().profile; g.setState({ profile: { ...pr, gold: 0, stash: pr.stash.map((x) => (x?.itemId === 'coin' ? null : x)), wounds: { pct: { thorax: 0.5 }, fractures: ['armL'] } } }); });
   await p.waitForTimeout(300); const btn = p.locator('[data-testid=cure-btn]');
-  ok((await btn.isDisabled()) && /te faltan/.test(await btn.innerText()), `sin oro: «${await btn.innerText()}»`);
+  ok((await btn.isDisabled()) && /te faltan/.test(await btn.getAttribute('aria-label')), `sin oro: «${await btn.getAttribute('aria-label')}»`);
   await p.screenshot({ path: `${OUT}/resultado-escritorio-sin-oro.png` });
   console.log(errs.length ? errs : 'sin errores de página'); await b.close();
 })();

@@ -22,8 +22,8 @@ import { CarryBar } from '../CarryBar';
 import { ItemSlot, GridView, SLOT_LABELS, highlightItems, compareWithEquipped, type InvMode } from '../inventory';
 import { PlayerSprite } from '../common';
 import { Panel, SubHead, Segmented, usePixelScale } from '../kit';
-import { BlockBody, BodyPanel, usefulOn } from '../BodyFigure';
-import { StatusAttrs, StatusNeeds, StatusTop } from '../EstadoParts';
+import { BodyPanel, usefulOn } from '../BodyFigure';
+import { BodyMap, StatusAttrs, StatusNeeds, StatusTop } from '../EstadoParts';
 import type { Region } from '../../../config/anatomy';
 import { NeedsPanel } from '../NeedsBars';
 import { needsOf } from '../../../core/needs';
@@ -280,10 +280,11 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
           <Panel title="Estado" className="min-h-0" bodyClassName="min-h-0 flex flex-col">
             <div className="flex-1 min-h-0 flex flex-col estado-center" data-testid="intendencia-status">
               <StatusTop body={body} />
-              <div className="flex-1 min-h-0 flex items-stretch justify-center estado-doll">
-                <BlockBody body={body} sel={null} words onPick={onPart} drop={(r) => (shown ? (usefulOn(body, shown, r) ? 'yes' : 'no') : null)} />
+              <div className="estado-cap mt-3">Estado corporal</div>
+              <div className="flex-1 min-h-0 flex items-center justify-center estado-doll">
+                <BodyMap body={body} shown={shown} onPick={onPart} />
               </div>
-              <p className="text-sm text-stone-400 text-center mb-2" data-testid="estado-hint">{pick ? <><b className="text-gold">{getItem(pick).name}</b>: toca una parte marcada con ◆, o arrástrala hasta ella.</> : 'Elige una cura de la mochila o del almacén y toca la parte del cuerpo, o arrástrala hasta ella.'}</p>
+              <p className="text-sm text-stone-400 text-center mb-2" data-testid="estado-hint">{pick ? <><b className="text-gold">{getItem(pick).name}</b>: toca una zona marcada con ◆ o arrástrala hasta ella.</> : 'Selecciona o arrastra una cura sobre la zona afectada.'}</p>
               <StatusNeeds />
             </div>
           </Panel>
