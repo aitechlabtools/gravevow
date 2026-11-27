@@ -97,7 +97,8 @@ function BastionGrid({ onTalk }: { onTalk: (v: VendorId) => void }) {
   const profile = useGame((s) => s.profile)!;
   const phone = useLayout() === 'phone';
   // La presentación de los mercaderes sale después de la bienvenida del intendente (que también pasa por aquí)
-  const welcomed = useGame((s) => !!s.tutorials?.seen.includes('bienvenida'));
+  // (o el personaje ya está asentado: tras «Reiniciar mini tutoriales» la bienvenida no vuelve y el «!» del Bastión se quedaba fijo)
+  const welcomed = useGame((s) => !!s.tutorials?.seen.includes('bienvenida')) || profile.tutorialSeen.lobby;
   useEffect(() => { if (welcomed) actions.tutorialEvent('bastion:merchants'); }, [welcomed]);
   const [reception, setReception] = useState(false);
   const recN = (profile.reception ?? []).length;

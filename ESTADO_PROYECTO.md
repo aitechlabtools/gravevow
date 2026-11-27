@@ -1,6 +1,6 @@
 # Gravevow · Estado del proyecto
 
-Última actualización: 22/11/2026 (Contratos de Grizk con bustos; reparto con el aliado rediseñado: montón «Para …», dividir y Reparto justo; conversación con busto grande en la mazmorra). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
+Última actualización: 27/11/2026 (arreglado el «!» fijo en la pestaña Bastión). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
 
 ## Cómo retomar el trabajo
 - En un ordenador nuevo o en otra sesión: haz pull en GitHub Desktop y escribe a Claude «Lee CLAUDE.md y ESTADO_PROYECTO.md» seguido de la tarea.
@@ -51,6 +51,7 @@
 - **Legal:** aviso legal, privacidad y cookies. Los datos del titular solo van en imagen y el correo de contacto también.
 
 ## En curso / por verificar
+- **«!» de Bastión (27/11):** comprobar en el PC con `e2e-bienvenida.cjs` y `minis-check.cjs` (en el entorno de Claude el aviso de cookies tapa los clics y no se pudieron pasar; ocurre también sin el cambio).
 - **Ataques (25/11):** las fichas de ataque ya no se resaltan en amarillo al tocarlas (el rombo del arco y los atributos siguen marcando lo elegido).
 - **Habilidad (25/11):** la etiqueta de nivel de las bloqueadas es ahora un chip corto con candado y «Nv 40» (title y aria «Requiere nivel 40»), para que no pise el nombre en el móvil.
 - **Habilidad (25/11):** solo se ilumina la habilidad de clase en uso (tocar otra ya no la resalta).
@@ -101,6 +102,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- **27/11 · «!» fijo en Bastión**: el mini tutorial de los mercaderes (`screen.bastion-entry`) solo se lanzaba si la cuenta tenía vista la «bienvenida», pero el personaje guarda aparte `tutorialSeen.lobby`. Tras «Reiniciar mini tutoriales» (o con datos desacompasados) la bienvenida no volvía y el «!» no se iba nunca. Ahora se lanza también con el personaje ya asentado (`Mercaderes.tsx`), y un personaje nuevo en una cuenta que ya vio la bienvenida se da por asentado (`Lobby.tsx`), así le salen los avisos de caída, fabricar y habilidad de clase. tsc y vitest (528) en verde.
 - **22/11 · Contratos de Grizk más visuales**: rejilla de bustos por zona y ficha con busto grande, cifras con icono y botones grandes de duración y actitud. Maqueta en `mockups/contratos`.
 - **22/11 · Reparto y conversación con busto**: en cofres y sacos con aliado, franja con su estado y barra, montón «Para …» (se recupera hasta cerrar), selector de cantidad (Mitad, Todo, ±) y «Reparto justo». Hablar con errantes, Kael, prisioneros y mercenarios usa un panel con busto grande, la frase y los botones en una fila. Los avisos esperan mientras están abiertas. Maquetas en `mockups/reparto` y `mockups/dialogo-busto`.
 - **18/11 · Misiones y Bestiario más visuales**: Misiones es un tablón de notas (retrato, objetivo grande, progreso, recompensas en iconos; Cobrar en la nota; detalle al tocar; huecos con «Ir al Bastión»; «?» con la explicación) y la pestaña Misiones de cada mercader usa las mismas notas. El Bestiario es una galería: el conocimiento es el color del borde, jefes en casilla doble, victorias en la esquina y ficha con candados. Estilo plano solo en estas pantallas. Maquetas y comparación en `mockups/misiones-bestiario-visual`; detalle en `docs/estado-trabajo.md`.

@@ -61,7 +61,9 @@ export function Lobby() {
   const go = (t: LobbyTab) => { setTab(t); sfx('click'); actions.tutorialEvent(`tab:${t}`); };
   // Bienvenida del intendente (data/tutorials.ts, «bienvenida»): una vez por personaje, al volver de la primera bajada
   const welcome = profile.tutorialDone && !profile.tutorialSeen.lobby;
-  useEffect(() => { if (welcome) actions.tutorialEvent('lobby:welcome'); }, [welcome]);
+  // La bienvenida es de la cuenta: si ya se vio con otro personaje no vuelve a salir, así que este queda «asentado» sin ella
+  const welcomeSeen = useGame((s) => !!s.tutorials?.seen.includes('bienvenida'));
+  useEffect(() => { if (welcome) { if (welcomeSeen) actions.markTutorial('lobby'); else actions.tutorialEvent('lobby:welcome'); } }, [welcome, welcomeSeen]);
   // Mini tutoriales por hechos, cuando ya se ha visto la bienvenida: volver tras caer y volver con algo que fabricar
   const settled = profile.tutorialSeen.lobby;
   useEffect(() => { if (settled && profile.fallen) actions.tutorialEvent('bastion:fallen'); }, [settled, profile.fallen]);
