@@ -1763,3 +1763,19 @@ div.hb-acard{cursor:default}
 .al-stats-tight .hb-stat{padding:3px 6px;font-size:13px}.al-stats-tight .hb-stat-m{font-size:12px;margin-top:0}
 @media (max-width:900px){.hb-acard-top{flex-wrap:wrap}.hb-acard-name{font-size:15px}}
 [data-testid=character-stats].al-stats-tight [data-testid=skill-stats] .hb-stat,.al-stats-tight [data-testid=skill-stats] .hb-stat{flex:0 0 auto;padding:3px 6px;font-size:13px}
+
+/* ESTADO en escritorio (27/11): resumen, cuerpo grande con heridas en texto, marca de aplicar y barras */
+.estado-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:4px 2px 10px;border-bottom:1px solid #2a2730;font-size:17px}
+.estado-doll{padding:12px 0}
+.estado-doll .doll{grid-template-columns:repeat(4,minmax(0,130px));grid-template-rows:96px 150px 96px 150px;width:auto}
+.estado-doll .doll-part{font-size:16px}
+.doll-word{font-size:13px;padding:0 5px;border:1px solid currentColor;margin-top:2px;white-space:nowrap}
+.doll-word.bleed{color:#ff6b6b}.doll-word.frac{color:#f2ead8}.doll-word.hurt{color:#e8b33a}.doll-word.off{color:#a8a0b0}
+.doll-apply{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);background:#e8b33a;color:#1a1206;font-size:12px;font-weight:700;padding:0 6px;white-space:nowrap;z-index:1}
+.estado-doll .doll-part.drop-yes{border:2px dashed #e8b33a;background:#2a2112;box-shadow:0 0 0 2px #e8b33a55}
+.estado-needs{display:flex;flex-direction:column;gap:8px;border-top:1px solid #2a2730;padding-top:10px}
+.estado-need{border:1px solid #2a2730;padding:6px 10px;font-size:16px}.estado-need.low{border-color:#6a2a2a}
+.estado-need-bar{height:8px;background:#26232a;margin-top:5px}.estado-need-bar i{display:block;height:100%}
+.estado-attrs .hb-stat{font-size:17px;padding:10px 6px}.estado-attrs .hb-stat-m{font-size:14px}
+.estado-doll .doll{grid-template-columns:110px 120px 120px 110px}
+.estado-doll .doll-name{font-size:16px}.estado-doll .doll-hp{font-size:15px}

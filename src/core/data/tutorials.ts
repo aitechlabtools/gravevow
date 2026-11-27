@@ -107,8 +107,8 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
   {
     id: 'tab.intendencia', topic: 'cuerpo', trigger: 'tab:estado', badge: 'tab-estado',
     steps: [
-      { text: 'Aquí ves tu **cuerpo** parte por parte y tus **necesidades**: saciedad, hidratación y descanso.', target: 'intendencia-status' },
-      { text: 'Si algo está herido y llevas con qué curarlo, sale un botón. **Pruébalo**.', target: 'body-quick', action: 'click' },
+      { text: 'Aquí ves tu **cuerpo** parte por parte y tus **necesidades**: saciedad, hidratación y descanso. Lo que te restan sale en **Atributos**, en rojo.', touch: 'Aquí ves tu **cuerpo** parte por parte y tus **necesidades**: saciedad, hidratación y descanso.', target: 'intendencia-status' },
+      { text: 'Para curarte, elige una **cura** de la mochila o del almacén y toca la parte del cuerpo: se marcan las partes donde sirve. Con monedas, **Curar** te deja entero.', touch: 'Para curarte, toca una **cura** y luego la parte del cuerpo: se marcan las partes donde sirve. Con monedas, Hermana Vesper te deja entero.', target: 'intendencia-status' },
     ],
   },
   {

@@ -102,7 +102,7 @@ export function regionWord(b: Body, r: Region): { word: string; ico: string; cls
 }
 
 /** ¿Sirve este objeto en esta región? (para resaltarla mientras se arrastra) */
-function usefulOn(body: Body, itemId: string, r: Region): boolean {
+export function usefulOn(body: Body, itemId: string, r: Region): boolean {
   const use = getItem(itemId).use;
   if (use?.kind === 'treat') return use.treat !== 'painkiller' && !treatError(body, use.treat as Treatment, r);
   if (use?.kind === 'heal') return !isDisabled(body, r) && body.parts[r].hp < regionMaxes(body.total)[r];
@@ -140,7 +140,7 @@ const DOLL: Record<Region, { area: string; label: string }> = {
   armR: { area: '2 / 1 / 4 / 2', label: 'BD' }, armL: { area: '2 / 4 / 4 / 5', label: 'BI' }, legR: { area: '4 / 2 / 5 / 3', label: 'PD' }, legL: { area: '4 / 3 / 5 / 4', label: 'PI' },
 };
 /** Figura de bloques (apartado Estado): cada parte es un botón con su vida; el color del borde dice cómo está. */
-function BlockBody({ body, sel, onPick, drop }: { body: Body; sel: Region; onPick: (r: Region) => void; drop: (r: Region) => 'yes' | 'no' | null }) {
+export function BlockBody({ body, sel, onPick, drop, words }: { body: Body; sel: Region | null; onPick: (r: Region) => void; drop: (r: Region) => 'yes' | 'no' | null; /** Estado (27/11): la herida también con texto («✕ Rota»). */ words?: boolean }) {
   return (
     <div className="doll" data-testid="body-map">
       {REGIONS.map((r) => {
@@ -153,7 +153,9 @@ function BlockBody({ body, sel, onPick, drop }: { body: Body; sel: Region; onPic
             <span className="doll-name">{VITAL_REGIONS.includes(r) && <span className="body-vital" aria-hidden>◆</span>}{DOLL[r].label}</span>
             <span className="doll-hp">{p.hp}/{cap}</span>
             {(p.bleed > 0 || p.fracture) && <span className="doll-ico">{p.bleed > 0 && <i className="body-ico bleed">{p.bleed === 2 ? '◆◆' : '◆'}</i>}{p.fracture && <i className="body-ico frac">✕</i>}</span>}
-            <span className={`sr-only body-tag-state ${word.cls}`} data-testid={`body-state-${r}`}>{word.word}</span>
+            {words && word.cls !== 'ok' ? <span className={`doll-word ${word.cls}`} data-testid={`body-state-${r}`}>{word.ico} {word.word}</span>
+              : <span className={`sr-only body-tag-state ${word.cls}`} data-testid={`body-state-${r}`}>{word.word}</span>}
+            {d === 'yes' && <span className="doll-apply" aria-hidden>◆ Aplicar aquí</span>}
           </button>
         );
       })}

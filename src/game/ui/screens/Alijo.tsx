@@ -22,7 +22,9 @@ import { CarryBar } from '../CarryBar';
 import { ItemSlot, GridView, SLOT_LABELS, highlightItems, compareWithEquipped, type InvMode } from '../inventory';
 import { PlayerSprite } from '../common';
 import { Panel, SubHead, Segmented, usePixelScale } from '../kit';
-import { BodyPanel } from '../BodyFigure';
+import { BlockBody, BodyPanel, usefulOn } from '../BodyFigure';
+import { StatusAttrs, StatusNeeds, StatusTop } from '../EstadoParts';
+import type { Region } from '../../../config/anatomy';
 import { NeedsPanel } from '../NeedsBars';
 import { needsOf } from '../../../core/needs';
 import { CureOffer, useCure } from '../CureOffer';
@@ -142,6 +144,22 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   );
   const card = <ItemCard loc={sel} mode={MODE} onClear={clear} compact={phone} stacked={(phone && view !== 'status') || (layout === 'tablet' && view === 'gear')} />;
   const status = <StatusView withNeeds={phone} />;
+  const [src, setSrc] = useState<'backpack' | 'stash'>('backpack');
+  // ESTADO (escritorio): la mochila llena el ancho de su columna, como el almacén (casillas de hasta 80 px)
+  const rightRef = useRef<HTMLDivElement | null>(null);
+  const [rightW, setRightW] = useState(0);
+  useEffect(() => {
+    const el = rightRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => setRightW(e.contentRect.width)); ro.observe(el); return () => ro.disconnect();
+  });
+  const bagSlot = rightW ? Math.max(44, Math.min(80, Math.floor((rightW - 40) / 6))) : 56;
+  const drag = useDrag();
+  // Soltar una cura sobre el cuerpo (escritorio): sale de la casilla de origen, sea mochila o almacén
+  useEffect(() => {
+    if (layout !== 'desktop' || section !== 'status') return;
+    const f = (e: Event) => { const { region, from } = (e as CustomEvent<{ region: Region; from?: Loc }>).detail; if (from) { actions.cureFrom(from, region); setSel(null); } };
+    window.addEventListener('cr-drop-body', f); return () => window.removeEventListener('cr-drop-body', f);
+  }, [layout, section]);
 
   if (phone && section !== 'status') {
     // Móvil (25/11, v4): un selector vertical de iconos y dos bloques iguales. Baúl (por defecto): equipo y mochila | almacén. Casco: personaje en su arco | atributos.
@@ -250,6 +268,38 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   const side = layout === 'tablet' ? 256 : compact ? 280 : 340;
   const deskSeg = null; // 25/11: sin selector Equipo / Heridas (Heridas es ahora el apartado Estado)
   const padX = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
+  if (view !== 'gear' && layout === 'desktop') {
+    // ESTADO en escritorio (27/11): Atributos con sus efectos · cuerpo, curación y necesidades · mochila o almacén (los de siempre)
+    const body = baseBody(profile);
+    const pick = selStack && !isCover(selStack) && ['treat', 'heal'].includes(getItem(selStack.itemId).use?.kind ?? '') ? selStack.itemId : null;
+    const shown = drag && !drag.lootId && ['treat', 'heal'].includes(getItem(drag.itemId).use?.kind ?? '') ? drag.itemId : pick;
+    const onPart = (r: Region) => { if (pick && sel && usefulOn(body, pick, r)) { actions.cureFrom(sel, r); clear(); } };
+    return (
+      <div className="h-full flex flex-col" data-testid="screen-estado" style={padX}>
+        <div className="flex-1 min-h-0 grid" style={{ gridTemplateColumns: 'minmax(0,0.85fr) minmax(0,1.2fr) minmax(calc(8 * 44px + 60px),1fr)', gap: 'var(--gap)' }}>
+          <Panel title="Atributos" className="min-h-0" bodyClassName="overflow-y-auto scroll-thin" testId="alijo-hero"><StatusAttrs body={body} /></Panel>
+          <Panel title="Estado" className="min-h-0" bodyClassName="min-h-0 flex flex-col">
+            <div className="flex-1 min-h-0 flex flex-col estado-center" data-testid="intendencia-status">
+              <StatusTop body={body} />
+              <div className="flex-1 min-h-0 flex items-center justify-center estado-doll">
+                <BlockBody body={body} sel={null} words onPick={onPart} drop={(r) => (shown ? (usefulOn(body, shown, r) ? 'yes' : 'no') : null)} />
+              </div>
+              <p className="text-sm text-stone-400 text-center mb-2" data-testid="estado-hint">{pick ? <><b className="text-gold">{getItem(pick).name}</b>: toca una parte marcada con ◆, o arrástrala hasta ella.</> : 'Elige una cura de la mochila o del almacén y toca la parte del cuerpo, o arrástrala hasta ella.'}</p>
+              <StatusNeeds />
+            </div>
+          </Panel>
+          <Panel title={src === 'backpack' ? 'Mochila' : 'Almacén'} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">
+            <div className="mb-2"><Segmented full options={[{ id: 'backpack', label: 'Mochila' }, { id: 'stash', label: 'Almacén' }]} value={src} onChange={(v) => { sfx('click'); setSrc(v); clear(); }} testId="estado-src" /></div>
+            <div ref={rightRef} className="w-full" />
+            {src === 'backpack' ? <div style={{ ['--slot' as string]: `${bagSlot}px`, ['--slot-big' as string]: `${bagSlot}px` }}>{backpack}</div> : <StashPanel cols={stashCols} bare sel={sel} onSelect={onSelect} onEmpty={onEmpty}
+              onQuick={(l, st) => { if (getItem(st.itemId).use?.kind === 'need') actions.eat(l); else actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />}
+            {sel && !pick && <div className="panel p-3 mt-3">{card}</div>}
+          </Panel>
+        </div>
+        {pickerModal}
+      </div>
+    );
+  }
   if (view !== 'gear') {
     return (
       <div className="h-full flex flex-col" data-testid="screen-estado" style={padX}>

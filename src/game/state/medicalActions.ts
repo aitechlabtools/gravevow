@@ -7,14 +7,14 @@ import { prepMods } from '../../core/refuge';
 import { needsOf, tickNeeds } from '../../core/needs';
 import { computeStats } from '../../core/stats';
 import { potionAmount } from '../../config/progression';
-import { countItem, removeItem } from '../../core/inventory';
+import { countItem, removeItem, stackAt, type Loc } from '../../core/inventory';
 import { getItem } from '../../core/data/items';
 import { spendGold } from '../../core/wallet';
 import { makeRng, randomSeed } from '../../core/rng';
 import type { ExpeditionState } from '../../core/expedition';
 import type { Profile } from '../../core/types';
 import { sfx } from '../audio';
-import { invError, loadNow, set, state, subzoneDepth, toast } from './internals';
+import { applyContainers, containersFor, invError, loadNow, set, state, subzoneDepth, toast } from './internals';
 import { actions } from './store';
 
 /** Objeto de la mochila que hace este tratamiento. */
@@ -170,6 +170,37 @@ export const medicalActions = {
     set({ profile: { ...p, backpack, wounds: toWounds(r.body) } });
     sfx('heal');
     toast(r.text, 'good', def.icon);
+  },
+
+  /** Estado en el Bastión (27/11): cura una parte con el objeto de la casilla `loc`, sea de la mochila o del almacén.
+   *  Mismas reglas que `baseTreat` y `baseHeal`; solo cambia de dónde sale el objeto. */
+  cureFrom(loc: Loc, region: Region) {
+    const p = state.profile;
+    if (!p || state.expedition || loc.kind !== 'grid') return;
+    const c = containersFor(state);
+    const st = c ? stackAt(c, loc) : null;
+    if (!c || !st) return;
+    const def = getItem(st.itemId);
+    const body = baseBody(p);
+    let next: Body, text: string;
+    if (def.use?.kind === 'treat') {
+      if (def.use.treat === 'painkiller') return invError('En el Bastión no te hace falta: el dolor solo pesa al pelear.');
+      const err = treatError(body, def.use.treat, region);
+      if (err) return invError(err);
+      const r = applyTreatment(body, def.use.treat, region);
+      next = r.body; text = r.text;
+    } else if (def.use?.kind === 'heal') {
+      const max = computeStats(p.character.classId, p.character.level, p.equipment).maxHp;
+      const h = healBody(body, potionAmount(def.use.amount, max));
+      if (h.healed <= 0) return invError('Ya tienes la vida al máximo (lo inutilizado solo se recupera con cirugía).');
+      next = h.body; text = `Usas ${def.name}: recuperas ${Math.round(h.healed)} de vida.`;
+    } else return invError('Esto no cura heridas.');
+    const grid = [...c[loc.container]];
+    grid[loc.index] = st.qty > 1 ? { ...st, qty: st.qty - 1 } : null;
+    if (!applyContainers({ ...c, [loc.container]: grid })) return;
+    set((s) => ({ profile: s.profile ? { ...s.profile, wounds: toWounds(next) } : s.profile }));
+    sfx('heal');
+    toast(text, 'good', def.icon);
   },
 
   /** En el Bastión: una poción de vida de tu mochila reparte la vida entre las regiones que funcionan. */

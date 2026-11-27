@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estado simplificado · mockup</title>
+<link rel="stylesheet" href="/node_modules/@fontsource/cinzel/index.css"><link rel="stylesheet" href="/node_modules/@fontsource/crimson-pro/index.css"><link rel="stylesheet" href="/node_modules/@fontsource/grenze/index.css">
+<style>
+*{box-sizing:border-box;margin:0}
+body{background:#0a090c;color:#e9e1cc;font-family:"Grenze",Georgia,serif;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+img{image-rendering:pixelated}
+.nav{display:flex;align-items:center;gap:6px;padding:12px 24px;height:68px}
+.nav .who{width:300px;font-family:Cinzel;font-size:15px}.nav .who small{display:block;font-family:Grenze;font-size:12px;color:#a8a090}
+.nav .t{border:2px solid #2a2730;padding:12px 18px;font-family:Cinzel;letter-spacing:.12em;font-size:15px;color:#cfc6b2}
+.nav .t.on{background:#ece4d0;color:#14110c}.nav .gold{margin-left:auto;color:#e8b33a;font-size:18px}
+.wrap{flex:1;min-height:0;display:flex;gap:16px;padding:0 24px 24px}
+.panel{border:2px solid #2a2730;background:#121015;min-height:0;display:flex;flex-direction:column}
+.ph{font-family:Cinzel;letter-spacing:.14em;color:#e8b33a;text-align:center;padding:14px;border-bottom:2px solid #1e1b22;font-size:16px}
+.left{flex:1.25}.right{flex:1}
+.sum{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:2px solid #1e1b22;font-size:17px}
+.sum b{font-family:Cinzel;font-weight:600}.ok{color:#8bc96f}.bad{color:#f08a6c}
+.cure{margin-left:auto;background:#d9a32e;color:#1a1206;border:none;font-family:Grenze;font-weight:700;font-size:16px;padding:0 18px;min-height:44px}
+.cure.off{background:#2a2730;color:#8c8693}
+.doll{flex:1;min-height:0;display:grid;justify-content:center;align-content:center;grid-template-columns:repeat(3,var(--c));grid-template-rows:var(--r1) var(--r2) var(--r3) var(--r4);gap:8px;--c:200px;--r1:110px;--r2:170px;--r3:110px;--r4:170px}
+.part{font-size:17px}
+.part{border:2px solid #4d7a3d;background:#16201a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:44px;min-width:44px;position:relative;font-size:15px;padding:4px}
+.part .n{font-weight:700}.part .hp{color:#cfc6b2}.part .bar{width:70%;height:4px;background:#2a2730}.part .bar i{display:block;height:100%;background:#6fae5a}
+.part.hurt{border-color:#e8752b;background:#20160f}.part.hurt .bar i{background:#e8b33a}
+.tag{font-size:13px;padding:1px 6px;border:1px solid;display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
+.tag.bl{color:#ff6b6b;border-color:#8a2a2a;background:#2a0f12}.tag.fr{color:#f2ead8;border-color:#6b6459;background:#24201b}
+.part.target{border:2px dashed #e8b33a;background:#2a2112;box-shadow:0 0 0 2px #e8b33a55}
+.part.target::after{content:'◆ Aplicar aquí';position:absolute;bottom:-11px;background:#e8b33a;color:#1a1206;font-size:12px;font-weight:700;padding:0 6px}
+.part.dim{opacity:.32}
+.armL{grid-column:3;grid-row:2/4}.armR{grid-column:1;grid-row:2/4}.head{grid-column:2;grid-row:1}.thorax{grid-column:2;grid-row:2}.abdomen{grid-column:2;grid-row:3}
+.legs{grid-column:2;grid-row:4;display:grid;grid-template-columns:1fr 1fr;gap:8px}.legs .part{min-width:0;text-align:center}
+.vital{color:#e8b33a}
+.needs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px 18px;border-top:2px solid #1e1b22}
+.need .h{display:flex;justify-content:space-between;font-size:15px}.need .b{height:8px;background:#26232a;margin:5px 0}.need .b i{display:block;height:100%}
+.fx{font-size:14px;display:flex;gap:6px;align-items:center}.fx.neg{color:#f08a6c}.fx.pos{color:#8bc96f}.fx.neu{color:#a8a090}
+.prop{font-size:10px;letter-spacing:.08em;border:1px dashed #8bc96f;padding:0 4px;color:#8bc96f}
+.list{flex:1;min-height:0;overflow:auto;padding:12px 16px}
+.grp{font-family:Cinzel;font-size:13px;letter-spacing:.12em;color:#a8a090;margin:8px 0 6px}
+.it{display:flex;align-items:center;gap:12px;border:2px solid #24212a;background:#0f0d12;padding:4px 10px 4px 4px;min-height:52px;margin-bottom:6px;width:100%;text-align:left;color:inherit;font:inherit;font-size:16px}
+.it .ic{width:44px;height:44px;border:2px solid #2a2730;display:grid;place-items:center;position:relative;background:#16141a}.it .ic img{width:36px;height:36px}
+.it .q{position:absolute;right:1px;bottom:-2px;font-size:13px;font-weight:700}
+.it .d{color:#a8a090}.it.sel{border-color:#e8b33a;background:#1f1a12}.it.sel .nm::before{content:'◆ ';color:#e8b33a}
+.act{border-top:2px solid #1e1b22;padding:12px 16px;display:flex;gap:10px;align-items:center;font-size:15px;color:#cfc6b2;min-height:70px}
+.act .go{background:#d9a32e;color:#1a1206;border:none;font:inherit;font-weight:700;min-height:44px;padding:0 20px;margin-left:auto}
+.hint{font-size:14px;color:#a8a090}
+/* mazmorra */
+.dng{position:absolute;inset:0;background:repeating-linear-gradient(0deg,#15131a 0 31px,#0d0c10 31px 32px),#15131a;opacity:.9}
+.ov{position:absolute;inset:0;background:#000a;display:flex;align-items:center;justify-content:center}
+.modal{width:min(1400px,92vw);height:min(860px,90vh);border:2px solid #e8b33a;background:#121015;display:flex;flex-direction:column}
+.mh{display:flex;align-items:center;padding:8px 8px 8px 18px;border-bottom:2px solid #1e1b22;font-family:Cinzel;color:#e8b33a;letter-spacing:.14em}
+.x{margin-left:auto;width:44px;height:44px;border:2px solid #3a3741;background:#1a171d;color:#e9e1cc;font-size:20px}
+.modal .wrap{padding:12px}
+.sheet{position:absolute;left:0;right:0;bottom:0;border-top:2px solid #e8b33a;background:#16130e;padding:12px 70px 12px 16px;display:flex;gap:14px;align-items:flex-start;font-size:15px}
+.sheet .x{position:absolute;right:10px;top:10px}
+.sheet h3{font-family:Cinzel;font-size:16px;margin-bottom:2px}
+/* tableta */
+@media (max-width:1300px){.nav .t span{display:none}.nav .who{width:200px}.doll{--c:120px;--r1:66px;--r2:96px;--r3:70px;--r4:100px}.needs{gap:8px;padding:10px 12px}}
+/* móvil horizontal */
+@media (max-height:450px){
+ .nav{height:46px;padding:4px 10px}.nav .t{padding:6px 10px}.nav .who{width:120px;font-size:12px}.nav .t span{display:none}
+ .wrap{padding:0 10px 8px;gap:8px}.ph{display:none}
+ .left{flex:1.15}.sum{padding:4px 8px;font-size:13px;gap:8px;min-height:44px}.cure{font-size:13px;padding:0 10px}
+ .body-row{display:flex;flex:1;min-height:0}
+ .doll{--c:62px;--r1:44px;--r2:62px;--r3:44px;--r4:56px;gap:4px;padding:2px 4px}
+ .part{font-size:11px;padding:1px;gap:0}.part .bar{display:none}.tag{font-size:10px;padding:0 3px}.tag .w{display:none}
+ .part.target::after{font-size:9px;bottom:-8px;content:'◆ Aquí'}
+ .needs{grid-template-columns:1fr;gap:4px;padding:4px 8px;border-top:none;border-left:2px solid #1e1b22;width:160px;align-content:center}
+ .need .h{font-size:12px}.need .b{height:5px;margin:2px 0}.fx{font-size:11px;gap:3px}
+ .list{padding:6px 8px}.grp{font-size:10px;margin:2px 0 3px}.it{min-height:46px;font-size:13px;gap:8px;margin-bottom:4px;padding:1px 6px 1px 1px}.it .d{font-size:12px}
+ .act{min-height:44px;padding:2px 8px;font-size:11px}
+ .modal{width:100vw;height:100vh}.mh{padding:2px 2px 2px 10px;font-size:12px}.modal .wrap{padding:6px}
+ .sheet{padding:8px 60px 8px 10px;font-size:13px}
+}
+@media (min-height:451px){.body-row{display:flex;flex-direction:column;flex:1;min-height:0}.needs{width:auto}}
+</style></head><body><div id="app" style="position:relative;flex:1;display:flex;flex-direction:column;min-height:0"></div>
+<script>
+const IC={"health_potion": "<img width=\"36\" height=\"36\" alt=\"Poci\u00f3n de vida\" class=\"pixelated\" draggable=\"false\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAABJElEQVR4AeyUMQrCQBBFR8FGC3sbL2BppV2OYGUlnslTWNkKKdLZiKUX8AgBtbFQpvjwix3IuFGyIYHPTGZndv++QPoS8YyG43dIEVtKlKGYg63Z9A3xJ9ouJhIS91gkrHr6hKyb1VWPIrTZ5RJSjLkoQzEHW7OdIYsM6h0hkLBiJUL8oysuV4Feq7WEhHWNPGuZ4HolQzzw6zwdQ4xa0UP8iZbZVCAmxz2Y08h7cj/nfX5pQt4uQ6fiJlBddNtFqC4qvE9HiGmE8vQJne+lQKEbag3rGvXdo/QJeW77Ta9J6PEse1A2nwm0zI8CDQ57CQnrGjGnEftptMyahmjgr2mahhQxpOg9wpzGKqjTJFTlZnX1uAkpeo+8Rt2GvAd4+xtn6AMAAP//2pyFnQAAAAZJREFUAwBe1tVJ5/uSEwAAAABJRU5ErkJggg==\">", "focus_tonic": "<img width=\"36\" height=\"36\" alt=\"T\u00f3nico de concentraci\u00f3n\" class=\"pixelated\" draggable=\"false\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAABLUlEQVR4AeyUMYoCUQyGs1vuFlsu2HgBSytLKwVPICgeSTyBIHgCCxGxsrT0AtpZWmirpPjhL17ghYzigxn4SchL8v75BuZbAs/vz98jpcBKCRmKXGzNlm+IP9Gk05CUuMciYdXLJ2S9WVX1EKHxbCMpRcyFDEUutmZrQxYZ1GtCIGHFLEL8o9sdjgL9r4aSEs418qxlgutZhnjg1Xk5hhi1oof4EzV7I4GYHPdgTiPv5H7OyyHErt+Zhwid1guBqjIdMlSVCd5TG2IaqbwmlKLCNTeh+fYsEC/iHOcauZ6Tuw3lLI30lGPodr9+Qd12S6D+dC/QZbCUlHCuEXMasU+jRTGHkDX7knqZhhQxpOg9wpzGHKRlEsp5s6p63IQUvUdeo25D3gu8/R9n6AkAAP//W6SAmwAAAAZJREFUAwDZC89JoglAKQAAAABJRU5ErkJggg==\">", "ration": "<img width=\"36\" height=\"36\" alt=\"Raci\u00f3n de viaje\" class=\"pixelated\" draggable=\"false\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAABMklEQVR4AeySsW0CQRBFxxeawO7Azi1ZdgFIiAYoggKogIgKKIUGEIgCICGHgAIIIAX94EvDar+4lY7jDu1JX3M7Ozf7980V1rAnG7o3kEzo9Ql13j8uKbpHJNzP/1BIJFxLQmos8/GPpUj1CY1wLQ2xoO7YbEMerxrL1/+fpUj18Wf5KTSbkHf6rPfCo/N41Vj2642lSF1s1OsY5T3kkSlizEtCaiz8EHG22hmFdUzcR4zthzlpKCysa90eQ0Ackyc16H4bFatFjvuI/lv13h5C6gaPzhen8/GN6k+2RqmDMYaYUuuni5NRPB8xj0yRZP6GEJBRxIn4e/m0KoReFM9BpBnEG0NIRFRrqj2GgJIaLg9WhdgPUWFvDyF1g0fnSxEC4ipU5jKlDJVpVFVN4wxdAQAA//9OhjG1AAAABklEQVQDAHU8jFg1dCm1AAAAAElFTkSuQmCC\">", "water": "<img width=\"36\" height=\"36\" alt=\"Odre de agua\" class=\"pixelated\" draggable=\"false\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAABPklEQVR4AdRTMQoCQQyMllr4BfsrrPyHPxFLX2ApPsEfiC+wFUG0uP6+YHG2SoqB4bhAjtzqrTAkrpNkMsGxBD7TyezThkBLCQmKDLZq8xfEJ7K29HCs2vwdsjbr6z3k0P16ljZExIUERQZbtXkK4n/NelUIcNxtpQ34XSPXWq7we54O8Qapc9MhtlqtB1hQudxLG5iDOo3ckzmcm4KY9Mt82ILYUrUYYIf4RPxe3DYC8Dvni/lUAJ7FnGE7xEr/lbsc4jPhLM3Y1wIuQX0N8/TJUxCfx7NlhJOnQ5GNu9Ymd+jyqATwiEsuyCOCOcMWVL9fI+BwKgXgDawcZ2lG5j+rWgDM0cgcj0PMT57nI0itBHA6jc2T4LtlHU6kEf00Wvx8HLI2SP3uckgtBtT6LkCdRs8yLkGeRn1xBifoCwAA//8J7AqAAAAABklEQVQDAPYsAPyQMyOmAAAAAElFTkSuQmCC\">", "bandage": "<img width=\"36\" height=\"36\" alt=\"Venda\" class=\"pixelated\" draggable=\"false\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAABFUlEQVR4AeyWPQoCMRCFxy21sLO0ECysPYE/4EEsLTyGtccR/DmBtYVgYWlnoa2SYuBt2JCRZNwNZOGR7GZn5uWbhU1BDbuyIV9DRIQ67e4nhnxmzLrIkHnxX0rHELbodjlQDGFOF/F0CLl2oP28RAiRYotimcCcWAvzlwzhQl3zNA31+mNihZA7HffEcuVJk5BrNxrPgwhdF2uqUojRIiRYIzYb8lHNhFQJDXdbqpKvqL2O/7XcMpuOfS8i9LifiWUn+OV+Mp0TC+PwWCIyhMHa82Yber2fLdZgNCMWHxlCR6SLbeI6ZpQQwjzq83QMcevMuFxtKIZMS6pkarDSIaT+sTgKiAgxTq0RvYkMYYD2vHGGvgAAAP//QmzMjQAAAAZJREFUAwBoDjhYMEH8tQAAAABJRU5ErkJggg==\">", "splint": "<img width=\"36\" height=\"36\" alt=\"F\u00e9rula\" class=\"pixelated\" draggable=\"false\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAABBUlEQVR4AeyXMQ7CMAxFAyMM7IxsXIGVi3BRBk7BgAQHYAIBK9UfLP1GtlJLjVpLqfQVx3asn7dEXSbjW682f01Gu5nWZiBnHTANWQdq5+dtCChFp8M2aZI6VosWaiJtBnJSx8pz5k2InU4VDyL0eH6SiI0Ctybu4VhmYOU8x4MM8YHacXxD9+s5eeQlGp+Q98be/kaoRCw+od3+mDwqEcnr8QnlNxp73wiViMYn5HnH0FsiktfjE8pvNPa+ESoRjU/I846ht0Qkrw8hlJ+puo9jCP9OIgvJ9/daaOJ+mYGV81Ych5B1g9r5HiHGf7m9kybuscxxjzYDOe7hOT1DXJgqnp2hDgAA//+TLNZXAAAABklEQVQDAOUk5e2VNa00AAAAAElFTkSuQmCC\">", "tourniquet": "<img width=\"36\" height=\"36\" alt=\"Torniquete\" class=\"pixelated\" draggable=\"false\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAABT0lEQVR4AdSWKw4CQQyGCxIEFoWAA8ARuAkX4SA4guIaOCwcAAQKi1gspKLJt8k2mYZddoakaTPbxz9feQ0l4TUeTT5tWMIoSRKU0qitnHIEcUWb9ULaMPb0iJZDyLtB1+c1QkTKFV3uTzE7nG4SMatTz56cxUvWBPFBX3F+goiOSBWx2fVRiVn1fg0iZnXqrZ96zqKG/Aj19V7x5rqEFLEZV8RGRM2YOay1fuqZw9gVxKR/xuUL4mp2h6M0GXOidMsnFL1xNN8ltJyNxeyXFbDW+qn3hLqCvIKuz/MTxC8u/q1YzadipojN+Bskzos5Vqfe+qnnLGrIj5Bzyd6Oa4SIjkgVsVlUqdWpZ0/OYs+aID7oKy5HEJESNePzfitNxhzG7OltIIWQV9vJeZmCUlB7uKK1ZRLybt/FeZgQV8BPEGPmREWHBUUHRPOzE/QFAAD//51uIukAAAAGSURBVAMAtwCfKhulQk4AAAAASUVORK5CYII=\">", "hemostatic": "<img width=\"36\" height=\"36\" alt=\"Hemost\u00e1tico\" class=\"pixelated\" draggable=\"false\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAABLElEQVR4AeyUsYoCUQxFs1vuFtvvN1ha2Sn2/oFY+RFiKTZ2lv6FrYg2NoKN4HcIItoqKS7c4gVeyCg+mIFLQl6Sd+cMzLcEnt+fv0dKgZUSMhS52Jot3xB/okHrX1LiHouEVS+fkPVmVdVDhPrzlaQUMRcyFLnYmq0NWWRQrwmBhBWzCPGPbnM4CbTstiUlnGvkWcsE17MM8cCr83IMMWpFD/EnGk7HAjE57sGcRt7J/ZyXQ4hdvzMPEVqMJgJVZTpkqCoTvKc2xDRSeU0oRYVrbkK761kgXsQ5zjVyPSd3G8pZGukpx9DtfvmCOs2GQLP9UaDeeisp4Vwj5jRin0aLYg4ha/Yl9TINKWJI0XuEOY05SMsklPNmVfW4CSl6j7xG3Ya8F3j7P87QEwAA//+A9g5wAAAABklEQVQDAD2U1Um9dpNQAAAAAElFTkSuQmCC\">", "stale_bread": "<img width=\"36\" height=\"36\" alt=\"Pan duro\" class=\"pixelated\" draggable=\"false\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAABK0lEQVR4AeySMQrCQBBFx5RaCBaCnXiAlBbaeAOvoidRb6I3sNHCMmBra22hrTLFh3HZT7IQk41E+Mzu7Gb2zxsTiezXGsobSEvo/wn1uv13iPKIuOftf8gl4u4pITaWzWouIWJ1XCPYU0O4UHWM25DFy8aSpqmEiNWxb9kpxE3IOq1rnVh0Fi8bS5ZlEiLW2HI2Esh6aEfGiCFPCbGx4EONx8tNIN37hHONvnM3Rw25F6vaN8eQIvbJklpMJwL57moO5xrtt2ydsIO68vEZer4eHWi9PQnECOkYfAq9fzjfBcL7GuMjxDqrK/9FSJFBwKlxPBxIGdJaEN7RaJtP7IasK003x5CihHb7q5Qh1NPIsDeHEOvg1/lChBRxGSrSTCFDRQqVdSc6Qx8AAAD//0nHcccAAAAGSURBVAMAVpJ6WBbzHzQAAAAASUVORK5CYII=\">"};
+const q=new URLSearchParams(location.search);const caso=q.get('caso')||'sano';
+const herido=caso!=='sano';const dng=caso==='mazmorra';
+const MAX={head:13,thorax:31,abdomen:19,armL:12,armR:12,legL:19,legR:19};
+const NAME={head:'Cabeza',thorax:'Tórax',abdomen:'Abdomen',armR:'B. der.',armL:'B. izq.',legR:'P. der.',legL:'P. izq.'};
+const hp=herido?{head:13,thorax:17,abdomen:19,armL:5,armR:12,legL:19,legR:13}:{...MAX};
+const W=herido?{thorax:['bl','Sangrado leve'],armL:['fr','Fractura']}:{};
+const needs=caso==='barras'?{sat:92,hyd:24,rest:6}:herido?{sat:100,hyd:24,rest:70}:{sat:100,hyd:85,rest:70};
+const items=[
+ {g:'Curas',id:'bandage',n:'Venda',q:2,d:'detiene un sangrado leve',ok:['thorax']},
+ {g:'Curas',id:'splint',n:'Férula',q:1,d:'fija una fractura de brazo o pierna',ok:['armL']},
+ {g:'Curas',id:'health_potion',n:'Poción de vida',q:3,d:'+45 de vida, repartida',ok:['thorax','armL','legR']},
+ {g:'Comida y bebida',id:'ration',n:'Ración de viaje',q:2,d:'+30 Saciedad',eat:'Comer'},
+ {g:'Comida y bebida',id:'water',n:'Odre de agua',q:3,d:'+30 Hidratación',eat:'Beber'},
+];
+const sel=caso==='cura'?'bandage':caso==='comida'?'water':caso==='detalle'?'bandage':null;
+const S=items.find(i=>i.id===sel);
+function part(r){const h=hp[r],m=MAX[r],w=W[r];const cls=['part',r];if(h<m||w)cls.push('hurt');
+ if(S&&S.ok){cls.push(S.ok.includes(r)?'target':'dim')}
+ const vit=['head','thorax','abdomen'].includes(r)?'<span class="vital">◆ </span>':'';
+ return `<div class="${cls.join(' ')}"><span class="n">${vit}${NAME[r]}</span><span class="hp">${h}/${m}</span><span class="bar"><i style="width:${h/m*100}%"></i></span>${w?`<span class="tag ${w[0]}">${w[0]=='bl'?'🩸':'🦴'}<span class="w"> ${w[1]}</span></span>`:''}</div>`}
+const total=Object.values(hp).reduce((a,b)=>a+b,0);
+function fx(k,v){
+ if(v<=0)return k=='rest'?['neg','▼ −20 % iniciativa']:['neg',`▼ Hiere el tórax cada ${k=='hyd'?5:10} pulsos`];
+ if(v<=10)return['neg','▼ −20 % Ímpetu o Maná máx.'];
+ if(v<=30)return['neg','▼ −10 % Ímpetu o Maná máx.'];
+ if(caso==='barras'&&v>=80)return['pos','▲ +5 % ataque <span class="prop">PROPUESTA</span>'];
+ return['neu','✓ Sin penalización'];}
+const NC={sat:['Saciedad','#c9873a'],hyd:['Hidratación','#4f8fc9'],rest:['Descanso','#8a6fc0']};
+const needsH=Object.keys(NC).map(k=>{const v=needs[k],f=fx(k,v);return `<div class="need"><div class="h"><span>${NC[k][0]}</span><span>${v}</span></div><div class="b"><i style="width:${v}%;background:${NC[k][1]}"></i></div><div class="fx ${f[0]}">${f[1]}</div></div>`}).join('');
+const sumH=`<div class="sum"><span><b>Vida</b> ${herido?98:125}/125</span>${herido?'<span class="bad">✕ 2 lesiones</span>':'<span class="ok">✓ Sin lesiones</span>'}${herido&&!dng?(q.get('pobre')?'<button class="cure off" disabled>Curarme entero · 5 oro · te faltan 3</button>':'<button class="cure">Curarme entero · 5 oro</button>'):''}</div>`;
+const left=`<section class="panel left">${dng?'':'<div class="ph">◆ CUERPO ◆</div>'}${sumH}<div class="body-row"><div class="doll">${['head','thorax','abdomen','armR','armL'].map(part).join('')}<div class="legs">${part('legR')}${part('legL')}</div></div><div class="needs">${needsH}</div></div></section>`;
+let grp='';const listH=items.map(i=>{const h=i.g!==grp?`<div class="grp">${(grp=i.g).toUpperCase()}</div>`:'';return h+`<button class="it ${i.id===sel?'sel':''}"><span class="ic">${IC[i.id]}<span class="q">${i.q}</span></span><span><span class="nm">${i.n}</span> <span class="d">· ${i.d}</span></span></button>`}).join('');
+const turno=dng?' · fuera de combate no gasta turno':'';
+const actH=!S?`<div class="act"><span class="hint">Toca una cura y luego la parte del cuerpo. Toca comida o bebida para tomarla.${turno}</span></div>`
+ :S.eat?`<div class="act"><span>${S.n}: ${S.d}</span><button class="go">${S.eat}${dng?' · sin gastar turno':''}</button></div>`
+ :`<div class="act"><span><b>${S.n}</b>: toca una parte marcada con ◆ para usarla.${turno}</span></div>`;
+const right=`<section class="panel right">${dng?'':'<div class="ph">◆ CURAS Y COMIDA ◆</div>'}<div class="list">${listH}</div>${actH}</section>`;
+const wrap=`<div class="wrap">${left}${right}</div>`;
+const nav=`<div class="nav"><div class="who">BEOTHORD<small>Guerrero · Nv 1</small></div>${['JUGAR','HABILIDADES','ALIJO','ESTADO','BASTIÓN','MISIONES','BESTIARIO','TIENDA'].map(t=>`<div class="t ${t=='ESTADO'?'on':''}">${t[0]}<span>${t.slice(1)}</span></div>`).join('')}<div class="gold">● ${q.get('pobre')?2:40}</div></div>`;
+const sheet=caso==='detalle'?`<div class="sheet"><span class="ic" style="width:48px;height:48px;border:2px solid #e8b33a;display:grid;place-items:center">${IC.bandage}</span><div><h3>Venda</h3><div style="color:#a8a090">Detiene un sangrado leve en una región. No devuelve la vida perdida.</div><div style="color:#8bc96f;margin-top:2px">Sirve en: tórax (sangrado leve)</div></div><button class="x">✕</button></div>`:'';
+document.getElementById('app').innerHTML=dng?`<div class="dng"></div><div class="ov"><div class="modal"><div class="mh">◆ ESTADO · tecla H<button class="x">✕</button></div>${wrap}</div></div>`:nav+wrap+sheet;
+</script></body></html>

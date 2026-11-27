@@ -4,6 +4,15 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 27/11: ESTADO en escritorio
+
+- Solo en escritorio y en el Bastión (`Alijo.tsx` con `section="status"` y `layout === 'desktop'`); tableta, móvil y la mazmorra siguen con `StatusView` y `BodyPanel` (pendiente adaptarlos).
+- Piezas nuevas en `ui/EstadoParts.tsx`: `statusMarks` (efectos activos calculados con `offenseMult`, `initiativeMult`, `resourceLoss` y `exhaustionLoss`; no inventa cifras), `StatusAttrs` (filas `hb-stat` de Habilidades), `StatusTop` (resumen y botón `cure-btn` con el precio de `cureCost`) y `StatusNeeds` (barras y `prepText`).
+- `BlockBody` (exportado de `BodyFigure.tsx`) admite `words` (herida en texto) y marca «◆ Aplicar aquí» en las partes `drop-yes`. `usefulOn` también se exporta.
+- `actions.cureFrom(loc, region)` (`medicalActions.ts`): cura en el Bastión con el objeto de cualquier casilla (mochila, almacén o compartido) con las reglas de `baseTreat` y `baseHeal`. `cr-drop-body` lleva ahora `from`.
+- La columna derecha usa la mochila y el `StashPanel` normales con el selector `estado-src`; la mochila calcula `--slot` con el ancho de la columna (hasta 80 px).
+- Mini tutorial `tab.intendencia`: el paso 2 ya no señala `body-quick` (no existe en escritorio).
+
 ## Novedades del 27/11: Habilidades, ataque elegido y coste neutro
 - La ficha de ataque elegida vuelve a marcarse (`.hb-acard.sel`: borde dorado de 2 px, barra izquierda, fondo claro y ◆ delante del nombre). Se había quitado el 25/11 (0.9.9.0) junto con el amarillo de «En uso»; en el móvil, con el arco en otra página, no quedaba ninguna señal. La selección ya se mantenía al cambiar de página.
 - Atributos lleva arriba «Comparando: <ataque>» y el coste en neutro con rayo o gota y reloj de arena (`skill-compare`, `skill-compare-name`, `skill-compare-cost`).

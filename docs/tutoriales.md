@@ -33,7 +33,7 @@ Mapa de los tutoriales: qué hay, qué los dispara y qué resaltan. Si cambias u
 | `tab.misiones` | Mercaderes | `tab:quests` | intendant | `tab-quests` | `screen-quests` | 2 | — |
 | `tab.bestiario` | Progresión | `tab:bestiary` | intendant | `tab-bestiary` | `bestiary` | 2 | — |
 | `tab.tienda` | Cuenta y copia | `tab:shop` | intendant | `tab-shop` | `shop` | 2 | — |
-| `tab.intendencia` | Heridas y necesidades | `tab:estado` | intendant | `tab-estado` | `intendencia-status`, `body-quick` | 2 | — |
+| `tab.intendencia` | Heridas y necesidades | `tab:estado` | intendant | `tab-estado` | `intendencia-status` (dos pasos: cuerpo y necesidades; curar desde mochila o almacén y con monedas) | 2 | — |
 | `tab.personaje` | Progresión | `tab:character` | intendant | `tab-character` | `skill-arc`, `character-skills`, `character-stats` | 3 | — |
 | `screen.bastion-entry` | Mercaderes | `bastion:merchants` | intendant | `tab-merchants` | `vendor-list`, `vendor-card-nira`, `vendor-nira` | 3 | tras la bienvenida |
 | `tab.refugio` | Bastión y estaciones | `bastion:station` | orik | — | `vendor-view-station`, `station-panel` | 2 | la primera vez que se abre la pestaña de una estación |

@@ -81,7 +81,7 @@ function drop(d: DragState, raw: string | null): boolean {
     return true;
   }
   if (t.type === 'bag') { actions.equipBag(d.from); return true; }
-  if (t.type === 'body') { if (d.lootId) return false; window.dispatchEvent(new CustomEvent('cr-drop-body', { detail: { itemId: d.itemId, region: t.region } })); return true; }
+  if (t.type === 'body') { if (d.lootId) return false; window.dispatchEvent(new CustomEvent('cr-drop-body', { detail: { itemId: d.itemId, region: t.region, from: d.from } })); return true; }
   if (t.type === 'sell') { if (d.lootId) return false; window.dispatchEvent(new CustomEvent('cr-drop-sell', { detail: d.from })); return true; }
   return false;
 }
