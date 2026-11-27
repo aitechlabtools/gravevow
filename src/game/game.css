@@ -1795,3 +1795,13 @@ div.hb-acard{cursor:default}
 .estado-need.low{border-color:#6a2a2a}
 .estado-need-bar{align-self:stretch;height:6px;background:#26232a;margin-top:6px}.estado-need-bar i{display:block;height:100%}
 .estado-attrs .hb-stat{font-size:17px;padding:10px 6px}.estado-attrs .hb-stat-m{font-size:14px}
+
+/* ESTADO en el móvil (27/11): todo en el alto de la pantalla */
+.estado-phone .estado-top{padding:0 0 4px}.estado-phone .estado-h .text-xl{font-size:16px}.estado-phone .estado-cap{font-size:12px}
+.estado-phone .estado-hp{height:6px;margin:3px 0 2px}.estado-phone .estado-h2{font-size:13px;min-height:44px}
+.estado-phone .estado-doll{min-height:0;padding:2px 0 6px}
+.estado-phone .bmap-card{padding:1px 4px;gap:1px}.estado-phone .bmap-name{font-size:11px}.estado-phone .bmap-hp{font-size:10px}.estado-phone .doll-word{font-size:9px;padding:0 2px}
+.estado-phone .estado-needs{padding-top:4px;gap:4px}.estado-phone .estado-need-row{gap:6px}.estado-phone .estado-need{padding:2px 6px;font-size:14px}
+.is-touch .bmap-card::after{content:'';position:absolute;inset:-4px 0}
+.bmap-card{container-type:inline-size}.bmap-name{min-width:0}
+@container (max-width:150px){.dw-t{display:none}}

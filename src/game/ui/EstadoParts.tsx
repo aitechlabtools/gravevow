@@ -150,7 +150,7 @@ export function BodyMap({ body, shown, onPick }: { body: Body; shown: string | n
             style={{ left: `${(c.x / 600) * 100}%`, top: `${(c.y / 300) * 100}%`, width: `${(CW / 600) * 100}%`, height: `${(CH / 300) * 100}%`, ['--rc' as string]: regionColor(body, r) }}
             data-drop={JSON.stringify({ type: 'body', region: r })} onClick={() => onPick(r)}
             aria-label={`${REGION_NAME[r]}: ${p.hp} de ${cap}. ${w.word}`} data-testid={`body-row-${r}`}>
-            <span className="bmap-name">{CARD_NAME[r]}{w.cls !== 'ok' && <span className={`doll-word ${w.cls}`} data-testid={`body-state-${r}`}>{w.ico} {w.word}</span>}</span>
+            <span className="bmap-name">{CARD_NAME[r]}{w.cls !== 'ok' && <span className={`doll-word ${w.cls}`} data-testid={`body-state-${r}`} title={w.word}>{w.ico}<span className="dw-t"> {w.word}</span></span>}</span>
             <span className="bmap-row"><span className="bmap-bar"><i style={{ width: `${(p.hp / Math.max(1, max)) * 100}%`, background: regionColor(body, r) }} /></span><span className="bmap-hp">{p.hp} / {cap}</span></span>
             {d === 'yes' && <span className="doll-apply" aria-hidden>◆ Aplicar aquí</span>}
           </button>

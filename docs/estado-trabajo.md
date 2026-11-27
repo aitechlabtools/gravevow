@@ -6,7 +6,7 @@ Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
 ## Novedades del 27/11: ESTADO en escritorio
 
-- Solo en escritorio y en el Bastión (`Alijo.tsx` con `section="status"` y `layout === 'desktop'`); tableta, móvil y la mazmorra siguen con `StatusView` y `BodyPanel` (pendiente adaptarlos).
+- En el Bastión (`Alijo.tsx` con `section="status"`): escritorio y tableta con tres columnas; móvil con selector vertical `estado-seg` (Cuerpo / Atributos), el panel elegido y mochila o almacén (`StashPanel noSort`, «Ordenar» junto al selector). El cuerpo es `BodyMap` (silueta en SVG 600 × 300 y fichas `body-row-*` con `data-drop`); la herida pierde el texto en fichas estrechas (`@container`). La mazmorra sigue con `BodyPanel` (pendiente).
 - Piezas nuevas en `ui/EstadoParts.tsx`: `statusMarks` (efectos activos calculados con `offenseMult`, `initiativeMult`, `resourceLoss` y `exhaustionLoss`; no inventa cifras), `StatusAttrs` (filas `hb-stat` de Habilidades), `StatusTop` (resumen y botón `cure-btn` con el precio de `cureCost`) y `StatusNeeds` (barras y `prepText`).
 - `BlockBody` (exportado de `BodyFigure.tsx`) admite `words` (herida en texto) y marca «◆ Aplicar aquí» en las partes `drop-yes`. `usefulOn` también se exporta.
 - `actions.cureFrom(loc, region)` (`medicalActions.ts`): cura en el Bastión con el objeto de cualquier casilla (mochila, almacén o compartido) con las reglas de `baseTreat` y `baseHeal`. `cr-drop-body` lleva ahora `from`.
