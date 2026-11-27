@@ -728,18 +728,9 @@ function BodyModal() {
 function DungeonStatus() {
   const exp = useGame((s) => s.expedition)!;
   const profile = useGame((s) => s.profile)!;
-  const tutorial = useGame((s) => s.tutorial);
   const [sel, setSel] = useState<Loc | null>(null);
   useClearOnDrop(useCallback(() => setSel(null), []));
   const drag = useDrag();
-  // La mochila llena el ancho de su columna (casillas de 44 a 84 px), alineada con «Ordenar» y la barra de carga
-  const bagRef = useRef<HTMLDivElement | null>(null);
-  const [bagW, setBagW] = useState(0);
-  useEffect(() => {
-    const el = bagRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(([e]) => setBagW(e.contentRect.width)); ro.observe(el); return () => ro.disconnect();
-  }, []);
-  const slot = bagW ? Math.max(44, Math.min(84, Math.floor((bagW - 5 * 4 - 2) / 6))) : 60;
   const body = expBody(exp, profile);
   const stackOf = (l: Loc | null) => (l?.kind === 'grid' && (l.container === 'backpack' || l.container === 'pocket') ? exp[l.container][l.index] : null);
   const isCure = (id?: string | null) => !!id && ['treat', 'heal'].includes(getItem(id).use?.kind ?? '') && getItem(id).use?.kind !== undefined && !(getItem(id).use?.kind === 'treat' && (getItem(id).use as { treat?: string }).treat === 'painkiller');
@@ -757,28 +748,18 @@ function DungeonStatus() {
   });
   const n = needsOf(exp.needs);
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 fade-in" data-modal onMouseDown={(e) => e.target === e.currentTarget && actions.closeModal()} data-testid="body-modal">
-      <div className="panel panel-gold dstatus" role="dialog" aria-label="Estado">
-        <div className="dstatus-head"><span className="panel-title text-xl">Estado</span>
-          <button className="btn icon-btn" style={{ minWidth: 44, minHeight: 44 }} onClick={() => actions.closeModal()} aria-label="Cerrar (H o Escape)" title="Cerrar · H" data-testid="body-close">✕</button></div>
-        <div className="dstatus-grid">
-          <div className="min-h-0 flex flex-col" data-testid="intendencia-status">
-            <div className="flex-1 min-h-0 flex items-center justify-center estado-doll"><BodyMap body={body} shown={shown} onPick={(r) => sel && apply(sel, r)} /></div>
-            <StatusNeeds body={body} needs={n} prep={exp.prep ?? null} eta={(k) => nextText(k, n, exp.body)} />
-          </div>
-          <div ref={bagRef} className="min-h-0 overflow-y-auto scroll-thin dstatus-bag" style={{ ['--slot' as string]: `${slot}px`, ['--slot-big' as string]: `${slot}px` }} data-testid="dungeon-status-bag">
-            <div className="flex items-center justify-between gap-2 mb-2"><span className="panel-title">Mochila · {exp.backpack.filter(Boolean).length}/{exp.backpack.length}</span>
-              <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button></div>
-            <GridView grid={exp.backpack} container="backpack" cols={6} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={(l) => setSel(sel && JSON.stringify(sel) === JSON.stringify(l) ? null : l)}
-              onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
-            {!tutorial && <CarryBar className="mt-2" />}
-            <div className="mt-3 text-xs text-gold mb-1">Bolsillo seguro · no se pierde al morir</div>
-            <GridView grid={exp.pocket} container="pocket" cols={3} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} />
-            {sel && !pick && <div className="mt-3"><ItemActions loc={sel} mode="dungeon" onClear={() => setSel(null)} /></div>}
-          </div>
+    <Modal onClose={() => actions.closeModal()} wide testId="body-modal">
+      <div className="flex items-center justify-between gap-2 mb-3"><h2 className="panel-title text-xl">Estado</h2><div className="flex gap-2">
+        <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button>
+        <button className="btn icon-btn" style={{ minWidth: 44, minHeight: 44 }} onClick={() => actions.closeModal()} aria-label="Cerrar (H o Escape)" title="Cerrar · H" data-testid="body-close">✕</button></div></div>
+      <div className="grid md:grid-cols-2 gap-5">
+        <div className="flex flex-col dstatus-left" data-testid="intendencia-status">
+          <div className="flex-1 min-h-0 flex items-center justify-center estado-doll"><BodyMap body={body} shown={shown} onPick={(r) => sel && apply(sel, r)} /></div>
+          <StatusNeeds body={body} needs={n} prep={exp.prep ?? null} eta={(k) => nextText(k, n, exp.body)} />
         </div>
+        <div data-testid="dungeon-status-bag"><InvBagColumn sel={sel} setSel={(l) => setSel(l && sel && JSON.stringify(sel) === JSON.stringify(l) ? null : l)} clear={() => setSel(null)} noActions={!!pick} /></div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -898,26 +879,42 @@ function DungeonInventory() {
   }
   return (
     <Modal onClose={() => actions.closeModal()} wide testId="dungeon-inventory">
-      <div className="flex items-center justify-between mb-3"><h2 className="panel-title text-xl">Inventario</h2><div className="flex gap-2">
-        <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button></div></div>
+      <div className="flex items-center justify-between gap-2 mb-3"><h2 className="panel-title text-xl">Inventario</h2><div className="flex gap-2">
+        <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button>
+        <button className="btn icon-btn" style={{ minWidth: 44, minHeight: 44 }} onClick={() => actions.closeModal()} aria-label="Cerrar (I o Escape)" title="Cerrar · I" data-testid="btn-close-inventory">✕</button></div></div>
       <div className="grid md:grid-cols-2 gap-5">
         <div className="space-y-4">
           <EquipmentView equipment={s.expedition.equipment} selected={sel} onSelect={setSel} mode="dungeon" portrait={<PlayerSprite scale={5} />} />
           <StatsList stats={stats} resourceName={CLASSES[ch.classId].resourceName} />
         </div>
-        <div>
-          <GridView grid={s.expedition.backpack} container="backpack" cols={6} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel}
-            onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
-          {!s.tutorial && <CarryBar className="mt-2" />}
-          <div className="mt-3">
-            <div className="text-xs text-gold mb-1">Bolsillo seguro · no se pierde al morir{gridGold(s.expedition.pocket) > 0 ? ` · oro a salvo: ${gridGold(s.expedition.pocket)}` : ''}</div>
-            <GridView grid={s.expedition.pocket} container="pocket" cols={3} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} />
-          </div>
-          <div className="mt-4"><ItemActions loc={sel} mode="dungeon" onClear={clear} /></div>
-        </div>
+        <InvBagColumn sel={sel} setSel={setSel} clear={clear} />
       </div>
-      <button className="btn mt-4" onClick={() => actions.closeModal()}>Cerrar <kbd className="opacity-60">I</kbd></button>
     </Modal>
+  );
+}
+
+/** Columna de la mochila del inventario (escritorio): casillas que llenan el ancho, alineadas con la barra de carga. */
+function InvBagColumn({ sel, setSel, clear, noActions }: { sel: Loc | null; setSel: (l: Loc | null) => void; clear: () => void; /** Estado: con una cura elegida no hacen falta sus acciones. */ noActions?: boolean }) {
+  const exp = useGame((x) => x.expedition)!;
+  const tutorial = useGame((x) => x.tutorial);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = ref.current; if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => setW(e.contentRect.width)); ro.observe(el); return () => ro.disconnect();
+  }, []);
+  const slot = w ? Math.max(44, Math.min(84, Math.floor((w - 5 * 4 - 2) / 6))) : 60;
+  return (
+    <div ref={ref} style={{ ['--slot' as string]: `${slot}px`, ['--slot-big' as string]: `${slot}px` }}>
+      <GridView grid={exp.backpack} container="backpack" cols={6} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel}
+        onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
+      {!tutorial && <CarryBar className="mt-2" />}
+      <div className="mt-3">
+        <div className="text-xs text-gold mb-1">Bolsillo seguro</div>
+        <GridView grid={exp.pocket} container="pocket" cols={3} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} />
+      </div>
+      {sel && !noActions && <div className="mt-4"><ItemActions loc={sel} mode="dungeon" onClear={clear} /></div>}
+    </div>
   );
 }
 
