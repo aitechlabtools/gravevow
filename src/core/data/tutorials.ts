@@ -116,7 +116,8 @@ export const MINI_TUTORIALS: MiniTutorial[] = [
     steps: [
       { text: 'Tus **ataques** salen de tus armas: cada mano trae los suyos. Para cambiarlos, cambia de arma en el **Alijo**.', target: 'skill-arc' },
       { text: 'La **habilidad de clase** se gana por hitos de nivel: los rombos **Nv 1 · 20 · 40 · 60 · 80** del panel **Habilidades**. Toca uno para ver sus opciones y equiparla; solo llevas una.', target: 'character-skills' },
-      { text: 'Al tocar una habilidad, en **Atributos** se marca en verde lo que mejora y en rojo lo que cuesta mientras dura.', target: 'character-stats' },
+      { text: 'Al tocar una habilidad, en **Atributos** se marca en verde lo que mejora y en rojo lo que empeora mientras dura.', target: 'character-stats' },
+      { text: 'El **ímpetu** (o el **maná**) es tu reserva en combate: cada ataque especial **gasta su coste al usarlo**, arriba en Atributos. Tu total no baja.', target: 'skill-compare' },
     ],
   },
   {

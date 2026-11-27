@@ -4,6 +4,13 @@
 Este documento resume todo lo hablado y hecho para que otro chat de Claude pueda continuar sin perder contexto.
 Léelo junto con CLAUDE.md (reglas permanentes del proyecto).
 
+## Novedades del 27/11: Habilidades, ataque elegido y coste neutro
+- La ficha de ataque elegida vuelve a marcarse (`.hb-acard.sel`: borde dorado de 2 px, barra izquierda, fondo claro y ◆ delante del nombre). Se había quitado el 25/11 (0.9.9.0) junto con el amarillo de «En uso»; en el móvil, con el arco en otra página, no quedaba ninguna señal. La selección ya se mantenía al cambiar de página.
+- Atributos lleva arriba «Comparando: <ataque>» y el coste en neutro con rayo o gota y reloj de arena (`skill-compare`, `skill-compare-name`, `skill-compare-cost`).
+- El coste de ímpetu o maná ya no tiñe de rojo la fila Ímpetu; la vida del Pacto de sangre y el recurso que se recupera salen como notas bajo el coste (`usageNotes`), no en las filas. En verde o rojo solo queda lo que cambia atributos o efecto.
+- Mini tutorial `tab.personaje`: paso nuevo (4) que explica que el coste se gasta al usar el ataque y el total no baja.
+- Capturas: `mockups/habilidades-seleccion` (antes, después y resultado).
+
 ## Novedades del 25/11 (9): Alijo › Equipo, versión 3
 - Aventurero · Equipo (muñeco de ranuras + mochila con bolsillo seguro y oro) · Almacén, según la captura del usuario. Móvil sin cambios (personaje con casillas alrededor). Capturas `mockups/plan-interfaz-2/alijo/v3-*`.
 

@@ -1,6 +1,6 @@
 # Gravevow · Estado del proyecto
 
-Última actualización: 27/11/2026 (arreglado el «!» fijo en la pestaña Bastión). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
+Última actualización: 27/11/2026 («!» fijo en Bastión; Habilidades: ataque elegido marcado y coste de ímpetu neutro). Aquí solo va lo vigente; el historial completo está en `docs/estado-trabajo.md`.
 
 ## Cómo retomar el trabajo
 - En un ordenador nuevo o en otra sesión: haz pull en GitHub Desktop y escribe a Claude «Lee CLAUDE.md y ESTADO_PROYECTO.md» seguido de la tarea.
@@ -102,6 +102,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- **27/11 · Habilidades: ataque elegido y coste neutro**: la ficha de ataque elegida se marca otra vez (borde dorado, barra y ◆; en el móvil no se veía cuál comparabas); Atributos muestra «Comparando: …» y el coste en neutro, y la fila Ímpetu ya no sale en rojo por el coste de un ataque (tampoco Vida en el Pacto de sangre). Mini tutorial `tab.personaje` con un paso sobre el coste. Capturas en `mockups/habilidades-seleccion`.
 - **27/11 · «!» fijo en Bastión**: el mini tutorial de los mercaderes (`screen.bastion-entry`) solo se lanzaba si la cuenta tenía vista la «bienvenida», pero el personaje guarda aparte `tutorialSeen.lobby`. Tras «Reiniciar mini tutoriales» (o con datos desacompasados) la bienvenida no volvía y el «!» no se iba nunca. Ahora se lanza también con el personaje ya asentado (`Mercaderes.tsx`), y un personaje nuevo en una cuenta que ya vio la bienvenida se da por asentado (`Lobby.tsx`), así le salen los avisos de caída, fabricar y habilidad de clase. tsc y vitest (528) en verde.
 - **22/11 · Contratos de Grizk más visuales**: rejilla de bustos por zona y ficha con busto grande, cifras con icono y botones grandes de duración y actitud. Maqueta en `mockups/contratos`.
 - **22/11 · Reparto y conversación con busto**: en cofres y sacos con aliado, franja con su estado y barra, montón «Para …» (se recupera hasta cerrar), selector de cantidad (Mitad, Todo, ±) y «Reparto justo». Hablar con errantes, Kael, prisioneros y mercenarios usa un panel con busto grande, la frase y los botones en una fila. Los avisos esperan mientras están abiertas. Maquetas en `mockups/reparto` y `mockups/dialogo-busto`.

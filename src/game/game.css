@@ -1748,6 +1748,15 @@ button.qj-free{cursor:pointer}button.qj-free:hover{color:#e9e1cc}
 [data-testid=character-stats] [data-testid=skill-stats] .hb-stat{flex:1 1 0;display:flex;flex-direction:column;justify-content:center;font-size:17px;padding:4px 6px}
 [data-testid=character-stats] [data-testid=skill-stats] .hb-stat-m{font-size:14px}
 .hb-acard.locked{opacity:.65;cursor:default}
+/* Ataque elegido para comparar (27/11): borde doble dorado, barra a la izquierda y rombo ◆; no depende solo del color */
+.hb-acard.sel{border:2px solid #e8b33a;background:#1f1a12;padding:9px 11px 9px 15px;box-shadow:inset 4px 0 0 #e8b33a}
+.hb-acard.sel .hb-acard-name::before{content:'◆ ';color:#e8b33a}
+/* Cabecera de Atributos: qué se compara y su coste, en neutro */
+.hb-cmp{display:flex;flex-direction:column;gap:2px;padding:6px 6px 8px;border-bottom:1px solid #3a3741;margin-bottom:2px;flex:0 0 auto}
+.hb-cmp-t{font-size:15px;color:#cfc8b8}.hb-cmp-t b{color:#e9e1cc;font-family:var(--font-display);font-weight:400}
+.hb-cmp-c{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;color:#cfc8b8}.hb-cmp-i{display:inline-flex;align-items:center;gap:6px}
+.hb-cmp-n{font-size:13px}.hb-cmp-n.good{color:#7fd08a}.hb-cmp-n.bad{color:#ff8a8a}
+.al-stats-tight .hb-cmp{padding:3px 6px 5px}.al-stats-tight .hb-cmp-t{font-size:13px}.al-stats-tight .hb-cmp-c{font-size:12px}
 .hb-note{font-size:14px;color:#a8a29e;padding:8px 10px;border:1px solid #3a3741;background:#141318}.hb-note.ok{color:#1a1206;background:#e8b33a;border-color:#e8b33a;font-weight:700}
 div.hb-acard{cursor:default}
 .hb-req{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#e8b33a;border:1px solid #8a6a2a;padding:4px 7px;white-space:nowrap;flex-shrink:0}

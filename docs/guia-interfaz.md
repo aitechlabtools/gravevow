@@ -338,13 +338,15 @@ Tres columnas 28/42/30 (`.qj`). Estados por color del borde izquierdo: dorado en
 
 ### Habilidades (25/11, versión 3)
 Todo a la vista, sin pestañas (`screens/Personaje.tsx`). Escritorio 22/44/34 y tableta 24/38/38:
-- Izquierda «Atributos» (`character-stats`, `SkillStats`): los atributos del Alijo; al elegir una habilidad, cada fila que cambia se tiñe (`.hb-stat.up` verde, `.down` rojo) con «▲ +30 % de daño · 3 turnos» o «▼ −4 de ímpetu» (`skillMarks`: golpe ×N, perforación, robo de vida, curación, escudo, coste, estados propios de Furia, Protección, Bloqueo, Aguante, Parpadeo, Regeneración y Escudo de maná). Solo informa: los cambios duran en combate.
+- Izquierda «Atributos» (`character-stats`, `SkillStats`): los atributos del Alijo; al elegir una habilidad, cada fila que cambia se tiñe (`.hb-stat.up` verde, `.down` rojo) con «▲ +30 % de daño · 3 turnos» (`skillMarks`: golpe ×N, perforación, robo de vida, curación, escudo, coste, estados propios de Furia, Protección, Bloqueo, Aguante, Parpadeo, Regeneración y Escudo de maná). Solo informa: los cambios duran en combate.
 - Centro, sin marco: arco (medio círculo arriba y dos rectas que bajan) con la habilidad de clase arriba, la mano derecha por la derecha y la izquierda por la izquierda (empezando a 45°); el héroe dentro y «Clase · Nivel» debajo.
 - Abajo de Atributos, «Efectos de la habilidad» (`skill-effects`): las líneas de efecto en verde (o rojo) de lo elegido; el detalle de la derecha repite esas líneas sobre la descripción.
 - Cabeceras de mano: el nombre del arma en una franja con el color de la mano (`.hb-band`).
 - Derecha «Habilidades» (`character-skills`): fichas pequeñas por mano (`.hb-mini`, `atk-<id>`: icono, nombre, coste y recarga pequeños), fila de hitos de clase Nv 1·20·40·60·80 (`.hb-hito`, `class-skill-<id>` o `hito-<nv>`; dorado la equipada, «!» por elegir, «?» bloqueados) y abajo el detalle (`skill-detail`): coste y recarga grandes con rótulo, efecto y «Equipar» (`equip-class-<id>`) o, en un hito, sus opciones (`class-choose` con «Elegir», o `class-next` con candado).
 - Móvil: héroe y Habilidades; los atributos en una ventana con el botón «Atributos».
 - Coste: ímpetu con rayo amarillo, maná con gota turquesa; recarga en azul («—» si no tiene).
+- **Ataque elegido (27/11):** `.hb-acard.sel` (borde dorado de 2 px, barra izquierda de 4 px, fondo #1f1a12 y ◆ delante del nombre). No es el `.on` de «En uso». Igual en los tres formatos.
+- **Cabecera de Atributos (27/11):** `skill-compare` con «Comparando: <nombre>» y el coste neutro («Coste: 3 de ímpetu · Recarga: 2 turnos»). Un coste por uso nunca se pinta como penalización de atributo: las filas solo marcan lo que cambia el atributo o el efecto. La vida que cuesta y el recurso que se recupera van como notas bajo el coste (`usageNotes`).
 
 - **Alijo › Aventurero (25/11):** mismo arco que Habilidades (`SkillArc` con `compact noFoot`): clase arriba, mano derecha a la derecha, izquierda a la izquierda. Con una pieza elegida, `HeroStats preview` marca filas `hs-up`/`hs-down` con ▲/▼. El panel Equipo tiene el pie fijo `backpack-foot` (carga, en riesgo y botones).
 - **Habilidades (25/11):** sin recuadro de efectos a la izquierda; el detalle de un hito (`.hb-det.hito`) crece para llenar el panel.

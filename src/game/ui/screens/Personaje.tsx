@@ -78,7 +78,8 @@ export function Personaje(_: { onStash?: () => void }) {
   const pickTab = (t: 'atk' | 'class') => { setTab(t); if (isClassFocus(focus) !== (t === 'class')) setFocus(t === 'class' ? k.profile.classSkills.equipped ?? null : k.right.items[1]?.id ?? k.right.items[0]?.id ?? null); };
   const pad = { padding: '0 max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left))', gap: 'var(--gap)' } as const;
   const skillId = focus && !focus.startsWith('hito:') ? focus : null;
-  const statPanel = <SkillStats skillId={skillId} />;
+  const focusName = !skillId ? null : skillId === 'basic' ? k.right.items[0]?.name ?? null : getSkill(skillId).name;
+  const statPanel = <SkillStats skillId={skillId} name={focusName} />;
   const hero = (
     <section className="min-h-0 relative hb-hero" data-testid="character-hero">
       <SkillArc k={k} focus={skillId} onFocus={pickFocus} compact={phone} />
@@ -202,7 +203,8 @@ export function SkillArc({ k, focus, onFocus, compact, noFoot }: { k: ReturnType
 
 // ── Atributos con lo que cambia la habilidad elegida mientras dura (verde mejora, rojo empeora) ──
 type Mark = { txt: string; good: boolean };
-function skillMarks(id: string | null, cost: number, res: string): Partial<Record<keyof Stats, Mark[]>> {
+// El coste (ímpetu o maná, vida en el Pacto de sangre) y lo que recupera NO cambian ningún atributo: van en usageNotes.
+function skillMarks(id: string | null): Partial<Record<keyof Stats, Mark[]>> {
   const out: Partial<Record<keyof Stats, Mark[]>> = {};
   if (!id || id === 'basic') return out;
   const s = getSkill(id);
@@ -214,9 +216,6 @@ function skillMarks(id: string | null, cost: number, res: string): Partial<Recor
   if (s.lifesteal) add('maxHp', `+${Math.round(s.lifesteal * 100)} % del daño hecho`);
   if (s.healPct) add('maxHp', `+${Math.round(s.healPct * 100)} % de vida`);
   if (s.shieldPct) add('maxHp', `escudo de ${Math.round(s.shieldPct * 100)} % de vida`);
-  if (s.selfDamagePct) add('maxHp', `−${Math.round(s.selfDamagePct * 100)} % de vida al usarla`, false);
-  if (cost) add('maxMp', `−${cost} de ${res}`, false);
-  if (s.manaGain) add('maxMp', `+${s.manaGain} de ${res}`);
   for (const ap of s.applies ?? []) {
     if (!ap.self) continue;
     const st = STATUSES[ap.status]; const t = ` · ${ap.turns} ${ap.turns === 1 ? 'turno' : 'turnos'}`;
@@ -229,11 +228,19 @@ function skillMarks(id: string | null, cost: number, res: string): Partial<Recor
   }
   return out;
 }
+/** Lo que pasa al usarla que no es un atributo: vida que cuesta y recurso que recupera. */
+function usageNotes(id: string | null, res: string): Mark[] {
+  if (!id || id === 'basic') return [];
+  const s = getSkill(id); const out: Mark[] = [];
+  if (s.selfDamagePct) out.push({ txt: `Cuesta el ${Math.round(s.selfDamagePct * 100)} % de tu vida al usarla`, good: false });
+  if (s.manaGain) out.push({ txt: `Recuperas ${s.manaGain} de ${res} al usarla`, good: true });
+  return out;
+}
 /** Líneas de efecto de una habilidad (sin el coste), sin repetir: «Golpe ×1,4», «+30 % de daño · 3 turnos». */
 function effectLines(id: string | null, res: string): Mark[] {
   const seen = new Set<string>(); const out: Mark[] = [];
-  for (const [key, ms] of Object.entries(skillMarks(id, 0, res))) for (const m of ms ?? []) {
-    if (key === 'maxMp' && m.txt.startsWith('−')) continue;
+  for (const m of [...Object.values(skillMarks(id)).flat(), ...usageNotes(id, res)]) {
+    if (!m) continue;
     if (seen.has(m.txt)) continue; seen.add(m.txt); out.push({ ...m, txt: m.txt[0].toUpperCase() + m.txt.slice(1) });
   }
   return out;
@@ -241,17 +248,30 @@ function effectLines(id: string | null, res: string): Mark[] {
 function EffectList({ lines }: { lines: Mark[] }) {
   return <ul className="hb-eff">{lines.map((m) => <li key={m.txt} className={m.good ? 'good' : 'bad'}>{m.txt}</li>)}</ul>;
 }
-function SkillStats({ skillId }: { skillId: string | null }) {
+function SkillStats({ skillId, name }: { skillId: string | null; name: string | null }) {
   const profile = useGame((s) => s.profile)!;
   const ch = profile.character;
   const cls = CLASSES[ch.classId];
   const st = computeStats(ch.classId, ch.level, profile.equipment);
   const base = baseStats(ch.classId, ch.level);
   const res = cls.resourceName.toLowerCase();
-  const cost = skillId && skillId !== 'basic' ? skillCost(getSkill(skillId).cost, st.maxMp, cls.resource) : 0;
-  const marks = skillMarks(skillId, cost, res);
+  const sk = skillId && skillId !== 'basic' ? getSkill(skillId) : null;
+  const cost = sk ? skillCost(sk.cost, st.maxMp, cls.resource) : 0;
+  const marks = skillMarks(skillId);
+  const notes = usageNotes(skillId, res);
   return (
     <div className="font-body flex flex-col h-full" data-testid="skill-stats">
+      {/* Qué se compara y lo que cuesta usarlo: información neutra, fuera de los atributos */}
+      <div className="hb-cmp" data-testid="skill-compare">
+        {name ? <>
+          <span className="hb-cmp-t">Comparando: <b data-testid="skill-compare-name">{name}</b></span>
+          <span className="hb-cmp-c" data-testid="skill-compare-cost">
+            <span className="hb-cmp-i">{cls.resource === 'mana' ? <Drop size={13} /> : <Bolt size={13} />}{cost ? `Coste: ${cost} de ${res}` : 'Sin coste'}</span>
+            {sk?.cooldown ? <span className="hb-cmp-i"><Recharge size={13} />Recarga: {sk.cooldown} {sk.cooldown === 1 ? 'turno' : 'turnos'}</span> : null}
+          </span>
+          {notes.map((x) => <span key={x.txt} className={`hb-cmp-n ${x.good ? 'good' : 'bad'}`}>{x.txt}</span>)}
+        </> : <span className="hb-cmp-t text-stone-400">Toca un ataque para comparar.</span>}
+      </div>
       {STAT_KEYS.map((key) => {
         const m = marks[key] ?? []; const bonus = st[key] - base[key];
         return (
@@ -271,7 +291,7 @@ function SkillStats({ skillId }: { skillId: string | null }) {
 function AtkCard({ a, on, onPick, k }: { a: Atk; on: boolean; onPick: () => void; k: ReturnType<typeof useKit> }) {
   const lines = a.id !== 'basic' ? effectLines(a.id, k.res) : [];
   return (
-    <button type="button" className="hb-acard" onClick={onPick} aria-pressed={on} data-testid={`atk-${a.id}`}>
+    <button type="button" className={`hb-acard ${on ? 'sel' : ''}`} onClick={onPick} aria-pressed={on} data-testid={`atk-${a.id}`}>
       <span className="hb-acard-top"><ActionIcon fx={a.fx} color={C[a.src]} size={28} /><span className="hb-acard-name">{a.name}</span><CostChips cost={a.cost} cd={a.cd} res={k.res} mana={k.mana} labels /></span>
       {lines.length > 0 && <EffectList lines={lines} />}
       <span className="hb-desc block">{a.desc}</span>
