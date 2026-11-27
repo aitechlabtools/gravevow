@@ -1777,11 +1777,14 @@ div.hb-acard{cursor:default}
 .estado-cure-price{display:inline-flex;align-items:center;gap:6px;color:#f0d9a0}
 .estado-cure.off{background:#17151a;border-color:#3a3741;color:#8c8693;cursor:not-allowed}.estado-cure.off .estado-cure-sep{background:#3a3741}.estado-cure.off .estado-cure-price{color:#e0605a}
 .estado-doll{min-height:200px;padding:8px 0 14px}
-.bmap{position:relative;aspect-ratio:2/1;height:100%;max-height:360px;max-width:100%}
+.bmap{position:relative;aspect-ratio:3/2;height:100%;max-width:100%}
 .bmap-svg{position:absolute;inset:0;width:100%;height:100%}
 .bmap-card{position:absolute;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:2px 8px;background:#1b211a;border:1px solid #4d7a3d;color:#e9e1cc;font:inherit;text-align:left;min-height:0;cursor:pointer}
 .bmap-card:hover{filter:brightness(1.15)}.bmap-card.hurt{border-color:var(--rc);background:#211a12}
-.bmap-card.drop-yes{border:2px dashed #e8b33a;background:#2a2112;box-shadow:0 0 0 2px #e8b33a55}.bmap-card.drop-no{opacity:.35}
+.bmap-card.ok{border-color:#2f3a2c;background:#171a17}.bmap-card.ok .bmap-hp{color:#8c8693}
+.bmap-card.drop-yes{border:1px solid #e8b33a;background:#2a2112}
+.bmap-ico{display:flex;gap:6px;align-items:flex-end;min-height:14px}.bmap-l{display:inline-flex;flex-direction:column;align-items:center;gap:1px}
+.bmap-g{display:flex;gap:1px}.bmap-g i{width:4px;height:2px}
 .bmap-name{display:flex;justify-content:space-between;gap:6px;font-size:15px;white-space:nowrap}
 .bmap-row{display:flex;align-items:center;gap:8px}.bmap-bar{flex:1;height:4px;background:#2a2730}.bmap-bar i{display:block;height:100%}
 .bmap-hp{font-size:13px;color:#cfc6b2;white-space:nowrap}
@@ -1805,3 +1808,5 @@ div.hb-acard{cursor:default}
 .is-touch .bmap-card::after{content:'';position:absolute;inset:-4px 0}
 .bmap-card{container-type:inline-size}.bmap-name{min-width:0}
 @container (max-width:150px){.dw-t{display:none}}
+.estado-phone .bmap-ico{min-height:9px;gap:3px}.estado-phone .bmap-ico svg{width:9px;height:9px}.estado-phone .bmap-g i{width:3px}
+.bmap-card{gap:6px}.bmap-hp{font-size:14px}

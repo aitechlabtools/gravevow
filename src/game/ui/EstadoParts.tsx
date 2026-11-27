@@ -107,7 +107,7 @@ export function StatusTop({ body }: { body: Body }) {
   );
 }
 
-// Estado corporal: silueta plana (escala del lienzo 600 × 300) y una ficha por parte unida con una línea.
+// Estado corporal: silueta plana (coordenadas base de 600 × 300, ver K) y una ficha por parte unida con una línea.
 const SIL: Record<Region, string> = {
   head: '282,8 318,8 330,22 328,48 314,60 286,60 272,48 270,22',
   thorax: '256,70 344,70 356,84 350,132 250,132 244,84',
@@ -117,42 +117,81 @@ const SIL: Record<Region, string> = {
   legR: '262,182 298,182 296,292 268,292 264,232',
   legL: '302,182 338,182 336,232 332,292 304,292',
 };
+// Lienzo de 600 × 400 (27/11): la silueta se dibuja con las coordenadas de 600 × 300 y se agranda ×4/3 desde el centro.
+const K = 4 / 3, SX = (x: number) => 300 + (x - 300) * K, SY = (y: number) => y * K;
 const CARD: Record<Region, { x: number; y: number; to: [number, number] }> = {
-  head: { x: 402, y: 6, to: [328, 34] }, thorax: { x: 402, y: 64, to: [348, 100] }, abdomen: { x: 402, y: 122, to: [340, 158] },
-  armL: { x: 402, y: 180, to: [368, 178] }, legL: { x: 402, y: 238, to: [334, 262] },
-  armR: { x: 38, y: 112, to: [232, 150] }, legR: { x: 38, y: 222, to: [280, 256] },
+  head: { x: 420, y: 8, to: [SX(328), SY(34)] }, thorax: { x: 420, y: 86, to: [SX(348), SY(100)] }, abdomen: { x: 420, y: 164, to: [SX(340), SY(158)] },
+  armL: { x: 420, y: 242, to: [SX(368), SY(178)] }, legL: { x: 420, y: 320, to: [SX(334), SY(262)] },
+  armR: { x: 20, y: 150, to: [SX(232), SY(150)] }, legR: { x: 20, y: 296, to: [SX(280), SY(256)] },
 };
-const CW = 160, CH = 52;
-const CARD_NAME: Record<Region, string> = { head: 'Cabeza', thorax: 'Tórax', abdomen: 'Abdomen', armR: 'Brazo der.', armL: 'Brazo izq.', legR: 'Pierna der.', legL: 'Pierna izq.' };
+const CW = 160, CH = 56;
 
-/** Cuerpo con fichas: tocar una ficha (o su parte) con una cura elegida la aplica; arrastrar una cura encima, también. */
+// Iconos de lesión en pixel art (27/11): gota (sangrado, con 1 o 2 marcas), hueso (fractura), rayo (dolor), inutilizada y operada.
+const ICO = {
+  bleed: ['...X...', '..XXX..', '.XXXXX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..'],
+  frac: ['XX.....', 'XXX....', '.XXX...', '..X.X..', '...XXX.', '....XXX', '.....XX'],
+  pain: ['...XX', '..XX.', '.XXXX', 'XXXX.', '..XX.', '.XX..', 'XX...'],
+  off: ['..XXX..', '.X...X.', 'X...X.X', 'X..X..X', 'X.X...X', '.X...X.', '..XXX..'],
+  op: ['...X...', '...X...', '...X...', 'XXXXXXX', '...X...', '...X...', '...X...'],
+  plus: ['..XXX..', '..XXX..', 'XXXXXXX', 'XXXXXXX', 'XXXXXXX', '..XXX..', '..XXX..'],
+};
+/** Centro de cada parte en el lienzo (para la cruz «+» de la cura elegida). */
+const MID: Record<Region, [number, number]> = { head: [300, 34], thorax: [300, 100], abdomen: [300, 157], armR: [240, 140], armL: [360, 140], legR: [281, 240], legL: [319, 240] };
+
+/** Lesiones de una parte, en orden, con su icono y color (el dolor solo si no lo calma un analgésico). */
+function lesionsOf(body: Body, r: Region): { k: keyof typeof ICO; name: string; color: string; grade?: number }[] {
+  const p = body.parts[r];
+  const out: { k: keyof typeof ICO; name: string; color: string; grade?: number }[] = [];
+  if (p.bleed) out.push({ k: 'bleed', name: p.bleed === 2 ? 'Sangrado grave' : 'Sangrado leve', color: '#e0605a', grade: p.bleed });
+  if (p.fracture) out.push({ k: 'frac', name: 'Fractura', color: '#f2ead8' });
+  if (isDisabled(body, r)) out.push({ k: 'off', name: 'Inutilizada', color: '#a8a0b0' });
+  if ((p.fracture || isDisabled(body, r)) && !body.painFree) out.push({ k: 'pain', name: 'Dolor', color: '#e8b33a' });
+  if (p.operated) out.push({ k: 'op', name: 'Operada', color: '#8fc0e0' });
+  return out;
+}
+
+/** Cuerpo: silueta y una ficha sin nombre por parte (iconos de lesión, barra y vida). Con una cura elegida o arrastrada,
+ *  las partes donde sirve llevan una cruz «+» y borde dorado; tocar la ficha o la parte la aplica. El nombre y el detalle,
+ *  en el tooltip y en la etiqueta accesible. */
 export function BodyMap({ body, shown, onPick }: { body: Body; shown: string | null; onPick: (r: Region) => void }) {
-  const drop = (r: Region) => (shown ? (usefulOn(body, shown, r) ? 'yes' : 'no') : null);
+  const ok = (r: Region) => !!shown && usefulOn(body, shown, r);
   return (
     <div className="bmap" data-testid="body-map">
-      <svg viewBox="0 0 600 300" className="bmap-svg" shapeRendering="crispEdges" aria-hidden>
+      <svg viewBox="0 0 600 400" className="bmap-svg" shapeRendering="crispEdges" aria-hidden>
         {REGIONS.map((r) => {
-          const c = CARD[r], left = c.x < 300;
-          const d = drop(r);
+          const c = CARD[r], left = c.x < 300, on = ok(r);
           return (
-            <g key={r} className={d ? `bmap-${d}` : undefined}>
-              <line x1={left ? c.x + CW : c.x} y1={c.y + CH / 2} x2={c.to[0]} y2={c.to[1]} stroke={d === 'yes' ? '#e8b33a' : '#4a4652'} strokeWidth={1.5} />
-              <polygon points={SIL[r]} fill={d === 'yes' ? '#3a2f17' : '#262c27'} stroke={isDisabled(body, r) ? '#6b6470' : regionColor(body, r)} strokeWidth={2} onClick={() => onPick(r)} style={{ cursor: 'pointer', pointerEvents: 'all' }} />
+            <g key={r}>
+              <line x1={left ? c.x + CW : c.x} y1={c.y + CH / 2} x2={c.to[0]} y2={c.to[1]} stroke={on ? '#e8b33a' : '#4a4652'} strokeWidth={1.5} />
+              <polygon transform={`translate(300 0) scale(${K}) translate(-300 0)`} points={SIL[r]} fill={on ? '#3a2f17' : '#262c27'} stroke={on ? '#e8b33a' : isDisabled(body, r) ? '#6b6470' : regionColor(body, r)} strokeWidth={on ? 3 : 2} onClick={() => onPick(r)} style={{ cursor: 'pointer', pointerEvents: 'all' }} />
             </g>
           );
         })}
+        {REGIONS.filter(ok).map((r) => (
+          <g key={r} transform={`translate(${SX(MID[r][0]) - 12} ${SY(MID[r][1]) - 12}) scale(3.4)`} style={{ pointerEvents: 'none' }}>
+            {ICO.plus.flatMap((row, y) => [...row].map((ch, x) => (ch === 'X' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#e8b33a" /> : null)))}
+          </g>
+        ))}
       </svg>
       {REGIONS.map((r) => {
         const c = CARD[r], p = body.parts[r], cap = regionCap(body, r), max = regionMaxes(body.total)[r];
-        const w = regionWord(body, r), d = drop(r);
+        const les = lesionsOf(body, r);
+        const hurt = les.length > 0 || p.hp < max;
+        const on = ok(r), d = shown ? (on ? 'yes' : 'no') : null;
+        const tip = [`${REGION_NAME[r]}: ${p.hp} / ${cap}`, ...les.map((l) => l.name)].join(' · ');
         return (
-          <button key={r} type="button" className={`bmap-card ${w.cls !== 'ok' ? 'hurt' : ''} ${d === 'yes' ? 'drop-yes' : d === 'no' ? 'drop-no' : ''}`}
-            style={{ left: `${(c.x / 600) * 100}%`, top: `${(c.y / 300) * 100}%`, width: `${(CW / 600) * 100}%`, height: `${(CH / 300) * 100}%`, ['--rc' as string]: regionColor(body, r) }}
-            data-drop={JSON.stringify({ type: 'body', region: r })} onClick={() => onPick(r)}
-            aria-label={`${REGION_NAME[r]}: ${p.hp} de ${cap}. ${w.word}`} data-testid={`body-row-${r}`}>
-            <span className="bmap-name">{CARD_NAME[r]}{w.cls !== 'ok' && <span className={`doll-word ${w.cls}`} data-testid={`body-state-${r}`} title={w.word}>{w.ico}<span className="dw-t"> {w.word}</span></span>}</span>
+          <button key={r} type="button" className={`bmap-card ${hurt ? 'hurt' : 'ok'} ${d === 'yes' ? 'drop-yes' : d === 'no' ? 'drop-no' : ''}`}
+            style={{ left: `${(c.x / 600) * 100}%`, top: `${(c.y / 400) * 100}%`, width: `${(CW / 600) * 100}%`, height: `${(CH / 400) * 100}%`, ['--rc' as string]: regionColor(body, r) }}
+            data-drop={JSON.stringify({ type: 'body', region: r })} onClick={() => onPick(r)} title={tip} aria-label={tip} data-testid={`body-row-${r}`}>
+            <span className="bmap-ico" data-testid={`body-state-${r}`} data-state={regionWord(body, r).cls}>
+              {les.map((l) => (
+                <span key={l.k} className="bmap-l" title={l.name}>
+                  <PixelIcon rows={ICO[l.k]} size={14} color={l.color} label={l.name} />
+                  {l.grade && <span className="bmap-g">{[1, 2].map((g) => <i key={g} style={{ background: g <= l.grade! ? l.color : '#3a3741' }} />)}</span>}
+                </span>
+              ))}
+            </span>
             <span className="bmap-row"><span className="bmap-bar"><i style={{ width: `${(p.hp / Math.max(1, max)) * 100}%`, background: regionColor(body, r) }} /></span><span className="bmap-hp">{p.hp} / {cap}</span></span>
-            {d === 'yes' && <span className="doll-apply" aria-hidden>◆ Aplicar aquí</span>}
           </button>
         );
       })}

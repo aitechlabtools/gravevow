@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Estado · silueta</title>
+<link rel="stylesheet" href="/node_modules/@fontsource/cinzel/index.css"><link rel="stylesheet" href="/node_modules/@fontsource/grenze/index.css">
+<style>
+*{box-sizing:border-box;margin:0}body{background:#0a090c;color:#e9e1cc;font-family:Grenze,Georgia,serif;display:flex;justify-content:center;align-items:flex-start;padding:16px}
+.panel{border:2px solid #2a2730;background:#121015;width:720px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.ph{font-family:Cinzel;letter-spacing:.14em;color:#e8b33a;text-align:center;font-size:16px;margin:-4px 0 6px}
+.cap{font-family:Cinzel;letter-spacing:.12em;font-size:15px}
+.h{display:flex;justify-content:space-between;align-items:baseline}.big{font-family:Cinzel;font-size:22px}
+.hp{height:10px;background:#26232a}.hp i{display:block;height:100%;background:#6fae5a}
+.h2{display:flex;justify-content:space-between;align-items:center;min-height:44px}
+.red{color:#e0605a}.mut{color:#a8a090;font-size:14px}
+.cure{display:inline-flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;background:#1d1910;border:1px solid #c9952e;color:#e8c46a;font-size:17px}
+.sep{width:1px;align-self:stretch;margin:8px 0;background:#6b5420}
+.map{position:relative;height:420px;border-top:1px solid #2a2730;border-bottom:1px solid #2a2730}
+svg.sil{position:absolute;left:50%;top:10px;transform:translateX(-50%);height:400px}
+.tag{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;transform:translate(-50%,-50%);pointer-events:none}
+.tag b{font-size:16px}.bar{width:46px;height:4px;background:#2a2730}.bar i{display:block;height:100%}
+.icons{display:flex;gap:6px}.ico{display:flex;flex-direction:column;align-items:center;gap:2px}.grade{display:flex;gap:2px}.grade i{width:5px;height:3px}
+.cross{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px}
+.tip{position:absolute;width:250px;border:2px solid #e8b33a;background:#16130e;padding:10px 12px;font-size:15px;display:flex;flex-direction:column;gap:6px}
+.tip .t{display:flex;justify-content:space-between;font-family:Cinzel;color:#e8b33a;letter-spacing:.08em}
+.tip hr{border:none;border-top:1px solid #2a2730}
+.needs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.need{border:1px solid #2a2730;background:#16141a;display:flex;justify-content:center;align-items:center;gap:10px;padding:8px;font-size:17px}
+/* móvil: panel central de 844 × 390 */
+body.movil .panel{width:420px;padding:8px 10px;gap:4px}body.movil .ph{display:none}body.movil .big{font-size:16px}body.movil .cap{font-size:12px}
+body.movil .hp{height:6px}body.movil .h2{font-size:13px}body.movil .cure{font-size:14px;padding:0 10px;gap:8px}
+body.movil .map{height:186px}body.movil svg.sil{height:176px;top:5px}body.movil .tag b{font-size:11px}body.movil .bar{width:30px;height:3px}
+body.movil .need{padding:2px;font-size:13px}body.movil .tip{width:190px;font-size:12px;padding:6px 8px;gap:3px}
+</style></head><body><div id="app"></div><script>
+const q=new URLSearchParams(location.search),caso=q.get('caso')||'herido',mov=q.get('disp')==='movil';if(mov)document.body.classList.add('movil');
+const PX=(rows,c,s)=>{const w=rows[0].length;let r='';rows.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${ch==='W'?'#f2ead8':c}"/>`}));return `<svg width="${w*s}" height="${rows.length*s}" viewBox="0 0 ${w} ${rows.length}" shape-rendering="crispEdges">${r}</svg>`};
+const DROP=['...X...','..XXX..','.XXXXX.','XXXXXXX','XXXXXXX','.XXXXX.','..XXX..'];
+const BONE=['XX.....','XXX....','.XXX...','..X.X..','...XXX.','....XXX','.....XX'];
+const BOLT=['...XX','..XX.','.XXXX','XXXX.','..XX.','.XX..','XX...'];
+const CROSS=['..XXX..','..XWX..','XXXWXXX','XWWWWWX','XXXWXXX','..XWX..','..XXX..'];
+const SIL={head:'282,8 318,8 330,22 328,48 314,60 286,60 272,48 270,22',thorax:'256,70 344,70 356,84 350,132 250,132 244,84',abdomen:'256,138 344,138 340,176 260,176',armR:'240,76 252,72 254,132 242,192 222,188 230,128',armL:'360,76 348,72 346,132 358,192 378,188 370,128',legR:'262,182 298,182 296,292 268,292 264,232',legL:'302,182 338,182 336,232 332,292 304,292'};
+const MAX={head:13,thorax:31,abdomen:19,armR:12,armL:12,legR:19,legL:19};
+const NAME={head:'Cabeza',thorax:'Tórax',abdomen:'Abdomen',armR:'Brazo derecho',armL:'Brazo izquierdo',legR:'Pierna derecha',legL:'Pierna izquierda'};
+const sano=caso==='sano';
+const hp=sano?{...MAX}:{head:13,thorax:17,abdomen:19,armR:3,armL:12,legR:11,legL:19};
+const W=sano?{}:{armR:{bleed:2,frac:1,pain:1},thorax:{bleed:1},legR:{frac:1,pain:1}};
+const col=(r)=>{const p=hp[r]/MAX[r];return p>.75?'#6fae5a':p>.45?'#e8b33a':p>.2?'#e8752b':'#d23a3a'};
+const fill=(r)=>{const p=hp[r]/MAX[r];return p>.75?'#262c27':p>.45?'#3a3218':p>.2?'#3a2418':'#3a1a1a'};
+const cura=caso==='cura'?['armR','legR']:[];// férula: solo donde hay fractura
+const hover=caso==='detalle'?'armR':null;
+// posición de la marca de cada parte (en unidades 600×300 del lienzo)
+const AT={head:[300,34],thorax:[300,102],abdomen:[300,157],armR:[208,132],armL:[392,132],legR:[248,250],legL:[352,250]};
+const H=mov?176:400,SC=H/300,OX=0;
+let svg=`<svg class="sil" viewBox="210 0 180 300" shape-rendering="crispEdges">`;
+for(const r in SIL){const on=cura.includes(r),dim=cura.length&&!on;svg+=`<polygon points="${SIL[r]}" fill="${fill(r)}" stroke="${on||hover===r?'#e8b33a':col(r)}" stroke-width="${on||hover===r?3:2}" opacity="${dim?.4:1}"/>`}
+svg+='</svg>';
+const mapW=mov?400:676;const sx=(x)=>mapW/2+(x-300)*SC,sy=(y)=>(mov?5:10)+y*SC;
+let tags='';
+for(const r in SIL){const hurt=hp[r]<MAX[r]||W[r];if(!hurt)continue;const [x,y]=AT[r];const w=W[r]||{};const s=mov?2:3;
+ let ic='';if(w.bleed)ic+=`<span class="ico">${PX(DROP,'#e0605a',s)}<span class="grade">${[1,2].map(g=>`<i style="background:${g<=w.bleed?'#e0605a':'#3a3741'}"></i>`).join('')}</span></span>`;
+ if(w.frac)ic+=`<span class="ico">${PX(BONE,'#f2ead8',s)}</span>`;if(w.pain)ic+=`<span class="ico">${PX(BOLT,'#e8b33a',s)}</span>`;
+ tags+=`<div class="tag" style="left:${mov?mapW/2+(x-300)*SC*1.9:sx(x)}px;top:${sy(y)}px"><b style="color:${col(r)}">${hp[r]}/${MAX[r]}</b><span class="bar"><i style="width:${hp[r]/MAX[r]*100}%;background:${col(r)}"></i></span><span class="icons">${ic}</span></div>`}
+for(const r of cura){const c={armR:[236,170],legR:[282,270]}[r];tags+=`<div class="cross" style="left:${sx(c[0])}px;top:${sy(c[1])}px">${PX(CROSS,'#e8b33a',mov?3:4)}</div>`}
+if(hover){tags+=`<div class="tip" style="left:${mov?6:40}px;top:${mov?10:150}px"><div class="t"><span>BRAZO DERECHO</span><span class="red">3 / 12</span></div><div class="hp" style="height:4px"><i style="width:25%;background:#d23a3a"></i></div><hr><span class="red">${PX(DROP,'#e0605a',2)} Sangrado grave</span><span>${PX(BONE,'#f2ead8',2)} Fractura</span><span style="color:#e8b33a">${PX(BOLT,'#e8b33a',2)} Dolor</span><hr><span class="red">▼ −15 % de daño (fractura y dolor)</span><span class="mut">Curas: torniquete o hemostático · férula</span></div>`}
+const cab=`<div class="h"><span class="cap">SALUD GENERAL</span><span class="big">${sano?'125 / 125':'98 / 125'}</span></div><div class="hp"><i style="width:${sano?100:78}%"></i></div>`+(sano?'':`<div class="h2"><div><div class="red">● 3 lesiones · 3 partes heridas</div><div class="mut">−27 puntos de vida</div></div><span class="cure">Curar<span class="sep"></span>● 7</span></div>`);
+const needs=`<div class="needs"><div class="need" style="color:#c9873a">🍴 100 %</div><div class="need" style="color:#4f8fc9">💧 24 %</div><div class="need" style="color:#8a6fc0">☾ 70 %</div></div>`;
+document.getElementById('app').innerHTML=`<div class="panel">${mov?'':'<div class="ph">◆ ESTADO ◆</div>'}${cab}<div class="map">${svg}${tags}</div>${needs}</div>`;
+</script></body></html>
