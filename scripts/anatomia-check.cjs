@@ -44,8 +44,14 @@ const [,, url = 'http://localhost:5173/play/', out = 'anatomia', dev] = process.
   await p.screenshot({ path: out + '-2.png' });
   // Solo se ofrece lo que sirve: no hay torniquete para el abdomen
   if (await p.$('[data-testid=treat-tourniquet-abdomen]')) fail('ofrece torniquete en el abdomen');
-  await tap('[data-testid=body-quick]'); await p.waitForTimeout(150);
-  await tap('[data-testid=body-row-armR]'); await tap('[data-testid=treat-splint-armR]'); await p.waitForTimeout(150);
+  if (await p.$('[data-testid=dungeon-status-bag]')) {
+    // Escritorio (27/11): se elige la cura en la mochila de la ventana y se toca la parte
+    await tap('[data-testid=dungeon-status-bag] [data-item=bandage]'); await tap('[data-testid=body-row-armL]'); await p.waitForTimeout(150);
+    await tap('[data-testid=dungeon-status-bag] [data-item=splint]'); await tap('[data-testid=body-row-armR]'); await p.waitForTimeout(150);
+  } else {
+    await tap('[data-testid=body-quick]'); await p.waitForTimeout(150);
+    await tap('[data-testid=body-row-armR]'); await tap('[data-testid=treat-splint-armR]'); await p.waitForTimeout(150);
+  }
   const st1 = await G(() => { const e = window.__GRAVEVOW__.getState().expedition; const n = (id) => e.backpack.filter((x) => x && x.itemId === id).reduce((a, x) => a + x.qty, 0); return { bleed: e.body.parts.armL.bleed, frac: e.body.parts.armR.fracture, bandages: n('bandage'), splints: n('splint') }; });
   if (st1.bleed !== 0 || st1.frac || st1.bandages !== 2 || st1.splints !== 0) fail('los tratamientos no se aplicaron bien: ' + JSON.stringify(st1));
   await tap('[data-testid=body-close]');

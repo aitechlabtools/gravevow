@@ -1813,3 +1813,9 @@ div.hb-acard{cursor:default}
 .estado-vesper{display:flex;align-items:center;gap:14px;border:1px solid #2a2730;background:#16141a;padding:8px 12px;margin-bottom:6px}
 .estado-vesper-bust{border:1px solid #3a3741;background:#0f0d12;padding:2px}
 .estado-phone .estado-vesper{padding:3px 6px;gap:8px;margin-bottom:2px}.estado-phone .estado-vesper-bust img{transform:none}
+
+/* ESTADO en la mazmorra (escritorio, 27/11) */
+.dstatus{width:min(1320px,94vw);height:min(820px,90vh);padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.dstatus-head{display:flex;align-items:center;justify-content:space-between}
+.dstatus-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px}
+.dstatus-bag{border-left:1px solid #2a2730;padding-left:18px}

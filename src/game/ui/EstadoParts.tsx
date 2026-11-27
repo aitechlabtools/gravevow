@@ -210,11 +210,11 @@ const NEED_ICON: Record<string, string[]> = {
 };
 
 /** Supervivencia: Saciedad, Hidratación y Descanso en tres tarjetas; con 30 o menos, «▼ Hambre / Sed / Cansancio». */
-export function StatusNeeds({ body }: { body: Body }) {
+export function StatusNeeds({ body, needs, prep: prepIn, eta }: { body: Body; /** Mazmorra: las de la expedición. */ needs?: Needs; prep?: Parameters<typeof prepText>[0]; /** Mazmorra: «Penaliza en ~27 min» en el tooltip. */ eta?: (k: 'sat' | 'hyd' | 'rest') => string }) {
   const p = useGame((s) => s.profile)!;
   const hpPct = Math.round((summaryHp(body) / Math.max(1, body.total)) * 100);
-  const n = needsOf(p.needs);
-  const prep = prepText(p.prep);
+  const n = needs ?? needsOf(p.needs);
+  const prep = prepText(prepIn !== undefined ? prepIn : p.prep);
   return (
     <div className="estado-needs" data-testid="estado-needs">
       <div className="estado-need-row">
@@ -225,7 +225,7 @@ export function StatusNeeds({ body }: { body: Body }) {
           const v = Math.round(n[k]);
           const low = v <= 30;
           return (
-            <div key={k} className={`estado-need ${low ? 'low' : ''}`} data-testid={`need-${k}`} title={NEED_NAME[k]} aria-label={`${NEED_NAME[k]}: ${v} %`}>
+            <div key={k} className={`estado-need ${low ? 'low' : ''}`} data-testid={`need-${k}`} title={eta ? `${NEED_NAME[k]}. ${eta(k)}` : NEED_NAME[k]} aria-label={`${NEED_NAME[k]}: ${v} %`}>
               <span className="estado-need-top"><PixelIcon rows={NEED_ICON[k]} size={20} color={NEED_COLOR[k]} label={NEED_NAME[k]} /><span className="text-lg" style={{ color: NEED_COLOR[k] }}>{v} %</span></span>
               {low && <span className="text-blood text-sm">▼ {NEED_LOW[k]}{v <= 0 && k !== 'rest' ? ' · hiere el tórax' : ''}</span>}
             </div>

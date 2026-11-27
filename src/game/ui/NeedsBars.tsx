@@ -96,7 +96,7 @@ function aprox(pulses: number): string {
 }
 
 /** Qué pasará y cuándo (tiempo de exploración activa). */
-function nextText(need: Need, n: Needs, body?: Body): string {
+export function nextText(need: Need, n: Needs, body?: Body): string {
   const v = n[need];
   const p = pulsesToNext(n, need, body);
   if (p === null) return 'Iniciativa −20 % hasta que duermas en el catre.';

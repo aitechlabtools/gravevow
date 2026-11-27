@@ -1,10 +1,13 @@
-import { NeedsDots, NeedsPanel, NeedsStrip } from './NeedsBars';
+import { NeedsDots, NeedsPanel, NeedsStrip, nextText } from './NeedsBars';
+import { BodyMap, StatusNeeds } from './EstadoParts';
+import { usefulOn } from './BodyFigure';
+import type { Region } from '../../config/anatomy';
 import { currentMini } from '../../core/tutorials';
 import { className } from '../../core/gender';
 import { CarryBar, HudLoad, OverloadChip, PactChip } from './CarryBar';
 import { effectiveMaxMp, needsOf } from '../../core/needs';
 import { getPact } from '../../core/data/altars';
-import { useClearOnDrop } from './pointerDrag';
+import { useClearOnDrop, useDrag } from './pointerDrag';
 import { gridGold } from '../../core/gold';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Phaser from 'phaser';
@@ -90,6 +93,10 @@ export function DungeonScreen() {
         if (s.modal?.type === 'rival' && s.tutorial && s.rival.disposition !== 'allied') return; // tutorial: hay que aliarse
         if (s.modal) actions.closeModal();
         else actions.openModal({ type: 'pause' });
+      } else if (k === 'h') {
+        e.preventDefault();
+        if (s.modal?.type === 'body') actions.closeModal();
+        else if (!s.modal) actions.openModal({ type: 'body' });
       } else if (k === 'i') {
         e.preventDefault();
         if (s.modal?.type === 'inventory') actions.closeModal();
@@ -699,7 +706,9 @@ function CaptiveModal({ mercId }: { mercId: string }) {
 function BodyModal() {
   const exp = useGame((s) => s.expedition);
   const profile = useGame((s) => s.profile);
+  const layout = useLayout();
   if (!exp || !profile) return null;
+  if (layout === 'desktop') return <DungeonStatus />;
   return (
     <Modal onClose={() => actions.closeModal()} wide testId="body-modal">
       <h2 className="font-display text-2xl mb-2">Heridas y necesidades</h2>
@@ -709,6 +718,67 @@ function BodyModal() {
       </BodyPanel>
       <button className="btn mt-3 text-sm" onClick={() => actions.closeModal()} data-testid="body-close">Cerrar</button>
     </Modal>
+  );
+}
+
+
+/** ESTADO en la mazmorra (escritorio, 27/11): el cuerpo y las cuatro tarjetas a la izquierda y la mochila a la derecha.
+ *  Tocar una cura y luego la parte (o arrastrarla hasta ella) la aplica con las reglas de siempre: fuera de combate no gasta
+ *  turno y la cirugía tarda dos pulsos. Sin curación con monedas. Se abre con la figura del HUD o con H; se cierra con ✕, H o Escape. */
+function DungeonStatus() {
+  const exp = useGame((s) => s.expedition)!;
+  const profile = useGame((s) => s.profile)!;
+  const tutorial = useGame((s) => s.tutorial);
+  const [sel, setSel] = useState<Loc | null>(null);
+  useClearOnDrop(useCallback(() => setSel(null), []));
+  const drag = useDrag();
+  // La mochila llena el ancho de su columna (casillas de 44 a 84 px), alineada con «Ordenar» y la barra de carga
+  const bagRef = useRef<HTMLDivElement | null>(null);
+  const [bagW, setBagW] = useState(0);
+  useEffect(() => {
+    const el = bagRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => setBagW(e.contentRect.width)); ro.observe(el); return () => ro.disconnect();
+  }, []);
+  const slot = bagW ? Math.max(44, Math.min(84, Math.floor((bagW - 5 * 4 - 2) / 6))) : 60;
+  const body = expBody(exp, profile);
+  const stackOf = (l: Loc | null) => (l?.kind === 'grid' && (l.container === 'backpack' || l.container === 'pocket') ? exp[l.container][l.index] : null);
+  const isCure = (id?: string | null) => !!id && ['treat', 'heal'].includes(getItem(id).use?.kind ?? '') && getItem(id).use?.kind !== undefined && !(getItem(id).use?.kind === 'treat' && (getItem(id).use as { treat?: string }).treat === 'painkiller');
+  const selId = stackOf(sel)?.itemId ?? null;
+  const pick = isCure(selId) ? selId : null;
+  const shown = drag && !drag.lootId && isCure(drag.itemId) ? drag.itemId : pick;
+  const apply = (l: Loc, r: Region) => {
+    const id = stackOf(l)?.itemId; if (!id || !usefulOn(body, id, r)) return;
+    if (getItem(id).use?.kind === 'treat') actions.treat(id, r); else actions.useItem(l);
+    setSel(null);
+  };
+  useEffect(() => {
+    const f = (e: Event) => { const { region, from } = (e as CustomEvent<{ region: Region; from?: Loc }>).detail; if (from) apply(from, region); };
+    window.addEventListener('cr-drop-body', f); return () => window.removeEventListener('cr-drop-body', f);
+  });
+  const n = needsOf(exp.needs);
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 fade-in" data-modal onMouseDown={(e) => e.target === e.currentTarget && actions.closeModal()} data-testid="body-modal">
+      <div className="panel panel-gold dstatus" role="dialog" aria-label="Estado">
+        <div className="dstatus-head"><span className="panel-title text-xl">Estado</span>
+          <button className="btn icon-btn" style={{ minWidth: 44, minHeight: 44 }} onClick={() => actions.closeModal()} aria-label="Cerrar (H o Escape)" title="Cerrar · H" data-testid="body-close">✕</button></div>
+        <div className="dstatus-grid">
+          <div className="min-h-0 flex flex-col" data-testid="intendencia-status">
+            <div className="flex-1 min-h-0 flex items-center justify-center estado-doll"><BodyMap body={body} shown={shown} onPick={(r) => sel && apply(sel, r)} /></div>
+            <StatusNeeds body={body} needs={n} prep={exp.prep ?? null} eta={(k) => nextText(k, n, exp.body)} />
+          </div>
+          <div ref={bagRef} className="min-h-0 overflow-y-auto scroll-thin dstatus-bag" style={{ ['--slot' as string]: `${slot}px`, ['--slot-big' as string]: `${slot}px` }} data-testid="dungeon-status-bag">
+            <div className="flex items-center justify-between gap-2 mb-2"><span className="panel-title">Mochila · {exp.backpack.filter(Boolean).length}/{exp.backpack.length}</span>
+              <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button></div>
+            <GridView grid={exp.backpack} container="backpack" cols={6} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={(l) => setSel(sel && JSON.stringify(sel) === JSON.stringify(l) ? null : l)}
+              onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
+            {!tutorial && <CarryBar className="mt-2" />}
+            <div className="mt-3 text-xs text-gold mb-1">Bolsillo seguro · no se pierde al morir</div>
+            <GridView grid={exp.pocket} container="pocket" cols={3} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} />
+            {sel && !pick && <div className="mt-3"><ItemActions loc={sel} mode="dungeon" onClear={() => setSel(null)} /></div>}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -811,7 +881,7 @@ function DungeonInventory() {
         </Panel>
         <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">
           <div className="flex items-center justify-between gap-2 mb-2"><span className="panel-title">Mochila · {s.expedition.backpack.filter(Boolean).length}/{s.expedition.backpack.length}</span>
-            <span className="flex gap-1"><button className="btn text-sm" onClick={() => actions.groupGold('backpack')} data-testid="group-gold-dungeon">Agrupar oro</button><button className="btn text-sm" onClick={() => actions.sortContainer('backpack')}>Ordenar</button></span></div>
+            <button className="btn text-sm" onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button></div>
           <GridView grid={s.expedition.backpack} container="backpack" cols={6} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel}
             onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
           {!s.tutorial && <CarryBar className="mt-2" />}
@@ -829,8 +899,7 @@ function DungeonInventory() {
   return (
     <Modal onClose={() => actions.closeModal()} wide testId="dungeon-inventory">
       <div className="flex items-center justify-between mb-3"><h2 className="panel-title text-xl">Inventario</h2><div className="flex gap-2">
-        <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => actions.groupGold('backpack')} data-testid="group-gold-dungeon" title="Mete las monedas sueltas en tus saquitos y sacos">Agrupar oro</button>
-        <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => actions.sortContainer('backpack')}>Ordenar</button></div></div>
+        <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button></div></div>
       <div className="grid md:grid-cols-2 gap-5">
         <div className="space-y-4">
           <EquipmentView equipment={s.expedition.equipment} selected={sel} onSelect={setSel} mode="dungeon" portrait={<PlayerSprite scale={5} />} />
