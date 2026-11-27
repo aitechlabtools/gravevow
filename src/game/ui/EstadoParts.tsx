@@ -130,8 +130,16 @@ const ICO = {
   op: ['...X...', '...X...', '...X...', 'XXXXXXX', '...X...', '...X...', '...X...'],
   plus: ['..X..', '..X..', 'XXXXX', '..X..', '..X..'],
 };
-/** Centro de cada parte en el lienzo (para la cruz «+» de la cura elegida). */
-const MID: Record<Region, [number, number]> = { head: [300, 34], thorax: [300, 100], abdomen: [300, 157], armR: [240, 140], armL: [360, 140], legR: [281, 240], legL: [319, 240] };
+/** Centro de una parte a la altura `y`: punto medio entre los dos bordes del polígono (la cruz nunca toca el contorno). */
+function midAt(r: Region, y: number): [number, number] {
+  const pts = SIL[r].split(' ').map((q) => q.split(',').map(Number) as [number, number]);
+  const xs: number[] = [];
+  pts.forEach(([x1, y1], i) => { const [x2, y2] = pts[(i + 1) % pts.length]; if ((y >= Math.min(y1, y2)) && (y <= Math.max(y1, y2)) && y1 !== y2) xs.push(x1 + ((y - y1) / (y2 - y1)) * (x2 - x1)); });
+  return [(Math.min(...xs) + Math.max(...xs)) / 2, y];
+}
+/** Altura de la cruz en cada parte: en brazos y piernas, donde son más anchos. */
+const MID_Y: Record<Region, number> = { head: 34, thorax: 100, abdomen: 157, armR: 140, armL: 140, legR: 225, legL: 225 };
+const LIMB = (r: Region) => r.startsWith('arm') || r.startsWith('leg');
 
 /** Lesiones de una parte, en orden, con su icono y color (el dolor solo si no lo calma un analgésico). */
 function lesionsOf(body: Body, r: Region): { k: keyof typeof ICO; name: string; color: string; grade?: number }[] {
@@ -163,7 +171,7 @@ export function BodyMap({ body, shown, onPick }: { body: Body; shown: string | n
           );
         })}
         {REGIONS.filter(ok).map((r) => (
-          <g key={r} transform={`translate(${SX(MID[r][0]) - 6} ${SY(MID[r][1]) - 6}) scale(2.4)`} style={{ pointerEvents: 'none' }}>
+          <g key={r} transform={(() => { const [mx, my] = midAt(r, MID_Y[r]); const k = LIMB(r) ? 1.8 : 2.4; return `translate(${SX(mx) - 2.5 * k} ${SY(my) - 2.5 * k}) scale(${k})`; })()} style={{ pointerEvents: 'none' }}>
             {ICO.plus.flatMap((row, y) => [...row].map((ch, x) => (ch === 'X' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#e8b33a" /> : null)))}
           </g>
         ))}
@@ -211,14 +219,14 @@ export function StatusNeeds({ body }: { body: Body }) {
     <div className="estado-needs" data-testid="estado-needs">
       <div className="estado-need-row">
         <div className={`estado-need ${hpPct < 100 ? 'low-hp' : ''}`} data-testid="need-hp" title="Vida" aria-label={`Vida: ${summaryHp(body)} de ${body.total} (${hpPct} %)`}>
-          <span className="estado-need-top"><PixelIcon rows={NEED_ICON.hp} size={26} color="#d23a3a" label="Vida" /><span className="text-lg" style={{ color: '#e0605a' }}>{hpPct} %</span></span>
+          <span className="estado-need-top"><PixelIcon rows={NEED_ICON.hp} size={20} color="#d23a3a" label="Vida" /><span className="text-lg" style={{ color: '#e0605a' }}>{hpPct} %</span></span>
         </div>
         {NEEDS.map((k) => {
           const v = Math.round(n[k]);
           const low = v <= 30;
           return (
             <div key={k} className={`estado-need ${low ? 'low' : ''}`} data-testid={`need-${k}`} title={NEED_NAME[k]} aria-label={`${NEED_NAME[k]}: ${v} %`}>
-              <span className="estado-need-top"><PixelIcon rows={NEED_ICON[k]} size={26} color={NEED_COLOR[k]} label={NEED_NAME[k]} /><span className="text-lg" style={{ color: NEED_COLOR[k] }}>{v} %</span></span>
+              <span className="estado-need-top"><PixelIcon rows={NEED_ICON[k]} size={20} color={NEED_COLOR[k]} label={NEED_NAME[k]} /><span className="text-lg" style={{ color: NEED_COLOR[k] }}>{v} %</span></span>
               {low && <span className="text-blood text-sm">▼ {NEED_LOW[k]}{v <= 0 && k !== 'rest' ? ' · hiere el tórax' : ''}</span>}
             </div>
           );
