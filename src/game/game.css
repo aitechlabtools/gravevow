@@ -1792,7 +1792,7 @@ div.hb-acard{cursor:default}
 .doll-word.bleed{color:#ff6b6b}.doll-word.frac{color:#f2ead8}.doll-word.hurt{color:#e8b33a}.doll-word.off{color:#a8a0b0}
 .doll-apply{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);background:#e8b33a;color:#1a1206;font-size:12px;font-weight:700;padding:0 6px;white-space:nowrap;z-index:1}
 .estado-needs{border-top:1px solid #2a2730;padding-top:10px;display:flex;flex-direction:column;gap:8px}
-.estado-need-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.estado-need-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .estado-need{display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid #2a2730;background:#16141a;padding:8px 12px;font-size:16px}
 .estado-need-top{display:flex;align-items:center;gap:10px}
 .estado-need.low{border-color:#6a2a2a}
@@ -1810,3 +1810,6 @@ div.hb-acard{cursor:default}
 @container (max-width:150px){.dw-t{display:none}}
 .estado-phone .bmap-ico{min-height:9px;gap:3px}.estado-phone .bmap-ico svg{width:9px;height:9px}.estado-phone .bmap-g i{width:3px}
 .bmap-card{gap:6px}.bmap-hp{font-size:14px}
+.estado-vesper{display:flex;align-items:center;gap:14px;border:1px solid #2a2730;background:#16141a;padding:8px 12px;margin-bottom:6px}
+.estado-vesper-bust{border:1px solid #3a3741;background:#0f0d12;padding:2px}
+.estado-phone .estado-vesper{padding:3px 6px;gap:8px;margin-bottom:2px}.estado-phone .estado-vesper-bust img{transform:none}

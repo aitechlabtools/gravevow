@@ -236,7 +236,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
             <div className="flex-1 min-h-0 flex flex-col" data-testid="intendencia-status">
               <StatusTop body={body} />
               <div className="flex-1 min-h-0 flex items-center justify-center estado-doll"><BodyMap body={body} shown={shown} onPick={onPart} /></div>
-              <StatusNeeds />
+              <StatusNeeds body={body} />
             </div>
           ) : <div className="flex-1 min-h-0 overflow-y-auto scroll-thin pr-1 al-stats-tight"><StatusAttrs body={body} /></div>}
         </div>
@@ -328,7 +328,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
               <div className="flex-1 min-h-0 flex items-center justify-center estado-doll">
                 <BodyMap body={body} shown={shown} onPick={onPart} />
               </div>
-              <StatusNeeds />
+              <StatusNeeds body={body} />
             </div>
           </Panel>
           <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">

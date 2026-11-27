@@ -14,6 +14,8 @@ import { useCure } from './CureOffer';
 import { regionColor, regionWord, usefulOn, woundsOf } from './BodyFigure';
 import { PixelIcon } from '../../shared/community';
 import { ItemIcon } from './inventory';
+import { MiniBust } from './QuestNotes';
+import { VENDORS } from '../../core/data/vendors';
 import { COIN_ID } from '../../config/gold';
 import { regionCap, regionMaxes } from '../../core/anatomy';
 
@@ -72,37 +74,30 @@ export function StatusAttrs({ body }: { body: Body }) {
   );
 }
 
-/** Salud general: vida total con su barra, lesiones y el botón de Vesper («Curar · 5 monedas», desactivado si no llega). */
+/** Recuadro de Hermana Vesper (27/11): su busto y «Curar · moneda N» (gris si no llega).
+ *  Las lesiones ya se ven en el cuerpo; sano, «Sin heridas que tratar». */
 export function StatusTop({ body }: { body: Body }) {
   const gold = useGame((s) => s.profile!.gold);
   const cure = useCure();
-  const lesions = REGIONS.reduce((n, r) => n + woundsOf(body, r).filter((k) => k !== 'hurt').length, 0);
-  const hurt = REGIONS.filter((r) => woundsOf(body, r).length).length;
   const short = cure && !cure.free ? Math.max(0, cure.price - gold) : 0;
-  const hp = summaryHp(body);
   const missing = Math.round(body.total - bodyHp(body));
   const fixes = REGIONS.some((r) => woundsOf(body, r).some((k) => k !== 'hurt'));
   const restores = missing > 0 && fixes ? 'recupera toda la vida y cura todas las lesiones' : fixes ? 'cura todas las lesiones' : 'recupera toda la vida';
-  const pc = Math.max(0, Math.min(100, (hp / Math.max(1, body.total)) * 100));
   return (
-    <div className="estado-top" data-testid="estado-top">
-      <div className="estado-h"><span className="estado-cap">Salud general</span><span className="font-display text-parchment text-xl">{hp} / {body.total}</span></div>
-      <div className="estado-hp"><i style={{ width: `${pc}%`, background: pc > 75 ? '#6fae5a' : pc > 45 ? '#e8b33a' : '#d23a3a' }} /></div>
-      {(hurt > 0 || !!cure) && <div className="estado-h2">
-        <div className="flex flex-col">
-          {hurt ? <span className="text-blood" data-testid="body-banner"><span className="estado-dot" aria-hidden>●</span> {lesions ? `${lesions} ${lesions === 1 ? 'lesión' : 'lesiones'} · ` : ''}{hurt} {hurt === 1 ? 'parte herida' : 'partes heridas'}</span>
-            : null}
-          {missing > 0 && <span className="text-sm text-stone-400" data-testid="estado-missing">−{missing} puntos de vida</span>}
-        </div>
-        {cure && (
-          <button className={`estado-cure ${short > 0 ? 'off' : ''}`} disabled={short > 0} onClick={() => actions.vesperTreat()} data-testid="cure-btn"
-            title={`Hermana Vesper: ${restores}. Se paga del oro del almacén.${short > 0 ? ` Te faltan ${short} monedas.` : ''}`}
-            aria-label={cure.free ? 'Curar gratis' : `Curar por ${cure.price} ${cure.price === 1 ? 'moneda' : 'monedas'}${short > 0 ? `, te faltan ${short}` : ''}`}>
-            <span>Curar</span><span className="estado-cure-sep" aria-hidden />
-            {cure.free ? <span>gratis</span> : <span className="estado-cure-price"><ItemIcon itemId={COIN_ID} size={20} />{cure.price}</span>}
-          </button>
-        )}
-      </div>}
+    <div className="estado-top estado-vesper" data-testid="estado-top">
+      <span className="estado-vesper-bust" title="Hermana Vesper"><MiniBust sprite={VENDORS.vesper.sprite} scale={3} /></span>
+      <div className="flex flex-col min-w-0 flex-1">
+        <span className="estado-cap" style={{ color: '#bfe0ff' }}>Hermana Vesper</span>
+        {!cure && <span className="text-stone-400 text-sm" data-testid="body-banner">Sin heridas que tratar.</span>}
+      </div>
+      {cure && (
+        <button className={`estado-cure ${short > 0 ? 'off' : ''}`} disabled={short > 0} onClick={() => actions.vesperTreat()} data-testid="cure-btn"
+          title={`Hermana Vesper: ${restores}. Se paga del oro del almacén.${short > 0 ? ` Te faltan ${short} monedas.` : ''}`}
+          aria-label={cure.free ? 'Curar gratis' : `Curar por ${cure.price} ${cure.price === 1 ? 'moneda' : 'monedas'}${short > 0 ? `, te faltan ${short}` : ''}`}>
+          <span>Curar</span><span className="estado-cure-sep" aria-hidden />
+          {cure.free ? <span>gratis</span> : <span className="estado-cure-price"><ItemIcon itemId={COIN_ID} size={20} />{cure.price}</span>}
+        </button>
+      )}
     </div>
   );
 }
@@ -202,17 +197,22 @@ export function BodyMap({ body, shown, onPick }: { body: Body; shown: string | n
 const NEED_ICON: Record<string, string[]> = {
   sat: ['X.X.X...XX', 'X.X.X..XXX', 'X.X.X..XXX', 'XXXXX..XXX', '.XXX...XXX', '..X.....XX', '..X.....X.', '..X.....X.', '..X.....X.', '..X.....X.'],
   hyd: ['....XX....', '....XX....', '...XXXX...', '..XXXXXX..', '..XXXXXX..', '.XXXXXXXX.', '.XXXXXXXX.', '.XXXXXXXX.', '..XXXXXX..', '...XXXX...'],
+  hp: ['.XX...XX..', 'XXXX.XXXX.', 'XXXXXXXXX.', 'XXXXXXXXX.', 'XXXXXXXXX.', '.XXXXXXX..', '..XXXXX...', '...XXX....', '....X.....', '..........'],
   rest: ['...XXXX...', '.XXXX.....', '.XXX......', 'XXX.......', 'XXX.......', 'XXX.......', 'XXXX......', '.XXXX...X.', '..XXXXXXX.', '....XXX...'],
 };
 
 /** Supervivencia: Saciedad, Hidratación y Descanso en tres tarjetas; con 30 o menos, «▼ Hambre / Sed / Cansancio». */
-export function StatusNeeds() {
+export function StatusNeeds({ body }: { body: Body }) {
   const p = useGame((s) => s.profile)!;
+  const hpPct = Math.round((summaryHp(body) / Math.max(1, body.total)) * 100);
   const n = needsOf(p.needs);
   const prep = prepText(p.prep);
   return (
     <div className="estado-needs" data-testid="estado-needs">
       <div className="estado-need-row">
+        <div className={`estado-need ${hpPct < 100 ? 'low-hp' : ''}`} data-testid="need-hp" title="Vida" aria-label={`Vida: ${summaryHp(body)} de ${body.total} (${hpPct} %)`}>
+          <span className="estado-need-top"><PixelIcon rows={NEED_ICON.hp} size={26} color="#d23a3a" label="Vida" /><span className="text-lg" style={{ color: '#e0605a' }}>{hpPct} %</span></span>
+        </div>
         {NEEDS.map((k) => {
           const v = Math.round(n[k]);
           const low = v <= 30;
