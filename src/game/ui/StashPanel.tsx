@@ -15,7 +15,9 @@ import { sfx } from '../audio';
 /** Color propio de la página «Compartido» (verde azulado): se distingue de las páginas del personaje. */
 export const SHARED_COLOR = '#7fd6c9';
 
-export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode = 'lobby', compactHeader = false, title = 'Almacén', testId = 'alijo-storage', marked, hideShared = false, onlyShared = false, fill = false, ptitle = false, bare = false }: {
+export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode = 'lobby', compactHeader = false, title = 'Almacén', testId = 'alijo-storage', marked, hideShared = false, onlyShared = false, fill = false, ptitle = false, bare = false, sortBelow = false }: {
+  /** Estado (escritorio): «Ordenar» en una fila propia bajo las pestañas, para que quepa «Compartido». */
+  sortBelow?: boolean;
   /** Móvil (Alijo): sin título ni contador; Ordenar junto a las pestañas de página. */
   bare?: boolean;
   /** Venta: el Compartido va en su propia pestaña (sin él en las páginas), o solo el Compartido. */
@@ -74,7 +76,9 @@ export function StashPanel({ cols, sel, onSelect, onEmpty, onQuick, onAlt, mode 
         </span>
       </div>}
       <div style={{ padding: touchy ? '6px 8px' : '8px 12px' }} className="border-b border-[#2a2830]">
-        {onlyShared ? null : bare ? <div className="flex gap-1 items-stretch"><div className="flex-1 min-w-0"><PageTabs sel={sel} onMoved={() => sel && onSelect(sel)} hideShared={hideShared} /></div>
+        {onlyShared ? null : bare && sortBelow ? <><PageTabs sel={sel} onMoved={() => sel && onSelect(sel)} hideShared={hideShared} />
+          <div className="flex justify-end mt-1.5"><button className="btn text-xs" style={{ minHeight: 34, padding: '0 10px' }} onClick={() => { actions.groupGold('stash'); actions.sortContainer('stash'); }} data-testid="sort-stash" title="Agrupa el oro en sus saquitos y ordena esta página">Ordenar</button></div></>
+          : bare ? <div className="flex gap-1 items-stretch"><div className="flex-1 min-w-0"><PageTabs sel={sel} onMoved={() => sel && onSelect(sel)} hideShared={hideShared} /></div>
           <button className="btn text-xs shrink-0" style={{ minHeight: 44, padding: '0 8px' }} onClick={() => { actions.groupGold('stash'); actions.sortContainer('stash'); }} data-testid="sort-stash" title="Agrupa el oro en sus saquitos y ordena esta página">Ordenar</button></div>
           : <PageTabs sel={sel} onMoved={() => sel && onSelect(sel)} hideShared={hideShared} />}
       </div>

@@ -1777,5 +1777,7 @@ div.hb-acard{cursor:default}
 .estado-need{border:1px solid #2a2730;padding:6px 10px;font-size:16px}.estado-need.low{border-color:#6a2a2a}
 .estado-need-bar{height:8px;background:#26232a;margin-top:5px}.estado-need-bar i{display:block;height:100%}
 .estado-attrs .hb-stat{font-size:17px;padding:10px 6px}.estado-attrs .hb-stat-m{font-size:14px}
-.estado-doll .doll{grid-template-columns:110px 120px 120px 110px}
+.estado-doll{overflow:hidden;min-height:180px}
+.estado-doll .doll{grid-template-columns:110px 120px 120px 110px;grid-template-rows:2fr 3fr 2fr 3fr;height:100%;max-height:520px;width:auto}
+.estado-doll .doll-part{min-height:0}
 .estado-doll .doll-name{font-size:16px}.estado-doll .doll-hp{font-size:15px}

@@ -64,7 +64,6 @@ export function StatusAttrs({ body }: { body: Body }) {
           </div>
         );
       })}
-      {!Object.keys(marks).length && <p className="text-sm text-stone-400 mt-3 px-1">Sin efectos activos: ni heridas ni hambre, sed o cansancio te restan nada.</p>}
     </div>
   );
 }
@@ -109,7 +108,6 @@ export function StatusNeeds() {
         );
       })}
       {prep.map((t) => <p key={t} className="text-heal text-sm" data-testid="estado-prep">▲ {t}</p>)}
-      <p className="text-xs text-stone-400">Solo bajan en la mazmorra; por encima de 30 no restan nada. El catre está con Grizk.</p>
     </div>
   );
 }

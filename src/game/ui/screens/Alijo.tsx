@@ -112,8 +112,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   const backpack = (
     <div data-testid="alijo-backpack">
       <SubHead right={<span className="flex gap-1">
-        <button className="btn text-xs" onClick={() => actions.groupGold('backpack')} data-testid="group-gold-backpack" title="Mete las monedas sueltas en tus saquitos y sacos">Agrupar oro</button>
-        <button className="btn text-xs" onClick={() => actions.sortContainer('backpack')} data-testid="sort-backpack">Ordenar</button></span>}>
+        <button className="btn text-xs" onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} data-testid="sort-backpack" title="Agrupa el oro en sus saquitos y ordena la mochila">Ordenar</button></span>}>
         Mochila · {profile.backpack.filter(Boolean).length}/{profile.backpack.length}
       </SubHead>
       <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={quickFromBag} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
@@ -200,7 +199,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
                 </div>
               </div>
             </div>
-            <div className="min-h-0 flex-1 min-w-0 flex"><StashPanel cols={stashCols} bare sel={sel} onSelect={onSelect} onEmpty={onEmpty} onQuick={(l) => openSheet(l)} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} /></div>
+            <div className="min-h-0 flex-1 min-w-0 flex"><StashPanel cols={stashCols} bare sortBelow sel={sel} onSelect={onSelect} onEmpty={onEmpty} onQuick={(l) => openSheet(l)} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} /></div>
           </>
         ) : (
           <>
@@ -281,17 +280,17 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
           <Panel title="Estado" className="min-h-0" bodyClassName="min-h-0 flex flex-col">
             <div className="flex-1 min-h-0 flex flex-col estado-center" data-testid="intendencia-status">
               <StatusTop body={body} />
-              <div className="flex-1 min-h-0 flex items-center justify-center estado-doll">
+              <div className="flex-1 min-h-0 flex items-stretch justify-center estado-doll">
                 <BlockBody body={body} sel={null} words onPick={onPart} drop={(r) => (shown ? (usefulOn(body, shown, r) ? 'yes' : 'no') : null)} />
               </div>
               <p className="text-sm text-stone-400 text-center mb-2" data-testid="estado-hint">{pick ? <><b className="text-gold">{getItem(pick).name}</b>: toca una parte marcada con ◆, o arrástrala hasta ella.</> : 'Elige una cura de la mochila o del almacén y toca la parte del cuerpo, o arrástrala hasta ella.'}</p>
               <StatusNeeds />
             </div>
           </Panel>
-          <Panel title={src === 'backpack' ? 'Mochila' : 'Almacén'} className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">
+          <Panel className="min-h-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">
             <div className="mb-2"><Segmented full options={[{ id: 'backpack', label: 'Mochila' }, { id: 'stash', label: 'Almacén' }]} value={src} onChange={(v) => { sfx('click'); setSrc(v); clear(); }} testId="estado-src" /></div>
             <div ref={rightRef} className="w-full" />
-            {src === 'backpack' ? <div style={{ ['--slot' as string]: `${bagSlot}px`, ['--slot-big' as string]: `${bagSlot}px` }}>{backpack}</div> : <StashPanel cols={stashCols} bare sel={sel} onSelect={onSelect} onEmpty={onEmpty}
+            {src === 'backpack' ? <div style={{ ['--slot' as string]: `${bagSlot}px`, ['--slot-big' as string]: `${bagSlot}px` }}>{backpack}</div> : <StashPanel cols={stashCols} bare sortBelow sel={sel} onSelect={onSelect} onEmpty={onEmpty}
               onQuick={(l, st) => { if (getItem(st.itemId).use?.kind === 'need') actions.eat(l); else actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />}
             {sel && !pick && <div className="panel p-3 mt-3">{card}</div>}
           </Panel>
