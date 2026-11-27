@@ -179,12 +179,9 @@ export function StatusNeeds() {
           const v = Math.round(n[k]);
           const low = v <= 30;
           return (
-            <div key={k} className={`estado-need ${low ? 'low' : ''}`} data-testid={`need-${k}`}>
-              <PixelIcon rows={NEED_ICON[k]} size={30} color={NEED_COLOR[k]} />
-              <span className="text-parchment">{NEED_NAME[k]}</span>
-              <span style={{ color: NEED_COLOR[k] }}>{v} %</span>
+            <div key={k} className={`estado-need ${low ? 'low' : ''}`} data-testid={`need-${k}`} title={NEED_NAME[k]} aria-label={`${NEED_NAME[k]}: ${v} %`}>
+              <span className="estado-need-top"><PixelIcon rows={NEED_ICON[k]} size={26} color={NEED_COLOR[k]} label={NEED_NAME[k]} /><span className="text-lg" style={{ color: NEED_COLOR[k] }}>{v} %</span></span>
               {low && <span className="text-blood text-sm">▼ {NEED_LOW[k]}{v <= 0 && k !== 'rest' ? ' · hiere el tórax' : ''}</span>}
-              <div className="estado-need-bar"><i style={{ width: `${v}%`, background: NEED_COLOR[k] }} /></div>
             </div>
           );
         })}

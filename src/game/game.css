@@ -1790,7 +1790,8 @@ div.hb-acard{cursor:default}
 .doll-apply{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);background:#e8b33a;color:#1a1206;font-size:12px;font-weight:700;padding:0 6px;white-space:nowrap;z-index:1}
 .estado-needs{border-top:1px solid #2a2730;padding-top:10px;display:flex;flex-direction:column;gap:8px}
 .estado-need-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.estado-need{display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid #2a2730;background:#16141a;padding:10px 12px;font-size:16px}
+.estado-need{display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid #2a2730;background:#16141a;padding:8px 12px;font-size:16px}
+.estado-need-top{display:flex;align-items:center;gap:10px}
 .estado-need.low{border-color:#6a2a2a}
 .estado-need-bar{align-self:stretch;height:6px;background:#26232a;margin-top:6px}.estado-need-bar i{display:block;height:100%}
 .estado-attrs .hb-stat{font-size:17px;padding:10px 6px}.estado-attrs .hb-stat-m{font-size:14px}
