@@ -280,11 +280,9 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
           <Panel title="Estado" className="min-h-0" bodyClassName="min-h-0 flex flex-col">
             <div className="flex-1 min-h-0 flex flex-col estado-center" data-testid="intendencia-status">
               <StatusTop body={body} />
-              <div className="estado-cap mt-3">Estado corporal</div>
               <div className="flex-1 min-h-0 flex items-center justify-center estado-doll">
                 <BodyMap body={body} shown={shown} onPick={onPart} />
               </div>
-              <p className="text-sm text-stone-400 text-center mb-2" data-testid="estado-hint">{pick ? <><b className="text-gold">{getItem(pick).name}</b>: toca una zona marcada con ◆ o arrástrala hasta ella.</> : 'Selecciona o arrastra una cura sobre la zona afectada.'}</p>
               <StatusNeeds />
             </div>
           </Panel>

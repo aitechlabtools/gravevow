@@ -88,10 +88,10 @@ export function StatusTop({ body }: { body: Body }) {
     <div className="estado-top" data-testid="estado-top">
       <div className="estado-h"><span className="estado-cap">Salud general</span><span className="font-display text-parchment text-xl">{hp} / {body.total}</span></div>
       <div className="estado-hp"><i style={{ width: `${pc}%`, background: pc > 75 ? '#6fae5a' : pc > 45 ? '#e8b33a' : '#d23a3a' }} /></div>
-      <div className="estado-h2">
+      {(hurt > 0 || !!cure) && <div className="estado-h2">
         <div className="flex flex-col">
           {hurt ? <span className="text-blood" data-testid="body-banner"><span className="estado-dot" aria-hidden>●</span> {lesions ? `${lesions} ${lesions === 1 ? 'lesión' : 'lesiones'} · ` : ''}{hurt} {hurt === 1 ? 'parte herida' : 'partes heridas'}</span>
-            : <span className="text-heal" data-testid="body-banner">⊘ Salud completa</span>}
+            : null}
           {missing > 0 && <span className="text-sm text-stone-400" data-testid="estado-missing">−{missing} puntos de vida</span>}
         </div>
         {cure && (
@@ -102,7 +102,7 @@ export function StatusTop({ body }: { body: Body }) {
             {cure.free ? <span>gratis</span> : <span className="estado-cure-price"><ItemIcon itemId={COIN_ID} size={20} />{cure.price}</span>}
           </button>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
@@ -173,7 +173,6 @@ export function StatusNeeds() {
   const prep = prepText(p.prep);
   return (
     <div className="estado-needs" data-testid="estado-needs">
-      <div className="estado-cap">Supervivencia</div>
       <div className="estado-need-row">
         {NEEDS.map((k) => {
           const v = Math.round(n[k]);
