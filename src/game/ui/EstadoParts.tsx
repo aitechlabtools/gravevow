@@ -128,7 +128,7 @@ const ICO = {
   pain: ['...XX', '..XX.', '.XXXX', 'XXXX.', '..XX.', '.XX..', 'XX...'],
   off: ['..XXX..', '.X...X.', 'X...X.X', 'X..X..X', 'X.X...X', '.X...X.', '..XXX..'],
   op: ['...X...', '...X...', '...X...', 'XXXXXXX', '...X...', '...X...', '...X...'],
-  plus: ['..XXX..', '..XXX..', 'XXXXXXX', 'XXXXXXX', 'XXXXXXX', '..XXX..', '..XXX..'],
+  plus: ['..X..', '..X..', 'XXXXX', '..X..', '..X..'],
 };
 /** Centro de cada parte en el lienzo (para la cruz «+» de la cura elegida). */
 const MID: Record<Region, [number, number]> = { head: [300, 34], thorax: [300, 100], abdomen: [300, 157], armR: [240, 140], armL: [360, 140], legR: [281, 240], legL: [319, 240] };
@@ -163,7 +163,7 @@ export function BodyMap({ body, shown, onPick }: { body: Body; shown: string | n
           );
         })}
         {REGIONS.filter(ok).map((r) => (
-          <g key={r} transform={`translate(${SX(MID[r][0]) - 12} ${SY(MID[r][1]) - 12}) scale(3.4)`} style={{ pointerEvents: 'none' }}>
+          <g key={r} transform={`translate(${SX(MID[r][0]) - 6} ${SY(MID[r][1]) - 6}) scale(2.4)`} style={{ pointerEvents: 'none' }}>
             {ICO.plus.flatMap((row, y) => [...row].map((ch, x) => (ch === 'X' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#e8b33a" /> : null)))}
           </g>
         ))}
