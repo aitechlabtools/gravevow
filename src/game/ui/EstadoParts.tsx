@@ -186,15 +186,17 @@ export function BodyMap({ body, shown, onPick }: { body: Body; shown: string | n
           <button key={r} type="button" className={`bmap-card ${hurt ? 'hurt' : 'ok'} ${d === 'yes' ? 'drop-yes' : d === 'no' ? 'drop-no' : ''}`}
             style={{ left: `${(c.x / 600) * 100}%`, top: `${(c.y / 400) * 100}%`, width: `${(CW / 600) * 100}%`, height: `${(CH / 400) * 100}%`, ['--rc' as string]: regionColor(body, r) }}
             data-drop={JSON.stringify({ type: 'body', region: r })} onClick={() => onPick(r)} title={tip} aria-label={tip} data-testid={`body-row-${r}`}>
+            <span className="bmap-in">
             <span className="bmap-ico" data-testid={`body-state-${r}`} data-state={regionWord(body, r).cls}>
               {les.map((l) => (
                 <span key={l.k} className="bmap-l" title={l.name}>
-                  <PixelIcon rows={ICO[l.k]} size={14} color={l.color} label={l.name} />
+                  <PixelIcon rows={ICO[l.k]} size={12} color={l.color} label={l.name} />
                   {l.grade && <span className="bmap-g">{[1, 2].map((g) => <i key={g} style={{ background: g <= l.grade! ? l.color : '#3a3741' }} />)}</span>}
                 </span>
               ))}
             </span>
             <span className="bmap-row"><span className="bmap-bar"><i style={{ width: `${(p.hp / Math.max(1, max)) * 100}%`, background: regionColor(body, r) }} /></span><span className="bmap-hp">{p.hp} / {cap}</span></span>
+            </span>
           </button>
         );
       })}

@@ -113,9 +113,9 @@ function PageRun({ phone, title, ok }: { phone: boolean; title: string; ok: bool
   const skill = summary.levelsGained > 0 && pendingUnlocks(profile) > 0;
   const notes = [summary.tutorialNote && ['tutorial-note', summary.tutorialNote], summary.mercNote && ['merc-note', summary.mercNote], summary.wandererNote && ['wanderer-note', summary.wandererNote]].filter(Boolean) as [string, string][];
   return (
-    <div className={`min-h-full grid items-center ${phone ? 'grid-cols-[auto_minmax(0,1fr)] gap-4' : 'grid-cols-1 justify-items-center content-center gap-3 py-2'}`}>
-      <div className={`flex justify-center ${ok ? '' : 'grayscale opacity-60'}`}><PlayerSprite scale={phone ? 5 : 8} animate={ok} /></div>
-      <div className={`w-full ${phone ? '' : 'max-w-2xl text-center'}`}>
+    <div className={`min-h-full grid items-center ${phone ? 'grid-cols-[2fr_3fr] gap-6 summary-run-phone' : 'grid-cols-1 justify-items-center content-center gap-3 py-2'}`}>
+      <div className={`flex justify-center ${phone ? 'summary-hero-glow' : ''} ${ok ? '' : 'grayscale opacity-60'}`}><PlayerSprite scale={phone ? 8 : 8} animate={ok} /></div>
+      <div className={`w-full ${phone ? 'max-w-md' : 'max-w-2xl text-center'}`}>
         <h1 className={`font-display ${phone ? 'text-3xl' : 'text-5xl'} ${ok ? 'text-gold' : 'text-blood'} title-glow`} data-testid="summary-title">{title}</h1>
         <p className={`font-body text-stone-300 ${phone ? 'text-sm' : 'text-xl'} mt-1`}>
           {ok ? 'El portal te escupe en el patio del Bastión. Todo lo que traes es tuyo.' : summary.reason === 'timeout' ? 'El reloj llegó a cero. Las puertas de piedra se sellaron contigo dentro.' : 'Tu cuerpo queda en las criptas. Tu equipo, también.'}

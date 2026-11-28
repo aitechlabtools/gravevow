@@ -1,4 +1,4 @@
-import { NeedsDots, NeedsPanel, NeedsStrip, nextText } from './NeedsBars';
+import { NeedsDots, NeedsStrip, nextText } from './NeedsBars';
 import { BodyMap, StatusNeeds } from './EstadoParts';
 import { usefulOn } from './BodyFigure';
 import type { Region } from '../../config/anatomy';
@@ -16,13 +16,13 @@ import { actions, getState, useGame, exposeDebug } from '../state/store';
 import { computeStats } from '../../core/stats';
 import { CLASSES } from '../../core/data/classes';
 import { getItem, RARITY_INFO } from '../../core/data/items';
-import { countItem, gridValue, type Loc } from '../../core/inventory';
+import { countItem, gridValue, stackAt, type Loc } from '../../core/inventory';
 import type { ItemStack } from '../../core/types';
 import { timeLeft } from '../../core/expedition';
 import { CombatScreen } from './CombatScreen';
-import { BodyFigure, BodyPanel } from './BodyFigure';
+import { BodyFigure } from './BodyFigure';
 import { expBody } from '../state/medicalActions';
-import { Bar, EquipmentView, GridView, StatsList, ItemIcon, highlightItems } from './inventory';
+import { Bar, EquipmentView, GridView, StatsList, ItemIcon, LockGlyph } from './inventory';
 import { PlayerSprite, MonsterSprite, Modal, formatTime, ItemActions, GoldAmount } from './common';
 import { SettingsModal } from './TitleScreen';
 import { chestType } from '../../core/data/chests';
@@ -43,7 +43,6 @@ import { pinnedQuests, questDef, questProgress } from '../../core/quests';
 import { planPayment } from '../../core/share';
 import { useLayout } from '../../config/ui';
 import { Panel } from './kit';
-import { ItemCard } from './screens/ItemCard';
 
 export function DungeonScreen() {
   const host = useRef<HTMLDivElement>(null);
@@ -536,7 +535,6 @@ function LootModal() {
     ? <QtyPicker key={selStack.uid} stack={selStack} lootId={session.id} index={selIndex} name={share ? who : undefined} onDone={() => setSel(null)} />
     : null;
   const strip = (compact?: boolean) => share && <ShareStrip given={session.givenValue ?? 0} total={session.totalValue ?? 0} single={session.single} who={s.rival.who} compact={compact} />;
-  const takeGold = grid.some((x) => x?.itemId === 'gold_coins') && !share && <button className="btn" onClick={() => actions.takeGold(session.id)} data-testid="btn-take-gold">Coger el oro ({gridGold(grid)})</button>;
   const fair = share && <button className="btn btn-ally" onClick={() => { actions.fairShare(session.id); setSel(null); }} data-testid="btn-fair-share">Reparto justo</button>;
   const close = <button className="btn loot-x" onClick={() => actions.closeLoot()} aria-label="Cerrar" title="Cerrar (Esc)" data-testid="btn-close-loot">✕</button>;
   const lootGrid = (cols: number) => (
@@ -549,7 +547,7 @@ function LootModal() {
       onQuick={(l) => actions.quickMove(l, 'loot', session.id)} onAlt={(l) => actions.quickMove(l, 'loot', session.id)} />
   );
   if (layout === 'phone') {
-    // Móvil (23/11): ventana flotante con la mazmorra detrás; abajo, «Coger el oro» y «Cogerlo todo» o, con algo tocado, cuántos coger
+    // Móvil (23/11): ventana flotante con la mazmorra detrás; abajo, «Cogerlo todo» o, con algo tocado, cuántos coger
     return (
       <div className="absolute inset-0 z-50 fade-in" data-testid="loot-modal">
         <div className="absolute inset-0 bg-black/45" onPointerDown={() => { bgDown.current = true; }} onClick={() => { if (bgDown.current) actions.closeLoot(); bgDown.current = false; }} aria-hidden />
@@ -567,7 +565,6 @@ function LootModal() {
           <div className="loot-win-ft" data-testid="loot-bar">
             {picker ?? (<>
               <span className="min-w-0 flex-1 text-[12px] text-stone-400 leading-tight">{share ? `Toca algo para repartirlo con ${who}.` : 'Toca algo para elegir cuántos coger.'}</span>
-              {takeGold}
               <button className="btn btn-gold" style={{ minHeight: 44 }} onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
             </>)}
           </div>
@@ -594,7 +591,6 @@ function LootModal() {
               <>
                 <div className="share-label">Tuyo · {bp.filter(Boolean).length}/{bp.length}</div>
                 <div className="flex-1 min-h-0 overflow-y-auto scroll-thin">{packGrid(phone ? 5 : 6)}</div>
-                {takeGold && <div className="mt-2">{takeGold}</div>}
                 <button className="btn btn-gold mt-2" style={{ minHeight: 48 }} onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
               </>
             )}
@@ -608,7 +604,7 @@ function LootModal() {
       <div className="loot-head">
         <h2 className="panel-title text-lg">{session.title}</h2>
         <span className="flex-1" />
-        {takeGold}{fair}
+        {fair}
         <button className="btn btn-gold" onClick={() => actions.takeAll(session.id)} data-testid="btn-take-all">Cogerlo todo</button>
         {close}
       </div>
@@ -706,21 +702,9 @@ function CaptiveModal({ mercId }: { mercId: string }) {
 function BodyModal() {
   const exp = useGame((s) => s.expedition);
   const profile = useGame((s) => s.profile);
-  const layout = useLayout();
   if (!exp || !profile) return null;
-  if (layout === 'desktop') return <DungeonStatus />;
-  return (
-    <Modal onClose={() => actions.closeModal()} wide testId="body-modal">
-      <h2 className="font-display text-2xl mb-2">Heridas y necesidades</h2>
-      <BodyPanel body={expBody(exp, profile)} backpack={exp.backpack} surgery={exp.surgery} onTreat={(id, r) => actions.treat(id, r)}
-        note="Se muere si la cabeza o el tórax llegan a cero. Tratar fuera de combate no gasta turno; la cirugía tarda dos pulsos.">
-        <NeedsPanel needs={needsOf(exp.needs)} body={exp.body} backpack={exp.backpack} onShowFood={(ids) => { actions.openModal({ type: 'inventory' }); window.setTimeout(() => highlightItems(ids), 120); }} />
-      </BodyPanel>
-      <button className="btn mt-3 text-sm" onClick={() => actions.closeModal()} data-testid="body-close">Cerrar</button>
-    </Modal>
-  );
+  return <DungeonStatus />;
 }
-
 
 /** ESTADO en la mazmorra (escritorio, 27/11): el cuerpo y las cuatro tarjetas a la izquierda y la mochila a la derecha.
  *  Tocar una cura y luego la parte (o arrastrarla hasta ella) la aplica con las reglas de siempre: fuera de combate no gasta
@@ -748,18 +732,13 @@ function DungeonStatus() {
   });
   const n = needsOf(exp.needs);
   return (
-    <Modal onClose={() => actions.closeModal()} wide testId="body-modal">
-      <div className="flex items-center justify-between gap-2 mb-3"><h2 className="panel-title text-xl">Estado</h2><div className="flex gap-2">
-        <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button>
-        <button className="btn icon-btn" style={{ minWidth: 44, minHeight: 44 }} onClick={() => actions.closeModal()} aria-label="Cerrar (H o Escape)" title="Cerrar · H" data-testid="body-close">✕</button></div></div>
-      <div className="grid md:grid-cols-2 gap-5">
-        <div className="flex flex-col dstatus-left" data-testid="intendencia-status">
+    <DunFrame title="Estado" testId="body-modal" closeId="body-close" closeKey="H">
+        <div className="dun-col flex flex-col dstatus-left" data-testid="intendencia-status">
           <div className="flex-1 min-h-0 flex items-center justify-center estado-doll"><BodyMap body={body} shown={shown} onPick={(r) => sel && apply(sel, r)} /></div>
           <StatusNeeds body={body} needs={n} prep={exp.prep ?? null} eta={(k) => nextText(k, n, exp.body)} />
         </div>
-        <div data-testid="dungeon-status-bag"><InvBagColumn sel={sel} setSel={(l) => setSel(l && sel && JSON.stringify(sel) === JSON.stringify(l) ? null : l)} clear={() => setSel(null)} noActions={!!pick} /></div>
-      </div>
-    </Modal>
+        <div className="dun-col" data-testid="dungeon-status-bag"><InvBagColumn sel={sel} setSel={(l) => setSel(l && sel && JSON.stringify(sel) === JSON.stringify(l) ? null : l)} clear={() => setSel(null)} noActions={!!pick} /></div>
+    </DunFrame>
   );
 }
 
@@ -851,45 +830,31 @@ function DungeonInventory() {
   if (!s.expedition || !s.profile) return null;
   const ch = s.profile.character;
   const stats = computeStats(ch.classId, ch.level, s.expedition.equipment);
-  if (layout !== 'desktop') {
-    // Fase 3 (tableta y móvil): pantalla completa en tres columnas; la ficha a la derecha no tapa nada
-    const phone = layout === 'phone';
-    return (
-      <div className="absolute inset-0 z-50 flex fade-in inv-full" data-testid="dungeon-inventory">
-        <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">
-          <EquipmentView equipment={s.expedition.equipment} selected={sel} onSelect={setSel} mode="dungeon" portrait={<PlayerSprite scale={phone ? 2 : 4} />} />
-          <div className="mt-3"><StatsList stats={stats} resourceName={CLASSES[ch.classId].resourceName} /></div>
-        </Panel>
-        <Panel className="min-h-0 shrink-0" bodyClassName="overflow-y-auto scroll-thin">
-          <div className="flex items-center justify-between gap-2 mb-2"><span className="panel-title">Mochila · {s.expedition.backpack.filter(Boolean).length}/{s.expedition.backpack.length}</span>
-            <button className="btn text-sm" onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button></div>
-          <GridView grid={s.expedition.backpack} container="backpack" cols={6} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel}
-            onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
-          {!s.tutorial && <CarryBar className="mt-2" />}
-          <div className="mt-3 text-sm text-gold mb-1">Bolsillo seguro · no se pierde al morir</div>
-          <GridView grid={s.expedition.pocket} container="pocket" cols={3} equipment={s.expedition.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} />
-        </Panel>
-        <Panel className="min-h-0 flex-1 min-w-0" bodyClassName="overflow-y-auto scroll-thin flex flex-col">
-          <div className="flex justify-end mb-2"><button className="btn" onClick={() => actions.closeModal()} data-testid="btn-close-inventory">Cerrar ✕</button></div>
-          {sel ? <ItemCard loc={sel} mode="dungeon" onClear={clear} compact={phone} stacked />
-            : <div className="flex-1 flex items-center justify-center text-center text-muted text-sm px-2">Toca un objeto para ver su ficha aquí.</div>}
-        </Panel>
-      </div>
-    );
-  }
   return (
-    <Modal onClose={() => actions.closeModal()} wide testId="dungeon-inventory">
-      <div className="flex items-center justify-between gap-2 mb-3"><h2 className="panel-title text-xl">Inventario</h2><div className="flex gap-2">
-        <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button>
-        <button className="btn icon-btn" style={{ minWidth: 44, minHeight: 44 }} onClick={() => actions.closeModal()} aria-label="Cerrar (I o Escape)" title="Cerrar · I" data-testid="btn-close-inventory">✕</button></div></div>
-      <div className="grid md:grid-cols-2 gap-5">
-        <div className="space-y-4">
-          <EquipmentView equipment={s.expedition.equipment} selected={sel} onSelect={setSel} mode="dungeon" portrait={<PlayerSprite scale={5} />} />
-          <StatsList stats={stats} resourceName={CLASSES[ch.classId].resourceName} />
-        </div>
-        <InvBagColumn sel={sel} setSel={setSel} clear={clear} />
+    <DunFrame title="Inventario" testId="dungeon-inventory" closeId="btn-close-inventory" closeKey="I">
+      <div className="dun-col space-y-4">
+        <EquipmentView equipment={s.expedition.equipment} selected={sel} onSelect={setSel} mode="dungeon" portrait={<PlayerSprite scale={layout === 'phone' ? 6 : layout === 'tablet' ? 10 : 12} />} />
+        <StatsList stats={stats} resourceName={CLASSES[ch.classId].resourceName} grouped />
       </div>
-    </Modal>
+      <div className="dun-col"><InvBagColumn sel={sel} setSel={setSel} clear={clear} /></div>
+    </DunFrame>
+  );
+}
+
+/** Marco común de Inventario y Estado en la mazmorra: siempre en ventana (28/11; en móvil, compacta),
+ *  con la misma cabecera (título, Ordenar y ✕) y dos columnas que se desplazan por separado si no caben. */
+function DunFrame({ title, testId, closeId, closeKey, children }: { title: string; testId: string; closeId: string; closeKey: string; children: ReactNode }) {
+  const layout = useLayout();
+  const head = (
+    <div className="flex items-center justify-between gap-2 mb-3 shrink-0"><h2 className="panel-title text-xl">{title}</h2><div className="flex gap-2">
+      <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button>
+      <button className="btn icon-btn" style={{ minWidth: 44, minHeight: 44 }} onClick={() => actions.closeModal()} aria-label={`Cerrar (${closeKey} o Escape)`} title={`Cerrar · ${closeKey}`} data-testid={closeId}>✕</button></div></div>
+  );
+  const phone = layout === 'phone';
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 fade-in" data-modal onMouseDown={(e) => e.target === e.currentTarget && actions.closeModal()} data-testid={testId} role="dialog" aria-label={title}>
+      <div className={`panel panel-gold dun-win ${phone ? 'is-phone' : ''}`}>{head}<div className="dun-grid">{children}</div></div>
+    </div>
   );
 }
 
@@ -903,16 +868,40 @@ function InvBagColumn({ sel, setSel, clear, noActions }: { sel: Loc | null; setS
     const el = ref.current; if (!el || typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(([e]) => setW(e.contentRect.width)); ro.observe(el); return () => ro.disconnect();
   }, []);
-  const slot = w ? Math.max(44, Math.min(84, Math.floor((w - 5 * 4 - 2) / 6))) : 60;
+  // Al usar, mover o equipar lo elegido, la casilla deja de quedar marcada en amarillo.
+  const selUid = useRef<string | null>(null);
+  const selKey = useRef('');
+  const key = sel ? JSON.stringify(sel) : '';
+  if (key !== selKey.current) { selKey.current = key; selUid.current = null; }
+  const atSel = sel ? stackAt({ backpack: exp.backpack, pocket: exp.pocket, equipment: exp.equipment, stash: [], shared: [], loot: [] }, sel) : null;
+  useEffect(() => {
+    if (!sel) { selUid.current = null; return; }
+    if (!atSel || (selUid.current && atSel.uid !== selUid.current)) { setSel(null); selUid.current = null; return; }
+    selUid.current = atSel.uid;
+  }, [sel, atSel, setSel]);
+  const phone = useLayout() === 'phone';
+  // En el móvil, casillas de 44 px: así caben la mochila, la carga y el bolsillo sin desplazar.
+  const slot = w ? Math.max(44, Math.min(phone ? 44 : 84, Math.floor((w - 5 * 4 - 12 - (phone ? 60 : 0)) / 6))) : 60;
   return (
     <div ref={ref} style={{ ['--slot' as string]: `${slot}px`, ['--slot-big' as string]: `${slot}px` }}>
+      {phone ? (
+        // Móvil: el bolsillo va en columna a la derecha de la mochila (sobra ancho y falta alto)
+        <div className="flex gap-3 items-start">
+          <div>
       <GridView grid={exp.backpack} container="backpack" cols={6} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel}
         onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
+          </div>
+          <div className="flex flex-col items-center gap-1" title="Bolsillo seguro: no se pierde al morir" aria-label="Bolsillo seguro"><GridView grid={exp.pocket} container="pocket" cols={1} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} /><span className="text-gold opacity-80" data-testid="pocket-lock"><LockGlyph /></span></div>
+        </div>
+      ) : (<>
+      <GridView grid={exp.backpack} container="backpack" cols={6} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel}
+        onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
+      </>)}
       {!tutorial && <CarryBar className="mt-2" />}
-      <div className="mt-3">
+      {!phone && <div className="mt-3">
         <div className="text-xs text-gold mb-1">Bolsillo seguro</div>
         <GridView grid={exp.pocket} container="pocket" cols={3} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} />
-      </div>
+      </div>}
       {sel && !noActions && <div className="mt-4"><ItemActions loc={sel} mode="dungeon" onClear={clear} /></div>}
     </div>
   );

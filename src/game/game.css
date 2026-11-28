@@ -1816,3 +1816,60 @@ div.hb-acard{cursor:default}
 
 /* ESTADO en la mazmorra (escritorio, 27/11) */
 .dstatus-left{min-height:440px}.dstatus-left .estado-need-row{gap:6px}.dstatus-left .estado-need{padding:6px 4px}
+
+/* Inventario de la mazmorra (escritorio): atributos en tres columnas con título */
+.stats-grouped{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;border-top:1px solid rgba(201,162,39,.25);padding-top:.75rem}
+.stats-group-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--color-gold,#c9a227);border-bottom:1px solid rgba(201,162,39,.25);padding-bottom:.2rem;margin-bottom:.35rem}
+.stats-grouped>div>div[data-stat]{padding:.1rem 0}
+
+/* Resumen en móvil (28/11): personaje grande a la izquierda con halo y el texto en una columna equilibrada */
+.summary-hero-glow{position:relative}
+.summary-hero-glow::before{content:'';position:absolute;inset:0 -5%;background:radial-gradient(ellipse closest-side,rgba(201,162,39,.22),transparent);pointer-events:none}
+.summary-hero-glow>*{position:relative}
+
+/* Inventario y Estado de la mazmorra en tableta y móvil (28/11): pantalla completa, dos columnas que se desplazan por separado */
+.dun-full{display:flex;flex-direction:column;background:#111015;padding:16px 20px;border:1px solid rgba(201,162,39,.35)}
+.dun-full.is-phone{padding:6px 12px calc(6px + env(safe-area-inset-bottom))}
+.dun-full.is-phone .panel-title{font-size:1rem}
+.dun-full .dun-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.dun-full.is-phone .dun-grid{gap:12px}
+.dun-full .dun-col{min-height:0;overflow-y:auto;scrollbar-width:thin}
+.dun-full .dstatus-left{min-height:0}
+.dun-full.is-phone .dun-col.space-y-4>*+*{margin-top:.5rem}
+.dun-full.is-phone .stats-grouped{gap:.6rem;padding-top:.4rem}
+.dun-full.is-phone .stats-grouped .text-sm{font-size:12px}
+.dun-full.is-phone>div:first-child{margin-bottom:.35rem}
+
+/* 28/11 · Inventario y Estado de la mazmorra siempre en ventana; las dos columnas se desplazan por separado si no caben */
+.dun-win{display:flex;flex-direction:column;width:calc(100% - 2rem);max-width:56rem;max-height:90vh;padding:1.25rem}
+.dun-win .dun-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.25rem}
+.dun-win .dun-col{min-height:0;overflow-y:auto;scrollbar-width:thin}
+.dun-win.is-phone{width:calc(100% - 1rem);max-width:none;max-height:calc(100dvh - .75rem);padding:.4rem .75rem .5rem}
+.dun-win.is-phone>div:first-child{margin-bottom:.3rem}
+.dun-win.is-phone .panel-title{font-size:1rem}
+.dun-win.is-phone .dun-grid{gap:.75rem}
+.dun-win.is-phone .stats-grouped{gap:.6rem;padding-top:.4rem}
+.dun-win.is-phone .stats-grouped .text-sm{font-size:12px}
+.dun-win.is-phone .dun-col.space-y-4>*+*{margin-top:.5rem}
+/* Móvil: equipo en casillas de 44 px sin rótulo (el icono de fondo ya dice qué va) para que quepan los atributos debajo */
+.dun-win.is-phone [data-testid=equipment]{--slot:44px;--slot-big:44px}
+.dun-win.is-phone [data-testid=equipment] .flex-col>div>span{display:none}
+.dun-win.is-phone [data-testid=equipment] .flex-col{gap:4px}
+.dun-win.is-phone .stats-grouped .stats-group-title{margin-bottom:.1rem;padding-bottom:0}
+.dun-win.is-phone .stats-grouped>div>div[data-stat]{padding:0;line-height:1.25}
+.dun-win.is-phone .dun-col.space-y-4>*+*{margin-top:.3rem}
+
+/* 28/11 · Fichas del cuerpo: iconos más pequeños y todo dentro del recuadro. En fichas estrechas (móvil),
+   iconos, barra y vida van en una sola línea y la letra se ajusta al ancho. */
+.bmap-card{overflow:hidden}
+.bmap-in{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;height:100%}
+.bmap-ico svg{width:12px;height:12px}
+@container (max-width:150px){
+  .bmap-in{flex-direction:row;align-items:center;gap:3px}
+  .bmap-ico{min-height:0;gap:2px;flex-shrink:0;align-items:center}
+  .bmap-ico svg{width:8px;height:8px}.bmap-g{display:none}
+  .bmap-row{flex:1;min-width:0;gap:3px}
+  .bmap-hp{font-size:clamp(8px,11cqw,12px)}
+}
+/* Móvil: Inventario y Estado a pantalla completa (sin margen ni marco) para ganar espacio */
+.dun-win.is-phone{width:100%;max-height:100dvh;height:100dvh;border:0;padding:max(.4rem,env(safe-area-inset-top)) max(.75rem,env(safe-area-inset-right)) max(.4rem,env(safe-area-inset-bottom)) max(.75rem,env(safe-area-inset-left))}

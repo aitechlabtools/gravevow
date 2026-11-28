@@ -11,7 +11,7 @@ import { FOOD } from '../../config/food';
 import { createPortal } from 'react-dom';
 import { dragJustEnded, startPointerDrag, useDrag } from './pointerDrag';
 import type { EquipSlot, Equipment, Grid, ItemStack, Stats } from '../../core/types';
-import { EQUIP_SLOTS, STAT_KEYS } from '../../core/types';
+import { EQUIP_SLOTS, STAT_KEYS, type StatKey } from '../../core/types';
 import { getItem, RARITY_INFO } from '../../core/data/items';
 import { CLASSES, STAT_LABELS } from '../../core/data/classes';
 import { canPlace, isCover, LAYOUTS, stackSize, type Loc } from '../../core/inventory';
@@ -382,7 +382,24 @@ export function EquipmentView({ equipment, portrait, selected, onSelect, mode }:
   );
 }
 
-export function StatsList({ stats, base, resourceName }: { stats: Stats; base?: Stats; resourceName: string }) {
+const STAT_GROUPS: [string, StatKey[]][] = [['Vitalidad', ['maxHp', 'maxMp', 'spd']], ['Ofensiva', ['atk', 'mag', 'crit']], ['Defensiva', ['def', 'res', 'eva']]];
+
+export function StatsList({ stats, base, resourceName, grouped }: { stats: Stats; base?: Stats; resourceName: string; /** Tres columnas con título (inventario de la mazmorra, escritorio). */ grouped?: boolean }) {
+  if (grouped) return (
+    <div className="stats-grouped" data-testid="stats">
+      {STAT_GROUPS.map(([title, keys]) => (
+        <div key={title}>
+          <div className="stats-group-title">{title}</div>
+          {keys.map((k) => (
+            <div key={k} className="flex justify-between text-sm" data-stat={k}>
+              <span className="text-stone-300">{k === 'maxMp' ? resourceName : STAT_LABELS[k].replace(' %', '')}</span>
+              <span className="font-bold">{stats[k]}{k === 'crit' || k === 'eva' ? '%' : ''}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-sm" data-testid="stats">
       {STAT_KEYS.map((k) => {
