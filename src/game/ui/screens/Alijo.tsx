@@ -349,7 +349,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   }
   // Vista «Equipo» (escritorio y tableta): Personaje y equipo · Mochila · Almacén
   // Escritorio: casillas de hasta 60 px, más pequeñas si la pantalla es baja, para que el panel Equipo quepa sin desplazar
-  const deskSlot = typeof window !== 'undefined' ? Math.max(36, Math.min(compact ? 48 : 60, Math.floor((window.innerHeight - 450) / 9))) : 60;
+  const deskSlot = typeof window !== 'undefined' ? Math.max(40, Math.min(compact ? 56 : 72, Math.floor((window.innerHeight - 380) / 9))) : 60;
   const slotVar = layout === 'tablet' ? { ['--slot' as string]: '44px', ['--slot-big' as string]: '44px' } : { ['--slot' as string]: `${deskSlot}px`, ['--slot-big' as string]: `${deskSlot}px` };
   // Alijo › Equipo (25/11, v3): Aventurero (héroe, nivel y atributos) · Equipo (muñeco de ranuras y mochila con bolsillo y oro) · Almacén
   const btnH = { minHeight: touchy ? 44 : 34 };
@@ -364,7 +364,11 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
             <span className="flex gap-1.5"><button className="btn text-xs" style={btnH} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén (no toca el equipo ni el bolsillo seguro)">Vaciar</button>
             <button className="btn text-xs" style={btnH} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} data-testid="sort-backpack" title="Agrupa el oro en sus saquitos y ordena la mochila">Ordenar</button></span>
           </div>
-          <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={quickFromBag} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
+          {/* Mochilas de 30 y 36: se ven 4 filas y el resto con scroll; la carga queda siempre justo debajo */}
+          <div className="dun-bag-scroll" style={profile.backpack.length > 24 ? { maxHeight: 'calc(var(--slot) * 4 + 24px)', overflowY: 'auto' } : undefined}>
+            <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={quickFromBag} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
+          </div>
+          <div data-testid="backpack-foot"><CarryBar className="mt-1.5 carry-fit" /></div>
           <div className="mt-2">
             <div className="al-box al-box-row" data-testid="alijo-pocket">
               <span className="pocket-lock pocket-label text-gold" title="Bolsillo seguro: no se pierde al morir" data-testid="pocket-gold"><LockGlyph /><span className="al-box-t" style={{ margin: 0 }}>Bolsillo</span></span>
@@ -374,10 +378,6 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
         </div>
         {sel && layout !== 'tablet' && <div className="panel p-3 mt-3 shrink-0" data-testid="item-card-wrap">{card}</div>}
       </div>
-      </div>
-      {/* Pie fijo: carga y botones de la mochila siempre a la vista */}
-      <div className="shrink-0 mx-auto pt-1 border-t border-stone-800" style={{ width: `calc(var(--slot) * 6 + 26px)`, maxWidth: '100%' }} data-testid="backpack-foot">
-          <CarryBar className="mt-1 mb-1 carry-fit" />
       </div>
     </Panel>
   );

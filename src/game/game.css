@@ -1929,3 +1929,5 @@ div.hb-acard{cursor:default}
 .dun-win.is-phone .dun-grid>:first-child{padding-top:0}
 .dun-win.is-phone [data-testid=equipment]{--slot:52px;--slot-big:52px}
 .dun-win.is-phone [data-testid=equipment]{--slot:55px;--slot-big:55px}
+.dun-win .dun-col{overflow-x:hidden}
+.dun-win.is-phone [data-testid=equipment]{--slot:clamp(44px, calc((100dvh - 104px) / 4 - 4px), 80px);--slot-big:var(--slot)}

@@ -102,6 +102,7 @@
 - **Tráileres antiguos:** se borraron de `public/`, pero siguen en el historial de git.
 
 ## Últimos cambios
+- **28/11 · Ajustes finales de Inventario/Estado y Alijo**: en el móvil el equipo (4 filas) y el personaje crecen con el alto de pantalla y la mochila hasta 64 px, así queda igual de alineado en móviles grandes (915 × 412) que en pequeños (750 × 340); escritorio sin scroll horizontal en la columna de la mochila. Alijo (escritorio): casillas más grandes según el alto (hasta 72 px), carga justo debajo de la mochila y el bolsillo debajo; mochilas de 30 y 36 con scroll de 4 filas. `probar-acciones.cjs` acepta `VW`/`VH`.
 - **28/11 · Móvil: todo el alto en Inventario y Estado**: sin título (queda oculto para lectores de pantalla); la columna izquierda empieza arriba; abajo, atributos (o tarjetas) y barra de carga en la misma línea; más aire entre filas de atributos.
 - **28/11 · Mochilas de 30 y 36**: en Inventario y Estado de la mazmorra las casillas mantienen su tamaño; con más de 4 filas la mochila enseña 4 y el resto se ve con scroll dentro de la rejilla (`dun-bag-scroll`). Prueba: `mockups/estado-simplificado/probar-mochilas.cjs`.
 - **28/11 · Bolsillo en el Alijo (ordenador)**: candado + «Bolsillo» con margen a la izquierda.

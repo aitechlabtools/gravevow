@@ -852,7 +852,7 @@ function DungeonInventory() {
       top={sel && <ItemActions loc={sel} mode="dungeon" onClear={clear} buttonsOnly />}
       sheet={layout === 'phone' && <SheetDrawer open={sheet && !!sel} onClose={() => setSheet(false)}><ItemCard loc={sel} mode="dungeon" onClear={clear} compact stacked /></SheetDrawer>}>
       <div className="dun-col space-y-4">
-        <EquipmentView equipment={s.expedition.equipment} selected={sel} onSelect={setSel} mode="dungeon" portrait={<PlayerSprite scale={layout === 'phone' ? 6 : layout === 'tablet' ? 10 : 12} />} />
+        <EquipmentView equipment={s.expedition.equipment} selected={sel} onSelect={setSel} mode="dungeon" portrait={<PlayerSprite scale={layout === 'phone' ? Math.max(6, Math.floor(window.innerHeight / 42)) : layout === 'tablet' ? 10 : 12} />} />
         <StatsList stats={stats} eff={effStats} resourceName={CLASSES[ch.classId].resourceName} grouped />
       </div>
       <div className="dun-col"><InvBagColumn sel={sel} setSel={setSel} onOpen={layout === 'phone' ? (l) => { setSel(l); setSheet(true); } : undefined} /></div>
@@ -916,7 +916,7 @@ function InvBagColumn({ sel, setSel, onOpen }: { sel: Loc | null; setSel: (l: Lo
   // Mochilas de 30 y 36 casillas: mismas casillas; la rejilla enseña 4 filas y el resto se ve con scroll
   const rows = Math.ceil(exp.backpack.length / 6);
   const bagScroll = rows > 4 ? { maxHeight: `calc(var(--slot) * 4 + 12px + 12px)`, overflowY: 'auto' as const } : undefined;
-  const slot = w ? (phone ? Math.max(44, Math.min(52, Math.floor((w - 6 * 4 - 12 - 2 - 12) / 7))) : Math.max(44, Math.min(84, Math.floor((w - 5 * 4 - 4) / 6)))) : 60;
+  const slot = w ? (phone ? Math.max(44, Math.min(64, Math.floor((w - 6 * 4 - 12 - 2 - 12) / 7))) : Math.max(44, Math.min(84, Math.floor((w - 5 * 4 - 12) / 6)))) : 60;
   return (
     <div ref={ref} className="dun-bagcol" style={{ ['--slot' as string]: `${slot}px`, ['--slot-big' as string]: `${slot}px` }}>
       {phone ? (

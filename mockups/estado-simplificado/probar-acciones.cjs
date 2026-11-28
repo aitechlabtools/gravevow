@@ -3,7 +3,7 @@ const { chromium, devices } = require('playwright'); const path = require('path'
 const URL = process.argv[2] || 'http://localhost:5173/play/'; const OUT = path.join(__dirname, 'capturas');
 (async () => {
   const b = await chromium.launch();
-  for (const [name, o] of [['escritorio', { viewport: { width: 1920, height: 1080 } }], ['movil', { ...devices['iPhone 13 landscape'], viewport: { width: 750, height: 340 } }]]) {
+  for (const [name, o] of [['escritorio', { viewport: { width: 1920, height: 1080 } }], ['movil', { ...devices['iPhone 13 landscape'], viewport: { width: +(process.env.VW||750), height: +(process.env.VH||340) } }]]) {
     const ctx = await b.newContext(o); await ctx.addInitScript(() => localStorage.setItem('gv-consent', 'denied')); const p = await ctx.newPage();
     const errs = []; p.on('pageerror', (e) => errs.push(e.message)); const ok = (c, m) => console.log(c ? 'OK ' : 'FALLA', name, m);
     await p.goto(URL + '?debug'); await p.click('[data-testid=btn-play]'); await p.waitForTimeout(800);
