@@ -384,18 +384,22 @@ export function EquipmentView({ equipment, portrait, selected, onSelect, mode }:
 
 const STAT_GROUPS: [string, StatKey[]][] = [['Vitalidad', ['maxHp', 'maxMp', 'spd']], ['Ofensiva', ['atk', 'mag', 'crit']], ['Defensiva', ['def', 'res', 'eva']]];
 
-export function StatsList({ stats, base, resourceName, grouped }: { stats: Stats; base?: Stats; resourceName: string; /** Tres columnas con título (inventario de la mazmorra, escritorio). */ grouped?: boolean }) {
+export function StatsList({ stats, base, resourceName, grouped, eff }: { stats: Stats; base?: Stats; resourceName: string; /** Tres columnas sin título (inventario de la mazmorra). */ grouped?: boolean; /** Valores con pactos, heridas y necesidades: la diferencia sale al lado (verde «+5», rojo «(−14)»). */ eff?: Stats }) {
   if (grouped) return (
     <div className="stats-grouped" data-testid="stats">
       {STAT_GROUPS.map(([title, keys]) => (
-        <div key={title}>
-          <div className="stats-group-title">{title}</div>
-          {keys.map((k) => (
-            <div key={k} className="flex justify-between text-sm" data-stat={k}>
-              <span className="text-stone-300">{k === 'maxMp' ? resourceName : STAT_LABELS[k].replace(' %', '')}</span>
-              <span className="font-bold">{stats[k]}{k === 'crit' || k === 'eva' ? '%' : ''}</span>
-            </div>
-          ))}
+        <div key={title} aria-label={title}>
+          {keys.map((k) => {
+            const pctSuf = k === 'crit' || k === 'eva' ? '%' : '';
+            const d = eff ? eff[k] - stats[k] : 0;
+            return (
+              <div key={k} className="flex justify-between gap-1 text-sm" data-stat={k}>
+                <span className="text-stone-300 truncate">{k === 'maxMp' ? resourceName : STAT_LABELS[k].replace(' %', '')}</span>
+                <span className="font-bold whitespace-nowrap">{stats[k]}{pctSuf}
+                  {d !== 0 && <span className={`stat-mod ${d > 0 ? 'text-heal' : 'text-blood'}`} data-testid={`stat-mod-${k}`}>{d > 0 ? ` +${d}` : ` (−${-d})`}</span>}</span>
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>

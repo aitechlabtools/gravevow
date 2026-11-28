@@ -1873,3 +1873,59 @@ div.hb-acard{cursor:default}
 }
 /* Móvil: Inventario y Estado a pantalla completa (sin margen ni marco) para ganar espacio */
 .dun-win.is-phone{width:100%;max-height:100dvh;height:100dvh;border:0;padding:max(.4rem,env(safe-area-inset-top)) max(.75rem,env(safe-area-inset-right)) max(.4rem,env(safe-area-inset-bottom)) max(.75rem,env(safe-area-inset-left))}
+/* 28/11 · Atributos sin títulos de grupo (más espacio) y modificadores al lado */
+.stats-group-title{display:none}
+.stats-grouped{padding-top:.5rem}
+.stat-mod{font-weight:600;font-size:.85em}
+/* 28/11 · Acciones del objeto en la cabecera de Inventario y Estado (mazmorra) */
+.dun-top [data-testid=item-actions]{flex-wrap:nowrap}
+.dun-top .btn{min-height:44px;white-space:nowrap}
+.dun-win.is-phone .dun-top .btn{padding-left:.5rem;padding-right:.5rem;font-size:12px}
+/* 28/11 · Cabecera con la misma rejilla que las columnas; separadores finos entre columnas de atributos */
+.dun-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.25rem;align-items:center}
+.dun-win.is-phone .dun-head{gap:.75rem}
+.dun-win.is-phone .dun-close{margin-left:calc(var(--dun-pocket-gap,6px));width:var(--dun-slot,46px)}
+.stats-grouped>div+div{border-left:1px solid rgba(201,162,39,.35);padding-left:.6rem}
+.dun-top{padding-left:6px}
+/* Móvil: contenido centrado en vertical, mismo margen por los cuatro lados */
+.dun-win.is-phone{justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.dun-win.is-phone .dun-grid{flex:0 1 auto}
+/* Móvil: ✕ del mismo tamaño que una casilla del bolsillo; las acciones reparten el hueco hasta Ordenar con la misma separación */
+.dun-win.is-phone .dun-close{height:var(--dun-slot,46px);min-width:0!important;min-height:0!important;padding:0}
+.dun-top [data-testid=item-actions]{gap:8px}
+.dun-top [data-testid=item-actions]>.btn{flex:1 1 auto}
+.dun-win.is-phone .dun-close{margin-right:var(--dun-close-mr,0px)}
+/* Móvil (28/11): una sola rejilla de dos columnas. «Estado/Inventario» arriba del todo, a la altura de los botones;
+   la columna izquierda empieza ahí mismo (el cuerpo gana alto) y la separación entre columnas es la misma que entre mochila y bolsillo (12 px). */
+.dun-win.is-phone{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:12px;row-gap:6px;align-content:center}
+.dun-win.is-phone .dun-head,.dun-win.is-phone .dun-grid{display:contents}
+.dun-win.is-phone .dun-head>h2{grid-column:1;grid-row:1;align-self:start;z-index:1;line-height:1.2}
+.dun-win.is-phone .dun-head>div{grid-column:2;grid-row:1}
+.dun-win.is-phone .dun-grid>:first-child{grid-column:1;grid-row:1/3;padding-top:1.6rem;min-height:0}
+.dun-win.is-phone .dun-grid>:last-child{grid-column:2;grid-row:2;min-height:0}
+/* Móvil: la barra de carga va de la primera casilla de la mochila a la última del bolsillo */
+.dun-win.is-phone .dun-carry{margin-left:6px;margin-right:var(--dun-close-mr,0px)}
+.dun-win.is-phone{grid-template-rows:auto auto}
+/* 28/11 · Barra de carga (y botones de debajo) con el ancho exacto de las casillas de la mochila: sin el relleno de la rejilla */
+.carry-fit{width:calc(var(--slot) * 6 + 20px);max-width:none;margin-left:6px;margin-right:6px}
+.carry-center{align-self:center}
+/* 28/11 · Bolsillo seguro: casillas con borde dorado y un candado en lugar de los textos */
+[data-testid=grid-pocket] .slot{border-color:rgba(201,162,39,.65)}
+.pocket-lock{display:inline-flex;align-items:center;justify-content:center;opacity:.85}
+[data-testid=carry-bar].carry-fit,div.carry-fit{width:calc(var(--slot) * 6 + 20px);max-width:none;margin-left:6px;margin-right:6px}
+.carry-narrow.carry-fit{width:auto;align-self:stretch}
+.pocket-label{gap:8px;padding-left:6px}
+.dun-bag-scroll{scrollbar-width:thin;scrollbar-color:#6b5a2a transparent}
+/* Móvil (28/11): Inventario y Estado usan todo el alto; abajo, los atributos (o las tarjetas) y la barra de carga en la misma línea */
+.dun-win.is-phone{grid-template-rows:auto minmax(0,1fr);align-content:stretch}
+.dun-win.is-phone .dun-grid>:first-child{display:flex;flex-direction:column}
+.dun-win.is-phone .dun-grid>:first-child .stats-grouped{margin-top:auto}
+.dun-win.is-phone .dun-grid>:last-child{display:flex;flex-direction:column}
+.dun-win.is-phone .dun-bagcol{flex:1;display:flex;flex-direction:column}
+.dun-win.is-phone .dun-bagcol>[data-testid=carry-bar]{margin-top:auto}
+.dun-win.is-phone .stats-grouped>div>div[data-stat]{line-height:1.7}
+/* Móvil: sin título «Inventario/Estado» (queda para lectores de pantalla); la columna izquierda empieza arriba */
+.dun-win.is-phone .dun-head>h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.dun-win.is-phone .dun-grid>:first-child{padding-top:0}
+.dun-win.is-phone [data-testid=equipment]{--slot:52px;--slot-big:52px}
+.dun-win.is-phone [data-testid=equipment]{--slot:55px;--slot-big:55px}

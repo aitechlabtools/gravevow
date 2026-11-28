@@ -5,7 +5,9 @@ import type { Region } from '../../config/anatomy';
 import { currentMini } from '../../core/tutorials';
 import { className } from '../../core/gender';
 import { CarryBar, HudLoad, OverloadChip, PactChip } from './CarryBar';
-import { effectiveMaxMp, needsOf } from '../../core/needs';
+import { effectiveMaxMp, exhaustionLoss, needsOf } from '../../core/needs';
+import { offenseMult, initiativeMult } from '../../core/anatomy';
+import { playerCombatant } from '../../core/combatants';
 import { getPact } from '../../core/data/altars';
 import { useClearOnDrop, useDrag } from './pointerDrag';
 import { gridGold } from '../../core/gold';
@@ -22,6 +24,8 @@ import { timeLeft } from '../../core/expedition';
 import { CombatScreen } from './CombatScreen';
 import { BodyFigure } from './BodyFigure';
 import { expBody } from '../state/medicalActions';
+import { ItemCard } from './screens/ItemCard';
+import { SheetDrawer } from './screens/Alijo';
 import { Bar, EquipmentView, GridView, StatsList, ItemIcon, LockGlyph } from './inventory';
 import { PlayerSprite, MonsterSprite, Modal, formatTime, ItemActions, GoldAmount } from './common';
 import { SettingsModal } from './TitleScreen';
@@ -710,6 +714,8 @@ function BodyModal() {
  *  Tocar una cura y luego la parte (o arrastrarla hasta ella) la aplica con las reglas de siempre: fuera de combate no gasta
  *  turno y la cirugía tarda dos pulsos. Sin curación con monedas. Se abre con la figura del HUD o con H; se cierra con ✕, H o Escape. */
 function DungeonStatus() {
+  const phone = useLayout() === 'phone';
+  const [sheet, setSheet] = useState(false);
   const exp = useGame((s) => s.expedition)!;
   const profile = useGame((s) => s.profile)!;
   const [sel, setSel] = useState<Loc | null>(null);
@@ -732,12 +738,14 @@ function DungeonStatus() {
   });
   const n = needsOf(exp.needs);
   return (
-    <DunFrame title="Estado" testId="body-modal" closeId="body-close" closeKey="H">
+    <DunFrame title="Estado" testId="body-modal" closeId="body-close" closeKey="H"
+      top={sel && !pick && <ItemActions loc={sel} mode="dungeon" onClear={() => setSel(null)} buttonsOnly />}
+      sheet={phone && <SheetDrawer open={sheet && !!sel} onClose={() => setSheet(false)}><ItemCard loc={sel} mode="dungeon" onClear={() => setSel(null)} compact stacked /></SheetDrawer>}>
         <div className="dun-col flex flex-col dstatus-left" data-testid="intendencia-status">
           <div className="flex-1 min-h-0 flex items-center justify-center estado-doll"><BodyMap body={body} shown={shown} onPick={(r) => sel && apply(sel, r)} /></div>
           <StatusNeeds body={body} needs={n} prep={exp.prep ?? null} eta={(k) => nextText(k, n, exp.body)} />
         </div>
-        <div className="dun-col" data-testid="dungeon-status-bag"><InvBagColumn sel={sel} setSel={(l) => setSel(l && sel && JSON.stringify(sel) === JSON.stringify(l) ? null : l)} clear={() => setSel(null)} noActions={!!pick} /></div>
+        <div className="dun-col" data-testid="dungeon-status-bag"><InvBagColumn sel={sel} setSel={(l) => setSel(l && sel && JSON.stringify(sel) === JSON.stringify(l) ? null : l)} onOpen={phone ? (l) => { setSel(l); setSheet(true); } : undefined} /></div>
     </DunFrame>
   );
 }
@@ -822,6 +830,7 @@ function ConfirmBetray() {
 }
 
 function DungeonInventory() {
+  const [sheet, setSheet] = useState(false);
   const s = useGame((x) => x);
   const layout = useLayout();
   const [sel, setSel] = useState<Loc | null>(null);
@@ -830,36 +839,50 @@ function DungeonInventory() {
   if (!s.expedition || !s.profile) return null;
   const ch = s.profile.character;
   const stats = computeStats(ch.classId, ch.level, s.expedition.equipment);
+  // Lo que cambia de verdad en combate: pacto del altar, necesidades (máximo del recurso) y heridas (daño e iniciativa)
+  const effStats = (() => {
+    const exp = s.expedition!, body = expBody(exp, s.profile!), needs = needsOf(exp.needs);
+    const e = { ...playerCombatant(ch, exp.equipment, exp.hp, exp.mp, {}, undefined, { needs, pact: exp.pact ?? null }).stats };
+    e.atk = Math.round(e.atk * offenseMult(body)); e.mag = Math.round(e.mag * offenseMult(body));
+    e.spd = Math.round(e.spd * initiativeMult(body, exhaustionLoss(needs)));
+    return e;
+  })();
   return (
-    <DunFrame title="Inventario" testId="dungeon-inventory" closeId="btn-close-inventory" closeKey="I">
+    <DunFrame title="Inventario" testId="dungeon-inventory" closeId="btn-close-inventory" closeKey="I"
+      top={sel && <ItemActions loc={sel} mode="dungeon" onClear={clear} buttonsOnly />}
+      sheet={layout === 'phone' && <SheetDrawer open={sheet && !!sel} onClose={() => setSheet(false)}><ItemCard loc={sel} mode="dungeon" onClear={clear} compact stacked /></SheetDrawer>}>
       <div className="dun-col space-y-4">
         <EquipmentView equipment={s.expedition.equipment} selected={sel} onSelect={setSel} mode="dungeon" portrait={<PlayerSprite scale={layout === 'phone' ? 6 : layout === 'tablet' ? 10 : 12} />} />
-        <StatsList stats={stats} resourceName={CLASSES[ch.classId].resourceName} grouped />
+        <StatsList stats={stats} eff={effStats} resourceName={CLASSES[ch.classId].resourceName} grouped />
       </div>
-      <div className="dun-col"><InvBagColumn sel={sel} setSel={setSel} clear={clear} /></div>
+      <div className="dun-col"><InvBagColumn sel={sel} setSel={setSel} onOpen={layout === 'phone' ? (l) => { setSel(l); setSheet(true); } : undefined} /></div>
     </DunFrame>
   );
 }
 
 /** Marco común de Inventario y Estado en la mazmorra: siempre en ventana (28/11; en móvil, compacta),
  *  con la misma cabecera (título, Ordenar y ✕) y dos columnas que se desplazan por separado si no caben. */
-function DunFrame({ title, testId, closeId, closeKey, children }: { title: string; testId: string; closeId: string; closeKey: string; children: ReactNode }) {
+function DunFrame({ title, testId, closeId, closeKey, children, top, sheet }: { title: string; testId: string; closeId: string; closeKey: string; children: ReactNode; /** Acciones del objeto elegido, en la cabecera junto a Ordenar y ✕. */ top?: ReactNode; /** Cajón de la ficha (móvil). */ sheet?: ReactNode }) {
   const layout = useLayout();
+  // Misma rejilla que el cuerpo: el título sobre la columna izquierda; sobre la mochila, las acciones (desde su primera casilla)
+  // y Ordenar (hasta su última casilla); en el móvil, ✕ queda encima del bolsillo.
   const head = (
-    <div className="flex items-center justify-between gap-2 mb-3 shrink-0"><h2 className="panel-title text-xl">{title}</h2><div className="flex gap-2">
-      <button className="btn text-sm" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button>
-      <button className="btn icon-btn" style={{ minWidth: 44, minHeight: 44 }} onClick={() => actions.closeModal()} aria-label={`Cerrar (${closeKey} o Escape)`} title={`Cerrar · ${closeKey}`} data-testid={closeId}>✕</button></div></div>
+    <div className="dun-head mb-3 shrink-0"><h2 className="panel-title text-xl shrink-0 self-center">{title}</h2>
+      <div className="flex gap-2 items-center min-w-0">
+        <div className="dun-top min-w-0 flex-1">{top}</div>
+        <button className="btn text-sm shrink-0" style={{ minHeight: 44 }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} title="Agrupa el oro y ordena la mochila">Ordenar</button>
+        <button className="btn icon-btn shrink-0 dun-close" style={{ minWidth: 44, minHeight: 44 }} onClick={() => actions.closeModal()} aria-label={`Cerrar (${closeKey} o Escape)`} title={`Cerrar · ${closeKey}`} data-testid={closeId}>✕</button></div></div>
   );
   const phone = layout === 'phone';
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 fade-in" data-modal onMouseDown={(e) => e.target === e.currentTarget && actions.closeModal()} data-testid={testId} role="dialog" aria-label={title}>
-      <div className={`panel panel-gold dun-win ${phone ? 'is-phone' : ''}`}>{head}<div className="dun-grid">{children}</div></div>
+      <div className={`panel panel-gold dun-win ${phone ? 'is-phone' : ''}`}>{head}<div className="dun-grid">{children}</div></div>{sheet}
     </div>
   );
 }
 
 /** Columna de la mochila del inventario (escritorio): casillas que llenan el ancho, alineadas con la barra de carga. */
-function InvBagColumn({ sel, setSel, clear, noActions }: { sel: Loc | null; setSel: (l: Loc | null) => void; clear: () => void; /** Estado: con una cura elegida no hacen falta sus acciones. */ noActions?: boolean }) {
+function InvBagColumn({ sel, setSel, onOpen }: { sel: Loc | null; setSel: (l: Loc | null) => void; /** Móvil: doble toque abre la ficha en lugar de la acción rápida. */ onOpen?: (l: Loc) => void }) {
   const exp = useGame((x) => x.expedition)!;
   const tutorial = useGame((x) => x.tutorial);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -881,28 +904,39 @@ function InvBagColumn({ sel, setSel, clear, noActions }: { sel: Loc | null; setS
   }, [sel, atSel, setSel]);
   const phone = useLayout() === 'phone';
   // En el móvil, casillas de 44 px: así caben la mochila, la carga y el bolsillo sin desplazar.
-  const slot = w ? Math.max(44, Math.min(phone ? 44 : 84, Math.floor((w - 5 * 4 - 12 - (phone ? 60 : 0)) / 6))) : 60;
+  // Móvil: la cabecera alinea ✕ con el bolsillo y Ordenar con la última casilla de la mochila (medidas reales tras pintar)
+  useEffect(() => {
+    const el = ref.current; const win = el?.closest('.dun-win') as HTMLElement | null; if (!el || !win || !phone) return;
+    const bag = el.querySelector('[data-testid=bag-grid]') as HTMLElement | null, pk = el.querySelector('[data-testid=pocket-col]') as HTMLElement | null;
+    if (!bag || !pk) return;
+    const b = { right: Math.max(...[...bag.querySelectorAll('.slot')].map((x) => x.getBoundingClientRect().right)) }, k = (pk.querySelector('.slot') ?? pk).getBoundingClientRect();
+    win.style.setProperty('--dun-slot', `${k.width}px`); win.style.setProperty('--dun-close-mr', `${Math.max(0, pk.getBoundingClientRect().right - k.right)}px`); win.style.setProperty('--dun-pocket-gap', `${Math.max(0, k.left - b.right - 8)}px`);
+  });
+  // En el móvil la mochila (6) y el bolsillo (1, a la derecha) llenan juntos el ancho: así la carga y la cabecera acaban en el mismo borde.
+  // Mochilas de 30 y 36 casillas: mismas casillas; la rejilla enseña 4 filas y el resto se ve con scroll
+  const rows = Math.ceil(exp.backpack.length / 6);
+  const bagScroll = rows > 4 ? { maxHeight: `calc(var(--slot) * 4 + 12px + 12px)`, overflowY: 'auto' as const } : undefined;
+  const slot = w ? (phone ? Math.max(44, Math.min(52, Math.floor((w - 6 * 4 - 12 - 2 - 12) / 7))) : Math.max(44, Math.min(84, Math.floor((w - 5 * 4 - 4) / 6)))) : 60;
   return (
-    <div ref={ref} style={{ ['--slot' as string]: `${slot}px`, ['--slot-big' as string]: `${slot}px` }}>
+    <div ref={ref} className="dun-bagcol" style={{ ['--slot' as string]: `${slot}px`, ['--slot-big' as string]: `${slot}px` }}>
       {phone ? (
         // Móvil: el bolsillo va en columna a la derecha de la mochila (sobra ancho y falta alto)
         <div className="flex gap-3 items-start">
-          <div>
+          <div data-testid="bag-grid" className="w-fit dun-bag-scroll" style={bagScroll}>
       <GridView grid={exp.backpack} container="backpack" cols={6} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel}
-        onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
+        onQuick={(l, st) => (onOpen ? onOpen(l) : getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
           </div>
-          <div className="flex flex-col items-center gap-1" title="Bolsillo seguro: no se pierde al morir" aria-label="Bolsillo seguro"><GridView grid={exp.pocket} container="pocket" cols={1} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} /><span className="text-gold opacity-80" data-testid="pocket-lock"><LockGlyph /></span></div>
+          <div className="flex flex-col items-center gap-1" data-testid="pocket-col" title="Bolsillo seguro: no se pierde al morir" aria-label="Bolsillo seguro"><GridView grid={exp.pocket} container="pocket" cols={1} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => (onOpen ? onOpen(l) : actions.quickMove(l, 'backpack'))} /><span className="text-gold opacity-80 flex items-center justify-center" style={{ height: `${slot}px`, marginTop: -6 }} data-testid="pocket-lock"><LockGlyph /></span></div>
         </div>
-      ) : (<>
+      ) : (<div className="dun-bag-scroll" style={bagScroll}>
       <GridView grid={exp.backpack} container="backpack" cols={6} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel}
-        onQuick={(l, st) => (getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
-      </>)}
-      {!tutorial && <CarryBar className="mt-2" />}
-      {!phone && <div className="mt-3">
-        <div className="text-xs text-gold mb-1">Bolsillo seguro</div>
-        <GridView grid={exp.pocket} container="pocket" cols={3} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => actions.quickMove(l, 'backpack')} />
+        onQuick={(l, st) => (onOpen ? onOpen(l) : getItem(st.itemId).slot ? actions.quickEquip(l) : getItem(st.itemId).use ? actions.useItem(l) : undefined)} />
+      </div>)}
+      {!tutorial && <CarryBar className={`mt-2 ${phone ? 'dun-carry' : ''}`} />}
+      {!phone && <div className="mt-3 flex items-center gap-3">
+        <GridView grid={exp.pocket} container="pocket" cols={3} equipment={exp.equipment} mode="dungeon" selected={sel} onSelect={setSel} onQuick={(l) => (onOpen ? onOpen(l) : actions.quickMove(l, 'backpack'))} />
+        <span className="pocket-lock text-gold" title="Bolsillo seguro: no se pierde al morir" aria-label="Bolsillo seguro"><LockGlyph /></span>
       </div>}
-      {sel && !noActions && <div className="mt-4"><ItemActions loc={sel} mode="dungeon" onClear={clear} /></div>}
     </div>
   );
 }

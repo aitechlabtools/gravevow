@@ -23,7 +23,7 @@ export function loadText(tier: number): string {
   return `Sobrecarga: −${Math.round(t.mobility * 100)} % de paso, +${Math.round(t.rest * 100)} % de Descanso`;
 }
 
-export function CarryBar({ className = '' }: { className?: string }) {
+export function CarryBar({ className = '', compact = true }: { className?: string; /** Sin la palabra «Carga» ni «Sin penalización» (los avisos de sobrecarga sí salen). */ compact?: boolean }) {
   const l = useLoad();
   if (!l) return null;
   const scale = CARRY_MAX; // la barra llega al 150 %
@@ -32,8 +32,8 @@ export function CarryBar({ className = '' }: { className?: string }) {
   return (
     <div className={`text-xs ${className}`} data-testid="carry-bar" data-tier={l.tier}>
       <div className="flex justify-between items-baseline gap-2">
-        <span className="text-stone-300">Carga <b className="font-display" style={{ color }} data-testid="carry-weight">{fmtWeight(l.weight)}</b> / {fmtWeight(l.capacity)}</span>
-        <span style={{ color: l.tier ? color : '#a8a29e' }} className="text-right truncate">{loadText(l.tier)}</span>
+        <span className="text-stone-300">{compact ? '' : 'Carga '}<b className="font-display" style={{ color }} data-testid="carry-weight">{fmtWeight(l.weight)}</b> / {fmtWeight(l.capacity)}</span>
+        {!(compact && !l.tier) && <span style={{ color: l.tier ? color : '#a8a29e' }} className="text-right truncate">{loadText(l.tier)}</span>}
       </div>
       <div className="relative h-2 mt-1 bg-black/60 border border-stone-700" title={`Hasta ${fmtWeight(l.capacity)} sin penalización; no puedes coger más allá de ${fmtWeight(l.capacity * CARRY_MAX)}.`}>
         <div className="absolute inset-y-0 left-0" style={{ width: pos(l.pct), background: color }} />

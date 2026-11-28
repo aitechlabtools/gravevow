@@ -6,11 +6,10 @@ import { className, g } from '../../../core/gender';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { actions, useGame } from '../../state/store';
 import { getItem } from '../../../core/data/items';
-import { gridValue, equippedValue, isCover, LAYOUTS, type Loc } from '../../../core/inventory';
+import { isCover, LAYOUTS, type Loc } from '../../../core/inventory';
 import { stackRarity } from '../../../core/data/rarity';
 import { useIsTouch } from '../../../shared/device';
 import { StashPanel } from '../StashPanel';
-import { gridGold } from '../../../core/gold';
 import { BAG_SIZES } from '../../../config/gold';
 import { ItemIcon } from '../inventory';
 import { dragJustEnded, useDrag, useClearOnDrop } from '../pointerDrag';
@@ -19,7 +18,7 @@ const BAG_DROP = JSON.stringify({ type: 'bag' });
 import { Modal } from '../common';
 import type { EquipSlot, ItemStack } from '../../../core/types';
 import { CarryBar } from '../CarryBar';
-import { ItemSlot, GridView, SLOT_LABELS, highlightItems, compareWithEquipped, type InvMode } from '../inventory';
+import { ItemSlot, GridView, LockGlyph, SLOT_LABELS, highlightItems, compareWithEquipped, type InvMode } from '../inventory';
 import { PlayerSprite } from '../common';
 import { Panel, SubHead, Segmented, usePixelScale } from '../kit';
 import { BodyPanel, usefulOn } from '../BodyFigure';
@@ -95,7 +94,6 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   const [confirmEmpty, setConfirmEmpty] = useState(false);
   const bagItems = profile.backpack.filter((x): x is ItemStack => !!x && !isCover(x));
   const bagUsed = bagItems.length > 0;
-  const hasMaterials = bagItems.some((x) => getItem(x.itemId).category === 'material');
   const valuable = bagItems.filter((x) => ['rare', 'epic', 'legendary'].includes(stackRarity(x, getItem(x.itemId))));
   const askEmpty = () => { sfx('click'); if (valuable.length) setConfirmEmpty(true); else { actions.emptyBackpack(); clear(); } };
   const emptyModal = confirmEmpty && (
@@ -112,24 +110,17 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
   const backpack = (
     <div data-testid="alijo-backpack">
       <SubHead right={<span className="flex gap-1">
+        <button className="btn text-xs" style={{}} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén (no toca el equipo ni el bolsillo seguro)">Vaciar</button>
         <button className="btn text-xs" onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} data-testid="sort-backpack" title="Agrupa el oro en sus saquitos y ordena la mochila">Ordenar</button></span>}>
-        Mochila · {profile.backpack.filter(Boolean).length}/{profile.backpack.length}
+        {profile.backpack.filter(Boolean).length}/{profile.backpack.length}
       </SubHead>
       <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={quickFromBag} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
-      <CarryBar className="mt-1.5" />
-      <div className="flex gap-1 mt-1.5" data-testid="backpack-quick">
-        <button className="btn text-xs flex-1" style={{ minHeight: touchy ? 44 : 34 }} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén (no toca el equipo ni el bolsillo seguro)">Vaciar mochila</button>
-        <button className="btn text-xs flex-1" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => { actions.emptyBackpack(true); clear(); }} disabled={!hasMaterials} data-testid="store-materials" title="Manda minerales y materiales al almacén">Guardar materiales</button>
-      </div>
-      {gridGold(profile.backpack) > 0 && (
-        <div className="flex items-center justify-between text-xs mt-1.5" data-testid="gold-carried"><span className="text-stone-300">Oro encima (se pierde si mueres)</span><span className="font-display text-ember">{gridGold(profile.backpack)}</span></div>
-      )}
+      <CarryBar className="mt-1.5 carry-fit" />
     </div>
   );
   const pocket = (
     <div className="mt-3" data-testid="alijo-pocket">
-      <SubHead right={<span className="text-[11px] text-heal" data-testid="pocket-gold">{gridGold(profile.pocket) > 0 ? `oro a salvo: ${gridGold(profile.pocket)}` : 'no se pierde al morir'}</span>}>Bolsillo seguro · {profile.pocket.filter(Boolean).length}/{profile.pocket.length}</SubHead>
-      <GridView grid={profile.pocket} container="pocket" cols={3} {...grids} onQuick={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
+      <div className="flex items-center gap-3"><GridView grid={profile.pocket} container="pocket" cols={3} {...grids} onQuick={(l) => { actions.quickMove(l, 'backpack'); clear(); }} /><span className="pocket-lock text-gold" title="Bolsillo seguro: no se pierde al morir" aria-label="Bolsillo seguro" data-testid="pocket-gold"><LockGlyph /></span></div>
     </div>
   );
   // El almacén tiene 8 columnas en todos los formatos (los objetos de 2×2 necesitan la misma forma siempre)
@@ -173,15 +164,16 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
     const bagCol = (
       <div className="flex flex-col shrink-0" style={{ width: 'calc(var(--slot) * 6 + 20px)' }} data-testid="alijo-backpack">
         <div className="flex items-center justify-between gap-1 mb-1">
-          <span className="hb-cap whitespace-nowrap" style={{ margin: 0 }}>Mochila · {profile.backpack.filter(Boolean).length}/{profile.backpack.length}</span>
+          <span className="hb-cap whitespace-nowrap" style={{ margin: 0 }}>{profile.backpack.filter(Boolean).length}/{profile.backpack.length}</span>
           <span className="flex gap-1">
             <button className="btn text-xs" style={{ minHeight: 44, padding: '0 8px' }} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén">Vaciar</button>
             <button className="btn text-xs" style={{ minHeight: 44, padding: '0 8px' }} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} data-testid="sort-backpack">Ordenar</button>
           </span>
         </div>
         <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={(l) => openSheet(l)} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
+        <CarryBar className="mt-1 carry-fit" />
         <div className="al-box al-box-row mt-1.5" data-testid="alijo-pocket">
-          <div className="flex flex-col items-start min-w-0"><div className="al-box-t">Bolsillo</div><div className="text-[12px] text-heal" data-testid="pocket-gold">{gridGold(profile.pocket) > 0 ? `a salvo: ${gridGold(profile.pocket)}` : 'no se pierde'}</div></div>
+          <span className="pocket-lock text-gold" title="Bolsillo seguro: no se pierde al morir" aria-label="Bolsillo seguro" data-testid="pocket-gold"><LockGlyph /></span>
           <GridView grid={profile.pocket} container="pocket" cols={profile.pocket.length} {...grids} onQuick={(l) => openSheet(l)} />
         </div>
       </div>
@@ -196,7 +188,6 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
                 <div className="flex flex-col gap-2" style={{ width: 'calc(var(--slot) * 6 + 20px)' }}>
                   <EquipDoll sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} onOpen={openSheet} />
                   {bagCol}
-                  <CarryBar className="carry-narrow pb-1" />
                 </div>
               </div>
             </div>
@@ -248,7 +239,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
           {src === 'backpack' ? (
             <div className="flex-1 min-h-0 overflow-y-auto scroll-thin flex flex-col items-center" data-testid="alijo-backpack">
               <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={quickFromBag} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
-              <CarryBar className="mt-1.5 w-full" />
+              <CarryBar className="mt-1.5 carry-fit carry-center" />
             </div>
           ) : <div className="flex-1 min-h-0 flex"><StashPanel cols={stashCols} bare noSort sel={sel} onSelect={onSelect} onEmpty={onEmpty}
               onQuick={(l, st) => { if (getItem(st.itemId).use?.kind === 'need') actions.eat(l); else actions.quickMove(l, 'backpack'); clear(); }} onAlt={(l) => { actions.quickMove(l, 'backpack'); clear(); }} /></div>}
@@ -369,14 +360,14 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
         <EquipDoll sel={sel} onSelect={onSelect} onEmpty={onEmpty} onDone={clear} onSkin={() => setPicker(true)} />
         <div className="al-sec" data-testid="alijo-backpack">
           <div className="flex items-center justify-between gap-2 mb-1.5">
-            <span className="hb-cap" style={{ margin: 0 }}>Mochila · {profile.backpack.filter(Boolean).length}/{profile.backpack.length}</span>
-            <button className="btn text-xs" style={btnH} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} data-testid="sort-backpack" title="Agrupa el oro en sus saquitos y ordena la mochila">Ordenar</button>
+            <span className="hb-cap" style={{ margin: 0 }}>{profile.backpack.filter(Boolean).length}/{profile.backpack.length}</span>
+            <span className="flex gap-1.5"><button className="btn text-xs" style={btnH} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén (no toca el equipo ni el bolsillo seguro)">Vaciar</button>
+            <button className="btn text-xs" style={btnH} onClick={() => { actions.groupGold('backpack'); actions.sortContainer('backpack'); }} data-testid="sort-backpack" title="Agrupa el oro en sus saquitos y ordena la mochila">Ordenar</button></span>
           </div>
           <GridView grid={profile.backpack} container="backpack" cols={6} {...grids} onQuick={quickFromBag} onAlt={(l) => { actions.quickMove(l, 'stash'); clear(); }} />
           <div className="mt-2">
             <div className="al-box al-box-row" data-testid="alijo-pocket">
-              <div className="flex flex-col items-start gap-0.5 min-w-0"><div className="al-box-t">Bolsillo seguro</div>
-                <div className="text-[12px] text-heal" data-testid="pocket-gold">{gridGold(profile.pocket) > 0 ? `oro a salvo: ${gridGold(profile.pocket)}` : 'no se pierde al morir'}</div></div>
+              <span className="pocket-lock pocket-label text-gold" title="Bolsillo seguro: no se pierde al morir" data-testid="pocket-gold"><LockGlyph /><span className="al-box-t" style={{ margin: 0 }}>Bolsillo</span></span>
               <GridView grid={profile.pocket} container="pocket" cols={profile.pocket.length} {...grids} onQuick={(l) => { actions.quickMove(l, 'backpack'); clear(); }} />
             </div>
           </div>
@@ -386,12 +377,7 @@ export function Alijo({ onShop, section }: { onShop?: () => void; section?: 'sta
       </div>
       {/* Pie fijo: carga y botones de la mochila siempre a la vista */}
       <div className="shrink-0 mx-auto pt-1 border-t border-stone-800" style={{ width: `calc(var(--slot) * 6 + 26px)`, maxWidth: '100%' }} data-testid="backpack-foot">
-          <CarryBar className="mt-1" />
-          <div className="flex justify-between text-xs mt-1"><span className="text-stone-400">En riesgo si mueres</span><span className="text-ember" data-testid="gold-box">{gridValue(profile.backpack) + equippedValue(profile.equipment)}</span></div>
-          <div className="grid grid-cols-2 gap-1 mt-2" data-testid="backpack-quick">
-            <button className="btn text-xs" style={btnH} onClick={askEmpty} disabled={!bagUsed} data-testid="empty-backpack" title="Pasa todo lo de la mochila al almacén (no toca el equipo ni el bolsillo seguro)">Vaciar mochila</button>
-            <button className="btn text-xs" style={btnH} onClick={() => { actions.emptyBackpack(true); clear(); }} disabled={!hasMaterials} data-testid="store-materials" title="Manda minerales y materiales al almacén">Guardar materiales</button>
-          </div>
+          <CarryBar className="mt-1 mb-1 carry-fit" />
       </div>
     </Panel>
   );
@@ -542,8 +528,8 @@ function CureBag({ grids, quick, onStash }: { grids: Record<string, unknown>; qu
       <div className="flex items-center justify-between mb-2"><span className="font-display text-parchment">Mochila · {profile.backpack.filter(Boolean).length}/{profile.backpack.length}</span></div>
       <div className="mb-2"><Segmented full options={[{ id: 'all', label: 'Todo' }, { id: 'cure', label: `Curación${cures.length ? ` · ${cures.length}` : ''}` }]} value={only} onChange={(v) => { sfx('click'); setOnly(v); }} testId="bag-filter" /></div>
       <GridView grid={profile.backpack} container="backpack" cols={6} {...(grids as object)} onQuick={quick} onAlt={onStash} />
-      <CarryBar className="mt-2" />
-      <button className="btn text-xs w-full mt-2" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => actions.sortContainer('backpack')} data-testid="sort-backpack">Ordenar mochila</button>
+      <CarryBar className="mt-2 carry-fit" />
+      <button className="btn text-xs mt-2 carry-fit" style={{ minHeight: touchy ? 44 : 34 }} onClick={() => actions.sortContainer('backpack')} data-testid="sort-backpack">Ordenar mochila</button>
       <p className="text-[12px] text-stone-400 mt-2">{touchy ? 'Toca' : 'Elige'} un objeto curativo y luego la parte del cuerpo para tratar una lesión.</p>
     </div>
   );
@@ -613,7 +599,7 @@ function PhoneHero() {
 }
 
 /** Cajón de la ficha (móvil): se abre con doble toque en un objeto y se despliega por la derecha; se cierra con ✕ o tocando fuera. */
-function SheetDrawer({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
+export function SheetDrawer({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   return (
     <>
       {open && <div className="ui-drawer-shade" onClick={onClose} />}
